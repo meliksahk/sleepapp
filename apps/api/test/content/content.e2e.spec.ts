@@ -31,7 +31,13 @@ describe('Content e2e (HTTP)', () => {
     await prisma.$connect();
     const base = { title_i18n: { en: 'X' }, engine_params: {}, layer_defs: {} };
     const over = await prisma.soundscapes.create({
-      data: { ...base, slug: slugs.over, archetype_affinity: ['overthinker'], status: 'published' },
+      data: {
+        ...base,
+        slug: slugs.over,
+        archetype_affinity: ['overthinker'],
+        status: 'published',
+        preview_asset_key: 'previews/over.opus',
+      },
     });
     await prisma.soundscapes.create({
       data: { ...base, slug: slugs.deep, archetype_affinity: ['deep-ocean'], status: 'published' },
@@ -86,6 +92,19 @@ describe('Content e2e (HTTP)', () => {
     expect(res.body.soundscape.slug).toBe(slugs.over);
     expect(res.body.presets).toHaveLength(1);
     expect(res.body.presets[0].archetypeSlug).toBe('overthinker');
+    // preview_asset_key → presigned URL (offline üretim): anahtar + imza içerir
+    expect(typeof res.body.previewUrl).toBe('string');
+    expect(res.body.previewUrl).toContain('previews/over.opus');
+    expect(res.body.previewUrl).toMatch(/X-Amz-Signature=/);
+  });
+
+  it('preview_asset_key olmayan soundscape → previewUrl null', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get(`/v1/content/soundscapes/${slugs.deep}`)
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.previewUrl).toBeNull();
   });
 
   it('draft (yayınlanmamış) slug → 404', async () => {

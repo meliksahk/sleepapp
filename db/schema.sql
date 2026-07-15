@@ -172,7 +172,8 @@ CREATE TABLE public.soundscapes (
     publish_at timestamp with time zone,
     created_by uuid,
     version integer DEFAULT 1 NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    preview_asset_key text
 );
 
 
@@ -456,4 +457,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120002'),
     ('20260715120003'),
     ('20260715120004'),
-    ('20260715120005');
+    ('20260715120005'),
+    ('20260715120006');
