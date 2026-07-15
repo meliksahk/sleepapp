@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { loadEnv } from './shared/config/env';
 import { ProblemDetailsFilter } from './shared/http/problem-details.filter';
@@ -9,7 +10,15 @@ import { IdempotencyInterceptor } from './shared/http/idempotency.interceptor';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
-  const app = await NestFactory.create(AppModule, { logger: ['error', 'warn', 'log'] });
+  // bodyParser: false → limitli parser'ları elle kaydederiz (DoS sertleşme).
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log'],
+    bodyParser: false,
+  });
+
+  const bodyLimit = env.MAX_REQUEST_BODY_BYTES;
+  app.use(json({ limit: bodyLimit }));
+  app.use(urlencoded({ extended: true, limit: bodyLimit }));
 
   app.setGlobalPrefix('v1', { exclude: ['health'] });
   app.useGlobalPipes(

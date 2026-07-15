@@ -52,6 +52,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#29 (request boyut limiti):** DoS sertleşme (docs/02, "Sıradaki iş" #4). `MAX_REQUEST_BODY_BYTES` env (64kb default); main.ts `bodyParser: false` + elle limitli `json`/`urlencoded`. `ProblemDetailsFilter` genişletildi: http-errors tarzı hatalar (body-parser'ın `PayloadTooLargeError`'ı — HttpException DEĞİL) `statusCode`/`expose` üzerinden doğru statüye eşlenir. 84 test yeşil (e2e: 1kb limitle >1kb gövde → 413 problem+json, limit altı normal). Body-parser hatasının global filtreye ULAŞTIĞI ampirik doğrulandı. Not: rate-limit Redis'e taşıma + feed cache hâlâ B4'te.
 - **#0 (F0 kickoff):** tüm zemin (monorepo, tokens, API+identity, app iskeletleri, codegen, CI). 8 commit, CI yeşil.
 - **#1 (DB canlı doğrulama):** Docker stack ayağa kaldırıldı; migration gerçek Postgres'e uygulandı (down/up tersinir + seed doğrulandı); `db/schema.sql` üretildi. B-1 + B-2 çözüldü. PR #1.
 - **#2 (Prisma adaptörleri):** identity in-memory → gerçek Postgres (Prisma). `prisma db pull` şema senkronu, PrismaService + Prisma repo'ları, env-based değil doğrudan wiring. Integration testleri (izolasyon dahil) + e2e artık gerçek DB'ye karşı; CI'a Postgres service + dbmate migrate eklendi. 16 test yeşil, curl ile uçtan uca kanıt (register→me→refresh→reuse 401, DB'de satırlar doğru). PR #2.

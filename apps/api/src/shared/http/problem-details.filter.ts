@@ -17,6 +17,21 @@ interface ProblemDetails {
   code?: string;
 }
 
+/** http-errors tarzı hata (statusCode + expose taşır); body-parser bunları fırlatır. */
+interface HttpErrorLike {
+  statusCode?: number;
+  status?: number;
+  expose?: boolean;
+  message?: string;
+}
+
+function isHttpError(e: unknown): e is HttpErrorLike {
+  if (typeof e !== 'object' || e === null) return false;
+  const r = e as HttpErrorLike;
+  const s = typeof r.statusCode === 'number' ? r.statusCode : r.status;
+  return typeof s === 'number' && s >= 400 && s <= 599;
+}
+
 const TITLES: Record<number, string> = {
   400: 'Bad Request',
   401: 'Unauthorized',
@@ -56,6 +71,12 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         } else if (Array.isArray(r.message)) {
           detail = r.message.join('; ');
         }
+      }
+    } else if (isHttpError(exception)) {
+      // http-errors tarzı (ör. body-parser PayloadTooLargeError 413) — HttpException değil.
+      status = exception.statusCode ?? exception.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+      if (exception.expose === true && typeof exception.message === 'string') {
+        detail = exception.message;
       }
     } else {
       // Beklenmeyen hata — teknik detay loglanır, istemciye sızmaz.
