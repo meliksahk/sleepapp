@@ -1,5 +1,19 @@
-import { StatCard, EmptyState, Button } from '@nocta/ui';
+import { StatCard, EmptyState, Button, DataTable, type Column } from '@nocta/ui';
 import { AppShell } from '@/components/AppShell';
+
+interface ActivityRow {
+  id: string;
+  action: string;
+  actor: string;
+  when: string;
+}
+const activityColumns: Column<ActivityRow>[] = [
+  { key: 'action', header: 'İşlem' },
+  { key: 'actor', header: 'Aktör' },
+  { key: 'when', header: 'Zaman' },
+];
+// Yer tutucu — A3'te audit_log API'sine bağlanacak.
+const activityRows: ActivityRow[] = [];
 
 export default function DashboardPage() {
   return (
@@ -25,6 +39,11 @@ export default function DashboardPage() {
             action={<Button disabled>Yeni soundscape</Button>}
           />
         </div>
+      </section>
+
+      <section className="mt-8">
+        <h3 className="mb-3 text-body font-display">Son etkinlik</h3>
+        <DataTable columns={activityColumns} rows={activityRows} emptyTitle="Henüz etkinlik yok" />
       </section>
     </AppShell>
   );
