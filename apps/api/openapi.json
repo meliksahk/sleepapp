@@ -243,6 +243,65 @@
         "summary": "Kullanıcının en yeni archetype sonucu",
         "tags": ["archetype"]
       }
+    },
+    "/v1/archetype/web": {
+      "post": {
+        "operationId": "WebArchetypeController_score",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAnswersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebResultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Anonim web testi — skorla + paylaşım slug üret",
+        "tags": ["archetype-web"]
+      }
+    },
+    "/v1/archetype/web/{slug}": {
+      "get": {
+        "operationId": "WebArchetypeController_result",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebResultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Paylaşım slug ile anonim sonuç (OG / /a sayfası)",
+        "tags": ["archetype-web"]
+      }
     }
   },
   "info": {
@@ -475,6 +534,34 @@
           }
         },
         "required": ["userId", "archetypeSlug", "scores", "version", "createdAt"]
+      },
+      "WebResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "shareSlug": {
+            "type": "string",
+            "description": "Paylasim slug (/a/{...})"
+          },
+          "archetypeSlug": {
+            "type": "string",
+            "enum": ["deep-ocean", "overthinker", "delta-drifter", "dawn-chaser"]
+          },
+          "scores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "version": {
+            "type": "number",
+            "example": 1
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["shareSlug", "archetypeSlug", "scores", "version", "createdAt"]
       }
     }
   }

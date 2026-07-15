@@ -140,6 +140,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/archetype/web": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Anonim web testi — skorla + paylaşım slug üret */
+        post: operations["WebArchetypeController_score"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/archetype/web/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paylaşım slug ile anonim sonuç (OG / /a sayfası) */
+        get: operations["WebArchetypeController_result"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -231,6 +265,19 @@ export interface components {
         ArchetypeResultResponseDto: {
             /** Format: uuid */
             userId: string;
+            /** @enum {string} */
+            archetypeSlug: "deep-ocean" | "overthinker" | "delta-drifter" | "dawn-chaser";
+            scores: {
+                [key: string]: number;
+            };
+            /** @example 1 */
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        WebResultResponseDto: {
+            /** @description Paylasim slug (/a/{...}) */
+            shareSlug: string;
             /** @enum {string} */
             archetypeSlug: "deep-ocean" | "overthinker" | "delta-drifter" | "dawn-chaser";
             scores: {
@@ -438,6 +485,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArchetypeResultResponseDto"];
+                };
+            };
+        };
+    };
+    WebArchetypeController_score: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAnswersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebResultResponseDto"];
+                };
+            };
+        };
+    };
+    WebArchetypeController_result: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebResultResponseDto"];
                 };
             };
         };
