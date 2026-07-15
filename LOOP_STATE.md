@@ -42,12 +42,12 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0:** Next.js panel — `packages/ui` başlangıcı (Button/Input/DataTable/StatCard/EmptyState) + AppShell + auth guard iskeleti (docs/03).
-2. **web W0:** tek sayfa + `/test` archetype (public web ucunu tüketir) + bekleme listesi (docs/05).
-3. **admin feature-sliced boundary lint** (api boundary ✓ iter #4; admin A0 ile birlikte).
-4. **web W0:** tek sayfa + `/test` archetype + bekleme listesi (docs/05).
-5. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard), AppShell, auth guard iskeleti.
-6. **identity v2:** e-posta ile hesaba yükseltme (magic link) + argon2id + hesap silme kaskadı (docs/02 B1).
+1. **web W0:** tek sayfa + `/test` archetype (public `POST /v1/archetype/web` ucunu tüketir) + bekleme listesi (docs/05). — API tarafı hazır, en yüksek görünür değer.
+2. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard/EmptyState) + AppShell + auth guard iskeleti (docs/03) + feature-sliced boundary lint.
+3. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
+4. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
+
+> B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
 
