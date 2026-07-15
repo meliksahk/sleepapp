@@ -39,6 +39,8 @@ dependencies:
   flutter_riverpod: ^2.6.1
   # Navigasyon — tip güvenli route'lar (docs/04).
   go_router: ^14.6.2
+  # HTTP — interim api client (üretilen Dart client Java-bloke, B-3; gelince değişecek).
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
