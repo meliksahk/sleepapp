@@ -40,5 +40,24 @@ class NoctaApiClient {
     return Session.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Kimlik doğrulamalı GET — ham yanıt döner (401 refresh akışı çağırana ait).
+  /// AuthController.authorizedRequest ile sarılır (401→refresh→retry).
+  Future<http.Response> getAuthed(String path, String accessToken) {
+    return _client.get(Uri.parse('$baseUrl$path'), headers: _authHeaders(accessToken));
+  }
+
+  /// Kimlik doğrulamalı POST (JSON gövde) — ham yanıt döner.
+  Future<http.Response> postAuthed(String path, String accessToken, Object body) {
+    return _client.post(
+      Uri.parse('$baseUrl$path'),
+      headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+  }
+
+  Map<String, String> _authHeaders(String accessToken) => {
+        'Authorization': 'Bearer $accessToken',
+      };
+
   void close() => _client.close();
 }
