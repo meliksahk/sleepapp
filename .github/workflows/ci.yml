@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ts:
+    name: TS workspace (turbo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # Turbo cache path-filtering sağlar: değişmeyen paketler cache-hit (anında).
+      - name: Lint / typecheck / test / build
+        run: pnpm turbo run lint typecheck test build
+
+  mobile:
+    name: Flutter (apps/mobile)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/design-tokens/**'
+              - '.github/workflows/ci.yml'
+      - if: steps.filter.outputs.mobile == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - if: steps.filter.outputs.mobile == 'true'
+        name: Pub get
+        working-directory: apps/mobile
+        run: flutter pub get
+      - if: steps.filter.outputs.mobile == 'true'
+        name: Analyze
+        working-directory: apps/mobile
+        run: flutter analyze
+      - if: steps.filter.outputs.mobile == 'true'
+        name: Test
+        working-directory: apps/mobile
+        run: flutter test
