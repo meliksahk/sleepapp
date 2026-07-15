@@ -1,0 +1,57 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:nocta/app/flavor.dart';
+import 'package:nocta/core/design_system/design_system.dart';
+import 'package:nocta/features/home/home_screen.dart';
+import 'package:nocta/features/sleep/sleep_models.dart';
+import 'package:nocta/features/sleep/sleep_providers.dart';
+
+Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
+  FlavorConfig.current = const FlavorConfig(
+    flavor: Flavor.dev,
+    name: 'DEV',
+    apiBaseUrl: 'http://localhost:3001',
+  );
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: overrides,
+      child: MaterialApp(theme: buildNoctaDarkTheme(), home: const HomeScreen()),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  testWidgets('streak verisi gelince kart görünür', (tester) async {
+    await _pump(tester, [
+      streakProvider.overrideWith(
+        (ref) async => const StreakStats(current: 5, longest: 12, totalNights: 40),
+      ),
+    ]);
+
+    expect(find.byKey(const Key('streak-current')), findsOneWidget);
+    expect(find.text('5'), findsOneWidget);
+    expect(find.text('nights streak'), findsOneWidget);
+    expect(find.text('NOCTA'), findsOneWidget); // home yine render
+  });
+
+  testWidgets('streak tek gece → tekil metin', (tester) async {
+    await _pump(tester, [
+      streakProvider.overrideWith(
+        (ref) async => const StreakStats(current: 1, longest: 1, totalNights: 1),
+      ),
+    ]);
+    expect(find.text('night streak'), findsOneWidget);
+  });
+
+  testWidgets('streak hatası home\'u bloklamaz (kart gizli)', (tester) async {
+    await _pump(tester, [
+      streakProvider.overrideWith((ref) async => throw Exception('ağ hatası')),
+    ]);
+
+    expect(find.byKey(const Key('streak-current')), findsNothing);
+    expect(find.text('NOCTA'), findsOneWidget); // home yine görünür
+    expect(find.textContaining('flavor: DEV'), findsOneWidget);
+  });
+}
