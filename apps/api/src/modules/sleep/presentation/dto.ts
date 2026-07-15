@@ -34,6 +34,12 @@ export class NightReportDto {
   calmScore!: number;
 }
 
+export class StreakDto {
+  @ApiProperty({ example: 5, description: 'Şu anki ardışık gece serisi' }) current!: number;
+  @ApiProperty({ example: 12, description: 'En uzun ardışık seri' }) longest!: number;
+  @ApiProperty({ example: 40, description: 'Kayıtlı toplam gece' }) totalNights!: number;
+}
+
 export class SleepSessionDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'date-time' }) startedAt!: string;

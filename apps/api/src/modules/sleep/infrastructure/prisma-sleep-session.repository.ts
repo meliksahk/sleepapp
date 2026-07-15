@@ -63,4 +63,15 @@ export class PrismaSleepSessionRepository implements SleepSessionRepository {
     });
     return rows.map(toDomain);
   }
+
+  async listNightDates(userId: string): Promise<string[]> {
+    const rows = await this.prisma.sleep_sessions.findMany({
+      where: { user_id: userId },
+      distinct: ['night_date'],
+      select: { night_date: true },
+      orderBy: { night_date: 'desc' },
+      take: 400,
+    });
+    return rows.map((r) => r.night_date.toISOString().slice(0, 10));
+  }
 }
