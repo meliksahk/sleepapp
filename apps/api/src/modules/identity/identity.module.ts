@@ -23,10 +23,9 @@ import {
   UuidIdGenerator,
 } from './infrastructure/crypto-adapters';
 import { JoseAccessTokenSigner } from './infrastructure/jose-access-token-signer';
-import {
-  InMemoryRefreshTokenRepository,
-  InMemoryUserRepository,
-} from './infrastructure/in-memory.repositories';
+import { PrismaService } from '../../shared/infra/prisma.service';
+import { PrismaUserRepository } from './infrastructure/prisma/prisma-user.repository';
+import { PrismaRefreshTokenRepository } from './infrastructure/prisma/prisma-refresh-token.repository';
 import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
@@ -40,9 +39,19 @@ const providers: Provider[] = [
   { provide: ID_GENERATOR, useClass: UuidIdGenerator },
   { provide: OPAQUE_TOKEN_GENERATOR, useClass: RandomOpaqueTokenGenerator },
   { provide: TOKEN_HASHER, useClass: Sha256TokenHasher },
-  // F0: in-memory adaptörler. Prisma adaptörü docker/DB gelince buraya bağlanır (docs/02 §2).
-  { provide: USER_REPOSITORY, useClass: InMemoryUserRepository },
-  { provide: REFRESH_TOKEN_REPOSITORY, useClass: InMemoryRefreshTokenRepository },
+  // Gerçek Postgres adaptörleri (Prisma). In-memory sürümler yalnızca unit-test harness'ında.
+  PrismaService,
+  {
+    provide: USER_REPOSITORY,
+    inject: [PrismaService],
+    useFactory: (prisma: PrismaService): UserRepository => new PrismaUserRepository(prisma),
+  },
+  {
+    provide: REFRESH_TOKEN_REPOSITORY,
+    inject: [PrismaService],
+    useFactory: (prisma: PrismaService): RefreshTokenRepository =>
+      new PrismaRefreshTokenRepository(prisma),
+  },
   {
     provide: ACCESS_TOKEN_SIGNER,
     inject: [ENV],

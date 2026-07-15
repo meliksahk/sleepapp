@@ -31,9 +31,11 @@ describe('Auth e2e (HTTP)', () => {
   });
 
   it('anonim kayıt → token → yetkili /v1/auth/me zinciri', async () => {
+    // Gerçek DB'ye yazılıyor → benzersiz fingerprint (tekrarlı koşumda çakışma yok).
+    const fingerprint = `e2e-device-${Date.now()}`;
     const reg = await request(app.getHttpServer())
       .post('/v1/auth/device')
-      .send({ fingerprint: 'e2e-device-0001', platform: 'ios' })
+      .send({ fingerprint, platform: 'ios' })
       .expect(201);
 
     expect(reg.body.accessToken).toBeTruthy();
