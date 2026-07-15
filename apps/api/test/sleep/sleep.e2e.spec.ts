@@ -137,6 +137,39 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body.code).toBe('invalid_night');
   });
 
+  it('streak: kayıt yokken hepsi 0', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/streak')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body).toEqual({ current: 0, longest: 0, totalNights: 0 });
+  });
+
+  it('streak: bu geceki oturumdan sonra current >= 1 (canlı seri)', async () => {
+    const t = await token();
+    await setTz(t, 'UTC');
+    const now = Date.now();
+    await request(app.getHttpServer())
+      .post('/v1/sleep/sessions')
+      .set('Authorization', `Bearer ${t}`)
+      .send({
+        startedAt: new Date(now - 2 * 60 * 60 * 1000).toISOString(), // 2 saat önce
+        endedAt: new Date(now).toISOString(),
+        movementEvents: 1,
+        soundEvents: 0,
+      })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/streak')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.totalNights).toBeGreaterThanOrEqual(1);
+    expect(res.body.current).toBeGreaterThanOrEqual(1); // bugün/dün → canlı
+    expect(res.body.longest).toBeGreaterThanOrEqual(1);
+  });
+
   it('liste yalnızca kendi oturumlarını döner (izolasyon)', async () => {
     const a = await token();
     const b = await token();

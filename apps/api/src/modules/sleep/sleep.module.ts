@@ -3,8 +3,10 @@ import { IdentityModule } from '../identity';
 import { ProfileModule, GetProfileUseCase } from '../profile';
 import { PrismaService } from '../../shared/infra/prisma.service';
 import {
+  CLOCK,
   PROFILE_TIMEZONE_READER,
   SLEEP_SESSION_REPOSITORY,
+  type Clock,
   type ProfileTimezoneReader,
   type SleepSessionRepository,
 } from './domain/ports';
@@ -12,6 +14,7 @@ import { PrismaSleepSessionRepository } from './infrastructure/prisma-sleep-sess
 import { RecordSleepSessionUseCase } from './application/record-sleep-session.usecase';
 import { ListSleepSessionsUseCase } from './application/list-sleep-sessions.usecase';
 import { GetNightReportUseCase } from './application/get-night-report.usecase';
+import { GetStreakUseCase } from './application/get-streak.usecase';
 import { SleepController } from './presentation/sleep.controller';
 
 const providers: Provider[] = [
@@ -49,6 +52,16 @@ const providers: Provider[] = [
     inject: [SLEEP_SESSION_REPOSITORY],
     useFactory: (repo: SleepSessionRepository): GetNightReportUseCase =>
       new GetNightReportUseCase(repo),
+  },
+  { provide: CLOCK, useValue: ((): Date => new Date()) satisfies Clock },
+  {
+    provide: GetStreakUseCase,
+    inject: [SLEEP_SESSION_REPOSITORY, PROFILE_TIMEZONE_READER, CLOCK],
+    useFactory: (
+      repo: SleepSessionRepository,
+      timezones: ProfileTimezoneReader,
+      now: Clock,
+    ): GetStreakUseCase => new GetStreakUseCase(repo, timezones, now),
   },
 ];
 

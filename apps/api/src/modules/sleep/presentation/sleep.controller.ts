@@ -21,9 +21,10 @@ import { AuthGuard, CurrentUser, type AccessTokenClaims } from '../../identity';
 import { RecordSleepSessionUseCase } from '../application/record-sleep-session.usecase';
 import { ListSleepSessionsUseCase } from '../application/list-sleep-sessions.usecase';
 import { GetNightReportUseCase } from '../application/get-night-report.usecase';
+import { GetStreakUseCase } from '../application/get-streak.usecase';
 import { SleepError } from '../domain/errors';
 import type { SleepSession } from '../domain/sleep-session.entity';
-import { NightReportDto, RecordSleepSessionDto, SleepSessionDto } from './dto';
+import { NightReportDto, RecordSleepSessionDto, SleepSessionDto, StreakDto } from './dto';
 
 const NIGHT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -48,6 +49,7 @@ export class SleepController {
     private readonly record: RecordSleepSessionUseCase,
     private readonly list: ListSleepSessionsUseCase,
     private readonly report: GetNightReportUseCase,
+    private readonly streak: GetStreakUseCase,
   ) {}
 
   @Post('sessions')
@@ -106,5 +108,12 @@ export class SleepController {
       throw new NotFoundException({ code: 'no_report', message: 'Bu gece için oturum yok.' });
     }
     return report;
+  }
+
+  @Get('streak')
+  @ApiOperation({ summary: 'Kullanıcının uyku serisi (current/longest/totalNights)' })
+  @ApiOkResponse({ type: StreakDto })
+  streakStats(@CurrentUser() user: AccessTokenClaims): Promise<StreakDto> {
+    return this.streak.execute(user.sub);
   }
 }
