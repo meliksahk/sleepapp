@@ -33,8 +33,21 @@ String _questions() => jsonEncode(<String, dynamic>{
   ],
 });
 
-Future<ArchetypeController> _controller() async {
+Future<ArchetypeController> _controller({bool existingResult = false}) async {
   final client = MockClient((req) async {
+    if (req.url.path == '/v1/archetype/result') {
+      if (!existingResult) return http.Response('not found', 404);
+      return http.Response(
+        jsonEncode(<String, dynamic>{
+          'userId': 'u-1',
+          'archetypeSlug': 'overthinker',
+          'scores': {'overthinker': 4},
+          'version': 1,
+          'createdAt': '2026-07-16T00:00:00.000Z',
+        }),
+        200,
+      );
+    }
     if (req.url.path == '/v1/auth/device') {
       return http.Response(
         jsonEncode(<String, dynamic>{
@@ -138,5 +151,27 @@ void main() {
     expect(sharer.last?.url, 'https://nocta.app/a/deep-ocean');
     expect(sharer.last?.text, contains('Deep Ocean'));
     expect(find.text('Link copied'), findsOneWidget);
+  });
+
+  testWidgets('kayıtlı sonuç varsa doğrudan sonucu gösterir (sihirbaz atlanır)', (tester) async {
+    await _pump(tester, await _controller(existingResult: true));
+
+    expect(find.byKey(const Key('archetype-result')), findsOneWidget);
+    expect(find.text('Overthinker'), findsOneWidget);
+    // Sihirbaz gösterilmez (soru/submit yok).
+    expect(find.byKey(const Key('archetype-submit')), findsNothing);
+  });
+
+  testWidgets('Retake → sonuçtan sihirbaza döner', (tester) async {
+    await _pump(tester, await _controller(existingResult: true));
+    expect(find.byKey(const Key('archetype-result')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('archetype-retake')));
+    await tester.pumpAndSettle();
+
+    // Sihirbaz göründü: soru + submit var, sonuç yok.
+    expect(find.text('How do you fall asleep?'), findsOneWidget);
+    expect(find.byKey(const Key('archetype-submit')), findsOneWidget);
+    expect(find.byKey(const Key('archetype-result')), findsNothing);
   });
 }

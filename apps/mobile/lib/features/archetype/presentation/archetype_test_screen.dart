@@ -29,18 +29,52 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
     _load();
   }
 
+  /// Açılış: kayıtlı sonuç varsa doğrudan göster (dönen kullanıcı testi tekrar
+  /// yapmaz), yoksa soru sihirbazını yükle.
   Future<void> _load() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final q = await ref.read(archetypeControllerProvider).fetchQuestions();
+      final existing = await ref.read(archetypeControllerProvider).latestResult();
+      if (!mounted) return;
+      if (existing != null) {
+        setState(() {
+          _result = existing;
+          _loading = false;
+        });
+        return;
+      }
+      await _loadQuestions();
+    } catch (e) {
       if (!mounted) return;
       setState(() {
-        _questions = q;
+        _error = e;
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _loadQuestions() async {
+    final q = await ref.read(archetypeControllerProvider).fetchQuestions();
+    if (!mounted) return;
+    setState(() {
+      _questions = q;
+      _loading = false;
+    });
+  }
+
+  /// Yeniden test: sonucu temizle, cevapları sıfırla, soruları yükle.
+  Future<void> _retake() async {
+    setState(() {
+      _result = null;
+      _answers.clear();
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await _loadQuestions();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -82,7 +116,7 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
   }
 
   Widget _body() {
-    if (_result != null) return _ResultView(result: _result!);
+    if (_result != null) return _ResultView(result: _result!, onRetake: _retake);
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
       return Center(
@@ -142,9 +176,10 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
 }
 
 class _ResultView extends ConsumerStatefulWidget {
-  const _ResultView({required this.result});
+  const _ResultView({required this.result, required this.onRetake});
 
   final ArchetypeResult result;
+  final VoidCallback onRetake;
 
   @override
   ConsumerState<_ResultView> createState() => _ResultViewState();
@@ -201,6 +236,13 @@ class _ResultViewState extends ConsumerState<_ResultView> {
               key: const Key('archetype-share'),
               label: _sharing ? 'Sharing…' : 'Share my identity',
               onPressed: _sharing ? null : _share,
+            ),
+            const SizedBox(height: NoctaSpace.s2),
+            NButton(
+              key: const Key('archetype-retake'),
+              label: 'Retake test',
+              variant: NButtonVariant.ghost,
+              onPressed: widget.onRetake,
             ),
           ],
         ),
