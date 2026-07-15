@@ -4,5 +4,5 @@ import preset from '@nocta/design-tokens/tailwind';
 
 export default {
   presets: [preset as Partial<Config>],
-  content: ['./src/**/*.{ts,tsx}'],
+  content: ['./src/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
 } satisfies Config;
