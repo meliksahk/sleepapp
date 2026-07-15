@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { loadEnv } from './shared/config/env';
 import { ProblemDetailsFilter } from './shared/http/problem-details.filter';
+import { IdempotencyInterceptor } from './shared/http/idempotency.interceptor';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
@@ -15,6 +16,7 @@ async function bootstrap(): Promise<void> {
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
   app.useGlobalFilters(new ProblemDetailsFilter());
+  app.useGlobalInterceptors(new IdempotencyInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('NOCTA API')
