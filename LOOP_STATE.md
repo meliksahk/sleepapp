@@ -26,7 +26,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ### Yapıldı, doğrulanmadı ⚠️
 
-- **Lokal DB migration (`db:migrate`):** docker-compose + dbmate ilk migration yazıldı, `docker compose config` geçti; ama Docker daemon kapalı + dbmate kurulu değil → canlı `up + migrate` KOŞULMADI. (bkz. BLOCKERS)
+- (temiz — F0'ın DB ⚠️ maddesi iter #1'de kapatıldı.)
 
 ### Yapılmadı / ertelendi ❌
 
@@ -43,12 +43,13 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Boundary lint kurallarını aktive et** (api modül sınırları + admin feature-sliced) — mimari bekçisi.
-2. **DB'yi canlı doğrula:** Docker Desktop açıkken `docker compose up -d` + dbmate kur + `pnpm db:migrate` + seed → ⚠️'yi ✅ yap; sonra Prisma adaptörlerini in-memory'nin yerine tak + integration testleri (testcontainers).
+1. **Prisma repository adaptörleri:** in-memory yerine gerçek Postgres adaptörleri (`prisma db pull` şema senkronu) + testcontainers integration testleri; identity "A, B okuyamaz" testi DB düzeyinde.
+2. **Boundary lint kurallarını aktive et** (api modül sınırları + admin feature-sliced) — mimari bekçisi.
 3. **API modülleri:** profile, archetype (soru matrisi versiyonlu), content feed, flags (docs/02 B1).
 4. **web W0:** tek sayfa + `/test` archetype + bekleme listesi (docs/05).
 5. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard), AppShell, auth guard iskeleti.
 
 ## İterasyon geçmişi
 
-- **#0 (F0 kickoff):** yukarıdaki tüm zemin. 7 commit, CI yeşil. Detay: git log.
+- **#0 (F0 kickoff):** tüm zemin (monorepo, tokens, API+identity, app iskeletleri, codegen, CI). 8 commit, CI yeşil.
+- **#1 (DB canlı doğrulama):** Docker stack ayağa kaldırıldı; migration gerçek Postgres'e uygulandı (down/up tersinir + seed doğrulandı); `db/schema.sql` üretildi. B-1 + B-2 çözüldü.
