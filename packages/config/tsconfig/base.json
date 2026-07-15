@@ -1,8 +1,25 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../../../tsconfig.base.json",
+  "display": "NOCTA base tsconfig (self-contained — pnpm symlink güvenli)",
   "compilerOptions": {
-    "composite": false,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false,
     "incremental": true
-  }
+  },
+  "exclude": ["node_modules", "dist", "build", ".next", ".turbo"]
 }
