@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './shared/infra/prisma.module';
+import { RequestIdMiddleware } from './shared/http/request-id.middleware';
 import { HealthModule } from './shared/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { ProfileModule } from './modules/profile/profile.module';
@@ -25,4 +26,8 @@ import { NotificationModule } from './modules/notification/notification.module';
     NotificationModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}
