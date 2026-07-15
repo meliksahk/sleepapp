@@ -481,6 +481,31 @@
         "tags": ["content"]
       }
     },
+    "/v1/content/weekly": {
+      "get": {
+        "operationId": "ContentController_weekly",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyReleaseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "En güncel haftalık soundscape yayını",
+        "tags": ["content"]
+      }
+    },
     "/v1/content/soundscapes/{slug}": {
       "get": {
         "operationId": "ContentController_detail",
@@ -920,6 +945,27 @@
           "archetypeAffinity",
           "version"
         ]
+      },
+      "WeeklyReleaseDto": {
+        "type": "object",
+        "properties": {
+          "weekStart": {
+            "type": "string",
+            "example": "2026-07-13",
+            "description": "Hafta başlangıcı (ISO tarih)"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "soundscapes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SoundscapeDto"
+            }
+          }
+        },
+        "required": ["weekStart", "notes", "soundscapes"]
       },
       "PresetDto": {
         "type": "object",

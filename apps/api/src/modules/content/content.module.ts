@@ -12,6 +12,7 @@ import { PrismaContentRepository } from './infrastructure/prisma-content.reposit
 import { S3AssetSigner } from './infrastructure/s3-asset.signer';
 import { GetFeedUseCase } from './application/get-feed.usecase';
 import { GetSoundscapeUseCase } from './application/get-soundscape.usecase';
+import { GetWeeklyReleaseUseCase } from './application/get-weekly-release.usecase';
 import { ContentController } from './presentation/content.controller';
 
 const providers: Provider[] = [
@@ -42,6 +43,12 @@ const providers: Provider[] = [
     inject: [CONTENT_REPOSITORY, ASSET_URL_SIGNER, ENV],
     useFactory: (repo: ContentRepository, signer: AssetUrlSigner, env: Env): GetSoundscapeUseCase =>
       new GetSoundscapeUseCase(repo, signer, env.MINIO_BUCKET_SOUNDSCAPES),
+  },
+  {
+    provide: GetWeeklyReleaseUseCase,
+    inject: [CONTENT_REPOSITORY],
+    useFactory: (repo: ContentRepository): GetWeeklyReleaseUseCase =>
+      new GetWeeklyReleaseUseCase(repo),
   },
 ];
 

@@ -1,4 +1,10 @@
-import type { ContentRepository, Preset, Soundscape, SoundscapeDetail } from '../domain/soundscape';
+import type {
+  ContentRepository,
+  Preset,
+  Soundscape,
+  SoundscapeDetail,
+  WeeklyRelease,
+} from '../domain/soundscape';
 import type { PrismaService } from '../../../shared/infra/prisma.service';
 
 interface SoundscapeRow {
@@ -44,6 +50,21 @@ export class PrismaContentRepository implements ContentRepository {
       soundscape: toSoundscape(row),
       presets,
       previewAssetKey: detailRow.preview_asset_key,
+    };
+  }
+
+  async findLatestWeeklyRelease(): Promise<WeeklyRelease | null> {
+    const release = await this.prisma.weekly_releases.findFirst({
+      orderBy: { week_start: 'desc' },
+    });
+    if (!release) return null;
+    const rows = await this.prisma.soundscapes.findMany({
+      where: { id: { in: release.soundscape_ids }, status: 'published' },
+    });
+    return {
+      weekStart: release.week_start.toISOString().slice(0, 10),
+      notes: release.notes,
+      soundscapes: rows.map(toSoundscape),
     };
   }
 }

@@ -153,6 +153,14 @@ model device_tokens {
   @@index([user_id], map: "idx_device_tokens_user")
 }
 
+model weekly_releases {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  week_start     DateTime @unique @db.Date
+  soundscape_ids String[] @default([]) @db.Uuid
+  notes          String?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+}
+
 enum ott_purpose {
   magic_link
   email_verify
