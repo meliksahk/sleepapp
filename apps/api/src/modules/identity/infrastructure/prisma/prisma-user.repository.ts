@@ -35,6 +35,12 @@ export class PrismaUserRepository implements UserRepository {
     });
     return device ? toUser(device.users) : null;
   }
+
+  async deleteById(id: string): Promise<void> {
+    // deleteMany: satır yoksa hata fırlatmaz (idempotent). FK ON DELETE CASCADE
+    // auth_devices/refresh_tokens/one_time_tokens/profiles/archetype_results'ı temizler.
+    await this.prisma.users.deleteMany({ where: { id } });
+  }
 }
 
 function toUser(row: { id: string; kind: string; roles: string[]; created_at: Date }): User {

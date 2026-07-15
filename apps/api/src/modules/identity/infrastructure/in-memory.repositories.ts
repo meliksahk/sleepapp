@@ -23,6 +23,13 @@ export class InMemoryUserRepository implements UserRepository {
     const id = this.userIdByFingerprint.get(fingerprint);
     return id ? (this.usersById.get(id) ?? null) : null;
   }
+
+  async deleteById(id: string): Promise<void> {
+    this.usersById.delete(id);
+    for (const [fp, uid] of this.userIdByFingerprint) {
+      if (uid === id) this.userIdByFingerprint.delete(fp);
+    }
+  }
 }
 
 export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {

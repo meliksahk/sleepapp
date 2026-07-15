@@ -29,6 +29,7 @@ import { PrismaRefreshTokenRepository } from './infrastructure/prisma/prisma-ref
 import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
+import { DeleteAccountUseCase } from './application/delete-account.usecase';
 import { AuthorizeUseCase } from './application/authorize.usecase';
 import { AuthController } from './presentation/auth.controller';
 import { AuthGuard } from './presentation/auth.guard';
@@ -108,6 +109,11 @@ const providers: Provider[] = [
       sessions: SessionMinter,
     ): RefreshSessionUseCase =>
       new RefreshSessionUseCase(refreshTokens, users, hasher, clock, sessions),
+  },
+  {
+    provide: DeleteAccountUseCase,
+    inject: [USER_REPOSITORY],
+    useFactory: (users: UserRepository): DeleteAccountUseCase => new DeleteAccountUseCase(users),
   },
   {
     provide: AuthorizeUseCase,
