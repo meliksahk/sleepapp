@@ -84,6 +84,35 @@ describe('Profile e2e (HTTP)', () => {
       .expect(400);
   });
 
+  it('geçersiz timezone 400 (IANA doğrulama)', async () => {
+    const { token } = await registerAndToken();
+    await request(app.getHttpServer())
+      .patch('/v1/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ timezone: 'Nowhere/Void' })
+      .expect(400);
+  });
+
+  it('geçersiz locale 400 (BCP-47 doğrulama)', async () => {
+    const { token } = await registerAndToken();
+    await request(app.getHttpServer())
+      .patch('/v1/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ locale: '!!' })
+      .expect(400);
+  });
+
+  it('geçerli locale (tr) kalıcı olur', async () => {
+    const { token } = await registerAndToken();
+    const res = await request(app.getHttpServer())
+      .patch('/v1/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ locale: 'tr', timezone: 'Europe/Istanbul' })
+      .expect(200);
+    expect(res.body.locale).toBe('tr');
+    expect(res.body.timezone).toBe('Europe/Istanbul');
+  });
+
   it("izolasyon: A'nın token'ı yalnızca A'nın profilini döndürür/günceller", async () => {
     const a = await registerAndToken();
     const b = await registerAndToken();

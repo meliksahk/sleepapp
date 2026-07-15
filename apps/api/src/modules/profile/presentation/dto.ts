@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBcp47Locale, IsIanaTimeZone } from './field.validators';
 
 const CHRONOTYPES = ['lion', 'bear', 'wolf', 'dolphin'] as const;
 
@@ -19,12 +20,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(10)
+  @IsBcp47Locale()
   locale?: string;
 
   @ApiPropertyOptional({ example: 'Europe/Istanbul', maxLength: 64 })
   @IsOptional()
   @IsString()
   @MaxLength(64)
+  @IsIanaTimeZone()
   timezone?: string;
 }
 
