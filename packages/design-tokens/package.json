@@ -1,0 +1,23 @@
+{
+  "name": "@nocta/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "description": "NOCTA tasarım token'ları — tek kaynak (docs/06). JSON → CSS vars + Tailwind preset + Dart theme.",
+  "type": "module",
+  "files": [
+    "build"
+  ],
+  "exports": {
+    "./css": "./build/css/tokens.css",
+    "./tailwind": "./build/tailwind/preset.cjs",
+    "./dart": "./build/dart/nocta_tokens.dart"
+  },
+  "scripts": {
+    "gen": "node scripts/build.mjs",
+    "build": "node scripts/build.mjs",
+    "clean": "node -e \"require('node:fs').rmSync('build',{recursive:true,force:true})\""
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.3.0"
+  }
+}
