@@ -2,6 +2,7 @@ import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
 import { PrismaService } from '../../shared/infra/prisma.service';
 import { ENV, loadEnv, type Env } from '../../shared/config/env';
+import { CACHE, type Cache } from '../../shared/cache/cache.port';
 import {
   ASSET_URL_SIGNER,
   CONTENT_REPOSITORY,
@@ -35,8 +36,9 @@ const providers: Provider[] = [
   },
   {
     provide: GetFeedUseCase,
-    inject: [CONTENT_REPOSITORY],
-    useFactory: (repo: ContentRepository): GetFeedUseCase => new GetFeedUseCase(repo),
+    inject: [CONTENT_REPOSITORY, CACHE],
+    useFactory: (repo: ContentRepository, cache: Cache): GetFeedUseCase =>
+      new GetFeedUseCase(repo, cache),
   },
   {
     provide: GetSoundscapeUseCase,

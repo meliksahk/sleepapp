@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './shared/infra/prisma.module';
+import { CacheModule } from './shared/cache/cache.module';
 import { RequestIdMiddleware } from './shared/http/request-id.middleware';
 import { HealthModule } from './shared/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
@@ -16,6 +17,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     // In-memory IP rate-limit (throttler). Dağıtık/Redis tabanlı limit B4 sertleşmede.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 30 }]),
     PrismaModule,
+    CacheModule,
     HealthModule,
     IdentityModule,
     ProfileModule,
