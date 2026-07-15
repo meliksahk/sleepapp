@@ -16,6 +16,10 @@ const EnvSchema = z.object({
   MAGIC_LINK_TTL: z.coerce.number().int().positive().default(900), // 15 dk
   MAGIC_LINK_BASE_URL: z.string().default('http://localhost:3003/auth/verify'),
 
+  // Paylaşım (sharing) — derin link + web kart URL'leri.
+  WEB_BASE_URL: z.string().default('https://nocta.app'),
+  APP_DEEPLINK_SCHEME: z.string().default('nocta'),
+
   // İstek gövdesi boyut limiti (DoS sertleşme). Payload'larımız küçük (auth/profil/cevaplar).
   MAX_REQUEST_BODY_BYTES: z.coerce.number().int().positive().default(65_536), // 64kb
 
