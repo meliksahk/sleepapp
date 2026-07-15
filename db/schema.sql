@@ -81,6 +81,19 @@ CREATE TABLE public.auth_devices (
 
 
 --
+-- Name: device_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.device_tokens (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    platform text NOT NULL,
+    token text NOT NULL,
+    last_seen_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: feature_flags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -246,6 +259,22 @@ ALTER TABLE ONLY public.auth_devices
 
 
 --
+-- Name: device_tokens device_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_tokens
+    ADD CONSTRAINT device_tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: device_tokens device_tokens_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_tokens
+    ADD CONSTRAINT device_tokens_token_key UNIQUE (token);
+
+
+--
 -- Name: feature_flags feature_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -388,6 +417,13 @@ CREATE INDEX idx_auth_devices_user ON public.auth_devices USING btree (user_id);
 
 
 --
+-- Name: idx_device_tokens_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_device_tokens_user ON public.device_tokens USING btree (user_id);
+
+
+--
 -- Name: idx_ott_user; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -436,6 +472,14 @@ ALTER TABLE ONLY public.archetype_results
 
 ALTER TABLE ONLY public.auth_devices
     ADD CONSTRAINT auth_devices_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: device_tokens device_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_tokens
+    ADD CONSTRAINT device_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -489,4 +533,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120005'),
     ('20260715120006'),
     ('20260715120007'),
-    ('20260715120008');
+    ('20260715120008'),
+    ('20260715120009');

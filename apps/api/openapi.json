@@ -537,6 +537,34 @@
         "summary": "Bekleme listesine katıl",
         "tags": ["waitlist"]
       }
+    },
+    "/v1/notifications/token": {
+      "post": {
+        "operationId": "NotificationController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Push cihaz token kaydı (idempotent)",
+        "tags": ["notification"]
+      }
     }
   },
   "info": {
@@ -942,6 +970,20 @@
           }
         },
         "required": ["email"]
+      },
+      "RegisterTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "APNs/FCM push token"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["ios", "android"]
+          }
+        },
+        "required": ["token", "platform"]
       }
     }
   }

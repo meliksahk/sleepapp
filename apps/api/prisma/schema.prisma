@@ -71,6 +71,7 @@ model users {
   deleted_at        DateTime?           @db.Timestamptz(6)
   archetype_results archetype_results[]
   auth_devices      auth_devices[]
+  device_tokens     device_tokens[]
   one_time_tokens   one_time_tokens[]
   profiles          profiles?
   refresh_tokens    refresh_tokens[]
@@ -139,6 +140,17 @@ model waitlist {
   email      String   @unique
   source     String?
   created_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model device_tokens {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String   @db.Uuid
+  platform     String
+  token        String   @unique
+  last_seen_at DateTime @default(now()) @db.Timestamptz(6)
+  users        users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_device_tokens_user")
 }
 
 enum ott_purpose {
