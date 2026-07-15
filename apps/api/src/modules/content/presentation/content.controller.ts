@@ -6,8 +6,9 @@ import {
   GetSoundscapeUseCase,
   type SoundscapeDetailResult,
 } from '../application/get-soundscape.usecase';
-import type { Soundscape } from '../domain/soundscape';
-import { SoundscapeDetailDto, SoundscapeDto } from './dto';
+import { GetWeeklyReleaseUseCase } from '../application/get-weekly-release.usecase';
+import type { Soundscape, WeeklyRelease } from '../domain/soundscape';
+import { SoundscapeDetailDto, SoundscapeDto, WeeklyReleaseDto } from './dto';
 
 @ApiTags('content')
 @ApiBearerAuth()
@@ -17,6 +18,7 @@ export class ContentController {
   constructor(
     private readonly getFeed: GetFeedUseCase,
     private readonly getSoundscape: GetSoundscapeUseCase,
+    private readonly getWeekly: GetWeeklyReleaseUseCase,
   ) {}
 
   @Get('feed')
@@ -25,6 +27,17 @@ export class ContentController {
   @ApiOkResponse({ type: [SoundscapeDto] })
   feed(@Query('archetype') archetype?: string): Promise<Soundscape[]> {
     return this.getFeed.execute(archetype);
+  }
+
+  @Get('weekly')
+  @ApiOperation({ summary: 'En güncel haftalık soundscape yayını' })
+  @ApiOkResponse({ type: WeeklyReleaseDto })
+  async weekly(): Promise<WeeklyRelease> {
+    const release = await this.getWeekly.execute();
+    if (!release) {
+      throw new NotFoundException({ code: 'no_release', message: 'Henüz haftalık yayın yok.' });
+    }
+    return release;
   }
 
   @Get('soundscapes/:slug')

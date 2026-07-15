@@ -276,6 +276,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/content/weekly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** En güncel haftalık soundscape yayını */
+        get: operations["ContentController_weekly"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/content/soundscapes/{slug}": {
         parameters: {
             query?: never;
@@ -480,6 +497,15 @@ export interface components {
             archetypeAffinity: string[];
             /** @example 1 */
             version: number;
+        };
+        WeeklyReleaseDto: {
+            /**
+             * @description Hafta başlangıcı (ISO tarih)
+             * @example 2026-07-13
+             */
+            weekStart: string;
+            notes: Record<string, never> | null;
+            soundscapes: components["schemas"]["SoundscapeDto"][];
         };
         PresetDto: {
             archetypeSlug: string;
@@ -893,6 +919,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SoundscapeDto"][];
+                };
+            };
+        };
+    };
+    ContentController_weekly: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeeklyReleaseDto"];
                 };
             };
         };

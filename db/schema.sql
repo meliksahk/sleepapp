@@ -235,6 +235,19 @@ CREATE TABLE public.web_archetype_results (
 
 
 --
+-- Name: weekly_releases; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.weekly_releases (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    week_start date NOT NULL,
+    soundscape_ids uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    notes text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: archetype_results archetype_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -403,6 +416,22 @@ ALTER TABLE ONLY public.web_archetype_results
 
 
 --
+-- Name: weekly_releases weekly_releases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.weekly_releases
+    ADD CONSTRAINT weekly_releases_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: weekly_releases weekly_releases_week_start_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.weekly_releases
+    ADD CONSTRAINT weekly_releases_week_start_key UNIQUE (week_start);
+
+
+--
 -- Name: idx_archetype_results_user; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -534,4 +563,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120006'),
     ('20260715120007'),
     ('20260715120008'),
-    ('20260715120009');
+    ('20260715120009'),
+    ('20260715120010');

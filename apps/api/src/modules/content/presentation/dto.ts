@@ -25,3 +25,10 @@ export class SoundscapeDetailDto {
   @ApiProperty({ nullable: true, description: 'Presigned önizleme URL (varsa)' })
   previewUrl!: string | null;
 }
+
+export class WeeklyReleaseDto {
+  @ApiProperty({ example: '2026-07-13', description: 'Hafta başlangıcı (ISO tarih)' })
+  weekStart!: string;
+  @ApiProperty({ nullable: true }) notes!: string | null;
+  @ApiProperty({ type: [SoundscapeDto] }) soundscapes!: SoundscapeDto[];
+}

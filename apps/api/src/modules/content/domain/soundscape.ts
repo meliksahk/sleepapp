@@ -50,9 +50,17 @@ export function sortByAffinity<T extends Soundscape>(
   return [...match, ...rest];
 }
 
+export interface WeeklyRelease {
+  readonly weekStart: string; // ISO date (YYYY-MM-DD)
+  readonly notes: string | null;
+  readonly soundscapes: readonly Soundscape[];
+}
+
 export interface ContentRepository {
   findPublished(): Promise<Soundscape[]>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
+  /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
+  findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;
 }
 
 export const CONTENT_REPOSITORY = Symbol('ContentRepository');
