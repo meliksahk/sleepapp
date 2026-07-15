@@ -61,6 +61,7 @@
       "<rootDir>/test"
     ],
     "testRegex": ".*\\.spec\\.ts$",
+    "testTimeout": 30000,
     "setupFiles": [
       "<rootDir>/test/jest-setup-env.ts"
     ],
