@@ -26,5 +26,19 @@ class NoctaApiClient {
     return Session.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Refresh token rotasyonu → yeni access + refresh (eski geçersizleşir).
+  /// Reuse/geçersiz token'da 401 → ApiException.
+  Future<Session> refresh(String refreshToken) async {
+    final res = await _client.post(
+      Uri.parse('$baseUrl/v1/auth/refresh'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({'refreshToken': refreshToken}),
+    );
+    if (res.statusCode != 200) {
+      throw ApiException(res.statusCode, res.body);
+    }
+    return Session.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   void close() => _client.close();
 }

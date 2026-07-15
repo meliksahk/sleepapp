@@ -37,4 +37,33 @@ void main() {
       throwsA(isA<ApiException>()),
     );
   });
+
+  test('refresh 200 → yeni Session parse eder, doğru uca gider', () async {
+    final mock = MockClient((req) async {
+      expect(req.method, 'POST');
+      expect(req.url.path, '/v1/auth/refresh');
+      final body = jsonDecode(req.body) as Map<String, dynamic>;
+      expect(body['refreshToken'], 'old-r');
+      return http.Response(
+        jsonEncode(<String, dynamic>{
+          'accessToken': 'new-a',
+          'refreshToken': 'new-r',
+          'accessTokenExpiresIn': 900,
+          'userId': 'u1',
+        }),
+        200,
+      );
+    });
+
+    final client = NoctaApiClient(baseUrl: 'http://x', client: mock);
+    final Session s = await client.refresh('old-r');
+    expect(s.accessToken, 'new-a');
+    expect(s.refreshToken, 'new-r');
+  });
+
+  test('refresh 200 dışı (reuse 401) → ApiException', () async {
+    final mock = MockClient((req) async => http.Response('unauthorized', 401));
+    final client = NoctaApiClient(baseUrl: 'http://x', client: mock);
+    expect(() => client.refresh('r'), throwsA(isA<ApiException>()));
+  });
 }
