@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../core/share/sharer.dart';
 import '../archetype_models.dart';
 import '../archetype_providers.dart';
 
@@ -140,15 +141,40 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
   }
 }
 
-class _ResultView extends StatelessWidget {
+class _ResultView extends ConsumerStatefulWidget {
   const _ResultView({required this.result});
 
   final ArchetypeResult result;
 
   @override
+  ConsumerState<_ResultView> createState() => _ResultViewState();
+}
+
+class _ResultViewState extends ConsumerState<_ResultView> {
+  bool _sharing = false;
+
+  Future<void> _share() async {
+    if (_sharing) return;
+    setState(() => _sharing = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final share = await ref.read(archetypeControllerProvider).fetchShare();
+      if (share == null) return;
+      await ref
+          .read(sharerProvider)
+          .share(ShareContent(text: share.title, url: share.webUrl));
+      messenger.showSnackBar(const SnackBar(content: Text('Link copied')));
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Could not share')));
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // slug → görünen ad ("deep-ocean" → "Deep Ocean").
-    final display = result.archetypeSlug
+    final display = widget.result.archetypeSlug
         .split('-')
         .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
@@ -169,6 +195,12 @@ class _ResultView extends StatelessWidget {
                 key: const Key('archetype-result'),
                 style: TextStyle(fontSize: NoctaFontSize.display, color: NoctaColors.inkPrimary),
               ),
+            ),
+            const SizedBox(height: NoctaSpace.s5),
+            NButton(
+              key: const Key('archetype-share'),
+              label: _sharing ? 'Sharing…' : 'Share my identity',
+              onPressed: _sharing ? null : _share,
             ),
           ],
         ),
