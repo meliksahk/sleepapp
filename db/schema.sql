@@ -172,6 +172,23 @@ CREATE TABLE public.schema_migrations (
 
 
 --
+-- Name: sleep_sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sleep_sessions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    started_at timestamp with time zone NOT NULL,
+    ended_at timestamp with time zone NOT NULL,
+    night_date date NOT NULL,
+    duration_minutes integer NOT NULL,
+    movement_events integer DEFAULT 0 NOT NULL,
+    sound_events integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: soundscapes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -352,6 +369,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: sleep_sessions sleep_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sleep_sessions
+    ADD CONSTRAINT sleep_sessions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: soundscapes soundscapes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -488,6 +513,13 @@ CREATE INDEX idx_soundscapes_status ON public.soundscapes USING btree (status);
 
 
 --
+-- Name: sleep_sessions_user_night_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX sleep_sessions_user_night_idx ON public.sleep_sessions USING btree (user_id, night_date DESC);
+
+
+--
 -- Name: archetype_results archetype_results_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -544,6 +576,14 @@ ALTER TABLE ONLY public.refresh_tokens
 
 
 --
+-- Name: sleep_sessions sleep_sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sleep_sessions
+    ADD CONSTRAINT sleep_sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
@@ -564,4 +604,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120007'),
     ('20260715120008'),
     ('20260715120009'),
-    ('20260715120010');
+    ('20260715120010'),
+    ('20260715120011');

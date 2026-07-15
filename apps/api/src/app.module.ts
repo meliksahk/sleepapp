@@ -12,6 +12,7 @@ import { ContentModule } from './modules/content/content.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { SharingModule } from './modules/sharing/sharing.module';
+import { SleepModule } from './modules/sleep/sleep.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SharingModule } from './modules/sharing/sharing.module';
     WaitlistModule,
     NotificationModule,
     SharingModule,
+    SleepModule,
   ],
 })
 export class AppModule implements NestModule {

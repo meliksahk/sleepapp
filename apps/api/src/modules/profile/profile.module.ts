@@ -29,5 +29,7 @@ const providers: Provider[] = [
   imports: [IdentityModule], // AuthGuard (public API)
   controllers: [ProfileController],
   providers,
+  // Modüller-arası okuma için dışa açılır (ör. sleep modülü timezone okur).
+  exports: [GetProfileUseCase],
 })
 export class ProfileModule {}
