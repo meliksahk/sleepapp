@@ -6,6 +6,7 @@ import { IdentityModule } from './modules/identity/identity.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { ArchetypeModule } from './modules/archetype/archetype.module';
 import { FlagsModule } from './modules/flags/flags.module';
+import { ContentModule } from './modules/content/content.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { FlagsModule } from './modules/flags/flags.module';
     ProfileModule,
     ArchetypeModule,
     FlagsModule,
+    ContentModule,
   ],
 })
 export class AppModule {}

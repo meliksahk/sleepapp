@@ -191,6 +191,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/content/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yayınlanmış soundscape feed (archetype affinity sıralı) */
+        get: operations["ContentController_feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/content/soundscapes/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yayınlanmış soundscape + preset detayları */
+        get: operations["ContentController_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -304,6 +338,33 @@ export interface components {
             version: number;
             /** Format: date-time */
             createdAt: string;
+        };
+        SoundscapeDto: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            titleI18n: {
+                [key: string]: string;
+            };
+            engineParams: {
+                [key: string]: unknown;
+            };
+            layerDefs: {
+                [key: string]: unknown;
+            } | null;
+            archetypeAffinity: string[];
+            /** @example 1 */
+            version: number;
+        };
+        PresetDto: {
+            archetypeSlug: string;
+            mixerState: {
+                [key: string]: unknown;
+            } | null;
+        };
+        SoundscapeDetailDto: {
+            soundscape: components["schemas"]["SoundscapeDto"];
+            presets: components["schemas"]["PresetDto"][];
         };
     };
     responses: never;
@@ -567,6 +628,48 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    ContentController_feed: {
+        parameters: {
+            query?: {
+                archetype?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SoundscapeDto"][];
+                };
+            };
+        };
+    };
+    ContentController_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SoundscapeDetailDto"];
                 };
             };
         };

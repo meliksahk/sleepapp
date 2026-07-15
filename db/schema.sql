@@ -16,6 +16,17 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: content_status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.content_status AS ENUM (
+    'draft',
+    'scheduled',
+    'published'
+);
+
+
+--
 -- Name: ott_purpose; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -97,6 +108,18 @@ CREATE TABLE public.one_time_tokens (
 
 
 --
+-- Name: presets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.presets (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    soundscape_id uuid NOT NULL,
+    archetype_slug text NOT NULL,
+    mixer_state jsonb NOT NULL
+);
+
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -131,6 +154,25 @@ CREATE TABLE public.refresh_tokens (
 
 CREATE TABLE public.schema_migrations (
     version character varying NOT NULL
+);
+
+
+--
+-- Name: soundscapes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.soundscapes (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    slug text NOT NULL,
+    title_i18n jsonb NOT NULL,
+    engine_params jsonb NOT NULL,
+    layer_defs jsonb NOT NULL,
+    archetype_affinity text[] DEFAULT '{}'::text[] NOT NULL,
+    status public.content_status DEFAULT 'draft'::public.content_status NOT NULL,
+    publish_at timestamp with time zone,
+    created_by uuid,
+    version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -214,6 +256,14 @@ ALTER TABLE ONLY public.one_time_tokens
 
 
 --
+-- Name: presets presets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.presets
+    ADD CONSTRAINT presets_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -243,6 +293,22 @@ ALTER TABLE ONLY public.refresh_tokens
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: soundscapes soundscapes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.soundscapes
+    ADD CONSTRAINT soundscapes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: soundscapes soundscapes_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.soundscapes
+    ADD CONSTRAINT soundscapes_slug_key UNIQUE (slug);
 
 
 --
@@ -299,6 +365,13 @@ CREATE INDEX idx_ott_user ON public.one_time_tokens USING btree (user_id);
 
 
 --
+-- Name: idx_presets_soundscape; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_presets_soundscape ON public.presets USING btree (soundscape_id);
+
+
+--
 -- Name: idx_refresh_tokens_family; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -310,6 +383,13 @@ CREATE INDEX idx_refresh_tokens_family ON public.refresh_tokens USING btree (fam
 --
 
 CREATE INDEX idx_refresh_tokens_user ON public.refresh_tokens USING btree (user_id);
+
+
+--
+-- Name: idx_soundscapes_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_soundscapes_status ON public.soundscapes USING btree (status);
 
 
 --
@@ -334,6 +414,14 @@ ALTER TABLE ONLY public.auth_devices
 
 ALTER TABLE ONLY public.one_time_tokens
     ADD CONSTRAINT one_time_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: presets presets_soundscape_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.presets
+    ADD CONSTRAINT presets_soundscape_id_fkey FOREIGN KEY (soundscape_id) REFERENCES public.soundscapes(id) ON DELETE CASCADE;
 
 
 --
@@ -367,4 +455,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120001'),
     ('20260715120002'),
     ('20260715120003'),
-    ('20260715120004');
+    ('20260715120004'),
+    ('20260715120005');

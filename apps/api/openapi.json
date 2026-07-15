@@ -330,6 +330,77 @@
         "summary": "Kullanıcı için değerlendirilmiş feature flag haritası",
         "tags": ["flags"]
       }
+    },
+    "/v1/content/feed": {
+      "get": {
+        "operationId": "ContentController_feed",
+        "parameters": [
+          {
+            "name": "archetype",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SoundscapeDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Yayınlanmış soundscape feed (archetype affinity sıralı)",
+        "tags": ["content"]
+      }
+    },
+    "/v1/content/soundscapes/{slug}": {
+      "get": {
+        "operationId": "ContentController_detail",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoundscapeDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Yayınlanmış soundscape + preset detayları",
+        "tags": ["content"]
+      }
     }
   },
   "info": {
@@ -590,6 +661,81 @@
           }
         },
         "required": ["shareSlug", "archetypeSlug", "scores", "version", "createdAt"]
+      },
+      "SoundscapeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "titleI18n": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "engineParams": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "layerDefs": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "archetypeAffinity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "titleI18n",
+          "engineParams",
+          "layerDefs",
+          "archetypeAffinity",
+          "version"
+        ]
+      },
+      "PresetDto": {
+        "type": "object",
+        "properties": {
+          "archetypeSlug": {
+            "type": "string"
+          },
+          "mixerState": {
+            "type": "object",
+            "additionalProperties": true,
+            "nullable": true
+          }
+        },
+        "required": ["archetypeSlug", "mixerState"]
+      },
+      "SoundscapeDetailDto": {
+        "type": "object",
+        "properties": {
+          "soundscape": {
+            "$ref": "#/components/schemas/SoundscapeDto"
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PresetDto"
+            }
+          }
+        },
+        "required": ["soundscape", "presets"]
       }
     }
   }
