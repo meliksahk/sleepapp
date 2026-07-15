@@ -12,13 +12,16 @@
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "keys:gen": "node scripts/gen-keys.mjs",
-    "openapi:export": "node scripts/export-openapi.mjs"
+    "openapi:export": "node scripts/export-openapi.mjs",
+    "db:pull": "prisma db pull && prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.5",
     "@nestjs/core": "^11.0.5",
     "@nestjs/platform-express": "^11.0.5",
     "@nestjs/swagger": "^11.0.3",
+    "@prisma/client": "^6.2.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "jose": "^5.9.6",
@@ -27,6 +30,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "dotenv": "^16.4.7",
+    "prisma": "^6.2.1",
     "@nestjs/cli": "^11.0.2",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.5",
@@ -51,6 +56,9 @@
       "<rootDir>/test"
     ],
     "testRegex": ".*\\.spec\\.ts$",
+    "setupFiles": [
+      "<rootDir>/test/jest-setup-env.ts"
+    ],
     "moduleFileExtensions": [
       "ts",
       "js",

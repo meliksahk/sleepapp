@@ -19,6 +19,23 @@ jobs:
   ts:
     name: TS workspace (turbo)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nocta
+          POSTGRES_PASSWORD: nocta_local_dev
+          POSTGRES_DB: nocta
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nocta -d nocta"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # integration testleri (Prisma) gerçek Postgres'e karşı koşar
+      DATABASE_URL: postgres://nocta:nocta_local_dev@localhost:5432/nocta?sslmode=disable
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +47,13 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      # SQL-first migration'ları uygula (dbmate docker image; host'a kurulum yok)
+      - name: DB migrate
+        run: |
+          docker run --rm --network host \
+            -v "${{ github.workspace }}/db:/db" \
+            -e DATABASE_URL="$DATABASE_URL" \
+            ghcr.io/amacneil/dbmate --wait up
       # Turbo cache path-filtering sağlar: değişmeyen paketler cache-hit (anında).
       - name: Lint / typecheck / test / build
         run: pnpm turbo run lint typecheck test build

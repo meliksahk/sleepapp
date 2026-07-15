@@ -34,7 +34,6 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - **Branch protection / CI-zorunlu kilit:** GitHub free planda private repoda API kapalı (bkz. DECISIONS_NEEDED).
 - **Dart API client (openapi-generator):** Java yok → ertelendi (bkz. BLOCKERS).
 - **argon2id şifre-hash:** identity v1'de şifre yok; F1 e-posta yükseltmede eklenecek (port hazır).
-- **Prisma repository adaptörleri:** F0'da in-memory; docker/DB gelince takılacak (hexagonal sınır hazır).
 - **Boundary lint (eslint-plugin-boundaries / import_lint):** paket kuruldu ama modül-içi kurallar henüz tanımlanmadı (F1).
 
 ---
@@ -43,13 +42,14 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Prisma repository adaptörleri:** in-memory yerine gerçek Postgres adaptörleri (`prisma db pull` şema senkronu) + testcontainers integration testleri; identity "A, B okuyamaz" testi DB düzeyinde.
-2. **Boundary lint kurallarını aktive et** (api modül sınırları + admin feature-sliced) — mimari bekçisi.
-3. **API modülleri:** profile, archetype (soru matrisi versiyonlu), content feed, flags (docs/02 B1).
-4. **web W0:** tek sayfa + `/test` archetype + bekleme listesi (docs/05).
-5. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard), AppShell, auth guard iskeleti.
+1. **Boundary lint kurallarını aktive et** (api modül sınırları + admin feature-sliced) — mimari bekçisi.
+2. **API modülleri:** profile, archetype (soru matrisi versiyonlu), content feed, flags (docs/02 B1).
+3. **web W0:** tek sayfa + `/test` archetype + bekleme listesi (docs/05).
+4. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard), AppShell, auth guard iskeleti.
+5. **identity v2:** e-posta ile hesaba yükseltme (magic link) + argon2id + hesap silme kaskadı (docs/02 B1).
 
 ## İterasyon geçmişi
 
 - **#0 (F0 kickoff):** tüm zemin (monorepo, tokens, API+identity, app iskeletleri, codegen, CI). 8 commit, CI yeşil.
-- **#1 (DB canlı doğrulama):** Docker stack ayağa kaldırıldı; migration gerçek Postgres'e uygulandı (down/up tersinir + seed doğrulandı); `db/schema.sql` üretildi. B-1 + B-2 çözüldü.
+- **#1 (DB canlı doğrulama):** Docker stack ayağa kaldırıldı; migration gerçek Postgres'e uygulandı (down/up tersinir + seed doğrulandı); `db/schema.sql` üretildi. B-1 + B-2 çözüldü. PR #1.
+- **#2 (Prisma adaptörleri):** identity in-memory → gerçek Postgres (Prisma). `prisma db pull` şema senkronu, PrismaService + Prisma repo'ları, env-based değil doğrudan wiring. Integration testleri (izolasyon dahil) + e2e artık gerçek DB'ye karşı; CI'a Postgres service + dbmate migrate eklendi. 16 test yeşil, curl ile uçtan uca kanıt (register→me→refresh→reuse 401, DB'de satırlar doğru).
