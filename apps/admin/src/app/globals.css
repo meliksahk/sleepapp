@@ -1,0 +1,12 @@
+/* Design token CSS değişkenleri (tek kaynak: packages/design-tokens). */
+@import '@nocta/design-tokens/css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-ink-primary);
+  font-family: var(--font-family-body);
+}

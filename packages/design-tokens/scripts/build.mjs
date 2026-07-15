@@ -3,6 +3,7 @@
 import StyleDictionary from 'style-dictionary';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -217,4 +218,16 @@ const sd = new StyleDictionary({
 });
 
 await sd.buildAllPlatforms();
+
+// Dart çıktısını Flutter uygulamasına da kopyala (mobil pnpm workspace dışında).
+const mobileDir = resolve(ROOT, '..', '..', 'apps', 'mobile', 'lib', 'core', 'design_system', 'generated');
+if (existsSync(resolve(ROOT, '..', '..', 'apps', 'mobile'))) {
+  mkdirSync(mobileDir, { recursive: true });
+  copyFileSync(
+    resolve(ROOT, 'build', 'dart', 'nocta_tokens.dart'),
+    resolve(mobileDir, 'nocta_tokens.dart'),
+  );
+  console.warn('[design-tokens] Dart token → apps/mobile/.../generated/nocta_tokens.dart');
+}
+
 console.warn('[design-tokens] build tamam → build/{css,tailwind,dart}');

@@ -1,0 +1,20 @@
+# NOCTA analyzer — strict-casts + strict-raw-types açık (CLAUDE.md §4).
+# dynamic'ten kaçın; üretilen kod (generated/) analizden hariç.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+    strict-inference: true
+  errors:
+    # Üretilen token dosyasındaki stil uyarıları hata sayılmaz.
+    constant_identifier_names: ignore
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    require_trailing_commas: true
