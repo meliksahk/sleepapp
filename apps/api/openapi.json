@@ -158,6 +158,91 @@
         "summary": "Kendi profilini güncelle (upsert)",
         "tags": ["profile"]
       }
+    },
+    "/v1/archetype/questions": {
+      "get": {
+        "operationId": "ArchetypeController_questions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Geçerli archetype soru matrisi",
+        "tags": ["archetype"]
+      }
+    },
+    "/v1/archetype/answers": {
+      "post": {
+        "operationId": "ArchetypeController_submit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAnswersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchetypeResultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cevapları gönder → skorla → sonucu kaydet",
+        "tags": ["archetype"]
+      }
+    },
+    "/v1/archetype/result": {
+      "get": {
+        "operationId": "ArchetypeController_result",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchetypeResultResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kullanıcının en yeni archetype sonucu",
+        "tags": ["archetype"]
+      }
     }
   },
   "info": {
@@ -290,6 +375,106 @@
             "maxLength": 64
           }
         }
+      },
+      "QuestionOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "archetype": {
+            "type": "string",
+            "enum": ["deep-ocean", "overthinker", "delta-drifter", "dawn-chaser"]
+          }
+        },
+        "required": ["id", "label", "archetype"]
+      },
+      "QuestionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionOptionDto"
+            }
+          }
+        },
+        "required": ["id", "prompt", "options"]
+      },
+      "QuestionsResponseDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "example": 1
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuestionDto"
+            }
+          }
+        },
+        "required": ["version", "questions"]
+      },
+      "SubmitAnswersDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "description": "Soru matrisi sürümü",
+            "example": 1
+          },
+          "answers": {
+            "type": "object",
+            "description": "questionId → optionId eşlemesi",
+            "example": {
+              "q1": "q1a",
+              "q2": "q2b"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["version", "answers"]
+      },
+      "ArchetypeResultResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "archetypeSlug": {
+            "type": "string",
+            "enum": ["deep-ocean", "overthinker", "delta-drifter", "dawn-chaser"]
+          },
+          "scores": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "version": {
+            "type": "number",
+            "example": 1
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": ["userId", "archetypeSlug", "scores", "version", "createdAt"]
       }
     }
   }
