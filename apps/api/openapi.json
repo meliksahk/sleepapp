@@ -100,6 +100,64 @@
         "summary": "Doğrulanmış kullanıcının kendi kimliği",
         "tags": ["auth"]
       }
+    },
+    "/v1/profile": {
+      "get": {
+        "operationId": "ProfileController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kimliği doğrulanmış kullanıcının kendi profili",
+        "tags": ["profile"]
+      },
+      "patch": {
+        "operationId": "ProfileController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kendi profilini güncelle (upsert)",
+        "tags": ["profile"]
+      }
     }
   },
   "info": {
@@ -181,6 +239,57 @@
           }
         },
         "required": ["userId", "roles"]
+      },
+      "ProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "object",
+            "nullable": true
+          },
+          "chronotype": {
+            "type": "object",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "example": "en"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "UTC"
+          }
+        },
+        "required": ["userId", "displayName", "chronotype", "locale", "timezone"]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "object",
+            "maxLength": 40,
+            "nullable": true
+          },
+          "chronotype": {
+            "type": "string",
+            "enum": ["lion", "bear", "wolf", "dolphin"],
+            "nullable": true
+          },
+          "locale": {
+            "type": "string",
+            "example": "en",
+            "maxLength": 10
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Europe/Istanbul",
+            "maxLength": 64
+          }
+        }
       }
     }
   }
