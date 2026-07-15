@@ -1,0 +1,76 @@
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import type { Response } from 'express';
+
+interface ProblemDetails {
+  type: string;
+  title: string;
+  status: number;
+  detail?: string;
+  /** Domain hata kodu (ör. refresh_token_reuse) — istemci dallanması için. */
+  code?: string;
+}
+
+const TITLES: Record<number, string> = {
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not Found',
+  409: 'Conflict',
+  413: 'Payload Too Large',
+  429: 'Too Many Requests',
+  500: 'Internal Server Error',
+  503: 'Service Unavailable',
+};
+
+/**
+ * Tüm hataları RFC 7807 problem+json'a çevirir (docs/02 §4). Controller'ların
+ * fırlattığı { code, message } korunur; kullanıcıya mesaj / loglanan teknik ayrım.
+ */
+@Catch()
+export class ProblemDetailsFilter implements ExceptionFilter {
+  private readonly logger = new Logger('Http');
+
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const res = host.switchToHttp().getResponse<Response>();
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let detail: string | undefined;
+    let code: string | undefined;
+
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const response = exception.getResponse();
+      if (typeof response === 'string') {
+        detail = response;
+      } else if (typeof response === 'object' && response !== null) {
+        const r = response as Record<string, unknown>;
+        code = typeof r.code === 'string' ? r.code : undefined;
+        if (typeof r.message === 'string') {
+          detail = r.message;
+        } else if (Array.isArray(r.message)) {
+          detail = r.message.join('; ');
+        }
+      }
+    } else {
+      // Beklenmeyen hata — teknik detay loglanır, istemciye sızmaz.
+      this.logger.error(exception instanceof Error ? exception.stack : String(exception));
+    }
+
+    const problem: ProblemDetails = {
+      type: 'about:blank',
+      title: TITLES[status] ?? 'Error',
+      status,
+      ...(detail ? { detail } : {}),
+      ...(code ? { code } : {}),
+    };
+
+    res.setHeader('Content-Type', 'application/problem+json');
+    res.status(status).send(JSON.stringify(problem));
+  }
+}
