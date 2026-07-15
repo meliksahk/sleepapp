@@ -39,8 +39,8 @@ const providers: Provider[] = [
   { provide: ID_GENERATOR, useClass: UuidIdGenerator },
   { provide: OPAQUE_TOKEN_GENERATOR, useClass: RandomOpaqueTokenGenerator },
   { provide: TOKEN_HASHER, useClass: Sha256TokenHasher },
-  // Gerçek Postgres adaptörleri (Prisma). In-memory sürümler yalnızca unit-test harness'ında.
-  PrismaService,
+  // Gerçek Postgres adaptörleri (Prisma). PrismaService global PrismaModule'den gelir.
+  // In-memory sürümler yalnızca unit-test harness'ında.
   {
     provide: USER_REPOSITORY,
     inject: [PrismaService],
