@@ -1,0 +1,20 @@
+{
+  "name": "@nocta/shared-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "OpenAPI'den üretilen TS tipleri (admin + web tüketir). Elle tip yazmak yasak (CLAUDE.md §2).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "gen": "openapi-typescript ../../apps/api/openapi.json -o src/generated/api.ts",
+    "build": "openapi-typescript ../../apps/api/openapi.json -o src/generated/api.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@nocta/config": "workspace:*",
+    "openapi-typescript": "^7.5.0",
+    "typescript": "^5.7.3"
+  }
+}

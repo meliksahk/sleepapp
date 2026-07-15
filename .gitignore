@@ -11,8 +11,8 @@ out/
 .turbo/
 *.tsbuildinfo
 
-# Generated code (codegen çıktıları — kaynak değil, üretim)
-packages/shared-types/src/generated/
+# Generated code (codegen çıktıları)
+# shared-types/generated: docs/01 gereği COMMIT edilir (CI drift kontrolü yapar) → ignore ETME.
 packages/design-tokens/build/
 apps/mobile/packages/api_client/lib/generated/
 
