@@ -175,6 +175,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/archetype/web/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public archetype soru matrisi (web testi render eder) */
+        get: operations["WebArchetypeController_questions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/archetype/web": {
         parameters: {
             query?: never;
@@ -254,6 +271,23 @@ export interface paths {
         get: operations["ContentController_detail"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bekleme listesine katıl */
+        post: operations["WaitlistController_join"];
         delete?: never;
         options?: never;
         head?: never;
@@ -425,6 +459,18 @@ export interface components {
             presets: components["schemas"]["PresetDto"][];
             /** @description Presigned önizleme URL (varsa) */
             previewUrl: Record<string, never> | null;
+        };
+        JoinWaitlistDto: {
+            /**
+             * Format: email
+             * @example user@example.com
+             */
+            email: string;
+            /**
+             * @description UTM/kaynak etiketi
+             * @example tiktok
+             */
+            source?: string;
         };
     };
     responses: never;
@@ -690,6 +736,25 @@ export interface operations {
             };
         };
     };
+    WebArchetypeController_questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionsResponseDto"];
+                };
+            };
+        };
+    };
     WebArchetypeController_score: {
         parameters: {
             query?: never;
@@ -794,6 +859,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SoundscapeDetailDto"];
                 };
+            };
+        };
+    };
+    WaitlistController_join: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinWaitlistDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

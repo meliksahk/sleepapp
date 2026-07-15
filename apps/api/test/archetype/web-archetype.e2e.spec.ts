@@ -38,6 +38,12 @@ describe('Web archetype e2e (HTTP, public)', () => {
     expect(fetched.body.archetypeSlug).toBe('deep-ocean');
   });
 
+  it('public GET questions → auth gerektirmez, version 1, 6 soru', async () => {
+    const res = await request(app.getHttpServer()).get('/v1/archetype/web/questions').expect(200);
+    expect(res.body.version).toBe(1);
+    expect(res.body.questions).toHaveLength(6);
+  });
+
   it('bilinmeyen slug → 404', async () => {
     await request(app.getHttpServer()).get('/v1/archetype/web/yok-boyle-slug').expect(404);
   });

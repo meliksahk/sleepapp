@@ -13,8 +13,10 @@ import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ScoreWebUseCase } from '../application/score-web.usecase';
 import { GetWebResultUseCase } from '../application/get-web-result.usecase';
+import { GetQuestionsUseCase } from '../application/get-questions.usecase';
 import { ArchetypeError } from '../domain/errors';
-import { SubmitAnswersDto, WebResultResponseDto } from './dto';
+import type { QuestionMatrix } from '../domain/archetype';
+import { QuestionsResponseDto, SubmitAnswersDto, WebResultResponseDto } from './dto';
 
 /**
  * Public web archetype testi (docs/05 W0) — kimlik GEREKMEZ. IP rate-limit
@@ -29,7 +31,15 @@ export class WebArchetypeController {
   constructor(
     private readonly scoreWeb: ScoreWebUseCase,
     private readonly getWebResult: GetWebResultUseCase,
+    private readonly getQuestions: GetQuestionsUseCase,
   ) {}
+
+  @Get('questions')
+  @ApiOperation({ summary: 'Public archetype soru matrisi (web testi render eder)' })
+  @ApiOkResponse({ type: QuestionsResponseDto })
+  questions(): QuestionMatrix {
+    return this.getQuestions.execute();
+  }
 
   @Post()
   @HttpCode(201)

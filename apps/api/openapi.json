@@ -325,6 +325,26 @@
         "tags": ["archetype"]
       }
     },
+    "/v1/archetype/web/questions": {
+      "get": {
+        "operationId": "WebArchetypeController_questions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Public archetype soru matrisi (web testi render eder)",
+        "tags": ["archetype-web"]
+      }
+    },
     "/v1/archetype/web": {
       "post": {
         "operationId": "WebArchetypeController_score",
@@ -481,6 +501,29 @@
         ],
         "summary": "Yayınlanmış soundscape + preset detayları",
         "tags": ["content"]
+      }
+    },
+    "/v1/waitlist": {
+      "post": {
+        "operationId": "WaitlistController_join",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinWaitlistDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "summary": "Bekleme listesine katıl",
+        "tags": ["waitlist"]
       }
     }
   },
@@ -871,6 +914,22 @@
           }
         },
         "required": ["soundscape", "presets", "previewUrl"]
+      },
+      "JoinWaitlistDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "source": {
+            "type": "string",
+            "example": "tiktok",
+            "description": "UTM/kaynak etiketi"
+          }
+        },
+        "required": ["email"]
       }
     }
   }
