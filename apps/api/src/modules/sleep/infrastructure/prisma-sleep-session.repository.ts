@@ -55,4 +55,12 @@ export class PrismaSleepSessionRepository implements SleepSessionRepository {
     });
     return rows.map(toDomain);
   }
+
+  async findByNight(userId: string, nightDate: string): Promise<SleepSession[]> {
+    const rows = await this.prisma.sleep_sessions.findMany({
+      where: { user_id: userId, night_date: new Date(`${nightDate}T00:00:00.000Z`) },
+      orderBy: { started_at: 'asc' },
+    });
+    return rows.map(toDomain);
+  }
 }

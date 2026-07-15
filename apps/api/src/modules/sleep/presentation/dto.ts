@@ -21,6 +21,19 @@ export class RecordSleepSessionDto {
   soundEvents!: number;
 }
 
+export class NightReportDto {
+  @ApiProperty({ example: '2026-07-15' }) nightDate!: string;
+  @ApiProperty({ example: 1 }) sessionCount!: number;
+  @ApiProperty({ example: 462 }) totalDurationMinutes!: number;
+  @ApiProperty({ example: 12 }) movementEvents!: number;
+  @ApiProperty({ example: 3 }) soundEvents!: number;
+  @ApiProperty({
+    example: 85,
+    description: 'Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil',
+  })
+  calmScore!: number;
+}
+
 export class SleepSessionDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'date-time' }) startedAt!: string;

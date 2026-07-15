@@ -4,6 +4,8 @@ import type { NewSleepSession, SleepSession } from './sleep-session.entity';
 export interface SleepSessionRepository {
   save(userId: string, session: NewSleepSession): Promise<SleepSession>;
   listRecentByUser(userId: string, limit: number): Promise<SleepSession[]>;
+  /** Belirli bir gecenin (YYYY-MM-DD) tüm oturumları. userId ile scope'lu. */
+  findByNight(userId: string, nightDate: string): Promise<SleepSession[]>;
 }
 
 /** Kullanıcı saat dilimini (başka modül) soyut okur — gece gruplaması için. */

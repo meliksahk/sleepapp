@@ -93,6 +93,50 @@ describe('Sleep e2e (HTTP)', () => {
       .expect(400);
   });
 
+  it('gece raporu: o gecenin oturumlarını özetler', async () => {
+    const t = await token();
+    await setTz(t, 'UTC');
+    // İki oturum aynı gece (UTC): 2026-03-10 22:00→2026-03-11 05:00 → gece 2026-03-10
+    await request(app.getHttpServer())
+      .post('/v1/sleep/sessions')
+      .set('Authorization', `Bearer ${t}`)
+      .send({
+        startedAt: '2026-03-10T22:00:00.000Z',
+        endedAt: '2026-03-11T04:00:00.000Z', // 360 dk
+        movementEvents: 4,
+        soundEvents: 2,
+      })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/report?night=2026-03-10')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.nightDate).toBe('2026-03-10');
+    expect(res.body.sessionCount).toBe(1);
+    expect(res.body.totalDurationMinutes).toBe(360);
+    expect(res.body.movementEvents).toBe(4);
+    expect(typeof res.body.calmScore).toBe('number');
+  });
+
+  it('oturum olmayan gece → 404 no_report', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/report?night=2000-01-01')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(404);
+    expect(res.body.code).toBe('no_report');
+  });
+
+  it('geçersiz night parametresi → 400 invalid_night', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/report?night=15-07-2026')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(400);
+    expect(res.body.code).toBe('invalid_night');
+  });
+
   it('liste yalnızca kendi oturumlarını döner (izolasyon)', async () => {
     const a = await token();
     const b = await token();

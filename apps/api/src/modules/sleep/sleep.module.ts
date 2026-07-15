@@ -11,6 +11,7 @@ import {
 import { PrismaSleepSessionRepository } from './infrastructure/prisma-sleep-session.repository';
 import { RecordSleepSessionUseCase } from './application/record-sleep-session.usecase';
 import { ListSleepSessionsUseCase } from './application/list-sleep-sessions.usecase';
+import { GetNightReportUseCase } from './application/get-night-report.usecase';
 import { SleepController } from './presentation/sleep.controller';
 
 const providers: Provider[] = [
@@ -42,6 +43,12 @@ const providers: Provider[] = [
     inject: [SLEEP_SESSION_REPOSITORY],
     useFactory: (repo: SleepSessionRepository): ListSleepSessionsUseCase =>
       new ListSleepSessionsUseCase(repo),
+  },
+  {
+    provide: GetNightReportUseCase,
+    inject: [SLEEP_SESSION_REPOSITORY],
+    useFactory: (repo: SleepSessionRepository): GetNightReportUseCase =>
+      new GetNightReportUseCase(repo),
   },
 ];
 
