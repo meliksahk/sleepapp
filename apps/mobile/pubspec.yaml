@@ -41,6 +41,8 @@ dependencies:
   go_router: ^14.6.2
   # HTTP — interim api client (üretilen Dart client Java-bloke, B-3; gelince değişecek).
   http: ^1.2.2
+  # Güvenli token saklama (mikrofon ham verisi gibi hassas veri değil; oturum token'ları).
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:
