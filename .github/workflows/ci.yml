@@ -10,6 +10,11 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# dorny/paths-filter PR'da değişen dosyaları GitHub API ile okur → pull-requests: read gerekir.
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   ts:
     name: TS workspace (turbo)
