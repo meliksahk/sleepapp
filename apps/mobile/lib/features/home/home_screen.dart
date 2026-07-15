@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../app/flavor.dart';
 import '../../core/design_system/design_system.dart';
 
@@ -36,7 +37,10 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: NoctaSpace.s5),
-              NButton(label: 'Find your sleep identity', onPressed: () {}),
+              NButton(
+                label: 'Find your sleep identity',
+                onPressed: () => context.push('/archetype'),
+              ),
             ],
           ),
         ),
