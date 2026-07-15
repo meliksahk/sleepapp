@@ -1,0 +1,6 @@
+packages:
+  - 'apps/api'
+  - 'apps/admin'
+  - 'apps/web'
+  - 'packages/*'
+  # apps/mobile bir Flutter projesidir; pnpm workspace'ine dahil değildir.

@@ -1,0 +1,23 @@
+# Tüm metin dosyaları için tutarlı LF satır sonu (Windows/macOS/Linux/CI parite)
+* text=auto eol=lf
+
+# Kabuk scriptleri ve husky hook'ları her zaman LF (CRLF shebang'i bozar)
+*.sh text eol=lf
+.husky/* text eol=lf
+
+# Dart/Flutter
+*.dart text eol=lf
+
+# Binary — dokunma
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.wav binary
+*.mp4 binary

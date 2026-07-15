@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Generated code (codegen çıktıları — kaynak değil, üretim)
+packages/shared-types/src/generated/
+packages/design-tokens/build/
+apps/mobile/packages/api_client/lib/generated/
+
+# Env & secrets — ASLA commit edilmez (CLAUDE.md §6)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Test & coverage
+coverage/
+.nyc_output/
+
+# Flutter
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/build/
+apps/mobile/.pub-cache/
+apps/mobile/.pub/
+apps/mobile/ios/Pods/
+apps/mobile/ios/.symlinks/
+apps/mobile/android/.gradle/
+apps/mobile/android/local.properties
+apps/mobile/**/GeneratedPluginRegistrant.*
+*.g.dart.bak
+
+# IDE & OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Docker/local data volumes
+db/data/
+.minio-data/
