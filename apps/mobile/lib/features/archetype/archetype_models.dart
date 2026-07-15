@@ -45,6 +45,31 @@ class ArchetypeQuestions {
       );
 }
 
+/// Paylaşım kartı (GET /v1/sharing/archetype). Web URL + deep link + kopya metin.
+class ArchetypeShare {
+  const ArchetypeShare({
+    required this.archetypeSlug,
+    required this.title,
+    required this.description,
+    required this.webUrl,
+    required this.deepLink,
+  });
+
+  final String archetypeSlug;
+  final String title;
+  final String description;
+  final String webUrl;
+  final String deepLink;
+
+  factory ArchetypeShare.fromJson(Map<String, dynamic> json) => ArchetypeShare(
+        archetypeSlug: json['archetypeSlug'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String,
+        webUrl: json['webUrl'] as String,
+        deepLink: json['deepLink'] as String,
+      );
+}
+
 class ArchetypeResult {
   const ArchetypeResult({
     required this.userId,

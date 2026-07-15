@@ -92,6 +92,28 @@ void main() {
     expect(await none.latestResult(), isNull);
   });
 
+  test('fetchShare: 200 → parse, 404 → null', () async {
+    final ok = await _build((req) async {
+      expect(req.url.path, '/v1/sharing/archetype');
+      return http.Response(
+        jsonEncode(<String, dynamic>{
+          'archetypeSlug': 'deep-ocean',
+          'title': 'My sleep identity is Deep Ocean',
+          'description': 'Take the NOCTA sleep ritual test to discover yours.',
+          'webUrl': 'https://nocta.app/a/deep-ocean',
+          'deepLink': 'nocta://a/deep-ocean',
+        }),
+        200,
+      );
+    });
+    final share = await ok.fetchShare();
+    expect(share?.webUrl, 'https://nocta.app/a/deep-ocean');
+    expect(share?.deepLink, 'nocta://a/deep-ocean');
+
+    final none = await _build((req) async => http.Response('not found', 404));
+    expect(await none.fetchShare(), isNull);
+  });
+
   test('401 → otomatik refresh + retry (authorizedRequest üzerinden)', () async {
     var refreshed = false;
     var questionsCalls = 0;

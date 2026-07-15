@@ -33,6 +33,16 @@ class ArchetypeController {
     return ArchetypeResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Paylaşım kartı (kullanıcının sonucundan). Sonuç yoksa (404) null döner.
+  Future<ArchetypeShare?> fetchShare() async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed('/v1/sharing/archetype', token),
+    );
+    if (res.statusCode == 404) return null;
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return ArchetypeShare.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   /// En son sonuç; henüz test yapılmadıysa (404) null döner.
   Future<ArchetypeResult?> latestResult() async {
     final res = await _auth.authorizedRequest(
