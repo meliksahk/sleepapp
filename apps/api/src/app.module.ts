@@ -11,6 +11,7 @@ import { FlagsModule } from './modules/flags/flags.module';
 import { ContentModule } from './modules/content/content.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { SharingModule } from './modules/sharing/sharing.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     ContentModule,
     WaitlistModule,
     NotificationModule,
+    SharingModule,
   ],
 })
 export class AppModule implements NestModule {
