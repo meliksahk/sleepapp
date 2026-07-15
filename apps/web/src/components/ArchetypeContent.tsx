@@ -1,6 +1,10 @@
 import type { ArchetypeContent as Archetype } from '@/content/archetypes';
+import { ShareButton } from '@/components/ShareButton';
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nocta.app';
 
 export function ArchetypeContent({ archetype }: { archetype: Archetype }) {
+  const shareUrl = `${SITE_URL}/a/${archetype.slug}`;
   return (
     <article className="mx-auto max-w-2xl p-5">
       <p className="text-caption uppercase tracking-widest text-ink-secondary">Sleep Identity</p>
@@ -23,12 +27,15 @@ export function ArchetypeContent({ archetype }: { archetype: Archetype }) {
         ))}
       </ul>
 
-      <a
-        href="/test"
-        className="mt-8 inline-block rounded-button bg-accent-aurora px-5 py-3 text-bg-base"
-      >
-        Take the sleep identity test
-      </a>
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href="/test"
+          className="inline-block rounded-button bg-accent-aurora px-5 py-3 text-bg-base"
+        >
+          Take the sleep identity test
+        </a>
+        <ShareButton title={`My sleep identity is ${archetype.name}`} url={shareUrl} />
+      </div>
     </article>
   );
 }
