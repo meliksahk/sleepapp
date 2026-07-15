@@ -42,6 +42,21 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: archetype_results; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.archetype_results (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    archetype_slug text NOT NULL,
+    answers jsonb NOT NULL,
+    scores jsonb NOT NULL,
+    version integer NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: auth_devices; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -121,6 +136,14 @@ CREATE TABLE public.users (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     deleted_at timestamp with time zone
 );
+
+
+--
+-- Name: archetype_results archetype_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.archetype_results
+    ADD CONSTRAINT archetype_results_pkey PRIMARY KEY (id);
 
 
 --
@@ -204,6 +227,13 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: idx_archetype_results_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_archetype_results_user ON public.archetype_results USING btree (user_id, created_at DESC);
+
+
+--
 -- Name: idx_auth_devices_user; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -229,6 +259,14 @@ CREATE INDEX idx_refresh_tokens_family ON public.refresh_tokens USING btree (fam
 --
 
 CREATE INDEX idx_refresh_tokens_user ON public.refresh_tokens USING btree (user_id);
+
+
+--
+-- Name: archetype_results archetype_results_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.archetype_results
+    ADD CONSTRAINT archetype_results_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -275,4 +313,5 @@ ALTER TABLE ONLY public.refresh_tokens
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20260715120001');
+    ('20260715120001'),
+    ('20260715120002');

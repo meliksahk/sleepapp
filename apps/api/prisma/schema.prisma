@@ -59,19 +59,33 @@ model schema_migrations {
 }
 
 model users {
-  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  kind              user_kind         @default(anonymous)
-  email             String?           @unique
-  email_verified_at DateTime?         @db.Timestamptz(6)
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind              user_kind           @default(anonymous)
+  email             String?             @unique
+  email_verified_at DateTime?           @db.Timestamptz(6)
   password_hash     String?
   totp_secret       String?
-  roles             String[]          @default([])
-  created_at        DateTime          @default(now()) @db.Timestamptz(6)
-  deleted_at        DateTime?         @db.Timestamptz(6)
+  roles             String[]            @default([])
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at        DateTime?           @db.Timestamptz(6)
+  archetype_results archetype_results[]
   auth_devices      auth_devices[]
   one_time_tokens   one_time_tokens[]
   profiles          profiles?
   refresh_tokens    refresh_tokens[]
+}
+
+model archetype_results {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  archetype_slug String
+  answers        Json
+  scores         Json
+  version        Int
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  users          users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id, created_at(sort: Desc)], map: "idx_archetype_results_user")
 }
 
 enum ott_purpose {

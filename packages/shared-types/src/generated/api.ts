@@ -89,6 +89,57 @@ export interface paths {
         patch: operations["ProfileController_update"];
         trace?: never;
     };
+    "/v1/archetype/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Geçerli archetype soru matrisi */
+        get: operations["ArchetypeController_questions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/archetype/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cevapları gönder → skorla → sonucu kaydet */
+        post: operations["ArchetypeController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/archetype/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanıcının en yeni archetype sonucu */
+        get: operations["ArchetypeController_result"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -143,6 +194,52 @@ export interface components {
             locale?: string;
             /** @example Europe/Istanbul */
             timezone?: string;
+        };
+        QuestionOptionDto: {
+            id: string;
+            label: string;
+            /** @enum {string} */
+            archetype: "deep-ocean" | "overthinker" | "delta-drifter" | "dawn-chaser";
+        };
+        QuestionDto: {
+            id: string;
+            prompt: string;
+            options: components["schemas"]["QuestionOptionDto"][];
+        };
+        QuestionsResponseDto: {
+            /** @example 1 */
+            version: number;
+            questions: components["schemas"]["QuestionDto"][];
+        };
+        SubmitAnswersDto: {
+            /**
+             * @description Soru matrisi sürümü
+             * @example 1
+             */
+            version: number;
+            /**
+             * @description questionId → optionId eşlemesi
+             * @example {
+             *       "q1": "q1a",
+             *       "q2": "q2b"
+             *     }
+             */
+            answers: {
+                [key: string]: string;
+            };
+        };
+        ArchetypeResultResponseDto: {
+            /** Format: uuid */
+            userId: string;
+            /** @enum {string} */
+            archetypeSlug: "deep-ocean" | "overthinker" | "delta-drifter" | "dawn-chaser";
+            scores: {
+                [key: string]: number;
+            };
+            /** @example 1 */
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
         };
     };
     responses: never;
@@ -280,6 +377,67 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileResponseDto"];
+                };
+            };
+        };
+    };
+    ArchetypeController_questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionsResponseDto"];
+                };
+            };
+        };
+    };
+    ArchetypeController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAnswersDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchetypeResultResponseDto"];
+                };
+            };
+        };
+    };
+    ArchetypeController_result: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchetypeResultResponseDto"];
                 };
             };
         };
