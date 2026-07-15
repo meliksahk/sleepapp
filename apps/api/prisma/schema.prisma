@@ -97,6 +97,14 @@ model web_archetype_results {
   created_at     DateTime @default(now()) @db.Timestamptz(6)
 }
 
+model feature_flags {
+  key         String   @id
+  description String?
+  rules       Json     @default("{\"enabled\": false}")
+  updated_by  String?  @db.Uuid
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+}
+
 enum ott_purpose {
   magic_link
   email_verify

@@ -70,6 +70,19 @@ CREATE TABLE public.auth_devices (
 
 
 --
+-- Name: feature_flags; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.feature_flags (
+    key text NOT NULL,
+    description text,
+    rules jsonb DEFAULT '{"enabled": false}'::jsonb NOT NULL,
+    updated_by uuid,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: one_time_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -174,6 +187,14 @@ ALTER TABLE ONLY public.auth_devices
 
 ALTER TABLE ONLY public.auth_devices
     ADD CONSTRAINT auth_devices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: feature_flags feature_flags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.feature_flags
+    ADD CONSTRAINT feature_flags_pkey PRIMARY KEY (key);
 
 
 --
@@ -345,4 +366,5 @@ ALTER TABLE ONLY public.refresh_tokens
 INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120001'),
     ('20260715120002'),
-    ('20260715120003');
+    ('20260715120003'),
+    ('20260715120004');

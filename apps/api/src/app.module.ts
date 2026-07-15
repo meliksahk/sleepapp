@@ -5,6 +5,7 @@ import { HealthModule } from './shared/health/health.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { ArchetypeModule } from './modules/archetype/archetype.module';
+import { FlagsModule } from './modules/flags/flags.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ArchetypeModule } from './modules/archetype/archetype.module';
     IdentityModule,
     ProfileModule,
     ArchetypeModule,
+    FlagsModule,
   ],
 })
 export class AppModule {}
