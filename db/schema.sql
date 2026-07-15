@@ -196,6 +196,18 @@ CREATE TABLE public.users (
 
 
 --
+-- Name: waitlist; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.waitlist (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    email text NOT NULL,
+    source text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: web_archetype_results; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -330,6 +342,22 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: waitlist waitlist_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.waitlist
+    ADD CONSTRAINT waitlist_email_key UNIQUE (email);
+
+
+--
+-- Name: waitlist waitlist_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.waitlist
+    ADD CONSTRAINT waitlist_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: web_archetype_results web_archetype_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -460,4 +488,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120004'),
     ('20260715120005'),
     ('20260715120006'),
-    ('20260715120007');
+    ('20260715120007'),
+    ('20260715120008');
