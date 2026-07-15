@@ -22,4 +22,6 @@ export class PresetDto {
 export class SoundscapeDetailDto {
   @ApiProperty({ type: SoundscapeDto }) soundscape!: SoundscapeDto;
   @ApiProperty({ type: [PresetDto] }) presets!: PresetDto[];
+  @ApiProperty({ nullable: true, description: 'Presigned önizleme URL (varsa)' })
+  previewUrl!: string | null;
 }

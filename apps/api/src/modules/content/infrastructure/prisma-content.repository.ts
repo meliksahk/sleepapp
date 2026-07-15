@@ -14,6 +14,9 @@ interface PresetRow {
   archetype_slug: string;
   mixer_state: unknown;
 }
+interface SoundscapeDetailRow extends SoundscapeRow {
+  preview_asset_key: string | null;
+}
 
 export class PrismaContentRepository implements ContentRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -32,11 +35,16 @@ export class PrismaContentRepository implements ContentRepository {
       include: { presets: true },
     });
     if (!row) return null;
+    const detailRow = row as unknown as SoundscapeDetailRow;
     const presets: Preset[] = row.presets.map((p: PresetRow) => ({
       archetypeSlug: p.archetype_slug,
       mixerState: p.mixer_state,
     }));
-    return { soundscape: toSoundscape(row), presets };
+    return {
+      soundscape: toSoundscape(row),
+      presets,
+      previewAssetKey: detailRow.preview_asset_key,
+    };
   }
 }
 

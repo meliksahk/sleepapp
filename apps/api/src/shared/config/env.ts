@@ -17,6 +17,13 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
+
+  // MinIO / S3 (presigned URL üretimi offline; canlı bağlantı erişimde doğrulanır)
+  MINIO_ENDPOINT: z.string().default('http://localhost:9000'),
+  MINIO_ROOT_USER: z.string().default('nocta'),
+  MINIO_ROOT_PASSWORD: z.string().default('nocta_local_dev'),
+  MINIO_REGION: z.string().default('us-east-1'),
+  MINIO_BUCKET_SOUNDSCAPES: z.string().default('soundscape-assets'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

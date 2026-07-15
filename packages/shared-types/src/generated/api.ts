@@ -365,6 +365,8 @@ export interface components {
         SoundscapeDetailDto: {
             soundscape: components["schemas"]["SoundscapeDto"];
             presets: components["schemas"]["PresetDto"][];
+            /** @description Presigned önizleme URL (varsa) */
+            previewUrl: Record<string, never> | null;
         };
     };
     responses: never;

@@ -733,9 +733,14 @@
             "items": {
               "$ref": "#/components/schemas/PresetDto"
             }
+          },
+          "previewUrl": {
+            "type": "object",
+            "nullable": true,
+            "description": "Presigned önizleme URL (varsa)"
           }
         },
-        "required": ["soundscape", "presets"]
+        "required": ["soundscape", "presets", "previewUrl"]
       }
     }
   }

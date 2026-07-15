@@ -2,8 +2,11 @@ import { Controller, Get, NotFoundException, Param, Query, UseGuards } from '@ne
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '../../identity';
 import { GetFeedUseCase } from '../application/get-feed.usecase';
-import { GetSoundscapeUseCase } from '../application/get-soundscape.usecase';
-import type { Soundscape, SoundscapeDetail } from '../domain/soundscape';
+import {
+  GetSoundscapeUseCase,
+  type SoundscapeDetailResult,
+} from '../application/get-soundscape.usecase';
+import type { Soundscape } from '../domain/soundscape';
 import { SoundscapeDetailDto, SoundscapeDto } from './dto';
 
 @ApiTags('content')
@@ -27,7 +30,7 @@ export class ContentController {
   @Get('soundscapes/:slug')
   @ApiOperation({ summary: 'Yayınlanmış soundscape + preset detayları' })
   @ApiOkResponse({ type: SoundscapeDetailDto })
-  async detail(@Param('slug') slug: string): Promise<SoundscapeDetail> {
+  async detail(@Param('slug') slug: string): Promise<SoundscapeDetailResult> {
     const found = await this.getSoundscape.execute(slug);
     if (!found) {
       throw new NotFoundException({ code: 'not_found', message: 'Soundscape bulunamadı.' });
