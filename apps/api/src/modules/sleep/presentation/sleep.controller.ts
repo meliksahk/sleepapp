@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  NotFoundException,
   Post,
   Query,
   UseGuards,
@@ -19,9 +20,12 @@ import {
 import { AuthGuard, CurrentUser, type AccessTokenClaims } from '../../identity';
 import { RecordSleepSessionUseCase } from '../application/record-sleep-session.usecase';
 import { ListSleepSessionsUseCase } from '../application/list-sleep-sessions.usecase';
+import { GetNightReportUseCase } from '../application/get-night-report.usecase';
 import { SleepError } from '../domain/errors';
 import type { SleepSession } from '../domain/sleep-session.entity';
-import { RecordSleepSessionDto, SleepSessionDto } from './dto';
+import { NightReportDto, RecordSleepSessionDto, SleepSessionDto } from './dto';
+
+const NIGHT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function toDto(s: SleepSession): SleepSessionDto {
   return {
@@ -43,6 +47,7 @@ export class SleepController {
   constructor(
     private readonly record: RecordSleepSessionUseCase,
     private readonly list: ListSleepSessionsUseCase,
+    private readonly report: GetNightReportUseCase,
   ) {}
 
   @Post('sessions')
@@ -80,5 +85,26 @@ export class SleepController {
     const parsed = limit ? Number.parseInt(limit, 10) : undefined;
     const sessions = await this.list.execute(user.sub, Number.isNaN(parsed) ? undefined : parsed);
     return sessions.map(toDto);
+  }
+
+  @Get('report')
+  @ApiOperation({ summary: 'Bir gecenin uyku raporu (özet + paylaşılabilir kart verisi)' })
+  @ApiQuery({ name: 'night', required: true, example: '2026-07-15' })
+  @ApiOkResponse({ type: NightReportDto })
+  async nightReport(
+    @CurrentUser() user: AccessTokenClaims,
+    @Query('night') night?: string,
+  ): Promise<NightReportDto> {
+    if (!night || !NIGHT_DATE_RE.test(night)) {
+      throw new BadRequestException({
+        code: 'invalid_night',
+        message: 'night parametresi YYYY-MM-DD olmalı.',
+      });
+    }
+    const report = await this.report.execute(user.sub, night);
+    if (!report) {
+      throw new NotFoundException({ code: 'no_report', message: 'Bu gece için oturum yok.' });
+    }
+    return report;
   }
 }
