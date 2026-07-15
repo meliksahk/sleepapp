@@ -88,6 +88,15 @@ model archetype_results {
   @@index([user_id, created_at(sort: Desc)], map: "idx_archetype_results_user")
 }
 
+model web_archetype_results {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  share_slug     String   @unique
+  archetype_slug String
+  scores         Json
+  version        Int
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+}
+
 enum ott_purpose {
   magic_link
   email_verify

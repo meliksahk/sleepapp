@@ -139,6 +139,20 @@ CREATE TABLE public.users (
 
 
 --
+-- Name: web_archetype_results; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.web_archetype_results (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    share_slug text NOT NULL,
+    archetype_slug text NOT NULL,
+    scores jsonb NOT NULL,
+    version integer NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: archetype_results archetype_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -224,6 +238,22 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: web_archetype_results web_archetype_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.web_archetype_results
+    ADD CONSTRAINT web_archetype_results_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: web_archetype_results web_archetype_results_share_slug_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.web_archetype_results
+    ADD CONSTRAINT web_archetype_results_share_slug_key UNIQUE (share_slug);
 
 
 --
@@ -314,4 +344,5 @@ ALTER TABLE ONLY public.refresh_tokens
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120001'),
-    ('20260715120002');
+    ('20260715120002'),
+    ('20260715120003');

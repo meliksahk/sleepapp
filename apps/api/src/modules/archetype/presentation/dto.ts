@@ -40,3 +40,13 @@ export class ArchetypeResultResponseDto {
   @ApiProperty({ example: 1 }) version!: number;
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
 }
+
+export class WebResultResponseDto {
+  @ApiProperty({ description: 'Paylasim slug (/a/{...})' }) shareSlug!: string;
+  @ApiProperty({ enum: ['deep-ocean', 'overthinker', 'delta-drifter', 'dawn-chaser'] })
+  archetypeSlug!: string;
+  @ApiProperty({ type: 'object', additionalProperties: { type: 'number' } })
+  scores!: Record<string, number>;
+  @ApiProperty({ example: 1 }) version!: number;
+  @ApiProperty({ format: 'date-time' }) createdAt!: Date;
+}
