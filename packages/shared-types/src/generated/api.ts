@@ -65,7 +65,8 @@ export interface paths {
         get: operations["AuthController_me"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Hesabı sil (kaskad — tüm ilişkili veri temizlenir) */
+        delete: operations["AuthController_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -463,6 +464,23 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MeResponseDto"];
                 };
+            };
+        };
+    };
+    AuthController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

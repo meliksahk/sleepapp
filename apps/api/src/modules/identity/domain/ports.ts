@@ -40,6 +40,8 @@ export interface UserRepository {
   createWithDevice(user: User, device: DeviceRegistration): Promise<void>;
   findById(id: string): Promise<User | null>;
   findByDeviceFingerprint(fingerprint: string): Promise<User | null>;
+  /** Hesabı sil — FK kaskadı ile tüm ilişkili veri temizlenir (App Store zorunluluğu). */
+  deleteById(id: string): Promise<void>;
 }
 
 /** refresh_tokens erişimi — rotation + reuse-detection için. */

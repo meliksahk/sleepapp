@@ -99,6 +99,22 @@
         ],
         "summary": "Doğrulanmış kullanıcının kendi kimliği",
         "tags": ["auth"]
+      },
+      "delete": {
+        "operationId": "AuthController_remove",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hesabı sil (kaskad — tüm ilişkili veri temizlenir)",
+        "tags": ["auth"]
       }
     },
     "/v1/profile": {

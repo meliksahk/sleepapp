@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Post,
@@ -17,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { RegisterDeviceUseCase } from '../application/register-device.usecase';
 import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
+import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { IdentityError } from '../domain/errors';
 import type { AccessTokenClaims } from '../domain/user.entity';
 import { AuthGuard } from './auth.guard';
@@ -29,6 +31,7 @@ export class AuthController {
   constructor(
     private readonly registerDevice: RegisterDeviceUseCase,
     private readonly refreshSession: RefreshSessionUseCase,
+    private readonly deleteAccount: DeleteAccountUseCase,
   ) {}
 
   @Post('device')
@@ -63,5 +66,15 @@ export class AuthController {
   me(@CurrentUser() user: AccessTokenClaims): MeResponseDto {
     // DAİMA token'daki sub — istemciden id kabul edilmez.
     return { userId: user.sub, roles: [...user.roles] };
+  }
+
+  @Delete('me')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Hesabı sil (kaskad — tüm ilişkili veri temizlenir)' })
+  async remove(@CurrentUser() user: AccessTokenClaims): Promise<void> {
+    // Yalnızca kendi hesabını siler — scope daima token sub.
+    await this.deleteAccount.execute(user.sub);
   }
 }
