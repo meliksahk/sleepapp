@@ -1,6 +1,7 @@
 import type {
   AccessTokenClaims,
   DeviceRegistration,
+  OneTimeTokenRecord,
   RefreshTokenRecord,
   User,
 } from './user.entity';
@@ -40,8 +41,23 @@ export interface UserRepository {
   createWithDevice(user: User, device: DeviceRegistration): Promise<void>;
   findById(id: string): Promise<User | null>;
   findByDeviceFingerprint(fingerprint: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
+  /** Anonim kullanıcıyı e-posta ile 'registered'a yükseltir. */
+  upgradeToEmail(userId: string, email: string, verifiedAt: Date): Promise<void>;
   /** Hesabı sil — FK kaskadı ile tüm ilişkili veri temizlenir (App Store zorunluluğu). */
   deleteById(id: string): Promise<void>;
+}
+
+/** one_time_tokens erişimi — magic link / e-posta doğrulama. */
+export interface OneTimeTokenRepository {
+  save(record: OneTimeTokenRecord): Promise<void>;
+  findByHash(tokenHash: string): Promise<OneTimeTokenRecord | null>;
+  markUsed(id: string, usedAt: Date): Promise<void>;
+}
+
+/** E-posta gönderimi (adaptör; sağlayıcı tek satırla değişir — docs/02 §3). */
+export interface Mailer {
+  sendMagicLink(email: string, link: string): Promise<void>;
 }
 
 /** refresh_tokens erişimi — rotation + reuse-detection için. */
@@ -60,3 +76,5 @@ export const TOKEN_HASHER = Symbol('TokenHasher');
 export const ACCESS_TOKEN_SIGNER = Symbol('AccessTokenSigner');
 export const USER_REPOSITORY = Symbol('UserRepository');
 export const REFRESH_TOKEN_REPOSITORY = Symbol('RefreshTokenRepository');
+export const ONE_TIME_TOKEN_REPOSITORY = Symbol('OneTimeTokenRepository');
+export const MAILER = Symbol('Mailer');

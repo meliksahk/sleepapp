@@ -42,11 +42,12 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **identity v2 — e-posta yükseltme:** magic link (log-mailer, SMTP ertelendi) + argon2id (hesap silme ✓ iter #10). SMTP sağlayıcı anahtarı → DECISIONS_NEEDED.
-2. **admin feature-sliced boundary lint** (api boundary ✓ iter #4; admin A0 ile birlikte).
-3. **web W0:** tek sayfa + `/test` archetype + bekleme listesi (docs/05).
-4. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard), AppShell, auth guard iskeleti.
-5. **identity v2:** e-posta ile hesaba yükseltme (magic link) + argon2id + hesap silme kaskadı (docs/02 B1).
+1. **admin A0:** Next.js panel — `packages/ui` başlangıcı (Button/Input/DataTable/StatCard/EmptyState) + AppShell + auth guard iskeleti (docs/03).
+2. **web W0:** tek sayfa + `/test` archetype (public web ucunu tüketir) + bekleme listesi (docs/05).
+3. **admin feature-sliced boundary lint** (api boundary ✓ iter #4; admin A0 ile birlikte).
+4. **web W0:** tek sayfa + `/test` archetype + bekleme listesi (docs/05).
+5. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard), AppShell, auth guard iskeleti.
+6. **identity v2:** e-posta ile hesaba yükseltme (magic link) + argon2id + hesap silme kaskadı (docs/02 B1).
 
 ## İterasyon geçmişi
 
@@ -60,4 +61,5 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - **#7 (flags modülü):** `GET /v1/flags` (kimlik doğrulamalı) → değerlendirilmiş flag haritası. Saf domain `evaluateFlag` (enabled + deterministik rollout kovası) + CryptoBucketHasher (sha256, 0-99). `feature_flags` tablosu (rules jsonb). 43 test yeşil (değerlendirme + kova unit + e2e: 401/enabled/rollout 0/100). Not: flag YAZMA admin modülünde (B3); tam kural motoru (platform/sürüm/archetype segmenti) A4. PR #7.
 - **#8 (content modülü):** `GET /v1/content/feed?archetype=` (yayınlanmış soundscape'ler, affinity sıralı — saf `sortByAffinity`) + `GET /v1/content/soundscapes/{slug}` (detay + preset). `soundscapes`+`presets` tabloları (content_status enum). 50 test yeşil (sort unit + e2e: 401/yalnızca-published/affinity sırası/detay/draft 404). Kapsam notu: ses TARİFİ metadata (on-device üretim); MinIO presigned URL (örnek dosyalar) ayrı iterasyona. PR #8.
 - **#9 (MinIO presigned URL):** soundscape `preview_asset_key` → detayda presigned `previewUrl` (S3AssetSigner, AWS SDK v3 — üretim OFFLINE, canlı MinIO gerektirmez → CI'da service gerekmiyor). 51 test yeşil (e2e: key varsa imzalı URL X-Amz-Signature içerir, yoksa null). **Ek düzeltme:** `api test` script'i `--runInBand` yapıldı — paralel e2e'nin paylaşılan DB'ye karşı flake'ini giderdi. Not: gerçek dosya erişimi asset'ler yüklenince doğrulanır. PR #9.
-- **#10 (hesap silme kaskadı):** `DELETE /v1/auth/me` (kimlik doğrulamalı, yalnızca kendi) → kullanıcı silme, FK ON DELETE CASCADE ile tüm ilişkili veri temizlenir (App Store/GDPR zorunluluğu). 55 test yeşil — e2e kaskadı GERÇEK DB'de kanıtladı: silmeden önce users/devices/refresh/profiles/archetype = 1, sonra hepsi 0. Not: MinIO nesne temizliği kullanıcı üretimi nesneler (share-cards) eklenince use case'e girer; kısa ömürlü access token blacklist edilmez (15 dk, refresh'ler silindi).
+- **#10 (hesap silme kaskadı):** `DELETE /v1/auth/me` (kimlik doğrulamalı, yalnızca kendi) → kullanıcı silme, FK ON DELETE CASCADE ile tüm ilişkili veri temizlenir (App Store/GDPR zorunluluğu). 55 test yeşil — e2e kaskadı GERÇEK DB'de kanıtladı: silmeden önce users/devices/refresh/profiles/archetype = 1, sonra hepsi 0. Not: MinIO nesne temizliği kullanıcı üretimi nesneler (share-cards) eklenince use case'e girer; kısa ömürlü access token blacklist edilmez (15 dk, refresh'ler silindi). PR #10.
+- **#11 (identity v2 — magic link):** e-posta ile hesaba yükseltme. `POST /v1/auth/email/request` (kimlik doğrulamalı, magic link üret + log-mailer) + `POST /v1/auth/email/verify` (public, token → anonim→registered yükseltme, email_verified_at). `one_time_tokens.email` kolonu; OTT/Mailer portları; dev'de ham token dönüyor (prod'da gizli, IS_PRODUCTION DI token'ı — presentation→shared boundary'sini korur). 63 test yeşil (in-memory unit + e2e: request/verify/kullanılmış-token 401/geçersiz-email 400/e-posta çakışması 409). Not: **gerçek SMTP (Brevo/Resend) ertelendi** → DECISIONS_NEEDED D-5; argon2id yalnızca şifre-tabanlı auth eklenirse gerekir (magic link passwordless).

@@ -4,6 +4,8 @@ import {
   ACCESS_TOKEN_SIGNER,
   CLOCK,
   ID_GENERATOR,
+  MAILER,
+  ONE_TIME_TOKEN_REPOSITORY,
   OPAQUE_TOKEN_GENERATOR,
   REFRESH_TOKEN_REPOSITORY,
   TOKEN_HASHER,
@@ -11,6 +13,8 @@ import {
   type AccessTokenSigner,
   type Clock,
   type IdGenerator,
+  type Mailer,
+  type OneTimeTokenRepository,
   type OpaqueTokenGenerator,
   type RefreshTokenRepository,
   type TokenHasher,
@@ -26,6 +30,11 @@ import { JoseAccessTokenSigner } from './infrastructure/jose-access-token-signer
 import { PrismaService } from '../../shared/infra/prisma.service';
 import { PrismaUserRepository } from './infrastructure/prisma/prisma-user.repository';
 import { PrismaRefreshTokenRepository } from './infrastructure/prisma/prisma-refresh-token.repository';
+import { PrismaOneTimeTokenRepository } from './infrastructure/prisma/prisma-one-time-token.repository';
+import { LogMailer } from './infrastructure/log-mailer';
+import { RequestEmailUpgradeUseCase } from './application/request-email-upgrade.usecase';
+import { VerifyEmailUpgradeUseCase } from './application/verify-email-upgrade.usecase';
+import { IS_PRODUCTION } from './presentation/tokens';
 import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
@@ -114,6 +123,55 @@ const providers: Provider[] = [
     provide: DeleteAccountUseCase,
     inject: [USER_REPOSITORY],
     useFactory: (users: UserRepository): DeleteAccountUseCase => new DeleteAccountUseCase(users),
+  },
+  {
+    provide: ONE_TIME_TOKEN_REPOSITORY,
+    inject: [PrismaService],
+    useFactory: (prisma: PrismaService): OneTimeTokenRepository =>
+      new PrismaOneTimeTokenRepository(prisma),
+  },
+  { provide: MAILER, useClass: LogMailer },
+  {
+    provide: IS_PRODUCTION,
+    inject: [ENV],
+    useFactory: (env: Env): boolean => env.NODE_ENV === 'production',
+  },
+  {
+    provide: RequestEmailUpgradeUseCase,
+    inject: [
+      USER_REPOSITORY,
+      ONE_TIME_TOKEN_REPOSITORY,
+      MAILER,
+      ID_GENERATOR,
+      CLOCK,
+      TOKEN_HASHER,
+      OPAQUE_TOKEN_GENERATOR,
+      ENV,
+    ],
+    useFactory: (
+      users: UserRepository,
+      ott: OneTimeTokenRepository,
+      mailer: Mailer,
+      ids: IdGenerator,
+      clock: Clock,
+      hasher: TokenHasher,
+      opaque: OpaqueTokenGenerator,
+      env: Env,
+    ): RequestEmailUpgradeUseCase =>
+      new RequestEmailUpgradeUseCase(users, ott, mailer, ids, clock, hasher, opaque, {
+        ttlSeconds: env.MAGIC_LINK_TTL,
+        baseUrl: env.MAGIC_LINK_BASE_URL,
+      }),
+  },
+  {
+    provide: VerifyEmailUpgradeUseCase,
+    inject: [USER_REPOSITORY, ONE_TIME_TOKEN_REPOSITORY, CLOCK, TOKEN_HASHER],
+    useFactory: (
+      users: UserRepository,
+      ott: OneTimeTokenRepository,
+      clock: Clock,
+      hasher: TokenHasher,
+    ): VerifyEmailUpgradeUseCase => new VerifyEmailUpgradeUseCase(users, ott, clock, hasher),
   },
   {
     provide: AuthorizeUseCase,

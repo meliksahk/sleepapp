@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class RegisterDeviceDto {
   @ApiProperty({ description: 'Cihaz başına benzersiz parmak izi', example: 'abc123-device' })
@@ -41,4 +41,34 @@ export class MeResponseDto {
 
   @ApiProperty({ type: [String] })
   roles!: string[];
+}
+
+export class RequestEmailDto {
+  @ApiProperty({ format: 'email', example: 'user@example.com' })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+}
+
+export class VerifyEmailDto {
+  @ApiProperty({ description: 'Magic link token' })
+  @IsString()
+  @MinLength(16)
+  token!: string;
+}
+
+export class EmailRequestResponseDto {
+  @ApiProperty({ example: 'sent' })
+  status!: string;
+
+  @ApiProperty({ required: false, description: 'Yalnızca development — test için ham token' })
+  devMagicToken?: string;
+}
+
+export class EmailVerifyResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  userId!: string;
+
+  @ApiProperty({ format: 'email' })
+  email!: string;
 }

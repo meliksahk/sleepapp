@@ -24,6 +24,12 @@
 - **Durum:** "Önce lokal" kararıyla ertelendi.
 - **Gerekli (sıra gelince):** Hostinger VPS IP + SSH kullanıcısı (+ staging subdomain, opsiyonel). Koda/repoya ASLA yazılmaz; SSH key-only erişim, ufw, fail2ban, docker, compose stack, GitHub Actions SSH deploy kurulacak.
 
+### D-5 · SMTP sağlayıcı (magic link e-posta gönderimi)
+
+- **Durum:** Magic link e-posta yükseltme kodu tamam; şu an **log-mailer** (linki loglar, gerçek e-posta göndermez). Gerçek gönderim için SMTP sağlayıcı gerekiyor (self-host mail deliverability nedeniyle yasak, docs/02 §3).
+- **Gerekli:** Brevo veya Resend free tier API anahtarı → `shared/infra/mailer` adaptörü tek satırla gerçek sağlayıcıya geçer.
+- **Varsayım (şimdilik):** log-mailer ile devam; dev/test raw token'ı response'ta döner (prod'da gizli).
+
 ### D-4 · Ürün/ton kararları (düşük öncelik, varsayımla ilerleniyor)
 
 - Marka adı **NOCTA** çalışma kod adı (docs/06) — netleşince token/isim tek yerden değişir.

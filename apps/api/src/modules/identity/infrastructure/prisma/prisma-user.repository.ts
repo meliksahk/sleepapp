@@ -36,6 +36,18 @@ export class PrismaUserRepository implements UserRepository {
     return device ? toUser(device.users) : null;
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    const row = await this.prisma.users.findUnique({ where: { email } });
+    return row ? toUser(row) : null;
+  }
+
+  async upgradeToEmail(userId: string, email: string, verifiedAt: Date): Promise<void> {
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: { email, kind: 'registered', email_verified_at: verifiedAt },
+    });
+  }
+
   async deleteById(id: string): Promise<void> {
     // deleteMany: satır yoksa hata fırlatmaz (idempotent). FK ON DELETE CASCADE
     // auth_devices/refresh_tokens/one_time_tokens/profiles/archetype_results'ı temizler.

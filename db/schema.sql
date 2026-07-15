@@ -103,7 +103,8 @@ CREATE TABLE public.one_time_tokens (
     purpose public.ott_purpose NOT NULL,
     token_hash text NOT NULL,
     expires_at timestamp with time zone NOT NULL,
-    used_at timestamp with time zone
+    used_at timestamp with time zone,
+    email text
 );
 
 
@@ -458,4 +459,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120003'),
     ('20260715120004'),
     ('20260715120005'),
-    ('20260715120006');
+    ('20260715120006'),
+    ('20260715120007');
