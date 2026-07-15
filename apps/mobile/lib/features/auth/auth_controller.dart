@@ -1,3 +1,4 @@
+import 'package:http/http.dart' as http;
 import '../../core/api/nocta_api_client.dart';
 import '../../core/api/session.dart';
 import '../../core/storage/session_store.dart';
@@ -34,6 +35,34 @@ class AuthController {
     if (_session == null) {
       await registerAnonymously(deviceFingerprint);
     }
+  }
+
+  /// Yetkili istek: geçerli access token ile [send] çağrılır. 401 dönerse bir
+  /// kez refresh denenir, yeni token'lar saklanır ve istek tekrarlanır. Refresh
+  /// de başarısızsa (reuse/geçersiz) oturum geçersizdir → signOut + hata iletilir.
+  /// Interim seam (docs/04 M0); generated client + Dio interceptor'a geçince değişir.
+  Future<http.Response> authorizedRequest(
+    Future<http.Response> Function(String accessToken) send,
+  ) async {
+    final current = _session;
+    if (current == null) {
+      throw StateError('Oturum yok — önce ensureSession çağrılmalı.');
+    }
+
+    final res = await send(current.accessToken);
+    if (res.statusCode != 401) return res;
+
+    // 401 → tek sefer refresh dene.
+    final Session refreshed;
+    try {
+      refreshed = await _client.refresh(current.refreshToken);
+    } on ApiException {
+      await signOut();
+      rethrow;
+    }
+    _session = refreshed;
+    await _store.save(refreshed);
+    return send(refreshed.accessToken);
   }
 
   Future<void> signOut() async {
