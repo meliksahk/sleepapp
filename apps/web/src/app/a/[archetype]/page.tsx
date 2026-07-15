@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ARCHETYPE_SLUGS, getArchetype } from '@/content/archetypes';
 import { ArchetypeContent } from '@/components/ArchetypeContent';
-import { buildArchetypeJsonLd } from '@/lib/schema';
+import { buildArchetypeJsonLd, buildBreadcrumbJsonLd } from '@/lib/schema';
 
 interface PageProps {
   params: Promise<{ archetype: string }>;
@@ -28,7 +28,7 @@ export default async function ArchetypePage({ params }: PageProps) {
   const data = getArchetype(archetype);
   if (!data) notFound();
 
-  const jsonLd = buildArchetypeJsonLd(data);
+  const jsonLd = [buildArchetypeJsonLd(data), buildBreadcrumbJsonLd(data)];
   return (
     <>
       <script
