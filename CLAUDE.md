@@ -164,16 +164,18 @@ nocta/
 ## 9. Komutlar (özet)
 
 ```
-pnpm i                      # kök bağımlılıklar
-pnpm turbo build            # tüm TS uygulamaları
-pnpm turbo test lint        # test + lint (path-filtered)
-pnpm --filter api dev       # API lokal (docker compose up -d db minio redis ile birlikte)
-pnpm --filter admin dev     # admin panel
-pnpm --filter web dev       # tanıtım sitesi
-docker compose up -d        # lokal Postgres + MinIO + Redis
-pnpm db:migrate / db:new    # dbmate migration uygula / yeni migration aç
-cd apps/mobile && flutter test && flutter run
-melos run gen               # Flutter codegen (freezed/json/riverpod)
-pnpm gen:api-types          # OpenAPI → packages/shared-types + Dart client
-pnpm gen:tokens             # design-tokens → CSS vars + Dart theme
+pnpm i                             # kök bağımlılıklar
+pnpm turbo build                   # tüm TS uygulamaları (turbo cache)
+pnpm turbo lint typecheck test     # lint + typecheck + test (turbo cache = path-filter)
+pnpm --filter @nocta/api dev       # API lokal :3001 (docker compose up -d ile birlikte)
+pnpm --filter @nocta/admin dev     # admin panel :3002
+pnpm --filter @nocta/web dev       # tanıtım sitesi :3003
+docker compose up -d               # lokal Postgres + MinIO + Redis (yalnızca 127.0.0.1)
+pnpm db:migrate                    # dbmate migration uygula (DATABASE_URL .env'den)
+pnpm db:new <ad>                   # yeni migration dosyası aç
+cd apps/mobile && flutter test && flutter run   # flavor: flutter run -t lib/main_dev.dart
+pnpm gen:api-types                 # OpenAPI → packages/shared-types (TS). Dart client: openapi-generator (Java)
+pnpm gen:tokens                    # design-tokens → CSS vars + Tailwind preset + Dart theme
+pnpm --filter @nocta/api keys:gen  # identity RS256 anahtar çifti (stdout → .env, repoya değil)
+# Not: Flutter codegen (freezed/json/riverpod build_runner) M0'da eklenecek (melos yok).
 ```
