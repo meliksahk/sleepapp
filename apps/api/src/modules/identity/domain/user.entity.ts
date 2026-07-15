@@ -15,6 +15,19 @@ export interface DeviceRegistration {
   readonly platform: string;
 }
 
+export type OttPurpose = 'magic_link' | 'email_verify' | 'password_reset';
+
+/** Tek kullanımlık token (magic link vb.). email: magic_link hedefi (verify'de uygulanır). */
+export interface OneTimeTokenRecord {
+  readonly id: string;
+  readonly userId: string;
+  readonly email: string | null;
+  readonly purpose: OttPurpose;
+  readonly tokenHash: string;
+  readonly expiresAt: Date;
+  readonly usedAt: Date | null;
+}
+
 /** DB'de saklanan refresh token kaydı (opak token'ın hash'i). */
 export interface RefreshTokenRecord {
   readonly id: string;

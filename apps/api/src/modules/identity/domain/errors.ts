@@ -33,3 +33,15 @@ export class InvalidAccessTokenError extends IdentityError {
     super('invalid_access_token', 'Access token geçersiz.');
   }
 }
+
+export class EmailAlreadyTakenError extends IdentityError {
+  constructor() {
+    super('email_taken', 'Bu e-posta başka bir hesapta kullanılıyor.');
+  }
+}
+
+export class InvalidMagicLinkError extends IdentityError {
+  constructor() {
+    super('invalid_magic_link', 'Magic link geçersiz, kullanılmış veya süresi dolmuş.');
+  }
+}

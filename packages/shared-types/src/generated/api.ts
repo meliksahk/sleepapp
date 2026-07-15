@@ -72,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/email/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** E-posta ile hesaba yükseltme için magic link iste */
+        post: operations["AuthController_requestEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/email/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Magic link ile e-postayı doğrula → hesabı yükselt */
+        post: operations["AuthController_verifyEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/profile": {
         parameters: {
             query?: never;
@@ -261,6 +295,29 @@ export interface components {
             /** Format: uuid */
             userId: string;
             roles: string[];
+        };
+        RequestEmailDto: {
+            /**
+             * Format: email
+             * @example user@example.com
+             */
+            email: string;
+        };
+        EmailRequestResponseDto: {
+            /** @example sent */
+            status: string;
+            /** @description Yalnızca development — test için ham token */
+            devMagicToken?: string;
+        };
+        VerifyEmailDto: {
+            /** @description Magic link token */
+            token: string;
+        };
+        EmailVerifyResponseDto: {
+            /** Format: uuid */
+            userId: string;
+            /** Format: email */
+            email: string;
         };
         ProfileResponseDto: {
             /** Format: uuid */
@@ -481,6 +538,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AuthController_requestEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestEmailDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailRequestResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_verifyEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailVerifyResponseDto"];
+                };
             };
         };
     };

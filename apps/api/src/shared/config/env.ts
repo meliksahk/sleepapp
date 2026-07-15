@@ -13,6 +13,8 @@ const EnvSchema = z.object({
   JWT_PUBLIC_KEY: z.string().optional(),
   ACCESS_TOKEN_TTL: z.coerce.number().int().positive().default(900), // 15 dk
   REFRESH_TOKEN_TTL: z.coerce.number().int().positive().default(2_592_000), // 30 gün
+  MAGIC_LINK_TTL: z.coerce.number().int().positive().default(900), // 15 dk
+  MAGIC_LINK_BASE_URL: z.string().default('http://localhost:3003/auth/verify'),
 
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),

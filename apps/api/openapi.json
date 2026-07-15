@@ -117,6 +117,71 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/email/request": {
+      "post": {
+        "operationId": "AuthController_requestEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "E-posta ile hesaba yükseltme için magic link iste",
+        "tags": ["auth"]
+      }
+    },
+    "/v1/auth/email/verify": {
+      "post": {
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailVerifyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Magic link ile e-postayı doğrula → hesabı yükselt",
+        "tags": ["auth"]
+      }
+    },
     "/v1/profile": {
       "get": {
         "operationId": "ProfileController_get",
@@ -498,6 +563,55 @@
           }
         },
         "required": ["userId", "roles"]
+      },
+      "RequestEmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          }
+        },
+        "required": ["email"]
+      },
+      "EmailRequestResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "sent"
+          },
+          "devMagicToken": {
+            "type": "string",
+            "description": "Yalnızca development — test için ham token"
+          }
+        },
+        "required": ["status"]
+      },
+      "VerifyEmailDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Magic link token"
+          }
+        },
+        "required": ["token"]
+      },
+      "EmailVerifyResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": ["userId", "email"]
       },
       "ProfileResponseDto": {
         "type": "object",
