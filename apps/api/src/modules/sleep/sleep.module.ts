@@ -69,5 +69,7 @@ const providers: Provider[] = [
   imports: [IdentityModule, ProfileModule],
   controllers: [SleepController],
   providers,
+  // Modüller-arası okuma için dışa açılır (ör. sharing gece raporu kartı üretir).
+  exports: [GetNightReportUseCase],
 })
 export class SleepModule {}
