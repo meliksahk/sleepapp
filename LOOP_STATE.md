@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈39% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈40% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 39%
+[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 40%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
 | ----------- | -------- | ------- | --------------------------------------------------------------------------- |
 | Backend/API | ~70%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
-| Mobil       | ~26%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
+| Mobil       | ~28%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
 | Web         | ~40%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·70 + 0.40·26 + 0.15·12 + 0.15·40 ≈ **39%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·70 + 0.40·28 + 0.15·12 + 0.15·40 ≈ **40%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#79 (mobil haftalık trend mini-grafiği):** #78 (`GET /v1/sleep/trend`) ucunu tüketen saf Flutter bar grafiği — geçmiş ekranında istatistik başlığı ile liste arasında son 7 gecenin süresi. Harici grafik kütüphanesi YOK (maliyet disiplini): `Row`+`Container` yükseklikleri, çubuk ∝ süre, veri-yok gece ince taban (inkFaint), veri olan gece accentAurora. `WeeklyTrend`/`TrendNight` model + `SleepController.weeklyTrend` + `sleepTrendProvider`. `WeeklyTrendChart` widget. Ekranda `trend.maybeWhen` — nightsWithData=0/yükleme/hata → gizli (dayanıklı). `flutter analyze` temiz, `flutter test` 73 yeşil (71→73): veri olan trend→7 çubuk; veri yok→gizli (mevcut testlere default trend override). Salt mobil (contract değişmedi). İlerleme barı mobil 26→28% → toplam %40. PR #80. Not: eksen etiketleri / dokunma-detay / calmScore serisi ayrı.
 - **#78 (haftalık uyku trendi ucu):** `GET /v1/sleep/trend` — son 7 gecenin gece-başına toplam süresi (grafik/haftalık özet için), oturumu olmayan gece 0, aynı gece toplanır. Yanıt: `nights` (eskiden yeniye, 7) + `averageDurationMinutes` (yalnızca veri olan geceler) + `nightsWithData`. Saf domain `trend.ts` (`weeklyTrend(sessions, today, days=7)` — deterministik, today parametreli, UTC takvim aritmetiği DST-güvenli). `GetWeeklyTrendUseCase` streak deseni (tz+clock ile "bugün", `[today-6..today]` `listByNightRange`'den — yeni repo metodu YOK). Controller açık DTO map (readonly→mutable), openapi+shared-types regen. 211 test yeşil (204→211: 5 unit + 2 e2e). turbo 17/17 (boundary yeşil). **Ek:** e2e'de 06:00 gece sınırı oturumu bugün/dün kovasına kaydırabildiği için kova-sabitleme yerine sınır-bağımsız (max night ≥180dk) doğrulama. Not: mobil grafik UI ayrı; calmScore trendi / aylık pencere ayrı. PR #78.
 - **#77 (mobil bildirim toggle):** #75 (profil bayrağı) + #76 (gönderim enforcement) zincirinin mobil UI karşılığı — özellik artık uçtan uca çalışır. Yeni `profile` feature'ı: `Profile` modeli + `ProfileController` (`get`/`setNotificationsEnabled`, AuthController.authorizedRequest ile sarılı, sleep→profile deseni) + providers. `NoctaApiClient.patchAuthed` eklendi. Ayarlar ekranına `SwitchListTile` (profileProvider.maybeWhen — yükleme/hata → gizli dayanıklı); değişince PATCH beklenir + provider invalidate, hata → switch eski değerinde kalır + snackbar. `flutter analyze` temiz, `flutter test` 71 yeşil (69→71): tek MockClient hem auth hem apiClient'a bağlı, `/v1/profile` GET/PATCH yönlendirilir (toggle açık yansıtır; kapatınca PATCH + invalidate sonrası switch kapanır). Not: gerçek push teslimi (APNs/FCM) hâlâ docs/10; bu yalnızca tercih yüzeyi. PR #77.
 - **#76 (bildirim opt-out enforcement):** #75'te eklenen `notifications_enabled` bayrağı artık gönderimde uygulanıyor (önceki iterasyonun açık bıraktığı boşluk kapatıldı). `SendNotificationUseCase` başında opt-out kısa-devresi: kullanıcı bildirimleri kapattıysa cihaz SORGULANMADAN `{sent:0,failed:0}` döner. Tercih, notification domain'ine eklenen `NotificationPreferenceReader` portu + module-def adaptörüyle (profil public `GetProfileUseCase`) okunur — notification `profiles` tablosuna DOKUNMAZ (sleep→profile timezone deseninin aynısı, modül sınırı korunur). 204 test yeşil (202→204): unit (opt-out'ta cihaz sorgusu bile yok, sender çağrılmaz) + e2e (cihaz kayıtlıyken profil kapalı → sent:0). turbo 17/17 (boundary yeşil). Contract değişmedi → shared-types regen gerekmedi. Not: gerçek APNs/FCM + BullMQ async teslim hâlâ docs/10; mobil ayar toggle'ı ayrı. PR #76.
