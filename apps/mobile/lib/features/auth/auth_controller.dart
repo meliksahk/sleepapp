@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/api/nocta_api_client.dart';
 import '../../core/api/session.dart';
@@ -63,6 +64,19 @@ class AuthController {
     _session = refreshed;
     await _store.save(refreshed);
     return send(refreshed.accessToken);
+  }
+
+  /// Diğer cihazlardan çık — mevcut oturum hariç tümünü iptal eder. İptal sayısı.
+  /// Refresh token gövde içinde CLOSURE'da okunur → 401 refresh rotasyonundan sonra
+  /// güncel (rotasyonlu) token gönderilir (aksi halde eski token reddedilirdi).
+  Future<int> revokeOtherSessions() async {
+    final res = await authorizedRequest(
+      (token) => _client.postAuthed('/v1/auth/sessions/revoke-others', token, {
+        'refreshToken': _session?.refreshToken ?? '',
+      }),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return (jsonDecode(res.body) as Map<String, dynamic>)['revoked'] as int;
   }
 
   Future<void> signOut() async {
