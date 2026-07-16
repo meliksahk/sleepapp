@@ -693,6 +693,45 @@
         ],
         "summary": "Tum soundscape kayitlari (taslak/planli/yayinlanmis)",
         "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminController_createSoundscape",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSoundscapeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSoundscapeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yazma yetkisi yok (analyst/support okur, yazamaz)"
+          },
+          "409": {
+            "description": "Slug zaten kullanimda"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Yeni taslak soundscape olustur",
+        "tags": ["admin"]
       }
     },
     "/v1/content/feed": {
@@ -1611,6 +1650,30 @@
           }
         },
         "required": ["id", "slug", "title", "status", "archetypeAffinity", "version", "createdAt"]
+      },
+      "CreateSoundscapeDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "example": "deep-ocean-drift",
+            "description": "URL kimliği (küçük-harf-kebab)"
+          },
+          "titleEn": {
+            "type": "string",
+            "example": "Deep Ocean Drift",
+            "description": "İngilizce başlık (birincil dil)"
+          },
+          "archetypeAffinity": {
+            "default": [],
+            "description": "Uygun uyku kimlikleri (archetype slug)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["slug", "titleEn"]
       },
       "SoundscapeDto": {
         "type": "object",

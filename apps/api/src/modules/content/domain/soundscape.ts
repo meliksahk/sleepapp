@@ -76,10 +76,21 @@ export interface SoundscapeSummary {
   readonly createdAt: Date;
 }
 
+/** Yeni taslak girdisi (admin yazma yolu). Durum daima 'draft' — yayınlama ayrı adım. */
+export interface NewSoundscape {
+  readonly slug: string;
+  readonly titleI18n: Record<string, string>;
+  readonly archetypeAffinity: readonly string[];
+  /** Denetim izi: hangi admin oluşturdu (soundscapes.created_by). */
+  readonly createdBy: string;
+}
+
 export interface ContentRepository {
   findPublished(): Promise<Soundscape[]>;
   /** TÜM soundscape'ler (taslak/planlı/yayınlanmış) — yalnızca admin okuma yolu. */
   findAllSummaries(): Promise<SoundscapeSummary[]>;
+  /** Taslak oluşturur. Slug çakışırsa null (UNIQUE ihlalini hataya çevirmez). */
+  createDraft(input: NewSoundscape): Promise<SoundscapeSummary | null>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
   /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;
