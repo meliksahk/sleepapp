@@ -5,6 +5,7 @@ import {
   ContentModule,
   CreateSoundscapeUseCase,
   GetAdminSoundscapeUseCase,
+  UpdateSoundscapeUseCase,
   ListAllSoundscapesUseCase,
   SetSoundscapeRecipeUseCase,
   SetSoundscapeStatusUseCase,
@@ -43,6 +44,7 @@ const providers: Provider[] = [
       SetSoundscapeStatusUseCase,
       SetSoundscapeRecipeUseCase,
       GetAdminSoundscapeUseCase,
+      UpdateSoundscapeUseCase,
     ],
     useFactory: (
       listAll: ListAllSoundscapesUseCase,
@@ -50,6 +52,7 @@ const providers: Provider[] = [
       setStatus: SetSoundscapeStatusUseCase,
       setRecipe: SetSoundscapeRecipeUseCase,
       getOne: GetAdminSoundscapeUseCase,
+      updateOne: UpdateSoundscapeUseCase,
     ): SoundscapeCatalog => ({
       list: async () => {
         const all = await listAll.execute();
@@ -63,6 +66,7 @@ const providers: Provider[] = [
       publish: async (slug) => toEntry(await setStatus.publish(slug)),
       unpublish: async (slug) => toEntry(await setStatus.unpublish(slug)),
       setRecipe: async (slug, recipe) => toEntry(await setRecipe.execute(slug, recipe)),
+      update: async (slug, patch) => toEntry(await updateOne.execute(slug, patch)),
     }),
   },
 ];

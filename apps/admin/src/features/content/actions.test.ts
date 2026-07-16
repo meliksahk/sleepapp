@@ -2,15 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const apiPost = vi.fn();
 const apiPut = vi.fn();
+const apiPatch = vi.fn();
 const revalidatePath = vi.fn();
 
 vi.mock('@/shared/api/server-client', () => ({
   apiPost: (...a: unknown[]) => apiPost(...a),
   apiPut: (...a: unknown[]) => apiPut(...a),
+  apiPatch: (...a: unknown[]) => apiPatch(...a),
 }));
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 
-const { createSoundscapeAction, setStatusAction, setRecipeAction } = await import('./actions');
+const { createSoundscapeAction, setStatusAction, setRecipeAction, updateMetaAction } =
+  await import('./actions');
 
 const form = (fields: Record<string, string>): FormData => {
   const fd = new FormData();
@@ -21,6 +24,7 @@ const form = (fields: Record<string, string>): FormData => {
 beforeEach(() => {
   apiPost.mockReset();
   apiPut.mockReset();
+  apiPatch.mockReset();
   revalidatePath.mockReset();
 });
 
@@ -151,5 +155,49 @@ describe('setRecipeAction', () => {
     const state = await setRecipeAction({}, form({ slug: 'x', layers: 'bu json degil' }));
     expect(apiPut).not.toHaveBeenCalled();
     expect(state.error).toContain('okunamadı');
+  });
+});
+
+describe('updateMetaAction', () => {
+  it('başlık ve affinity PATCH edilir; iki yol da tazelenir', async () => {
+    apiPatch.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+
+    const state = await updateMetaAction(
+      {},
+      form({ slug: 'x', titleEn: 'Yeni', archetypeAffinity: 'deep-ocean, night-owl' }),
+    );
+
+    expect(apiPatch).toHaveBeenCalledWith('/v1/admin/soundscapes/x', {
+      titleEn: 'Yeni',
+      archetypeAffinity: ['deep-ocean', 'night-owl'],
+    });
+    expect(state).toEqual({ saved: true });
+    expect(revalidatePath).toHaveBeenCalledWith('/content/x');
+    expect(revalidatePath).toHaveBeenCalledWith('/content');
+  });
+
+  it('affinity boşaltılabilir → boş dizi gider (dokunmama değil, TEMİZLEME)', async () => {
+    apiPatch.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+    await updateMetaAction({}, form({ slug: 'x', titleEn: 'Y', archetypeAffinity: '' }));
+    expect(apiPatch.mock.calls[0]?.[1]).toMatchObject({ archetypeAffinity: [] });
+  });
+
+  it('SLUG gövdeye KONULMAZ — derin linkler kırılmasın', async () => {
+    apiPatch.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+    await updateMetaAction({}, form({ slug: 'x', titleEn: 'Y' }));
+    expect(apiPatch.mock.calls[0]?.[1]).not.toHaveProperty('slug');
+  });
+
+  it('boş başlık reddi editörün diline çevrilir, tazeleme YAPILMAZ', async () => {
+    apiPatch.mockResolvedValue({ ok: false, status: 400, code: 'empty_title' });
+    const state = await updateMetaAction({}, form({ slug: 'x', titleEn: '' }));
+    expect(state.error).toContain('Başlık boş');
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('403 sessizce yutulmaz', async () => {
+    apiPatch.mockResolvedValue({ ok: false, status: 403 });
+    const state = await updateMetaAction({}, form({ slug: 'x', titleEn: 'Y' }));
+    expect(state.error).toContain('yetkiniz yok');
   });
 });

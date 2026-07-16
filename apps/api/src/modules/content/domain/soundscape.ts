@@ -93,6 +93,19 @@ export interface AdminSoundscapeView {
   readonly recipe: unknown;
 }
 
+/**
+ * Kısmi meta güncelleme. `undefined` = DOKUNMA (alanı silme ile karıştırılmamalı);
+ * bu yüzden `null` değil `undefined` kullanılıyor.
+ *
+ * SLUG YOK ve olmayacak: slug derin linkte yaşar (`/a/{slug}`, `/library/{slug}`)
+ * ve paylaşılan kartlarda dolaşır. Değiştirmek, dışarıda duran linkleri sessizce
+ * kırardı — yeniden adlandırma istenirse yönlendirme tablosu gerekir (ayrı iş).
+ */
+export interface SoundscapeMetaPatch {
+  readonly titleI18n?: Record<string, string>;
+  readonly archetypeAffinity?: readonly string[];
+}
+
 /** Yeni taslak girdisi (admin yazma yolu). Durum daima 'draft' — yayınlama ayrı adım. */
 export interface NewSoundscape {
   readonly slug: string;
@@ -114,6 +127,8 @@ export interface ContentRepository {
   setStatus(slug: string, status: ContentStatus): Promise<SoundscapeSummary | null>;
   /** Ses tarifini yazar; kayıt yoksa null. */
   setEngineParams(slug: string, params: unknown): Promise<SoundscapeSummary | null>;
+  /** Başlık/affinity günceller (kısmi); kayıt yoksa null. */
+  updateMeta(slug: string, patch: SoundscapeMetaPatch): Promise<SoundscapeSummary | null>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
   /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;

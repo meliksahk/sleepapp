@@ -6,6 +6,7 @@ import type {
   Preset,
   NewSoundscape,
   Soundscape,
+  SoundscapeMetaPatch,
   SoundscapeDetail,
   SoundscapeSummary,
   WeeklyRelease,
@@ -96,6 +97,22 @@ export class PrismaContentRepository implements ContentRepository {
     const updated = await this.prisma.soundscapes.updateMany({
       where: { slug },
       data: { engine_params: params as object },
+    });
+    if (updated.count === 0) return null;
+    const row = await this.prisma.soundscapes.findUnique({ where: { slug } });
+    return row ? toSummary(row) : null;
+  }
+
+  async updateMeta(slug: string, patch: SoundscapeMetaPatch): Promise<SoundscapeSummary | null> {
+    const updated = await this.prisma.soundscapes.updateMany({
+      where: { slug },
+      data: {
+        // Yalnızca verilen alanlar: `undefined` Prisma'da "dokunma" demektir.
+        ...(patch.titleI18n === undefined ? {} : { title_i18n: patch.titleI18n }),
+        ...(patch.archetypeAffinity === undefined
+          ? {}
+          : { archetype_affinity: [...patch.archetypeAffinity] }),
+      },
     });
     if (updated.count === 0) return null;
     const row = await this.prisma.soundscapes.findUnique({ where: { slug } });
