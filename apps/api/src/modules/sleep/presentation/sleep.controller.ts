@@ -77,15 +77,32 @@ export class SleepController {
   }
 
   @Get('sessions')
-  @ApiOperation({ summary: 'Kullanıcının en yeni uyku oturumları' })
+  @ApiOperation({ summary: 'Uyku oturumları — en yeni N veya gece aralığı (from+to)' })
   @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'from', required: false, example: '2026-07-01' })
+  @ApiQuery({ name: 'to', required: false, example: '2026-07-31' })
   @ApiOkResponse({ type: [SleepSessionDto] })
   async recent(
     @CurrentUser() user: AccessTokenClaims,
     @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ): Promise<SleepSessionDto[]> {
+    // Aralık: from ve to birlikte, geçerli YYYY-MM-DD ve from <= to olmalı.
+    if (from !== undefined || to !== undefined) {
+      if (!from || !to || !NIGHT_DATE_RE.test(from) || !NIGHT_DATE_RE.test(to) || from > to) {
+        throw new BadRequestException({
+          code: 'invalid_range',
+          message: 'from ve to birlikte, YYYY-MM-DD ve from <= to olmalı.',
+        });
+      }
+      const ranged = await this.list.execute(user.sub, { from, to });
+      return ranged.map(toDto);
+    }
     const parsed = limit ? Number.parseInt(limit, 10) : undefined;
-    const sessions = await this.list.execute(user.sub, Number.isNaN(parsed) ? undefined : parsed);
+    const sessions = await this.list.execute(user.sub, {
+      limit: parsed !== undefined && Number.isNaN(parsed) ? undefined : parsed,
+    });
     return sessions.map(toDto);
   }
 

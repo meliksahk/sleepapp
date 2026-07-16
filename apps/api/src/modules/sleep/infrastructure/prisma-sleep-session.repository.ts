@@ -64,6 +64,20 @@ export class PrismaSleepSessionRepository implements SleepSessionRepository {
     return rows.map(toDomain);
   }
 
+  async listByNightRange(userId: string, from: string, to: string): Promise<SleepSession[]> {
+    const rows = await this.prisma.sleep_sessions.findMany({
+      where: {
+        user_id: userId,
+        night_date: {
+          gte: new Date(`${from}T00:00:00.000Z`),
+          lte: new Date(`${to}T00:00:00.000Z`),
+        },
+      },
+      orderBy: [{ night_date: 'desc' }, { started_at: 'desc' }],
+    });
+    return rows.map(toDomain);
+  }
+
   async listNightDates(userId: string): Promise<string[]> {
     const rows = await this.prisma.sleep_sessions.findMany({
       where: { user_id: userId },
