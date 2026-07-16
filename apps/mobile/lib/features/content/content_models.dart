@@ -1,8 +1,8 @@
+import '../../core/audio_engine/engine_params.dart';
 import '../../core/audio_engine/dsp/mix_render.dart';
 
 // İçerik modelleri (docs/04). Kimlik doğrulamalı /v1/content uçları.
-// engineParams/layerDefs (ses motoru) on-device motor gelince eklenecek; şimdilik
-// liste/kütüphane için gereken alanlar. Üretilen Dart client (B-3) gelince değişir.
+// Üretilen Dart client (B-3) gelince değişir.
 
 class Soundscape {
   const Soundscape({
@@ -11,6 +11,7 @@ class Soundscape {
     required this.titleI18n,
     required this.archetypeAffinity,
     required this.version,
+    this.mixSpec,
   });
 
   final String id;
@@ -18,6 +19,11 @@ class Soundscape {
   final Map<String, String> titleI18n;
   final List<String> archetypeAffinity;
   final int version;
+
+  /// Ses tarifi (`engine_params` → [MixSpec]). **null olabilir:** tarif boş
+  /// (taslak), bozuk, ya da BU UYGULAMANIN TANIMADIĞI bir şema sürümünde olabilir
+  /// (docs/04 §79). null = "bu ses bu sürümde çalınamaz" — çökme değil.
+  final MixSpec? mixSpec;
 
   /// Verilen dile göre başlık; yoksa 'en', o da yoksa slug.
   String title(String locale) => titleI18n[locale] ?? titleI18n['en'] ?? slug;
@@ -38,6 +44,9 @@ class Soundscape {
         archetypeAffinity:
             (json['archetypeAffinity'] as List<dynamic>).map((e) => e as String).toList(),
         version: json['version'] as int,
+        // Tarif AYRIŞTIRILAMAZSA kayıt yine de listelenir (başlık/affinity geçerli);
+        // yalnızca çalınamaz. Tüm kaydı düşürmek, kütüphaneyi sessizce boşaltırdı.
+        mixSpec: parseEngineParams(json['engineParams']),
       );
 }
 
