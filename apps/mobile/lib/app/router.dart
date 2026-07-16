@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../features/archetype/presentation/archetype_detail_screen.dart';
+import '../features/archetype/presentation/archetype_history_screen.dart';
 import '../features/archetype/presentation/archetype_test_screen.dart';
 import '../features/content/presentation/soundscape_detail_screen.dart';
 import '../features/content/presentation/soundscape_library_screen.dart';
@@ -18,6 +19,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/archetype',
       builder: (context, state) => const ArchetypeTestScreen(),
+    ),
+    GoRoute(
+      path: '/identity/history',
+      builder: (context, state) => const ArchetypeHistoryScreen(),
     ),
     GoRoute(
       path: '/identity/:slug',

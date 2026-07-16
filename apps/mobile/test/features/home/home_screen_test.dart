@@ -31,6 +31,8 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
         // Varsayılan: test sonucu yok + boş içerik (kimlik kartı gizli). İlgili test kendi kurar.
         latestArchetypeResultProvider.overrideWith((ref) async => null),
         archetypeContentProvider.overrideWith((ref) async => <String, ArchetypeInfo>{}),
+        // Varsayılan: geçmiş yok → bağlantı gizli.
+        archetypeHistoryProvider.overrideWith((ref) async => <ArchetypeResult>[]),
         ...overrides,
       ],
       child: MaterialApp(theme: buildNoctaDarkTheme(), home: const HomeScreen()),
@@ -148,6 +150,26 @@ void main() {
     await _pump(tester, []); // default: result null
     expect(find.byKey(const Key('identity-name')), findsNothing);
     expect(find.text('Find your sleep identity'), findsOneWidget);
+  });
+
+  testWidgets('birden fazla sonuç → kimlik geçmişi bağlantısı görünür', (tester) async {
+    await _pump(tester, [
+      latestArchetypeResultProvider.overrideWith((ref) async => _result('deep-ocean')),
+      archetypeHistoryProvider.overrideWith(
+        (ref) async => [_result('deep-ocean'), _result('overthinker')],
+      ),
+    ]);
+    expect(find.byKey(const Key('identity-history-link')), findsOneWidget);
+    expect(find.text('2 identities over time'), findsOneWidget);
+  });
+
+  testWidgets('tek sonuç → geçmiş bağlantısı gizli (anlamsız olurdu)', (tester) async {
+    await _pump(tester, [
+      latestArchetypeResultProvider.overrideWith((ref) async => _result('deep-ocean')),
+      archetypeHistoryProvider.overrideWith((ref) async => [_result('deep-ocean')]),
+    ]);
+    expect(find.byKey(const Key('identity-history-link')), findsNothing);
+    expect(find.byKey(const Key('identity-name')), findsOneWidget); // kart yine görünür
   });
 
   testWidgets('içerik yüklenmese de sonuç slug ile kimlik kartı gösterilir', (tester) async {
