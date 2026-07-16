@@ -15,6 +15,8 @@ describe('Flags e2e (HTTP)', () => {
     off: `${prefix}-off`,
     r0: `${prefix}-r0`,
     r100: `${prefix}-r100`,
+    iosOnly: `${prefix}-ios`,
+    minVer: `${prefix}-minver`,
   };
 
   const token = async (): Promise<string> => {
@@ -36,6 +38,8 @@ describe('Flags e2e (HTTP)', () => {
         { key: keys.off, rules: { enabled: false } },
         { key: keys.r0, rules: { enabled: true, rolloutPercentage: 0 } },
         { key: keys.r100, rules: { enabled: true, rolloutPercentage: 100 } },
+        { key: keys.iosOnly, rules: { enabled: true, platforms: ['ios'] } },
+        { key: keys.minVer, rules: { enabled: true, minAppVersion: '1.4.0' } },
       ],
     });
 
@@ -68,5 +72,25 @@ describe('Flags e2e (HTTP)', () => {
     expect(res.body[keys.off]).toBe(false);
     expect(res.body[keys.r0]).toBe(false);
     expect(res.body[keys.r100]).toBe(true);
+    // context yok → segment kapılı flag'ler fail-closed
+    expect(res.body[keys.iosOnly]).toBe(false);
+    expect(res.body[keys.minVer]).toBe(false);
+  });
+
+  it('segment context (platform + appVersion) query ile değerlendirilir', async () => {
+    const t = await token();
+    const ios = await request(app.getHttpServer())
+      .get('/v1/flags?platform=ios&appVersion=1.5.0')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(ios.body[keys.iosOnly]).toBe(true); // ios eşleşti
+    expect(ios.body[keys.minVer]).toBe(true); // 1.5.0 >= 1.4.0
+
+    const android = await request(app.getHttpServer())
+      .get('/v1/flags?platform=android&appVersion=1.3.0')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(android.body[keys.iosOnly]).toBe(false); // platform dışı
+    expect(android.body[keys.minVer]).toBe(false); // 1.3.0 < 1.4.0
   });
 });
