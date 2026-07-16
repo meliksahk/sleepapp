@@ -430,6 +430,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/soundscapes/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tek soundscape + ham ses tarifi (taslak dahil) */
+        get: operations["AdminController_soundscape"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/soundscapes/{slug}/recipe": {
         parameters: {
             query?: never;
@@ -900,6 +917,23 @@ export interface components {
              * @default []
              */
             archetypeAffinity: string[];
+        };
+        AdminSoundscapeDetailDto: {
+            id: string;
+            slug: string;
+            /** @description Görünen başlık (EN; yoksa slug) */
+            title: string;
+            /** @enum {string} */
+            status: "draft" | "scheduled" | "published";
+            /** @description Uygun uyku kimlikleri */
+            archetypeAffinity: string[];
+            version: number;
+            /** @description ISO 8601 UTC (CLAUDE.md §4) */
+            createdAt: string;
+            /** @description Ham engine_params. Eski/elle girilmiş bozuk bir tarif de dönebilir — editör onu GÖREBİLMELİ ki düzeltebilsin. */
+            recipe: {
+                [key: string]: unknown;
+            };
         };
         SetRecipeDto: {
             /**
@@ -1825,6 +1859,34 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminSoundscapeDto"];
                 };
+            };
+        };
+    };
+    AdminController_soundscape: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSoundscapeDetailDto"];
+                };
+            };
+            /** @description Soundscape yok */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

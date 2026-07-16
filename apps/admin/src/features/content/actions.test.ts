@@ -1,12 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const apiPost = vi.fn();
+const apiPut = vi.fn();
 const revalidatePath = vi.fn();
 
-vi.mock('@/shared/api/server-client', () => ({ apiPost: (...a: unknown[]) => apiPost(...a) }));
+vi.mock('@/shared/api/server-client', () => ({
+  apiPost: (...a: unknown[]) => apiPost(...a),
+  apiPut: (...a: unknown[]) => apiPut(...a),
+}));
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 
-const { createSoundscapeAction, setStatusAction } = await import('./actions');
+const { createSoundscapeAction, setStatusAction, setRecipeAction } = await import('./actions');
 
 const form = (fields: Record<string, string>): FormData => {
   const fd = new FormData();
@@ -16,6 +20,7 @@ const form = (fields: Record<string, string>): FormData => {
 
 beforeEach(() => {
   apiPost.mockReset();
+  apiPut.mockReset();
   revalidatePath.mockReset();
 });
 
@@ -105,5 +110,46 @@ describe('setStatusAction', () => {
     apiPost.mockResolvedValue({ ok: false, status: 403 });
     const state = await setStatusAction({}, form({ slug: 'x', action: 'publish' }));
     expect(state.error).toContain('yetkiniz yok');
+  });
+});
+
+describe('setRecipeAction', () => {
+  const layers = [{ id: 'base', type: 'pink', gain: 0.5 }];
+
+  it('schemaVersion=1 ile PUT eder ve HEM detay HEM listeyi tazeler', async () => {
+    apiPut.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+
+    const state = await setRecipeAction({}, form({ slug: 'x', layers: JSON.stringify(layers) }));
+
+    expect(apiPut).toHaveBeenCalledWith('/v1/admin/soundscapes/x/recipe', {
+      schemaVersion: 1,
+      layers,
+    });
+    expect(state).toEqual({ saved: true });
+    // Liste de tazelenmeli: tarif varlığı oradaki yayınlama düğmesinin sonucunu değiştirir.
+    expect(revalidatePath).toHaveBeenCalledWith('/content/x');
+    expect(revalidatePath).toHaveBeenCalledWith('/content');
+  });
+
+  it('BOZUK tarif reddi editörün diline çevrilir, tazeleme YAPILMAZ', async () => {
+    apiPut.mockResolvedValue({ ok: false, status: 400, code: 'invalid_recipe' });
+
+    const state = await setRecipeAction({}, form({ slug: 'x', layers: JSON.stringify(layers) }));
+
+    expect(state.error).toBeDefined();
+    expect(state.saved).toBeUndefined();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('403 sessizce yutulmaz', async () => {
+    apiPut.mockResolvedValue({ ok: false, status: 403 });
+    const state = await setRecipeAction({}, form({ slug: 'x', layers: JSON.stringify(layers) }));
+    expect(state.error).toContain('yetkiniz yok');
+  });
+
+  it("bozuk JSON → API'ye HİÇ gidilmez (anlamsız istek atmayalım)", async () => {
+    const state = await setRecipeAction({}, form({ slug: 'x', layers: 'bu json degil' }));
+    expect(apiPut).not.toHaveBeenCalled();
+    expect(state.error).toContain('okunamadı');
   });
 });

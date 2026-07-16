@@ -81,6 +81,7 @@ export class PrismaContentRepository implements ContentRepository {
       summary: toSummary(row),
       // "Tarif var" = en az bir anahtar. `{}` boş sayılır — taslak böyle doğuyor.
       hasRecipe: params !== null && typeof params === 'object' && Object.keys(params).length > 0,
+      recipe: row.engine_params,
     };
   }
 

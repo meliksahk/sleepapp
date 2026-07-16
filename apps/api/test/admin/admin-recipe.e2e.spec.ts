@@ -214,6 +214,81 @@ describe('Admin ses tarifi e2e (HTTP)', () => {
     expect(row?.engine_params).toEqual(VALID);
   });
 
+  describe('detay ucu (düzenleme ekranını besler)', () => {
+    it('mevcut tarifi ham hâliyle döner', async () => {
+      const slug = `${prefix}-detail`;
+      await seed(slug);
+      const token = await tokenFor(['editor']);
+      await setRecipe(token, slug, VALID).expect(200);
+
+      const res = await request(app.getHttpServer())
+        .get(`/v1/admin/soundscapes/${slug}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(res.body.recipe).toEqual(VALID);
+      expect(res.body.slug).toBe(slug);
+    });
+
+    it('TASLAK kaydı da döner (boş tarifle) — editör onu düzenleyecek', async () => {
+      const slug = `${prefix}-detail-draft`;
+      await seed(slug);
+      const res = await request(app.getHttpServer())
+        .get(`/v1/admin/soundscapes/${slug}`)
+        .set('Authorization', `Bearer ${await tokenFor(['editor'])}`)
+        .expect(200);
+      expect(res.body.status).toBe('draft');
+      expect(res.body.recipe).toEqual({});
+    });
+
+    it('BOZUK/eski tarif de dönmeli — editör görmeden düzeltemez', async () => {
+      // Doğrulama YAZMA yolunda (#123); okuma yolu bozuk kaydı gizlerse editör
+      // "neden yayınlanmıyor?" diye bakakalır.
+      const slug = `${prefix}-detail-bad`;
+      await prisma.soundscapes.create({
+        data: {
+          slug,
+          title_i18n: { en: slug },
+          engine_params: { eskiSema: true, layers: 'bozuk' },
+          layer_defs: [],
+          status: 'draft',
+        },
+      });
+      const res = await request(app.getHttpServer())
+        .get(`/v1/admin/soundscapes/${slug}`)
+        .set('Authorization', `Bearer ${await tokenFor(['editor'])}`)
+        .expect(200);
+      expect(res.body.recipe).toEqual({ eskiSema: true, layers: 'bozuk' });
+    });
+
+    it('analyst detayı OKUYABİLİR (okuma daraltılmadı)', async () => {
+      const slug = `${prefix}-detail-analyst`;
+      await seed(slug);
+      await request(app.getHttpServer())
+        .get(`/v1/admin/soundscapes/${slug}`)
+        .set('Authorization', `Bearer ${await tokenFor(['analyst'])}`)
+        .expect(200);
+    });
+
+    it('olmayan slug → 404', async () => {
+      await request(app.getHttpServer())
+        .get(`/v1/admin/soundscapes/${prefix}-hicyok`)
+        .set('Authorization', `Bearer ${await tokenFor(['editor'])}`)
+        .expect(404);
+    });
+
+    it('mobil token → 403', async () => {
+      const dev = await request(app.getHttpServer())
+        .post('/v1/auth/device')
+        .send({ fingerprint: `det-${Date.now()}`, platform: 'ios' })
+        .expect(201);
+      createdUsers.push(dev.body.userId);
+      await request(app.getHttpServer())
+        .get(`/v1/admin/soundscapes/${prefix}-x`)
+        .set('Authorization', `Bearer ${dev.body.accessToken}`)
+        .expect(403);
+    });
+  });
+
   it('analyst tarif yazamaz → 403', async () => {
     const slug = `${prefix}-analyst`;
     await seed(slug);
