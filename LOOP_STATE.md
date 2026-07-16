@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈70% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈71% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████████████░░░░░░░░░░░░] 70%
+[████████████████████████████░░░░░░░░░░░░] 71%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
-| Mobil       | ~54%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Mobil       | ~57%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·54 + 0.15·80 + 0.15·45 ≈ **70%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·57 + 0.15·80 + 0.15·45 ≈ **71%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Mobil devam (%54, ağırlık 0.40 — en yüksek):** cihazsız yapılabilecekler: (a) **uyku oturumu domain mantığı** — olay akışı + zaman → `RecordSleepSessionDto` (gece sınırı 06:00 kuralı, süre hesabı; saf Dart, API bunu bekliyor). (b) alarm penceresi mantığı (docs/04 §86: pencere içinde hafif uyku sinyali → tetik; saf Dart, test edilebilir). (c) mix-to-video offline render yolu (renderMix hazır).
+1. **Mobil devam (%57, ağırlık 0.40 — en yüksek):** cihazsız kalan işler: (a) **uyku oturumu birleştirici** — dedektör + alarm + saat → API'nin beklediği oturum (süre, olay sayıları). NOT: `movementEvents`/`soundEvents` SINIFLANDIRMA istiyor ve o gerçek veri ister → şimdilik tek "olay sayısı" ile mi gönderilecek, ürün kararı (D-10 adayı). (b) mix-to-video offline render yolu (renderMix hazır). (c) uyku modu ekranı (UI; mikrofon yakalama olmadan da iskelet kurulabilir).
 2. **İnsan-kapılı (otonom YAPILAMAZ):** native ses grafiği + gerçek cihaz doğrulaması (CLAUDE.md §1.1 kulaklıkla), mikrofon yakalama (platform izni), olay sınıflandırma eşiklerinin gerçek gece kayıtlarıyla ayarlanması (docs/04 §120 fixture'ları).
 3. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
 4. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
@@ -78,6 +78,42 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #129 — akıllı alarm penceresi + aktivite köprüsü (PR #130, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `SmartAlarm` (docs/04 §86) + `hasRecentActivity` köprüsü (dedektörün ÇERÇEVE
+  birimini alarmın DUVAR SAATİne çevirir). Mobilde alarm adına hiç kod yoktu.
+- docs/04 §120 zaten "alarm penceresi mantığı unit+integration testli" diyor →
+  cihazsız yapılabilir kısım tam da bu.
+- flutter analyze temiz; **222 test** (200→222, +22). turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **EN KRİTİK — SON TARİH PAZARLIKSIZ:** hafif uyku sinyali HİÇ görülmese de pencere
+  sonunda çalar. "Akıllı" kısım bir OPTİMİZASYON; alarm bir SÖZ. Sinyal beklerken
+  sessiz kalmak = kullanıcının işe geç kalması. Testlerin ağırlığı orada (son tarih
+  geçtiyse de çalar — tick kaçarsa kaybolmasın; sıfır pencere kilitlenmez).
+- **SAF MANTIK, YAN ETKİSİZ:** bildirim/ses/zamanlayıcı yok — alarmın doğruluğu
+  saniyesi saniyesine test edilebilmeli.
+- BİR KEZ çalar (yoksa her tick'te bildirim). Pencere öncesi aktivite olsa bile çalmaz.
+- Köprü AYRI dosyada: dedektör çerçeveyle, alarm saatle çalışır; çeviriyi birine
+  gömmek onu diğerinin zaman kavramına bağlardı.
+- Süregelen olay sayılır (horlama hâlâ sürüyorsa "şu an ses var").
+
+🔥 **Riskler / açıklar**
+
+- **SEZGİSEL (dürüstlük):** "son N dk akustik aktivite = hafif uyku" varsayımı
+  polisomnografiyle DOĞRULANMADI. İddia "hareketlendiğinde uyandırırız" ile sınırlı
+  kalmalı — "REM'i biliriz" DEĞİL (CLAUDE.md §1.1 ürün metnine de bakar).
+- Bildirim, "sunrise" ses rampası, zamanlayıcı, uyku modu ekranı YOK (platform işi).
+- iOS kısıtı duruyor: uyku modu = şarjda + uygulama açık (docs/04 §86 ürün kararı).
+
+❌ **Yapılmadı**
+
+- Bildirim/zamanlayıcı, uyku modu ekranı, olay sınıflandırma, mikrofon yakalama,
+  native ses grafiği (insan-kapılı), mix-to-video.
 
 ### #128 — on-device dB zarfı + akustik olay tespiti (PR #129, merged)
 
