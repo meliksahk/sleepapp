@@ -5,6 +5,7 @@ import 'package:http/testing.dart';
 import 'package:nocta/core/api/nocta_api_client.dart';
 import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
+import 'package:nocta/core/sleep_tracking/sleep_session_builder.dart';
 import 'package:nocta/features/sleep/sleep_controller.dart';
 
 String _session(String slug) => jsonEncode(<String, dynamic>{
@@ -53,10 +54,12 @@ void main() {
     });
 
     final s = await controller.recordSession(
-      startedAt: DateTime.utc(2026, 3, 10, 22),
-      endedAt: DateTime.utc(2026, 3, 11, 4),
-      movementEvents: 4,
-      soundEvents: 2,
+      SleepSessionDraft(
+        startedAt: DateTime.utc(2026, 3, 10, 22),
+        endedAt: DateTime.utc(2026, 3, 11, 4),
+        movementEvents: 4,
+        soundEvents: 2,
+      ),
     );
     expect(authHeader, 'Bearer access-1');
     expect(body['movementEvents'], 4);
