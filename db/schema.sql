@@ -157,7 +157,8 @@ CREATE TABLE public.profiles (
     chronotype text,
     locale text DEFAULT 'en'::text NOT NULL,
     timezone text DEFAULT 'UTC'::text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    notifications_enabled boolean DEFAULT true NOT NULL
 );
 
 
@@ -650,4 +651,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120009'),
     ('20260715120010'),
     ('20260715120011'),
-    ('20260715120012');
+    ('20260715120012'),
+    ('20260715120013');
