@@ -9,9 +9,14 @@ import { RolesGuard } from '../../src/modules/identity/presentation/roles.guard'
  * tasarım kararlarıdır — sabitlenmezse sessizce tersine dönebilirler.
  */
 describe('RolesGuard', () => {
-  const contextWith = (roles: string[] | undefined): ExecutionContext =>
+  const contextWith = (
+    roles: string[] | undefined,
+    aud: 'app' | 'admin' = 'admin',
+  ): ExecutionContext =>
     ({
-      switchToHttp: () => ({ getRequest: () => (roles ? { user: { sub: 'u1', roles } } : {}) }),
+      switchToHttp: () => ({
+        getRequest: () => (roles ? { user: { sub: 'u1', roles, aud } } : {}),
+      }),
       getHandler: () => () => undefined,
       getClass: () => class {},
     }) as unknown as ExecutionContext;
@@ -36,6 +41,12 @@ describe('RolesGuard', () => {
 
   it('rol yoksa reddeder', () => {
     expect(() => guardFor(['owner']).canActivate(contextWith([]))).toThrow(ForbiddenException);
+  });
+
+  it('rol yeterli ama audience "app" → reddeder (mobil token panel anahtarı değildir)', () => {
+    expect(() => guardFor(['owner']).canActivate(contextWith(['owner'], 'app'))).toThrow(
+      ForbiddenException,
+    );
   });
 
   it('req.user hiç yoksa reddeder (guard sırası yanlış kurulmuşsa AÇIK BIRAKMAZ)', () => {

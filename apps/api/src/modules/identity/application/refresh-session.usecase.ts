@@ -1,3 +1,4 @@
+import { audienceForKind } from '../domain/user.entity';
 import type { IssuedSession } from '../domain/user.entity';
 import { InvalidRefreshTokenError, RefreshTokenReuseError } from '../domain/errors';
 import type { Clock, RefreshTokenRepository, TokenHasher, UserRepository } from '../domain/ports';
@@ -49,6 +50,9 @@ export class RefreshSessionUseCase {
       userId: user.id,
       roles: user.roles,
       familyId: record.familyId,
+      // Rol/tür değişimi refresh'te yürürlüğe girer: admin yapılan hesap bir sonraki
+      // refresh'te 'admin' audience'ı alır, geri alınan da kaybeder.
+      aud: audienceForKind(user.kind),
     });
   }
 }
