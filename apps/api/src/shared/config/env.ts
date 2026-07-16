@@ -23,6 +23,11 @@ const EnvSchema = z.object({
   // İstek gövdesi boyut limiti (DoS sertleşme). Payload'larımız küçük (auth/profil/cevaplar).
   MAX_REQUEST_BODY_BYTES: z.coerce.number().int().positive().default(65_536), // 64kb
 
+  // IP rate-limit (throttler). Env'den gelir çünkü e2e testleri tek IP'den yüzlerce
+  // istek atar → testte yüksek, üretimde sıkı. Dağıtık (Redis) storage B4'te.
+  THROTTLE_LIMIT: z.coerce.number().int().positive().default(60), // pencere başına istek
+  THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000), // pencere (ms)
+
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
