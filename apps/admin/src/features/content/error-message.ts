@@ -11,6 +11,7 @@ export function createErrorMessage(status: number, code?: string): string {
     return 'Ses tarifi boş — yayınlanamaz. Önce sesi tanımlayın (tarif editörü henüz yok).';
   }
   if (code === 'soundscape_not_found') return 'Kayıt bulunamadı. Liste güncel olmayabilir.';
+  if (code === 'empty_title') return 'Başlık boş olamaz.';
   if (code === 'invalid_slug') {
     return 'Slug yalnızca küçük harf, rakam ve tire içerebilir (ör. deep-ocean-drift).';
   }

@@ -42,6 +42,11 @@ export interface SoundscapeCatalog {
   publish(slug: string): Promise<CatalogEntry>;
   /** Ses tarifini yazar (doğrulama content'in işi). */
   setRecipe(slug: string, recipe: unknown): Promise<CatalogEntry>;
+  /** Başlık/affinity günceller (kısmi). Slug DEĞİŞTİRİLEMEZ — derin linkte yaşar. */
+  update(
+    slug: string,
+    patch: { titleEn?: string; archetypeAffinity?: string[] },
+  ): Promise<CatalogEntry>;
   unpublish(slug: string): Promise<CatalogEntry>;
 }
 

@@ -843,6 +843,54 @@
         ],
         "summary": "Tek soundscape + ham ses tarifi (taslak dahil)",
         "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "AdminController_updateSoundscape",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSoundscapeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSoundscapeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yazma yetkisi yok"
+          },
+          "404": {
+            "description": "Soundscape yok"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Baslik/affinity guncelle (kismi)",
+        "tags": ["admin"]
       }
     },
     "/v1/admin/soundscapes/{slug}/recipe": {
@@ -1909,6 +1957,23 @@
           }
         },
         "required": ["schemaVersion", "layers"]
+      },
+      "UpdateSoundscapeDto": {
+        "type": "object",
+        "properties": {
+          "titleEn": {
+            "type": "string",
+            "example": "Deep Ocean Drift",
+            "description": "İngilizce başlık"
+          },
+          "archetypeAffinity": {
+            "description": "Uygun uyku kimlikleri (tam liste)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "SoundscapeDto": {
         "type": "object",

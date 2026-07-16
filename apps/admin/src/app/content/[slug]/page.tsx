@@ -3,6 +3,7 @@ import { AppShell } from '@/shared/ui/AppShell';
 import { apiGet } from '@/shared/api/server-client';
 import { LogoutButton } from '@/features/auth/LogoutButton';
 import { RecipeForm } from '@/features/content/RecipeForm';
+import { MetaForm } from '@/features/content/MetaForm';
 import { toFormLayers } from '@/features/content/recipe-form';
 import { canWriteContent } from '@/features/content/can-write';
 import { statusLabel } from '@/features/content/status-label';
@@ -35,6 +36,13 @@ export default async function SoundscapeDetailPage({
       <p className="mt-1 mb-6 text-body text-ink-secondary">
         {detail.slug} · {statusLabel(detail.status)}
       </p>
+
+      {canWrite && (
+        <section className="mb-8">
+          <h3 className="mb-3 text-body font-display">Bilgiler</h3>
+          <MetaForm slug={detail.slug} title={detail.title} affinity={detail.archetypeAffinity} />
+        </section>
+      )}
 
       <h3 className="mb-3 text-body font-display">Ses tarifi</h3>
       {canWrite ? (

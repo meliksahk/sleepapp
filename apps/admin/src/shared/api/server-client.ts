@@ -44,10 +44,15 @@ export async function apiPut<T>(path: string, body: unknown): Promise<WriteResul
   return write('PUT', path, body);
 }
 
+/** Kısmi güncelleme (bkz. apiPost gerekçesi). */
+export async function apiPatch<T>(path: string, body: unknown): Promise<WriteResult<T>> {
+  return write('PATCH', path, body);
+}
+
 export type WriteResult<T> = { ok: true; data: T } | { ok: false; status: number; code?: string };
 
 async function write<T>(
-  method: 'POST' | 'PUT',
+  method: 'POST' | 'PUT' | 'PATCH',
   path: string,
   body: unknown,
 ): Promise<WriteResult<T>> {

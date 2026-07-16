@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { apiPost, apiPut } from '@/shared/api/server-client';
+import { apiPatch, apiPost, apiPut } from '@/shared/api/server-client';
 import { createErrorMessage } from './error-message';
 import type { AdminSoundscape } from './types';
 
@@ -15,6 +15,11 @@ export interface StatusState {
 }
 
 export interface RecipeState {
+  error?: string;
+  saved?: boolean;
+}
+
+export interface MetaState {
   error?: string;
   saved?: boolean;
 }
@@ -108,6 +113,35 @@ export async function setRecipeAction(
   }
 
   // Hem detay hem LİSTE: tarif varlığı listedeki yayınlama düğmesinin sonucunu değiştirir.
+  revalidatePath(`/content/${slug}`);
+  revalidatePath('/content');
+  return { saved: true };
+}
+
+/**
+ * Başlık/affinity güncelle (Server Action).
+ *
+ * Slug alanı YOK ve olmayacak: derin linkte yaşar; değiştirmek dışarıdaki linkleri
+ * sessizce kırardı (API de gövdedeki slug'ı reddediyor — #125).
+ */
+export async function updateMetaAction(_prev: MetaState, formData: FormData): Promise<MetaState> {
+  const slug = String(formData.get('slug') ?? '');
+  const titleEn = String(formData.get('titleEn') ?? '');
+  const affinityRaw = String(formData.get('archetypeAffinity') ?? '');
+
+  const archetypeAffinity = affinityRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  const res = await apiPatch<AdminSoundscape>(`/v1/admin/soundscapes/${slug}`, {
+    titleEn,
+    archetypeAffinity,
+  });
+  if (!res.ok) {
+    return { error: createErrorMessage(res.status, res.code) };
+  }
+
   revalidatePath(`/content/${slug}`);
   revalidatePath('/content');
   return { saved: true };

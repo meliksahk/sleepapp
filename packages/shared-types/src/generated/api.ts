@@ -444,7 +444,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Baslik/affinity guncelle (kismi) */
+        patch: operations["AdminController_updateSoundscape"];
         trace?: never;
     };
     "/v1/admin/soundscapes/{slug}/recipe": {
@@ -954,6 +955,15 @@ export interface components {
             layers: {
                 [key: string]: unknown;
             }[];
+        };
+        UpdateSoundscapeDto: {
+            /**
+             * @description İngilizce başlık
+             * @example Deep Ocean Drift
+             */
+            titleEn?: string;
+            /** @description Uygun uyku kimlikleri (tam liste) */
+            archetypeAffinity?: string[];
         };
         SoundscapeDto: {
             /** Format: uuid */
@@ -1880,6 +1890,45 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminSoundscapeDetailDto"];
                 };
+            };
+            /** @description Soundscape yok */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_updateSoundscape: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSoundscapeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSoundscapeDto"];
+                };
+            };
+            /** @description Yazma yetkisi yok */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Soundscape yok */
             404: {

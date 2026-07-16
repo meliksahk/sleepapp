@@ -7,6 +7,7 @@ import {
   HttpCode,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -43,6 +44,7 @@ import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { CreateSoundscapeDto } from './create-soundscape.dto';
 import { SetRecipeDto } from './recipe.dto';
+import { UpdateSoundscapeDto } from './update-soundscape.dto';
 import {
   SOUNDSCAPE_CATALOG,
   type CatalogEntry,
@@ -207,6 +209,29 @@ export class AdminController {
     @Body() dto: SetRecipeDto,
   ): Promise<AdminSoundscapeDto> {
     return this.runCatalog(() => this.catalog.setRecipe(slug, dto));
+  }
+
+  /**
+   * Başlık / affinity güncelle. KISMİ: verilmeyen alana dokunulmaz.
+   * Slug yok — derin linkte yaşar (bkz. UpdateSoundscapeDto).
+   */
+  @Patch('soundscapes/:slug')
+  @HttpCode(200)
+  @Roles('owner', 'editor')
+  @ApiOperation({ summary: 'Baslik/affinity guncelle (kismi)' })
+  @ApiOkResponse({ type: AdminSoundscapeDto })
+  @ApiForbiddenResponse({ description: 'Yazma yetkisi yok' })
+  @ApiNotFoundResponse({ description: 'Soundscape yok' })
+  async updateSoundscape(
+    @Param('slug') slug: string,
+    @Body() dto: UpdateSoundscapeDto,
+  ): Promise<AdminSoundscapeDto> {
+    return this.runCatalog(() =>
+      this.catalog.update(slug, {
+        titleEn: dto.titleEn,
+        archetypeAffinity: dto.archetypeAffinity,
+      }),
+    );
   }
 
   /** Domain hatalarını HTTP'ye çevirir — tek yerde, uçlar arasında sapma olmasın. */
