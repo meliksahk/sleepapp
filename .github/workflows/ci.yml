@@ -10,10 +10,10 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# dorny/paths-filter PR'da değişen dosyaları GitHub API ile okur → pull-requests: read gerekir.
+# Değişen dosyalar GIT ile tespit edilir (bkz. mobile/filter adımı) — GitHub API
+# çağrısı YOK, dolayısıyla `pull-requests: read` de gerekmiyor.
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
   ts:
@@ -76,14 +76,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: filter
         with:
-          filters: |
-            mobile:
-              - 'apps/mobile/**'
-              - 'packages/design-tokens/**'
-              - '.github/workflows/ci.yml'
+          # Taban ile karşılaştırma yapacağız: sığ klon merge-base'i bulamaz.
+          fetch-depth: 0
+      # Değişen dosyalar GIT ile bulunur, GitHub API ile DEĞİL.
+      #
+      # NEDEN: burada dorny/paths-filter vardı ve PR'da değişen dosyaları
+      # `pulls/{n}/files` ucundan okuyordu. 2026-07-17'de o uç saatlerce HTML 500
+      # döndürdü → adım 6 saniyede çöktü, Flutter hiç çalışmadı ve HİÇBİR PR merge
+      # edilemedi (kodla ilgisi olmayan bir arıza, tüm hattı durdurdu). `git diff`
+      # yalnızca zaten checkout edilmiş depoya bakar; dış servise bağlı değildir.
+      #
+      # `base.sha` OLAY YÜKÜNDEN gelir (API çağrısı değil) — arıza sırasında bile vardır.
+      - name: Detect mobile changes (git)
+        id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="$BASE_SHA"
+          else
+            base="$BEFORE_SHA"
+          fi
+
+          # ŞÜPHEDE KALIRSAN ÇALIŞTIR: taban bilinmiyorsa (dal ilk kez itildi,
+          # 000000; ya da commit yok) işi ATLAMAK, test koşmadan YEŞİL CI demek
+          # olurdu — bu, çökmekten beterdir. O yüzden varsayılan "değişti".
+          known=1
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ]; then
+            known=0
+          elif ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            known=0
+          fi
+          if [ "$known" -eq 0 ]; then
+            echo "Taban belirlenemedi ($base) → güvenli tarafta kalınıp koşuluyor."
+            echo "mobile=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed="$(git diff --name-only "$base" HEAD)"
+          echo "Değişen dosyalar:"; echo "$changed"
+
+          if echo "$changed" | grep -qE '^(apps/mobile/|packages/design-tokens/|\.github/workflows/ci\.yml$)'; then
+            echo "mobile=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "mobile=false" >> "$GITHUB_OUTPUT"
+          fi
       - if: steps.filter.outputs.mobile == 'true'
         uses: subosito/flutter-action@v2
         with:
