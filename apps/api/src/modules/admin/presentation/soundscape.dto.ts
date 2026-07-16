@@ -18,3 +18,14 @@ export class AdminSoundscapeDto {
   @ApiProperty({ description: 'ISO 8601 UTC (CLAUDE.md §4)' })
   createdAt!: string;
 }
+
+/** Detay: özet + DÜZENLENECEK ham tarif (doğrulanmamış — bkz. AdminSoundscapeView). */
+export class AdminSoundscapeDetailDto extends AdminSoundscapeDto {
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: true,
+    description:
+      'Ham engine_params. Eski/elle girilmiş bozuk bir tarif de dönebilir — editör onu GÖREBİLMELİ ki düzeltebilsin.',
+  })
+  recipe!: unknown;
+}

@@ -4,6 +4,7 @@ import type { SoundscapeSummary } from '../content';
 import {
   ContentModule,
   CreateSoundscapeUseCase,
+  GetAdminSoundscapeUseCase,
   ListAllSoundscapesUseCase,
   SetSoundscapeRecipeUseCase,
   SetSoundscapeStatusUseCase,
@@ -41,16 +42,22 @@ const providers: Provider[] = [
       CreateSoundscapeUseCase,
       SetSoundscapeStatusUseCase,
       SetSoundscapeRecipeUseCase,
+      GetAdminSoundscapeUseCase,
     ],
     useFactory: (
       listAll: ListAllSoundscapesUseCase,
       create: CreateSoundscapeUseCase,
       setStatus: SetSoundscapeStatusUseCase,
       setRecipe: SetSoundscapeRecipeUseCase,
+      getOne: GetAdminSoundscapeUseCase,
     ): SoundscapeCatalog => ({
       list: async () => {
         const all = await listAll.execute();
         return all.map(toEntry);
+      },
+      get: async (slug) => {
+        const view = await getOne.execute(slug);
+        return { entry: toEntry(view.summary), recipe: view.recipe };
       },
       create: async (input) => toEntry(await create.execute(input)),
       publish: async (slug) => toEntry(await setStatus.publish(slug)),

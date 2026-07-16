@@ -15,6 +15,7 @@ import { ListAllSoundscapesUseCase } from './application/list-all-soundscapes.us
 import { CreateSoundscapeUseCase } from './application/create-soundscape.usecase';
 import { SetSoundscapeStatusUseCase } from './application/set-soundscape-status.usecase';
 import { SetSoundscapeRecipeUseCase } from './application/set-soundscape-recipe.usecase';
+import { GetAdminSoundscapeUseCase } from './application/get-admin-soundscape.usecase';
 import { PrismaContentRepository } from './infrastructure/prisma-content.repository';
 import { S3AssetSigner } from './infrastructure/s3-asset.signer';
 import { GetFeedUseCase } from './application/get-feed.usecase';
@@ -89,6 +90,12 @@ const providers: Provider[] = [
       new SetSoundscapeStatusUseCase(repo, cache),
   },
   {
+    provide: GetAdminSoundscapeUseCase,
+    inject: [CONTENT_REPOSITORY],
+    useFactory: (repo: ContentRepository): GetAdminSoundscapeUseCase =>
+      new GetAdminSoundscapeUseCase(repo),
+  },
+  {
     provide: SetSoundscapeRecipeUseCase,
     inject: [CONTENT_REPOSITORY, CACHE],
     useFactory: (repo: ContentRepository, cache: Cache): SetSoundscapeRecipeUseCase =>
@@ -106,6 +113,7 @@ const providers: Provider[] = [
     CreateSoundscapeUseCase,
     SetSoundscapeStatusUseCase,
     SetSoundscapeRecipeUseCase,
+    GetAdminSoundscapeUseCase,
   ],
 })
 export class ContentModule {}

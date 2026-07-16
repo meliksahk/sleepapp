@@ -29,8 +29,15 @@ export interface NewCatalogEntry {
   readonly createdBy: string;
 }
 
+/** Tek kayıt + düzenlenecek ham tarif. */
+export interface CatalogDetail {
+  readonly entry: CatalogEntry;
+  readonly recipe: unknown;
+}
+
 export interface SoundscapeCatalog {
   list(): Promise<CatalogEntry[]>;
+  get(slug: string): Promise<CatalogDetail>;
   create(input: NewCatalogEntry): Promise<CatalogEntry>;
   publish(slug: string): Promise<CatalogEntry>;
   /** Ses tarifini yazar (doğrulama content'in işi). */

@@ -84,6 +84,13 @@ export interface SoundscapeSummary {
 export interface AdminSoundscapeView {
   readonly summary: SoundscapeSummary;
   readonly hasRecipe: boolean;
+  /**
+   * Ham `engine_params`. Panelde DÜZENLENEBİLMESİ için gerekir; listede taşınmaz
+   * (100 satırda ses tarifi gereksiz yük — #119 kararı). Doğrulanmamış dönüyor:
+   * DB'de eski/elle girilmiş bir kayıt bulunabilir ve editör onu GÖREBİLMELİ ki
+   * düzeltebilsin. Doğrulama YAZMA yolunda (#123).
+   */
+  readonly recipe: unknown;
 }
 
 /** Yeni taslak girdisi (admin yazma yolu). Durum daima 'draft' — yayınlama ayrı adım. */

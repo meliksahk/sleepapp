@@ -35,13 +35,25 @@ export async function apiGet<T>(path: string): Promise<T> {
  * bunları "beklenmedik" gibi ele almak olurdu. Okuma (`apiGet`) tersine: 401/403 orada
  * sayfanın hiç render edilemeyeceği anlamına gelir.
  */
-export async function apiPost<T>(
+export async function apiPost<T>(path: string, body: unknown): Promise<WriteResult<T>> {
+  return write('POST', path, body);
+}
+
+/** Tarif yazma gibi "tamamını değiştir" işlemleri için (bkz. apiPost gerekçesi). */
+export async function apiPut<T>(path: string, body: unknown): Promise<WriteResult<T>> {
+  return write('PUT', path, body);
+}
+
+export type WriteResult<T> = { ok: true; data: T } | { ok: false; status: number; code?: string };
+
+async function write<T>(
+  method: 'POST' | 'PUT',
   path: string,
   body: unknown,
-): Promise<{ ok: true; data: T } | { ok: false; status: number; code?: string }> {
+): Promise<WriteResult<T>> {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value;
   const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
+    method,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

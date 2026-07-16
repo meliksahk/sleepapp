@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { apiPost } from '@/shared/api/server-client';
+import { apiPost, apiPut } from '@/shared/api/server-client';
 import { createErrorMessage } from './error-message';
 import type { AdminSoundscape } from './types';
 
@@ -12,6 +12,11 @@ export interface CreateState {
 
 export interface StatusState {
   error?: string;
+}
+
+export interface RecipeState {
+  error?: string;
+  saved?: boolean;
 }
 
 /**
@@ -71,4 +76,39 @@ export async function setStatusAction(
 
   revalidatePath('/content');
   return {};
+}
+
+/**
+ * Ses tarifini kaydet (Server Action).
+ *
+ * Katmanlar JSON olarak gelir: dinamik satır sayısını düz FormData alanlarıyla ifade
+ * etmek ad çakışması ve sıra hataları üretirdi. Şema DOĞRULAMASI burada TEKRAR
+ * EDİLMEZ — kural API'de (#123); buradaki iş, reddi editörün diline çevirmek.
+ */
+export async function setRecipeAction(
+  _prev: RecipeState,
+  formData: FormData,
+): Promise<RecipeState> {
+  const slug = String(formData.get('slug') ?? '');
+  const layersJson = String(formData.get('layers') ?? '[]');
+
+  let layers: unknown;
+  try {
+    layers = JSON.parse(layersJson);
+  } catch {
+    return { error: 'Katmanlar okunamadı. Sayfayı yenileyip tekrar deneyin.' };
+  }
+
+  const res = await apiPut<AdminSoundscape>(`/v1/admin/soundscapes/${slug}/recipe`, {
+    schemaVersion: 1,
+    layers,
+  });
+  if (!res.ok) {
+    return { error: createErrorMessage(res.status, res.code) };
+  }
+
+  // Hem detay hem LİSTE: tarif varlığı listedeki yayınlama düğmesinin sonucunu değiştirir.
+  revalidatePath(`/content/${slug}`);
+  revalidatePath('/content');
+  return { saved: true };
 }

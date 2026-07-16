@@ -40,7 +40,7 @@ import {
 } from '../../identity';
 import { Inject } from '@nestjs/common';
 import { AdminMeDto } from './dto';
-import { AdminSoundscapeDto } from './soundscape.dto';
+import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { CreateSoundscapeDto } from './create-soundscape.dto';
 import { SetRecipeDto } from './recipe.dto';
 import {
@@ -169,6 +169,26 @@ export class AdminController {
   @ApiOkResponse({ type: AdminSoundscapeDto })
   async unpublish(@Param('slug') slug: string): Promise<AdminSoundscapeDto> {
     return this.runCatalog(() => this.catalog.unpublish(slug));
+  }
+
+  /**
+   * Tek kayıt + düzenlenecek ham tarif. Listede tarif taşınmaz (#119) — panelin
+   * düzenleme ekranı için ayrı uç.
+   */
+  @Get('soundscapes/:slug')
+  @ApiOperation({ summary: 'Tek soundscape + ham ses tarifi (taslak dahil)' })
+  @ApiOkResponse({ type: AdminSoundscapeDetailDto })
+  @ApiNotFoundResponse({ description: 'Soundscape yok' })
+  async soundscape(@Param('slug') slug: string): Promise<AdminSoundscapeDetailDto> {
+    try {
+      const { entry, recipe } = await this.catalog.get(slug);
+      return { ...toDto(entry), recipe };
+    } catch (err) {
+      if (err instanceof SoundscapeNotFoundError) {
+        throw new NotFoundException({ code: err.code, message: err.message });
+      }
+      throw err;
+    }
   }
 
   /**

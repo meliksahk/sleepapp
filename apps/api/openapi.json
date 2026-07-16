@@ -808,6 +808,43 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/soundscapes/{slug}": {
+      "get": {
+        "operationId": "AdminController_soundscape",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSoundscapeDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Soundscape yok"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tek soundscape + ham ses tarifi (taslak dahil)",
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/soundscapes/{slug}/recipe": {
       "put": {
         "operationId": "AdminController_setRecipe",
@@ -1798,6 +1835,54 @@
           }
         },
         "required": ["slug", "titleEn"]
+      },
+      "AdminSoundscapeDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "description": "Görünen başlık (EN; yoksa slug)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "scheduled", "published"]
+          },
+          "archetypeAffinity": {
+            "description": "Uygun uyku kimlikleri",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO 8601 UTC (CLAUDE.md §4)"
+          },
+          "recipe": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Ham engine_params. Eski/elle girilmiş bozuk bir tarif de dönebilir — editör onu GÖREBİLMELİ ki düzeltebilsin."
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "status",
+          "archetypeAffinity",
+          "version",
+          "createdAt",
+          "recipe"
+        ]
       },
       "SetRecipeDto": {
         "type": "object",
