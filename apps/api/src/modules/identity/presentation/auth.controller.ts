@@ -9,12 +9,14 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RegisterDeviceUseCase } from '../application/register-device.usecase';
@@ -44,6 +46,18 @@ import {
   SessionResponseDto,
   VerifyEmailDto,
 } from './dto';
+
+/**
+ * Admin giriş limiti — istek anında okunur (Resolvable), böylece test ve operasyon
+ * ayarlayabilir. `loadEnv()` BURADA çağrılamaz: presentation katmanı `shared/config`'i
+ * import edemez (boundary lint, docs/02 §2) ve decorator DI kullanamaz. Değer yine de
+ * env.ts şemasında tanımlı → açılışta zod ile DOĞRULANIR; buradaki okuma yalnızca
+ * doğrulanmış değeri geri alır. Bozuk/eksikse güvenli varsayılana (5) düşer.
+ */
+function adminLoginLimit(): number {
+  const parsed = Number(process.env.ADMIN_LOGIN_LIMIT);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 5;
+}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -87,12 +101,23 @@ export class AuthController {
   /**
    * Panel girişi. Burada (identity'de) yaşar: auth kodu YALNIZCA bu modülde
    * (CLAUDE.md §6) — admin modülü kripto/parola görmez.
+   *
+   * KABA KUVVET: global limit route başına 60/dk'dır — "gezinme" için makul,
+   * "parola tahmini" için değil (tek IP'den günde 86.400 deneme). Sistemdeki en
+   * değerli hesap olduğu için burada 5/dk. Meşru kullanıcıyı zorlamaz: insan bir
+   * dakikada 5'ten fazla parola denemez.
+   *
+   * SINIRI: bu limit IP BAŞINADIR. Çok IP'li (botnet/proxy) bir saldırgan yine
+   * dağıtarak deneyebilir — asıl çözüm HESAP başına kilitleme, o ise yeni bir DB
+   * alanı ister (ayrı iş, defterde). Bu, tek IP'li kaba kuvveti 12.000× yavaşlatır.
    */
   @Post('admin/login')
   @HttpCode(200)
+  @Throttle({ default: { limit: adminLoginLimit, ttl: 60_000 } })
   @ApiOperation({ summary: 'Admin panel girişi (e-posta + parola)' })
   @ApiOkResponse({ type: SessionResponseDto })
   @ApiUnauthorizedResponse({ description: 'E-posta veya parola hatalı' })
+  @ApiTooManyRequestsResponse({ description: 'Çok fazla giriş denemesi (5/dk)' })
   async adminLogin(@Body() dto: AdminLoginDto): Promise<SessionResponseDto> {
     try {
       return await this.loginAdmin.execute(dto.email, dto.password);

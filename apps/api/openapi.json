@@ -115,6 +115,9 @@
           },
           "401": {
             "description": "E-posta veya parola hatalı"
+          },
+          "429": {
+            "description": "Çok fazla giriş denemesi (5/dk)"
           }
         },
         "summary": "Admin panel girişi (e-posta + parola)",
