@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈54% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈56% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████████░░░░░░░░░░░░░░░░░░] 54%
+[██████████████████████░░░░░░░░░░░░░░░░░░] 56%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~86%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~18%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~28%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·86 + 0.40·49 + 0.15·18 + 0.15·45 ≈ **54%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·86 + 0.40·49 + 0.15·28 + 0.15·45 ≈ **56%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kalanı:** (a) **admin'e vitest kur** — şu an HİÇ test yok, panel kodu yazmadan önce şart. (b) **panel login sayfası + middleware** (API hazır; httpOnly cookie kararı verilecek). (c) TOTP 2FA. (d) davet akışı + parola sıfırlama. (e) hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi + admin:create ✓ #114, giriş limiti ✓ #115.
+1. **admin A0 kalanı:** (a) **token yenileme + çıkış butonu** — şu an 15dk sonra oturum sessizce ölüyor (en görünür eksik). (b) TOTP 2FA. (c) davet akışı + parola sıfırlama. (d) hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116.
 2. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 3. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
 4. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
@@ -75,6 +75,47 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #116 — panel girişi (httpOnly çerez) + kapı + admin'e vitest (PR #117, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **Panele giriş yapılabiliyor:** giriş sayfası + `/api/session` vekili + middleware
+  kapısı. #112→#116 zinciri: API hazırdı, panel ilk kez bağlandı.
+- **🆕 BULGU KAPANDI: admin'de HİÇ test yoktu** — `test` script'i bile yoktu, turbo'nun
+  "18/18"i admin için hiçbir şey koşmuyordu. Artık **19 task** ve **23 admin testi** (0→23).
+- **GERÇEK SUNUCUDA doğrulandı** (API :3099 + panel :3002): çerezsiz `/` → 307
+  `/login?next=%2F` · giriş → 200 + `HttpOnly; SameSite=lax`, token'da `"aud":"admin"` ·
+  çerezle `/` → 200 · **giriş gövdesi `{"ok":true}` — token SIZMIYOR** · yanlış parola
+  401 · arka arkaya denemeler 429. Kanıt hesabı silindi (kalan 0).
+- turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **httpOnly çerez, localStorage DEĞİL:** XSS admin anahtarını okuyamasın. Bedeli:
+  tarayıcı API'ye doğrudan gitmez, panelin route handler'ından geçer — bilerek ödendi.
+- **Açık yönlendirme koruması** (`safeNextPath`): `//` ve `/\` de reddedilir (ikisi de
+  `/` ile başlar ama tarayıcı DIŞ adres olarak çözer).
+- **429 → 401'e çevrilmez:** birleştirmek kullanıcıyı "parolam yanlış" sanıp denemeye
+  devam ettirir, limit hiç açılmaz.
+- `secure` yalnızca production: lokalde http'de secure çerez yazılmaz, giriş sessizce
+  çalışmaz görünürdü.
+
+🔥 **Riskler / açıklar**
+
+- **Middleware YETKİ KONTROLÜ DEĞİL:** yalnızca çerezin VARLIĞINA bakar, token'ı
+  doğrulamaz. Gerçek kapı sunucuda (#112/#113). Geçersiz çerezli kullanıcı sayfayı
+  GÖRÜR ama veri çekemez. Bu bilinçli — CLAUDE.md §3.3 gereği sunucu kapısı ÖNCE yazıldı.
+- **Access token yenileme YOK:** 15dk sonra sayfalar 401 alır → yeniden giriş. Refresh
+  çerezi duruyor ama kullanılmıyor. **Sıradaki iş.**
+- **Çıkış UI'ı yok** (`DELETE /api/session` var+test edildi, butonu yok) ve çıkış
+  sunucudaki oturumu iptal ETMEZ (refresh token API'de geçerli kalır).
+- i18n yok (hard-coded TR) — **D-8 kararı bekliyor**.
+
+❌ **Yapılmadı**
+
+- TOTP 2FA, davet akışı, hesap-başına kilitleme, token yenileme, çıkış butonu,
+  `.env.example`, dashboard'un canlı veriye bağlanması.
 
 ### #115 — admin girişine kaba kuvvet limiti (PR #116, merged)
 
