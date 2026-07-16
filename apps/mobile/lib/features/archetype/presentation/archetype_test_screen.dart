@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../core/share/sharer.dart';
+import '../../analytics/analytics_providers.dart';
 import '../archetype_models.dart';
 import '../archetype_providers.dart';
 
@@ -187,6 +188,15 @@ class _ResultView extends ConsumerStatefulWidget {
 
 class _ResultViewState extends ConsumerState<_ResultView> {
   bool _sharing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Sonuç görüntülendi → analitik olayı (viral kanca ölçümü). Bloklamaz.
+    ref
+        .read(analyticsProvider)
+        .track('archetype_completed', props: {'archetype': widget.result.archetypeSlug});
+  }
 
   Future<void> _share() async {
     if (_sharing) return;

@@ -8,10 +8,25 @@ import 'package:nocta/core/api/nocta_api_client.dart';
 import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/core/share/sharer.dart';
 import 'package:nocta/core/storage/session_store.dart';
+import 'package:nocta/features/analytics/analytics.dart';
+import 'package:nocta/features/analytics/analytics_providers.dart';
 import 'package:nocta/features/archetype/archetype_controller.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/archetype/presentation/archetype_test_screen.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
+
+class RecordingAnalytics implements Analytics {
+  final List<String> events = [];
+  Map<String, dynamic>? lastProps;
+  @override
+  void track(String name, {Map<String, dynamic>? props}) {
+    events.add(name);
+    lastProps = props;
+  }
+
+  @override
+  Future<int> flush() async => 0;
+}
 
 class RecordingSharer implements Sharer {
   ShareContent? last;
@@ -116,6 +131,8 @@ Future<void> _pump(
     ProviderScope(
       overrides: <Override>[
         archetypeControllerProvider.overrideWithValue(controller),
+        // Analytics override — default'u apiClientProvider→FlavorConfig okur (testte yok).
+        analyticsProvider.overrideWithValue(RecordingAnalytics()),
         if (sharer != null) sharerProvider.overrideWithValue(sharer),
       ],
       child: MaterialApp(theme: buildNoctaDarkTheme(), home: const ArchetypeTestScreen()),
@@ -148,6 +165,27 @@ void main() {
     // Tanıtım içeriği (public uç) geldiyse tagline gösterilir.
     expect(find.byKey(const Key('archetype-tagline')), findsOneWidget);
     expect(find.text('You sink into stillness.'), findsOneWidget);
+  });
+
+  testWidgets('sonuç görüntülenince archetype_completed analitik olayı gönderilir', (tester) async {
+    final analytics = RecordingAnalytics();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          archetypeControllerProvider.overrideWithValue(await _controller()),
+          analyticsProvider.overrideWithValue(analytics),
+        ],
+        child: MaterialApp(theme: buildNoctaDarkTheme(), home: const ArchetypeTestScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('opt-q1-q1a')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('archetype-submit')));
+    await tester.pumpAndSettle();
+
+    expect(analytics.events, contains('archetype_completed'));
+    expect(analytics.lastProps?['archetype'], 'deep-ocean');
   });
 
   testWidgets('sonuçta paylaş → sharer web URL alır, "Link copied" gösterilir', (tester) async {
