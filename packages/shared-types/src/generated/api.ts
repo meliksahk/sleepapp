@@ -1164,6 +1164,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Çok fazla giriş denemesi (5/dk) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_me: {

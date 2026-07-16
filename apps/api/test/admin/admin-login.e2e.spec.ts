@@ -48,7 +48,13 @@ describe('Admin girişi e2e (HTTP)', () => {
   const login = (body: Record<string, unknown>) =>
     request(app.getHttpServer()).post('/v1/auth/admin/login').send(body);
 
+  const originalLoginLimit = process.env.ADMIN_LOGIN_LIMIT;
+
   beforeAll(async () => {
+    // Bu dosya KİMLİK DOĞRULAMAYI test eder, limiti değil: 5/dk'lık gerçek limit
+    // burada 429 üretirdi. Limitin KENDİSİ kendi e2e'sinde test edilir
+    // (admin-login-throttle.e2e.spec.ts) → kapsam dışı kalmıyor.
+    process.env.ADMIN_LOGIN_LIMIT = '100000';
     await prisma.$connect();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
@@ -60,6 +66,7 @@ describe('Admin girişi e2e (HTTP)', () => {
   });
 
   afterAll(async () => {
+    process.env.ADMIN_LOGIN_LIMIT = originalLoginLimit;
     if (created.length > 0) {
       await prisma.users.deleteMany({ where: { id: { in: created } } });
     }

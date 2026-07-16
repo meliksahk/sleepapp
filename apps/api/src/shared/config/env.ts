@@ -27,6 +27,10 @@ const EnvSchema = z.object({
   // istek atar → testte yüksek, üretimde sıkı. Dağıtık (Redis) storage B4'te.
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(60), // pencere başına istek
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000), // pencere (ms)
+  // Admin girişi için AYRI ve çok daha sıkı limit (dakikada 5 deneme). Global 60/dk
+  // "gezinme" için makul, "parola tahmini" için değil. Ayarlanabilir çünkü bu bir
+  // operasyon kararı — ama YÜKSELTMEK kaba kuvvet kapısını açar, bilinçli yapılsın.
+  ADMIN_LOGIN_LIMIT: z.coerce.number().int().positive().default(5),
 
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
