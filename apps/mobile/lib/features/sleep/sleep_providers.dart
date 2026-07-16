@@ -12,3 +12,8 @@ final sleepControllerProvider = Provider<SleepController>((ref) {
 final streakProvider = FutureProvider<StreakStats>((ref) {
   return ref.read(sleepControllerProvider).streak();
 });
+
+/// En yeni uyku oturumları — geçmiş ekranı bunu izler.
+final recentSleepSessionsProvider = FutureProvider<List<SleepSession>>((ref) {
+  return ref.read(sleepControllerProvider).recentSessions();
+});
