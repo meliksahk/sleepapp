@@ -942,6 +942,56 @@
         "tags": ["sleep"]
       }
     },
+    "/v1/sleep/stats": {
+      "get": {
+        "operationId": "SleepController_sleepStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SleepStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Uyku istatistikleri (gece sayısı, toplam/ortalama süre)",
+        "tags": ["sleep"]
+      }
+    },
+    "/v1/sleep/trend": {
+      "get": {
+        "operationId": "SleepController_weeklyTrend",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeeklyTrendDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Son 7 gecenin uyku trendi (gece-başına süre, grafik için)",
+        "tags": ["sleep"]
+      }
+    },
     "/v1/analytics/events": {
       "post": {
         "operationId": "AnalyticsController_events",
@@ -1159,9 +1209,20 @@
           "timezone": {
             "type": "string",
             "example": "UTC"
+          },
+          "notificationsEnabled": {
+            "type": "boolean",
+            "example": true
           }
         },
-        "required": ["userId", "displayName", "chronotype", "locale", "timezone"]
+        "required": [
+          "userId",
+          "displayName",
+          "chronotype",
+          "locale",
+          "timezone",
+          "notificationsEnabled"
+        ]
       },
       "UpdateProfileDto": {
         "type": "object",
@@ -1185,6 +1246,11 @@
             "type": "string",
             "example": "Europe/Istanbul",
             "maxLength": 64
+          },
+          "notificationsEnabled": {
+            "type": "boolean",
+            "example": true,
+            "description": "Push bildirim tercihi"
           }
         }
       },
@@ -1693,6 +1759,64 @@
           }
         },
         "required": ["current", "longest", "totalNights"]
+      },
+      "SleepStatsDto": {
+        "type": "object",
+        "properties": {
+          "nights": {
+            "type": "number",
+            "example": 12,
+            "description": "Kayıtlı benzersiz gece sayısı"
+          },
+          "totalDurationMinutes": {
+            "type": "number",
+            "example": 5400
+          },
+          "averageDurationMinutes": {
+            "type": "number",
+            "example": 450
+          }
+        },
+        "required": ["nights", "totalDurationMinutes", "averageDurationMinutes"]
+      },
+      "TrendNightDto": {
+        "type": "object",
+        "properties": {
+          "nightDate": {
+            "type": "string",
+            "example": "2026-07-15",
+            "description": "Gece etiketi (yerel gün, 06:00 sınırı)"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 462,
+            "description": "O gecenin toplam süresi (dk); oturum yoksa 0"
+          }
+        },
+        "required": ["nightDate", "durationMinutes"]
+      },
+      "WeeklyTrendDto": {
+        "type": "object",
+        "properties": {
+          "nights": {
+            "description": "Son 7 gece, eskiden yeniye",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendNightDto"
+            }
+          },
+          "averageDurationMinutes": {
+            "type": "number",
+            "example": 445,
+            "description": "Yalnızca veri olan gecelerin ortalaması (yoksa 0)"
+          },
+          "nightsWithData": {
+            "type": "number",
+            "example": 5,
+            "description": "Aralıkta oturumu olan gece sayısı"
+          }
+        },
+        "required": ["nights", "averageDurationMinutes", "nightsWithData"]
       },
       "AnalyticsEventDto": {
         "type": "object",

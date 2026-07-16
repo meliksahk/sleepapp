@@ -40,6 +40,22 @@ export class SleepStatsDto {
   @ApiProperty({ example: 450 }) averageDurationMinutes!: number;
 }
 
+export class TrendNightDto {
+  @ApiProperty({ example: '2026-07-15', description: 'Gece etiketi (yerel gün, 06:00 sınırı)' })
+  nightDate!: string;
+  @ApiProperty({ example: 462, description: 'O gecenin toplam süresi (dk); oturum yoksa 0' })
+  durationMinutes!: number;
+}
+
+export class WeeklyTrendDto {
+  @ApiProperty({ type: [TrendNightDto], description: 'Son 7 gece, eskiden yeniye' })
+  nights!: TrendNightDto[];
+  @ApiProperty({ example: 445, description: 'Yalnızca veri olan gecelerin ortalaması (yoksa 0)' })
+  averageDurationMinutes!: number;
+  @ApiProperty({ example: 5, description: 'Aralıkta oturumu olan gece sayısı' })
+  nightsWithData!: number;
+}
+
 export class StreakDto {
   @ApiProperty({ example: 5, description: 'Şu anki ardışık gece serisi' }) current!: number;
   @ApiProperty({ example: 12, description: 'En uzun ardışık seri' }) longest!: number;

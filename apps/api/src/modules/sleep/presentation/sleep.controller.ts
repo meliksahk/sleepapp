@@ -23,6 +23,7 @@ import { ListSleepSessionsUseCase } from '../application/list-sleep-sessions.use
 import { GetNightReportUseCase } from '../application/get-night-report.usecase';
 import { GetStreakUseCase } from '../application/get-streak.usecase';
 import { GetSleepStatsUseCase } from '../application/get-sleep-stats.usecase';
+import { GetWeeklyTrendUseCase } from '../application/get-weekly-trend.usecase';
 import { SleepError } from '../domain/errors';
 import type { SleepSession } from '../domain/sleep-session.entity';
 import {
@@ -31,6 +32,7 @@ import {
   SleepSessionDto,
   SleepStatsDto,
   StreakDto,
+  WeeklyTrendDto,
 } from './dto';
 
 const NIGHT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -58,6 +60,7 @@ export class SleepController {
     private readonly report: GetNightReportUseCase,
     private readonly streak: GetStreakUseCase,
     private readonly stats: GetSleepStatsUseCase,
+    private readonly trend: GetWeeklyTrendUseCase,
   ) {}
 
   @Post('sessions')
@@ -147,5 +150,20 @@ export class SleepController {
   @ApiOkResponse({ type: SleepStatsDto })
   sleepStats(@CurrentUser() user: AccessTokenClaims): Promise<SleepStatsDto> {
     return this.stats.execute(user.sub);
+  }
+
+  @Get('trend')
+  @ApiOperation({ summary: 'Son 7 gecenin uyku trendi (gece-başına süre, grafik için)' })
+  @ApiOkResponse({ type: WeeklyTrendDto })
+  async weeklyTrend(@CurrentUser() user: AccessTokenClaims): Promise<WeeklyTrendDto> {
+    const trend = await this.trend.execute(user.sub);
+    return {
+      nights: trend.nights.map((n) => ({
+        nightDate: n.nightDate,
+        durationMinutes: n.durationMinutes,
+      })),
+      averageDurationMinutes: trend.averageDurationMinutes,
+      nightsWithData: trend.nightsWithData,
+    };
   }
 }

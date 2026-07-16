@@ -242,6 +242,52 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body).toEqual({ nights: 0, totalDurationMinutes: 0, averageDurationMinutes: 0 });
   });
 
+  it('trend: kayıt yokken 7 gece 0 + eskiden yeniye sıralı', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/trend')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.nights).toHaveLength(7);
+    expect(res.body.nights.every((n: { durationMinutes: number }) => n.durationMinutes === 0)).toBe(
+      true,
+    );
+    expect(res.body.nightsWithData).toBe(0);
+    expect(res.body.averageDurationMinutes).toBe(0);
+    // eskiden yeniye artan sıra
+    const dates = res.body.nights.map((n: { nightDate: string }) => n.nightDate);
+    expect([...dates].sort()).toEqual(dates);
+  });
+
+  it('trend: bu geceki oturum pencere içindeki bir kovaya düşer', async () => {
+    const t = await token();
+    await setTz(t, 'UTC');
+    const now = Date.now();
+    await request(app.getHttpServer())
+      .post('/v1/sleep/sessions')
+      .set('Authorization', `Bearer ${t}`)
+      .send({
+        startedAt: new Date(now - 3 * 60 * 60 * 1000).toISOString(), // 3 saat = 180dk
+        endedAt: new Date(now).toISOString(),
+        movementEvents: 0,
+        soundEvents: 0,
+      })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/trend')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    // 06:00 sınırı oturumu bugün/dün kovasına atabilir → kovayı sabitleme;
+    // pencere içinde en az bir gece ~180dk taşımalı (sınır-bağımsız).
+    expect(res.body.nights).toHaveLength(7);
+    const maxNight = Math.max(
+      ...res.body.nights.map((n: { durationMinutes: number }) => n.durationMinutes),
+    );
+    expect(maxNight).toBeGreaterThanOrEqual(180);
+    expect(res.body.nightsWithData).toBeGreaterThanOrEqual(1);
+  });
+
   it('liste yalnızca kendi oturumlarını döner (izolasyon)', async () => {
     const a = await token();
     const b = await token();

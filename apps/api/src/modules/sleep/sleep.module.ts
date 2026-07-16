@@ -16,6 +16,7 @@ import { ListSleepSessionsUseCase } from './application/list-sleep-sessions.usec
 import { GetNightReportUseCase } from './application/get-night-report.usecase';
 import { GetStreakUseCase } from './application/get-streak.usecase';
 import { GetSleepStatsUseCase } from './application/get-sleep-stats.usecase';
+import { GetWeeklyTrendUseCase } from './application/get-weekly-trend.usecase';
 import { SleepController } from './presentation/sleep.controller';
 
 const providers: Provider[] = [
@@ -69,6 +70,15 @@ const providers: Provider[] = [
     inject: [SLEEP_SESSION_REPOSITORY],
     useFactory: (repo: SleepSessionRepository): GetSleepStatsUseCase =>
       new GetSleepStatsUseCase(repo),
+  },
+  {
+    provide: GetWeeklyTrendUseCase,
+    inject: [SLEEP_SESSION_REPOSITORY, PROFILE_TIMEZONE_READER, CLOCK],
+    useFactory: (
+      repo: SleepSessionRepository,
+      timezones: ProfileTimezoneReader,
+      now: Clock,
+    ): GetWeeklyTrendUseCase => new GetWeeklyTrendUseCase(repo, timezones, now),
   },
 ];
 

@@ -498,6 +498,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/sleep/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Uyku istatistikleri (gece sayısı, toplam/ortalama süre) */
+        get: operations["SleepController_sleepStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sleep/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Son 7 gecenin uyku trendi (gece-başına süre, grafik için) */
+        get: operations["SleepController_weeklyTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/analytics/events": {
         parameters: {
             query?: never;
@@ -601,6 +635,8 @@ export interface components {
             locale: string;
             /** @example UTC */
             timezone: string;
+            /** @example true */
+            notificationsEnabled: boolean;
         };
         UpdateProfileDto: {
             displayName?: Record<string, never> | null;
@@ -610,6 +646,11 @@ export interface components {
             locale?: string;
             /** @example Europe/Istanbul */
             timezone?: string;
+            /**
+             * @description Push bildirim tercihi
+             * @example true
+             */
+            notificationsEnabled?: boolean;
         };
         QuestionOptionDto: {
             id: string;
@@ -853,6 +894,43 @@ export interface components {
              * @example 40
              */
             totalNights: number;
+        };
+        SleepStatsDto: {
+            /**
+             * @description Kayıtlı benzersiz gece sayısı
+             * @example 12
+             */
+            nights: number;
+            /** @example 5400 */
+            totalDurationMinutes: number;
+            /** @example 450 */
+            averageDurationMinutes: number;
+        };
+        TrendNightDto: {
+            /**
+             * @description Gece etiketi (yerel gün, 06:00 sınırı)
+             * @example 2026-07-15
+             */
+            nightDate: string;
+            /**
+             * @description O gecenin toplam süresi (dk); oturum yoksa 0
+             * @example 462
+             */
+            durationMinutes: number;
+        };
+        WeeklyTrendDto: {
+            /** @description Son 7 gece, eskiden yeniye */
+            nights: components["schemas"]["TrendNightDto"][];
+            /**
+             * @description Yalnızca veri olan gecelerin ortalaması (yoksa 0)
+             * @example 445
+             */
+            averageDurationMinutes: number;
+            /**
+             * @description Aralıkta oturumu olan gece sayısı
+             * @example 5
+             */
+            nightsWithData: number;
         };
         AnalyticsEventDto: {
             /**
@@ -1563,6 +1641,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StreakDto"];
+                };
+            };
+        };
+    };
+    SleepController_sleepStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleepStatsDto"];
+                };
+            };
+        };
+    };
+    SleepController_weeklyTrend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeeklyTrendDto"];
                 };
             };
         };
