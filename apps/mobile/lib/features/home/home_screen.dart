@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/flavor.dart';
 import '../../core/design_system/design_system.dart';
+import '../content/content_models.dart';
+import '../content/content_providers.dart';
 import '../sleep/sleep_providers.dart';
 
 /// Geçici iskelet ekranı (Faz M0). M1'de onboarding + archetype testi gelir.
@@ -12,6 +14,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final streak = ref.watch(streakProvider);
+    final weekly = ref.watch(weeklyReleaseProvider);
     return Scaffold(
       body: Center(
         child: Padding(
@@ -38,6 +41,11 @@ class HomeScreen extends ConsumerWidget {
                 data: (s) => _StreakCard(current: s.current),
                 orElse: () => const SizedBox.shrink(),
               ),
+              // Haftalık yayın kartı — yalnızca yayın varken (yükleme/hata/null → gizli).
+              weekly.maybeWhen(
+                data: (w) => w == null ? const SizedBox.shrink() : _WeeklyCard(release: w),
+                orElse: () => const SizedBox.shrink(),
+              ),
               NCard(
                 child: Text(
                   'flavor: ${FlavorConfig.current.name}',
@@ -54,6 +62,41 @@ class HomeScreen extends ConsumerWidget {
                 label: 'Browse soundscapes',
                 variant: NButtonVariant.ghost,
                 onPressed: () => context.push('/library'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeeklyCard extends StatelessWidget {
+  const _WeeklyCard({required this.release});
+
+  final WeeklyRelease release;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = release.soundscapes.length;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NoctaSpace.s5),
+      child: GestureDetector(
+        key: const Key('weekly-card'),
+        onTap: () => context.push('/library'),
+        child: NCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'This week',
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.accentAurora),
+              ),
+              const SizedBox(height: NoctaSpace.s2),
+              Text(
+                release.notes ?? '$count soundscape${count == 1 ? '' : 's'} this week',
+                key: const Key('weekly-note'),
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
               ),
             ],
           ),

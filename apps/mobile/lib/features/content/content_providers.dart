@@ -17,3 +17,8 @@ final soundscapeFeedProvider = FutureProvider<List<Soundscape>>((ref) {
 final soundscapeDetailProvider = FutureProvider.family<SoundscapeDetail?, String>((ref, slug) {
   return ref.read(contentControllerProvider).soundscape(slug);
 });
+
+/// En güncel haftalık yayın; yoksa null. Home'daki haftalık kart bunu izler.
+final weeklyReleaseProvider = FutureProvider<WeeklyRelease?>((ref) {
+  return ref.read(contentControllerProvider).weekly();
+});
