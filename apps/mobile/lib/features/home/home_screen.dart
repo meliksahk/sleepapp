@@ -36,9 +36,12 @@ class HomeScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
               ),
               const SizedBox(height: NoctaSpace.s6),
-              // Streak yalnızca veri gelince görünür (yükleme/hata → gizli, home bloklanmaz).
+              // Streak: yalnızca en az bir gece kaydı varken görünür (yeni kullanıcıda
+              // "0 nights streak" göstermek yerine gizli). Yükleme/hata → gizli, home bloklanmaz.
               streak.maybeWhen(
-                data: (s) => _StreakCard(current: s.current),
+                data: (s) => s.totalNights == 0
+                    ? const SizedBox.shrink()
+                    : _StreakCard(current: s.current, longest: s.longest),
                 orElse: () => const SizedBox.shrink(),
               ),
               // Haftalık yayın kartı — yalnızca yayın varken (yükleme/hata/null → gizli).
@@ -119,12 +122,15 @@ class _WeeklyCard extends StatelessWidget {
 }
 
 class _StreakCard extends StatelessWidget {
-  const _StreakCard({required this.current});
+  const _StreakCard({required this.current, required this.longest});
 
   final int current;
+  final int longest;
 
   @override
   Widget build(BuildContext context) {
+    // Kişisel rekor yalnızca güncel seriden büyükse anlamlı (aksi halde tekrar bilgi).
+    final showBest = longest > current;
     return Padding(
       padding: const EdgeInsets.only(bottom: NoctaSpace.s5),
       child: NCard(
@@ -139,6 +145,14 @@ class _StreakCard extends StatelessWidget {
               current == 1 ? 'night streak' : 'nights streak',
               style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
             ),
+            if (showBest) ...[
+              const SizedBox(height: NoctaSpace.s2),
+              Text(
+                'Best $longest',
+                key: const Key('streak-best'),
+                style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkFaint),
+              ),
+            ],
           ],
         ),
       ),
