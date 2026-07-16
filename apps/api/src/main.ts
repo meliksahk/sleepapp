@@ -16,6 +16,9 @@ async function bootstrap(): Promise<void> {
     bodyParser: false,
   });
 
+  // Framework parmak izini gizle (X-Powered-By: Express başlığını kaldır).
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+
   const bodyLimit = env.MAX_REQUEST_BODY_BYTES;
   app.use(json({ limit: bodyLimit }));
   app.use(urlencoded({ extended: true, limit: bodyLimit }));
