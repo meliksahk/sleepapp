@@ -1,6 +1,7 @@
 import type { PrismaService } from '../../../shared/infra/prisma.service';
 import type { SleepSessionRepository } from '../domain/ports';
 import type { NewSleepSession, SleepSession } from '../domain/sleep-session.entity';
+import type { SleepAggregate } from '../domain/stats';
 
 interface Row {
   id: string;
@@ -76,6 +77,29 @@ export class PrismaSleepSessionRepository implements SleepSessionRepository {
       orderBy: [{ night_date: 'desc' }, { started_at: 'desc' }],
     });
     return rows.map(toDomain);
+  }
+
+  /**
+   * TÜM oturumların toplamı — DB'de hesaplanır (bellek/pencere yok).
+   * `nights` için groupBy: benzersiz gece sayısı; COUNT(DISTINCT) Prisma'da yok.
+   */
+  async aggregateFor(userId: string): Promise<SleepAggregate> {
+    const [totals, nights] = await Promise.all([
+      this.prisma.sleep_sessions.aggregate({
+        where: { user_id: userId },
+        _count: { _all: true },
+        _sum: { duration_minutes: true },
+      }),
+      this.prisma.sleep_sessions.groupBy({
+        by: ['night_date'],
+        where: { user_id: userId },
+      }),
+    ]);
+    return {
+      nights: nights.length,
+      sessionCount: totals._count._all,
+      totalDurationMinutes: totals._sum.duration_minutes ?? 0,
+    };
   }
 
   async listNightDates(userId: string): Promise<string[]> {
