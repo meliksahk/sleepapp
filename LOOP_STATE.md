@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈64% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈66% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████████████░░░░░░░░░░░░░░] 64%
+[██████████████████████████░░░░░░░░░░░░░░] 66%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~95%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~58%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~68%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·95 + 0.40·49 + 0.15·58 + 0.15·45 ≈ **64%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·95 + 0.40·49 + 0.15·68 + 0.15·45 ≈ **66%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 devam:** (a) **panelde tarif formu** — API hazır (#123), editör hâlâ curl'süz tarif yazamıyor (docs/03: "jsonschema + form hibrit; ham JSON'a advanced sekmesinde izin"). (b) düzenleme (başlık/affinity). (c) dashboard canlı veri. (d) sayfalama. Liste ✓ #119, oluşturma ✓ #120, panel formu ✓ #121, yayınlama + cache ✓ #122, tarif API ✓ #123.
+1. **A1 kalanı:** (a) **başlık/affinity düzenleme** — tarif düzenlenebiliyor ama başlık düzeltilemiyor. (b) dashboard canlı veri (yer tutucu metrikler duruyor). (c) sayfalama. (d) zamanlanmış yayın (`scheduled` + `publish_at` şemada var, akış yok). A1 çekirdeği TAMAM: liste #119, oluşturma #120, panel formu #121, yayınlama+cache #122, tarif API #123, tarif editörü #124.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,43 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #124 — panelde ses tarifi editörü + admin detay ucu (PR #125, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `/content/[slug]` düzenleme ekranı: katman editörü (id/tür/kazanç, 1–8).
+  **A1 zinciri panelden tamamlandı: taslak oluştur → tarif yaz → yayınla.**
+- `GET /v1/admin/soundscapes/:slug` (özet + düzenlenecek ham tarif).
+- **GERÇEK SUNUCUDA:** editor girişi → `/content/form-rcp` 200; sayfada "Form Recipe",
+  "Ses tarifi", `value="base"`, tür "brown", kazanç 0.70, "Tarifi kaydet" + "Katman
+  ekle" render oldu. Kanıt verisi silindi.
+- API **340 test** (334→340), admin **66 test** (55→66), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **Ham tarif DOĞRULANMADAN dönüyor:** DB'de eski/elle girilmiş bozuk kayıt olabilir,
+  **editör görmeden düzeltemez**. Sıkı kapı YAZMA yolunda (#123).
+- **`toFormLayers` DOĞRULAMAZ, KURTARIR:** bilinmeyen tür → varsayılan, aralık dışı
+  gain → kırpılır; katman KAYBOLMAZ.
+- **"Ham JSON" sekmesi YOK** (docs/03 "advanced" öneriyor): form yeterliyken ham JSON,
+  bozuk tarif üretmenin en kolay yolu olurdu. Sözleşme büyürse yeniden değerlendir.
+- Katmanlar JSON alanıyla gönderiliyor (düz FormData alanları ad çakışması üretirdi).
+- Kaydetme HEM detay HEM listeyi tazeler (tarif varlığı yayınlama düğmesini etkiler).
+
+🔥 **Riskler / açıklar**
+
+- **DÜRÜSTLÜK:** form GÖNDERİMİ gerçek tarayıcıyla koşulmadı (Next-Action protokolü
+  curl'le zahmetli). Action birim testlerle, API yolu + render canlı doğrulandı.
+- Başlık/affinity düzenleme YOK (yalnızca tarif).
+- `layer_defs` kullanılmıyor — **D-9 kararı bekliyor**; (2) çıkarsa #122'nin kapısı
+  yanlış kolona bakıyor demektir.
+- Zamanlanmış yayın, dashboard canlı veri, sayfalama yok; i18n yok (**D-8**).
+
+❌ **Yapılmadı**
+
+- Başlık/affinity düzenleme, zamanlanmış yayın, dashboard canlı veri, sayfalama,
+  TOTP 2FA, davet akışı, `.env.example`.
 
 ### #123 — ses tarifi ucu (şema doğrulamalı) (PR #124, merged)
 
