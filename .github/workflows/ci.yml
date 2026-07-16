@@ -61,6 +61,11 @@ jobs:
       - name: Health claim scan (CLAUDE.md §1.1)
         run: pnpm check:health-claims
 
+      # Node tabanlı olduğu için mobile job'ında değil burada: health-claims de
+      # aynı şekilde apps/mobile/lib'i buradan tarıyor.
+      - name: Hard-coded string scan (CLAUDE.md §4)
+        run: pnpm check:i18n
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest

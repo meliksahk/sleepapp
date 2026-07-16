@@ -7,6 +7,7 @@ import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/archetype/presentation/archetype_detail_screen.dart';
 import 'package:nocta/features/content/content_models.dart';
 import 'package:nocta/features/content/content_providers.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 
 const _info = ArchetypeInfo(
   slug: 'deep-ocean',
@@ -23,15 +24,23 @@ Soundscape _s(String slug, String title) => Soundscape(
   version: 1,
 );
 
-Future<void> _pump(WidgetTester tester, String slug, List<Override> overrides) async {
+Future<void> _pump(
+  WidgetTester tester,
+  String slug,
+  List<Override> overrides,
+) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: <Override>[
         // Varsayılan: uygun ses yok → bölüm gizli. İlgili test kendi kurar.
-        soundscapesForArchetypeProvider.overrideWith((ref, arg) async => <Soundscape>[]),
+        soundscapesForArchetypeProvider.overrideWith(
+          (ref, arg) async => <Soundscape>[],
+        ),
         ...overrides,
       ],
       child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
         theme: buildNoctaDarkTheme(),
         home: ArchetypeDetailScreen(slug: slug),
       ),
@@ -41,9 +50,13 @@ Future<void> _pump(WidgetTester tester, String slug, List<Override> overrides) a
 }
 
 void main() {
-  testWidgets('bilinen slug → isim + tagline + özet gösterilir', (tester) async {
+  testWidgets('bilinen slug → isim + tagline + özet gösterilir', (
+    tester,
+  ) async {
     await _pump(tester, 'deep-ocean', [
-      archetypeContentProvider.overrideWith((ref) async => const {'deep-ocean': _info}),
+      archetypeContentProvider.overrideWith(
+        (ref) async => const {'deep-ocean': _info},
+      ),
     ]);
     expect(find.byKey(const Key('detail-name')), findsOneWidget);
     expect(find.text('Deep Ocean'), findsOneWidget);
@@ -53,7 +66,9 @@ void main() {
 
   testWidgets('bilinmeyen slug → "Unknown identity"', (tester) async {
     await _pump(tester, 'nope', [
-      archetypeContentProvider.overrideWith((ref) async => const {'deep-ocean': _info}),
+      archetypeContentProvider.overrideWith(
+        (ref) async => const {'deep-ocean': _info},
+      ),
     ]);
     expect(find.byKey(const Key('identity-unknown')), findsOneWidget);
     expect(find.byKey(const Key('detail-name')), findsNothing);
@@ -61,14 +76,18 @@ void main() {
 
   testWidgets('içerik hatası → retry butonu', (tester) async {
     await _pump(tester, 'deep-ocean', [
-      archetypeContentProvider.overrideWith((ref) async => throw Exception('ağ')),
+      archetypeContentProvider.overrideWith(
+        (ref) async => throw Exception('ağ'),
+      ),
     ]);
     expect(find.byKey(const Key('detail-retry')), findsOneWidget);
   });
 
   testWidgets('uygun sesler listelenir ("sana uygun sesler")', (tester) async {
     await _pump(tester, 'deep-ocean', [
-      archetypeContentProvider.overrideWith((ref) async => const {'deep-ocean': _info}),
+      archetypeContentProvider.overrideWith(
+        (ref) async => const {'deep-ocean': _info},
+      ),
       soundscapesForArchetypeProvider.overrideWith(
         (ref, arg) async => [_s('abyss', 'Abyss'), _s('tide', 'Tide')],
       ),
@@ -79,19 +98,32 @@ void main() {
     expect(find.text('Tide'), findsOneWidget);
   });
 
-  testWidgets('uygun ses yoksa bölüm gizli (detay yine görünür)', (tester) async {
+  testWidgets('uygun ses yoksa bölüm gizli (detay yine görünür)', (
+    tester,
+  ) async {
     await _pump(tester, 'deep-ocean', [
-      archetypeContentProvider.overrideWith((ref) async => const {'deep-ocean': _info}),
+      archetypeContentProvider.overrideWith(
+        (ref) async => const {'deep-ocean': _info},
+      ),
       // default: boş liste
     ]);
     expect(find.byKey(const Key('sounds-heading')), findsNothing);
-    expect(find.byKey(const Key('detail-name')), findsOneWidget); // detay bloklanmaz
+    expect(
+      find.byKey(const Key('detail-name')),
+      findsOneWidget,
+    ); // detay bloklanmaz
   });
 
-  testWidgets('ses listesi hatası detayı bloklamaz (bölüm gizli)', (tester) async {
+  testWidgets('ses listesi hatası detayı bloklamaz (bölüm gizli)', (
+    tester,
+  ) async {
     await _pump(tester, 'deep-ocean', [
-      archetypeContentProvider.overrideWith((ref) async => const {'deep-ocean': _info}),
-      soundscapesForArchetypeProvider.overrideWith((ref, arg) async => throw Exception('ağ')),
+      archetypeContentProvider.overrideWith(
+        (ref) async => const {'deep-ocean': _info},
+      ),
+      soundscapesForArchetypeProvider.overrideWith(
+        (ref, arg) async => throw Exception('ağ'),
+      ),
     ]);
     expect(find.byKey(const Key('sounds-heading')), findsNothing);
     expect(find.byKey(const Key('detail-name')), findsOneWidget);

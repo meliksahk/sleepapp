@@ -120,6 +120,81 @@
   "settingsSignOutOthersFailed": "Could not sign out other devices",
   "@settingsSignOutOthersFailed": { "description": "Diger cihazlardan cikis hatasi" },
 
+  "archetypeTestTitle": "Sleep Identity Test",
+  "@archetypeTestTitle": { "description": "Archetype testi ekrani basligi" },
+
+  "archetypeTestScoring": "Scoring…",
+  "@archetypeTestScoring": { "description": "Cevaplar gonderilirken buton etiketi" },
+
+  "archetypeTestSeeResult": "See my result",
+  "@archetypeTestSeeResult": { "description": "Testi bitirme butonu" },
+
+  "archetypeYourSleepIdentity": "Your sleep identity",
+  "@archetypeYourSleepIdentity": { "description": "Sonuc kartinin ustundeki etiket" },
+
+  "archetypeShareCopied": "Link copied",
+  "@archetypeShareCopied": { "description": "Paylasim linki panoya kopyalandi bildirimi" },
+
+  "archetypeShareFailed": "Could not share",
+  "@archetypeShareFailed": { "description": "Paylasim basarisiz bildirimi" },
+
+  "archetypeShareButton": "Share my identity",
+  "@archetypeShareButton": { "description": "Archetype karti paylasim butonu (viral kanca #1)" },
+
+  "archetypeShareSharing": "Sharing…",
+  "@archetypeShareSharing": { "description": "Archetype paylasimi surerken buton etiketi" },
+
+  "archetypeRetakeTest": "Retake test",
+  "@archetypeRetakeTest": { "description": "Sonuc ekraninda testi tekrarla" },
+
+  "archetypeDetailTitle": "Sleep identity",
+  "@archetypeDetailTitle": { "description": "Archetype detay ekrani basligi" },
+
+  "archetypeUnknown": "Unknown identity",
+  "@archetypeUnknown": { "description": "Bilinmeyen slug icin detay ekrani" },
+
+  "archetypeSoundsThatSuitYou": "Sounds that suit you",
+  "@archetypeSoundsThatSuitYou": { "description": "Detayda uygun sesler bolum basligi" },
+
+  "identityHistoryTitle": "Your identity over time",
+  "@identityHistoryTitle": { "description": "Kimlik gecmisi ekrani basligi" },
+
+  "identityHistoryEmpty": "No test results yet",
+  "@identityHistoryEmpty": { "description": "Hic test yapilmamisken bos durum" },
+
+  "identityHistoryCurrent": "Current",
+  "@identityHistoryCurrent": { "description": "En yeni sonuc rozeti" },
+
+  "libraryTitle": "Soundscapes",
+  "@libraryTitle": { "description": "Soundscape kutuphanesi ekrani basligi" },
+
+  "libraryEmpty": "No soundscapes yet",
+  "@libraryEmpty": { "description": "Feed bosken" },
+
+  "libraryAffinity": "For {names}",
+  "@libraryAffinity": {
+    "description": "Soundscape hangi uyku kimligine uygun (archetype adlari)",
+    "placeholders": { "names": { "type": "String" } }
+  },
+
+  "soundscapeDetailTitle": "Soundscape",
+  "@soundscapeDetailTitle": { "description": "Soundscape detay ekrani basligi" },
+
+  "soundscapeNotFound": "Soundscape not found",
+  "@soundscapeNotFound": { "description": "Yayinlanmamis/olmayan soundscape" },
+
+  "soundscapePreviewAvailable": "Preview available",
+  "@soundscapePreviewAvailable": { "description": "Onizleme URL'i varken bilgi" },
+
+  "sleepHistoryStats": "{count, plural, =1{1 night · avg {avg}} other{{count} nights · avg {avg}}}",
+  "@sleepHistoryStats": {
+    "description": "Uyku gecmisi ust bilgisi. COGUL ICU ile (kodda -s eklenemez).",
+    "placeholders": { "count": { "type": "int" }, "avg": { "type": "String" } }
+  },
+
+  "sleepHistoryEmpty": "No sleep recorded yet",
+  "@sleepHistoryEmpty": { "description": "Hic uyku kaydi yokken bos durum" },
+
   "shareFailed": "Could not share",
   "@shareFailed": { "description": "Paylaşım hatası" }
 }

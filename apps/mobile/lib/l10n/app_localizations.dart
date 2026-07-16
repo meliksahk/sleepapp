@@ -285,6 +285,144 @@ abstract class AppL10n {
   /// **'Could not sign out other devices'**
   String get settingsSignOutOthersFailed;
 
+  /// Archetype testi ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Identity Test'**
+  String get archetypeTestTitle;
+
+  /// Cevaplar gonderilirken buton etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Scoring…'**
+  String get archetypeTestScoring;
+
+  /// Testi bitirme butonu
+  ///
+  /// In en, this message translates to:
+  /// **'See my result'**
+  String get archetypeTestSeeResult;
+
+  /// Sonuc kartinin ustundeki etiket
+  ///
+  /// In en, this message translates to:
+  /// **'Your sleep identity'**
+  String get archetypeYourSleepIdentity;
+
+  /// Paylasim linki panoya kopyalandi bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get archetypeShareCopied;
+
+  /// Paylasim basarisiz bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share'**
+  String get archetypeShareFailed;
+
+  /// Archetype karti paylasim butonu (viral kanca #1)
+  ///
+  /// In en, this message translates to:
+  /// **'Share my identity'**
+  String get archetypeShareButton;
+
+  /// Archetype paylasimi surerken buton etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing…'**
+  String get archetypeShareSharing;
+
+  /// Sonuc ekraninda testi tekrarla
+  ///
+  /// In en, this message translates to:
+  /// **'Retake test'**
+  String get archetypeRetakeTest;
+
+  /// Archetype detay ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep identity'**
+  String get archetypeDetailTitle;
+
+  /// Bilinmeyen slug icin detay ekrani
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown identity'**
+  String get archetypeUnknown;
+
+  /// Detayda uygun sesler bolum basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds that suit you'**
+  String get archetypeSoundsThatSuitYou;
+
+  /// Kimlik gecmisi ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Your identity over time'**
+  String get identityHistoryTitle;
+
+  /// Hic test yapilmamisken bos durum
+  ///
+  /// In en, this message translates to:
+  /// **'No test results yet'**
+  String get identityHistoryEmpty;
+
+  /// En yeni sonuc rozeti
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get identityHistoryCurrent;
+
+  /// Soundscape kutuphanesi ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Soundscapes'**
+  String get libraryTitle;
+
+  /// Feed bosken
+  ///
+  /// In en, this message translates to:
+  /// **'No soundscapes yet'**
+  String get libraryEmpty;
+
+  /// Soundscape hangi uyku kimligine uygun (archetype adlari)
+  ///
+  /// In en, this message translates to:
+  /// **'For {names}'**
+  String libraryAffinity(String names);
+
+  /// Soundscape detay ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Soundscape'**
+  String get soundscapeDetailTitle;
+
+  /// Yayinlanmamis/olmayan soundscape
+  ///
+  /// In en, this message translates to:
+  /// **'Soundscape not found'**
+  String get soundscapeNotFound;
+
+  /// Onizleme URL'i varken bilgi
+  ///
+  /// In en, this message translates to:
+  /// **'Preview available'**
+  String get soundscapePreviewAvailable;
+
+  /// Uyku gecmisi ust bilgisi. COGUL ICU ile (kodda -s eklenemez).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 night · avg {avg}} other{{count} nights · avg {avg}}}'**
+  String sleepHistoryStats(int count, String avg);
+
+  /// Hic uyku kaydi yokken bos durum
+  ///
+  /// In en, this message translates to:
+  /// **'No sleep recorded yet'**
+  String get sleepHistoryEmpty;
+
   /// Paylaşım hatası
   ///
   /// In en, this message translates to:

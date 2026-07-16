@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../content/content_providers.dart';
 import '../archetype_providers.dart';
 
 /// Archetype detay ekranı (docs/04) — bir uyku kimliğinin isim/tagline/özetini
 /// gösterir. İçerik `archetypeContentProvider` slug→info haritasından çözülür.
-/// Home kimlik kartından açılır. Not: metinler l10n'a M1'de taşınacak.
+/// Home kimlik kartından açılır.
 class ArchetypeDetailScreen extends ConsumerWidget {
   const ArchetypeDetailScreen({super.key, required this.slug});
 
@@ -15,9 +16,10 @@ class ArchetypeDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppL10n.of(context);
     final content = ref.watch(archetypeContentProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Sleep identity')),
+      appBar: AppBar(title: Text(l10n.archetypeDetailTitle)),
       body: SafeArea(
         child: content.when(
           data: (map) {
@@ -25,9 +27,12 @@ class ArchetypeDetailScreen extends ConsumerWidget {
             if (info == null) {
               return Center(
                 child: Text(
-                  'Unknown identity',
+                  l10n.archetypeUnknown,
                   key: const Key('identity-unknown'),
-                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                  style: TextStyle(
+                    fontSize: NoctaFontSize.body,
+                    color: NoctaColors.inkSecondary,
+                  ),
                 ),
               );
             }
@@ -39,17 +44,26 @@ class ArchetypeDetailScreen extends ConsumerWidget {
                   Text(
                     info.name,
                     key: const Key('detail-name'),
-                    style: TextStyle(fontSize: NoctaFontSize.h1, color: NoctaColors.inkPrimary),
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.h1,
+                      color: NoctaColors.inkPrimary,
+                    ),
                   ),
                   const SizedBox(height: NoctaSpace.s2),
                   Text(
                     info.tagline,
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.accentAurora),
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.body,
+                      color: NoctaColors.accentAurora,
+                    ),
                   ),
                   const SizedBox(height: NoctaSpace.s4),
                   Text(
                     info.summary,
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.body,
+                      color: NoctaColors.inkSecondary,
+                    ),
                   ),
                   _SoundsSection(slug: slug),
                 ],
@@ -89,9 +103,12 @@ class _SoundsSection extends ConsumerWidget {
           children: [
             const SizedBox(height: NoctaSpace.s6),
             Text(
-              'Sounds that suit you',
+              AppL10n.of(context).archetypeSoundsThatSuitYou,
               key: const Key('sounds-heading'),
-              style: TextStyle(fontSize: NoctaFontSize.h2, color: NoctaColors.inkPrimary),
+              style: TextStyle(
+                fontSize: NoctaFontSize.h2,
+                color: NoctaColors.inkPrimary,
+              ),
             ),
             const SizedBox(height: NoctaSpace.s3),
             for (final s in list)

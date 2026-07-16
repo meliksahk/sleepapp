@@ -5,6 +5,7 @@ import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/features/sleep/sleep_models.dart';
 import 'package:nocta/features/sleep/sleep_providers.dart';
 import 'package:nocta/features/sleep/presentation/sleep_history_screen.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 
 SleepSession _s(String id, String night, int minutes) => SleepSession(
   id: id,
@@ -19,11 +20,15 @@ SleepSession _s(String id, String night, int minutes) => SleepSession(
 WeeklyTrend _trend(List<int> minutes) => WeeklyTrend(
   nights: [
     for (var i = 0; i < minutes.length; i++)
-      TrendNight(nightDate: '2026-03-${(10 + i).toString().padLeft(2, '0')}', durationMinutes: minutes[i]),
+      TrendNight(
+        nightDate: '2026-03-${(10 + i).toString().padLeft(2, '0')}',
+        durationMinutes: minutes[i],
+      ),
   ],
   averageDurationMinutes: minutes.where((m) => m > 0).isEmpty
       ? 0
-      : (minutes.where((m) => m > 0).reduce((a, b) => a + b) / minutes.where((m) => m > 0).length)
+      : (minutes.where((m) => m > 0).reduce((a, b) => a + b) /
+                minutes.where((m) => m > 0).length)
             .round(),
   nightsWithData: minutes.where((m) => m > 0).length,
 );
@@ -34,14 +39,24 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
       overrides: <Override>[
         // Default stats (nights:0 → başlık gizli); stats testi kendi scope'unu kurar.
         sleepStatsProvider.overrideWith(
-          (ref) async =>
-              const SleepStats(nights: 0, totalDurationMinutes: 0, averageDurationMinutes: 0),
+          (ref) async => const SleepStats(
+            nights: 0,
+            totalDurationMinutes: 0,
+            averageDurationMinutes: 0,
+          ),
         ),
         // Default trend (veri yok → grafik gizli); grafik testi kendi scope'unu kurar.
-        sleepTrendProvider.overrideWith((ref) async => _trend(const [0, 0, 0, 0, 0, 0, 0])),
+        sleepTrendProvider.overrideWith(
+          (ref) async => _trend(const [0, 0, 0, 0, 0, 0, 0]),
+        ),
         ...overrides,
       ],
-      child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SleepHistoryScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildNoctaDarkTheme(),
+        home: const SleepHistoryScreen(),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -57,7 +72,10 @@ void main() {
   testWidgets('oturumlar gece + süre ile listelenir', (tester) async {
     await _pump(tester, [
       recentSleepSessionsProvider.overrideWith(
-        (ref) async => [_s('s1', '2026-03-10', 462), _s('s2', '2026-03-09', 420)],
+        (ref) async => [
+          _s('s1', '2026-03-10', 462),
+          _s('s2', '2026-03-09', 420),
+        ],
       ),
     ]);
 
@@ -76,16 +94,22 @@ void main() {
 
   testWidgets('hata → retry', (tester) async {
     await _pump(tester, [
-      recentSleepSessionsProvider.overrideWith((ref) async => throw Exception('ağ')),
+      recentSleepSessionsProvider.overrideWith(
+        (ref) async => throw Exception('ağ'),
+      ),
     ]);
     expect(find.byKey(const Key('sleep-history-retry')), findsOneWidget);
   });
 
-  testWidgets('istatistik başlığı gösterilir (nights + ortalama)', (tester) async {
+  testWidgets('istatistik başlığı gösterilir (nights + ortalama)', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: <Override>[
-          recentSleepSessionsProvider.overrideWith((ref) async => [_s('s1', '2026-03-10', 462)]),
+          recentSleepSessionsProvider.overrideWith(
+            (ref) async => [_s('s1', '2026-03-10', 462)],
+          ),
           sleepStatsProvider.overrideWith(
             (ref) async => const SleepStats(
               nights: 12,
@@ -93,9 +117,16 @@ void main() {
               averageDurationMinutes: 450,
             ),
           ),
-          sleepTrendProvider.overrideWith((ref) async => _trend(const [0, 0, 0, 0, 0, 0, 0])),
+          sleepTrendProvider.overrideWith(
+            (ref) async => _trend(const [0, 0, 0, 0, 0, 0, 0]),
+          ),
         ],
-        child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SleepHistoryScreen()),
+        child: MaterialApp(
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          theme: buildNoctaDarkTheme(),
+          home: const SleepHistoryScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -103,9 +134,13 @@ void main() {
     expect(find.text('12 nights · avg 7h 30m'), findsOneWidget);
   });
 
-  testWidgets('veri olan trend → mini grafik 7 çubukla gösterilir', (tester) async {
+  testWidgets('veri olan trend → mini grafik 7 çubukla gösterilir', (
+    tester,
+  ) async {
     await _pump(tester, [
-      recentSleepSessionsProvider.overrideWith((ref) async => [_s('s1', '2026-03-16', 420)]),
+      recentSleepSessionsProvider.overrideWith(
+        (ref) async => [_s('s1', '2026-03-16', 420)],
+      ),
       sleepTrendProvider.overrideWith(
         (ref) async => _trend(const [0, 300, 0, 480, 360, 0, 420]),
       ),
@@ -118,7 +153,9 @@ void main() {
 
   testWidgets('veri olmayan trend → grafik gizli', (tester) async {
     await _pump(tester, [
-      recentSleepSessionsProvider.overrideWith((ref) async => [_s('s1', '2026-03-10', 462)]),
+      recentSleepSessionsProvider.overrideWith(
+        (ref) async => [_s('s1', '2026-03-10', 462)],
+      ),
       // default trend override (hepsi 0) → nightsWithData 0 → gizli
     ]);
     expect(find.byKey(const Key('weekly-trend-chart')), findsNothing);
