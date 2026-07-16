@@ -43,6 +43,10 @@ dependencies:
   http: ^1.2.2
   # Güvenli token saklama (mikrofon ham verisi gibi hassas veri değil; oturum token'ları).
   flutter_secure_storage: ^9.2.2
+  # i18n — CLAUDE.md §4: tüm kullanıcı metinleri arb'de, hard-code yasak.
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +64,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # arb -> AppLocalizations kod üretimi (flutter tool; build_runner gerekmez).
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
