@@ -25,7 +25,7 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
 }
 
 void main() {
-  testWidgets('streak verisi gelince kart görünür', (tester) async {
+  testWidgets('streak verisi gelince kart + kişisel rekor görünür', (tester) async {
     await _pump(tester, [
       streakProvider.overrideWith(
         (ref) async => const StreakStats(current: 5, longest: 12, totalNights: 40),
@@ -35,16 +35,42 @@ void main() {
     expect(find.byKey(const Key('streak-current')), findsOneWidget);
     expect(find.text('5'), findsOneWidget);
     expect(find.text('nights streak'), findsOneWidget);
+    expect(find.byKey(const Key('streak-best')), findsOneWidget);
+    expect(find.text('Best 12'), findsOneWidget); // longest > current
     expect(find.text('NOCTA'), findsOneWidget); // home yine render
   });
 
-  testWidgets('streak tek gece → tekil metin', (tester) async {
+  testWidgets('streak tek gece → tekil metin, rekor satırı yok (longest == current)', (
+    tester,
+  ) async {
     await _pump(tester, [
       streakProvider.overrideWith(
         (ref) async => const StreakStats(current: 1, longest: 1, totalNights: 1),
       ),
     ]);
     expect(find.text('night streak'), findsOneWidget);
+    expect(find.byKey(const Key('streak-best')), findsNothing);
+  });
+
+  testWidgets('kayıt yokken (totalNights 0) streak kartı gizli', (tester) async {
+    await _pump(tester, [
+      streakProvider.overrideWith(
+        (ref) async => const StreakStats(current: 0, longest: 0, totalNights: 0),
+      ),
+    ]);
+    expect(find.byKey(const Key('streak-current')), findsNothing);
+    expect(find.text('NOCTA'), findsOneWidget);
+  });
+
+  testWidgets('seri kopmuş ama geçmiş var → 0 + kişisel rekor gösterilir', (tester) async {
+    await _pump(tester, [
+      streakProvider.overrideWith(
+        (ref) async => const StreakStats(current: 0, longest: 12, totalNights: 40),
+      ),
+    ]);
+    expect(find.byKey(const Key('streak-current')), findsOneWidget);
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('Best 12'), findsOneWidget);
   });
 
   testWidgets('streak hatası home\'u bloklamaz (kart gizli)', (tester) async {
