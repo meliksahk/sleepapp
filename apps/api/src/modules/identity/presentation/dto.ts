@@ -21,6 +21,11 @@ export class RefreshDto {
   refreshToken!: string;
 }
 
+export class RevokedSessionsDto {
+  @ApiProperty({ example: 2, description: 'İptal edilen diğer oturum sayısı' })
+  revoked!: number;
+}
+
 export class SessionResponseDto {
   @ApiProperty()
   accessToken!: string;

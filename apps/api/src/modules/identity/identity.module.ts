@@ -39,6 +39,7 @@ import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
+import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
 import { AuthorizeUseCase } from './application/authorize.usecase';
 import { AuthController } from './presentation/auth.controller';
 import { AuthGuard } from './presentation/auth.guard';
@@ -123,6 +124,15 @@ const providers: Provider[] = [
     provide: DeleteAccountUseCase,
     inject: [USER_REPOSITORY],
     useFactory: (users: UserRepository): DeleteAccountUseCase => new DeleteAccountUseCase(users),
+  },
+  {
+    provide: RevokeOtherSessionsUseCase,
+    inject: [REFRESH_TOKEN_REPOSITORY, TOKEN_HASHER, CLOCK],
+    useFactory: (
+      refreshTokens: RefreshTokenRepository,
+      hasher: TokenHasher,
+      clock: Clock,
+    ): RevokeOtherSessionsUseCase => new RevokeOtherSessionsUseCase(refreshTokens, hasher, clock),
   },
   {
     provide: ONE_TIME_TOKEN_REPOSITORY,

@@ -66,6 +66,8 @@ export interface RefreshTokenRepository {
   findByHash(tokenHash: string): Promise<RefreshTokenRecord | null>;
   markRevoked(id: string, revokedAt: Date): Promise<void>;
   revokeFamily(familyId: string, revokedAt: Date): Promise<void>;
+  /** userId'nin keepFamilyId HARİÇ tüm aktif token'larını iptal eder; iptal sayısı. */
+  revokeAllExceptFamily(userId: string, keepFamilyId: string, revokedAt: Date): Promise<number>;
 }
 
 // DI token'ları (Nest provider'ları bu sembollerle bağlanır).
