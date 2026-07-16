@@ -21,7 +21,8 @@
     "db:migrate": "dbmate up",
     "db:new": "dbmate new",
     "db:rollback": "dbmate down",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check:health-claims": "node tooling/check-health-claims.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

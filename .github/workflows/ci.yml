@@ -58,6 +58,9 @@ jobs:
       - name: Lint / typecheck / test / build
         run: pnpm turbo run lint typecheck test build size
 
+      - name: Health claim scan (CLAUDE.md §1.1)
+        run: pnpm check:health-claims
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest
