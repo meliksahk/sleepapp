@@ -1,10 +1,12 @@
-import type { ArchetypeContent as Archetype } from '@/content/archetypes';
+import Link from 'next/link';
+import { ARCHETYPES, type ArchetypeContent as Archetype } from '@/content/archetypes';
 import { ShareButton } from '@/components/ShareButton';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nocta.app';
 
 export function ArchetypeContent({ archetype }: { archetype: Archetype }) {
   const shareUrl = `${SITE_URL}/a/${archetype.slug}`;
+  const others = ARCHETYPES.filter((a) => a.slug !== archetype.slug);
   return (
     <article className="mx-auto max-w-2xl p-5">
       <p className="text-caption uppercase tracking-widest text-ink-secondary">Sleep Identity</p>
@@ -36,6 +38,20 @@ export function ArchetypeContent({ archetype }: { archetype: Archetype }) {
         </a>
         <ShareButton title={`My sleep identity is ${archetype.name}`} url={shareUrl} />
       </div>
+
+      {/* İç bağlantı (SEO): diğer sleep identity'leri */}
+      <nav aria-label="Other sleep identities" className="mt-10 border-t border-ink-faint/20 pt-6">
+        <h2 className="text-h2 font-display">Other sleep identities</h2>
+        <ul className="mt-3 flex flex-col gap-2">
+          {others.map((a) => (
+            <li key={a.slug}>
+              <Link href={`/a/${a.slug}`} className="text-body text-accent-aurora hover:underline">
+                {a.name} — {a.tagline}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </article>
   );
 }
