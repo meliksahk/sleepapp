@@ -98,6 +98,23 @@ void main() {
     expect(await none.nightReport('2000-01-01'), isNull);
   });
 
+  test('stats: parse eder', () async {
+    final controller = await _build((req) async {
+      expect(req.url.path, '/v1/sleep/stats');
+      return http.Response(
+        jsonEncode(<String, dynamic>{
+          'nights': 12,
+          'totalDurationMinutes': 5400,
+          'averageDurationMinutes': 450,
+        }),
+        200,
+      );
+    });
+    final s = await controller.stats();
+    expect(s.nights, 12);
+    expect(s.averageDurationMinutes, 450);
+  });
+
   test('streak: parse eder', () async {
     final controller = await _build((req) async {
       expect(req.url.path, '/v1/sleep/streak');

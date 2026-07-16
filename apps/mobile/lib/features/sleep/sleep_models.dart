@@ -1,6 +1,34 @@
 // Uyku modelleri (docs/04). Kimlik doğrulamalı /v1/sleep uçları.
 // Üretilen Dart client (B-3) gelince bu interim modeller değişecek.
 
+/// Dakikayı "7h 42m" / "45m" / "0m" biçiminde döner (paylaşılan formatlayıcı).
+String formatMinutes(int minutes) {
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  if (h == 0) return '${m}m';
+  if (m == 0) return '${h}h';
+  return '${h}h ${m}m';
+}
+
+/// Uyku istatistikleri (GET /v1/sleep/stats).
+class SleepStats {
+  const SleepStats({
+    required this.nights,
+    required this.totalDurationMinutes,
+    required this.averageDurationMinutes,
+  });
+
+  final int nights;
+  final int totalDurationMinutes;
+  final int averageDurationMinutes;
+
+  factory SleepStats.fromJson(Map<String, dynamic> json) => SleepStats(
+        nights: json['nights'] as int,
+        totalDurationMinutes: json['totalDurationMinutes'] as int,
+        averageDurationMinutes: json['averageDurationMinutes'] as int,
+      );
+}
+
 class SleepSession {
   const SleepSession({
     required this.id,
@@ -21,13 +49,7 @@ class SleepSession {
   final int soundEvents;
 
   /// Süreyi "7h 42m" / "45m" biçiminde döner.
-  String get durationText {
-    final h = durationMinutes ~/ 60;
-    final m = durationMinutes % 60;
-    if (h == 0) return '${m}m';
-    if (m == 0) return '${h}h';
-    return '${h}h ${m}m';
-  }
+  String get durationText => formatMinutes(durationMinutes);
 
   factory SleepSession.fromJson(Map<String, dynamic> json) => SleepSession(
         id: json['id'] as String,

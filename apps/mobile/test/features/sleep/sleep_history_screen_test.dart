@@ -19,7 +19,14 @@ SleepSession _s(String id, String night, int minutes) => SleepSession(
 Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: overrides,
+      overrides: <Override>[
+        // Default stats (nights:0 → başlık gizli); stats testi kendi scope'unu kurar.
+        sleepStatsProvider.overrideWith(
+          (ref) async =>
+              const SleepStats(nights: 0, totalDurationMinutes: 0, averageDurationMinutes: 0),
+        ),
+        ...overrides,
+      ],
       child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SleepHistoryScreen()),
     ),
   );
@@ -58,5 +65,26 @@ void main() {
       recentSleepSessionsProvider.overrideWith((ref) async => throw Exception('ağ')),
     ]);
     expect(find.byKey(const Key('sleep-history-retry')), findsOneWidget);
+  });
+
+  testWidgets('istatistik başlığı gösterilir (nights + ortalama)', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          recentSleepSessionsProvider.overrideWith((ref) async => [_s('s1', '2026-03-10', 462)]),
+          sleepStatsProvider.overrideWith(
+            (ref) async => const SleepStats(
+              nights: 12,
+              totalDurationMinutes: 5400,
+              averageDurationMinutes: 450,
+            ),
+          ),
+        ],
+        child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SleepHistoryScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('sleep-stats')), findsOneWidget);
+    expect(find.text('12 nights · avg 7h 30m'), findsOneWidget);
   });
 }
