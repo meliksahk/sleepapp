@@ -19,7 +19,10 @@ class HomeScreen extends ConsumerWidget {
     final result = ref.watch(latestArchetypeResultProvider);
     final content = ref.watch(archetypeContentProvider);
     // Kullanıcının test sonucu var mı → buton "Retake" olur, kimlik kartı görünür.
-    final hasResult = result.maybeWhen(data: (r) => r != null, orElse: () => false);
+    final hasResult = result.maybeWhen(
+      data: (r) => r != null,
+      orElse: () => false,
+    );
     return Scaffold(
       body: Center(
         child: Padding(
@@ -38,7 +41,10 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: NoctaSpace.s3),
               Text(
                 'Your night has an identity',
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.body,
+                  color: NoctaColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: NoctaSpace.s6),
               // Kullanıcının uyku kimliği — sonuç varsa (yükleme/hata/yok → gizli).
@@ -49,7 +55,11 @@ class HomeScreen extends ConsumerWidget {
                     data: (m) => m[r.archetypeSlug],
                     orElse: () => null,
                   );
-                  return _IdentityCard(name: info?.name ?? r.archetypeSlug, tagline: info?.tagline);
+                  return _IdentityCard(
+                    slug: r.archetypeSlug,
+                    name: info?.name ?? r.archetypeSlug,
+                    tagline: info?.tagline,
+                  );
                 },
                 orElse: () => const SizedBox.shrink(),
               ),
@@ -63,7 +73,9 @@ class HomeScreen extends ConsumerWidget {
               ),
               // Haftalık yayın kartı — yalnızca yayın varken (yükleme/hata/null → gizli).
               weekly.maybeWhen(
-                data: (w) => w == null ? const SizedBox.shrink() : _WeeklyCard(release: w),
+                data: (w) => w == null
+                    ? const SizedBox.shrink()
+                    : _WeeklyCard(release: w),
                 orElse: () => const SizedBox.shrink(),
               ),
               NCard(
@@ -75,7 +87,9 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: NoctaSpace.s5),
               NButton(
                 key: const Key('archetype-cta'),
-                label: hasResult ? 'Retake the test' : 'Find your sleep identity',
+                label: hasResult
+                    ? 'Retake the test'
+                    : 'Find your sleep identity',
                 onPressed: () => context.push('/archetype'),
               ),
               const SizedBox(height: NoctaSpace.s2),
@@ -105,8 +119,13 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _IdentityCard extends StatelessWidget {
-  const _IdentityCard({required this.name, required this.tagline});
+  const _IdentityCard({
+    required this.slug,
+    required this.name,
+    required this.tagline,
+  });
 
+  final String slug;
   final String name;
   final String? tagline;
 
@@ -114,28 +133,41 @@ class _IdentityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: NoctaSpace.s5),
-      child: NCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your sleep identity',
-              style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.accentAurora),
-            ),
-            const SizedBox(height: NoctaSpace.s1),
-            Text(
-              name,
-              key: const Key('identity-name'),
-              style: TextStyle(fontSize: NoctaFontSize.h2, color: NoctaColors.inkPrimary),
-            ),
-            if (tagline != null && tagline!.isNotEmpty) ...[
+      child: GestureDetector(
+        key: const Key('identity-card'),
+        onTap: () => context.push('/identity/$slug'),
+        child: NCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your sleep identity',
+                style: TextStyle(
+                  fontSize: NoctaFontSize.caption,
+                  color: NoctaColors.accentAurora,
+                ),
+              ),
               const SizedBox(height: NoctaSpace.s1),
               Text(
-                tagline!,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                name,
+                key: const Key('identity-name'),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.h2,
+                  color: NoctaColors.inkPrimary,
+                ),
               ),
+              if (tagline != null && tagline!.isNotEmpty) ...[
+                const SizedBox(height: NoctaSpace.s1),
+                Text(
+                  tagline!,
+                  style: TextStyle(
+                    fontSize: NoctaFontSize.body,
+                    color: NoctaColors.inkSecondary,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -161,13 +193,20 @@ class _WeeklyCard extends StatelessWidget {
             children: [
               Text(
                 'This week',
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.accentAurora),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.body,
+                  color: NoctaColors.accentAurora,
+                ),
               ),
               const SizedBox(height: NoctaSpace.s2),
               Text(
-                release.notes ?? '$count soundscape${count == 1 ? '' : 's'} this week',
+                release.notes ??
+                    '$count soundscape${count == 1 ? '' : 's'} this week',
                 key: const Key('weekly-note'),
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.body,
+                  color: NoctaColors.inkPrimary,
+                ),
               ),
             ],
           ),
@@ -195,18 +234,27 @@ class _StreakCard extends StatelessWidget {
             Text(
               '$current',
               key: const Key('streak-current'),
-              style: TextStyle(fontSize: NoctaFontSize.display, color: NoctaColors.inkPrimary),
+              style: TextStyle(
+                fontSize: NoctaFontSize.display,
+                color: NoctaColors.inkPrimary,
+              ),
             ),
             Text(
               current == 1 ? 'night streak' : 'nights streak',
-              style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              style: TextStyle(
+                fontSize: NoctaFontSize.body,
+                color: NoctaColors.inkSecondary,
+              ),
             ),
             if (showBest) ...[
               const SizedBox(height: NoctaSpace.s2),
               Text(
                 'Best $longest',
                 key: const Key('streak-best'),
-                style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkFaint),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.caption,
+                  color: NoctaColors.inkFaint,
+                ),
               ),
             ],
           ],
