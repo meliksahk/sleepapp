@@ -5,6 +5,28 @@
 
 ## Açık kararlar
 
+### D-7 · Hesap veri dışa aktarma (GDPR taşınabilirlik) — kapsam kararı
+
+- **Durum:** Hesap **silme** kaskadı var (`DELETE /v1/auth/me`, App Store zorunluluğu). **Dışa aktarma yok**
+  — GDPR/KVKK taşınabilirlik hakkı karşılanmıyor. #103'te başlandı, kapsam nedeniyle bölündü.
+- **Bulgular (araştırıldı, tekrar araştırmaya gerek yok):**
+  - Kişisel veri taşıyan modüller: **identity** (users: email/kind/createdAt + auth_devices + refresh_tokens
+    - one_time_tokens), **profile**, **archetype** (results — geçmiş ✓ #103'te eklendi), **sleep**
+      (sessions), **notification** (device_tokens), **analytics** (events).
+  - **Modül döngüsü kısıtı:** `sleep → profile` ve herkes `identity`'yi import ediyor. Export'u profile veya
+    identity'ye koymak **döngü** yaratır → kimsenin import etmediği yeni bir **`account` modülü** gerekir.
+  - **Hacim sorunu:** `analytics_events` binlerce satır olabilir → tek yanıt yerine **sayfalama/akış** gerekir.
+  - **Kırpma yasağı:** #101/#102'de kapatılan sessiz sınırlarla aynı sınıf — export'ta kırpma OLAMAZ.
+    Kaynak use case'lerin sınırsız olması şart (`ListSleepSessionsUseCase` 100 ile sınırlı → export için
+    ayrı bir "tümü" yolu gerekir).
+  - **Sırlar:** `password_hash` ve `totp_secret` export'a **ASLA** girmez.
+- **Karar gereken:** hangi kapsam v1 olacak?
+  1. **Kullanıcı-anlamlı veri** (hesap + profil + archetype geçmişi + uyku oturumları); analytics telemetrisi
+     ve push token'ları hariç, yanıtta gerekçesiyle belirtilir. (Önerilen — çoğu uygulamanın yaptığı.)
+  2. **Tam export** (analytics + token'lar dahil) — sayfalama/akış + daha büyük iş.
+- **Varsayım (şimdilik):** hiçbir şey ship edilmedi; **yarım bir export'u "verileriniz" diye sunmak
+  yanıltıcı olacağı için** bilinçli olarak bekletiliyor. Lansman öncesi kapatılmalı (kullanıcı yok, acil değil).
+
 ### D-6 · Web JS bütçesi 90KB, mevcut mimariyle ULAŞILAMAZ (yeni bulgu)
 
 - **Durum:** CLAUDE.md §3.4 web bütçesi: **JS < 90KB (ana sayfa)**. Bu kapı hiç kurulmamıştı;
