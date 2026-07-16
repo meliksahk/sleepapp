@@ -84,6 +84,8 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ### #132 — `.env.example` bayatlığı + sürüklenme kapısı (PR #133, merged)
 
+> **Bar değişmedi (%73):** bu bir hata düzeltmesi + kapı, yeni ürün yeteneği değil.
+
 ✅ **Yapıldı ve doğrulandı**
 
 - **🔴 KENDİ YANLIŞ BULGUMU DÜZELTTİM:** #115'te "`.env.example` depoda YOK" yazmıştım
