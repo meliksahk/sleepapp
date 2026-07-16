@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈69% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈70% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████████████░░░░░░░░░░░░] 69%
+[████████████████████████████░░░░░░░░░░░░] 70%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
-| Mobil       | ~51%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Mobil       | ~54%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·51 + 0.15·80 + 0.15·45 ≈ **69%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·54 + 0.15·80 + 0.15·45 ≈ **70%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,17 +66,59 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Mobil devam (%51, ağırlık 0.40 — en yüksek):** ses zinciri artık DSP (#96-98) + tarif ayrıştırıcı (#127) ile hazır, ama **native graf İNSAN-KAPILI** (gerçek cihaz + kulaklık, CLAUDE.md §1.1). Cihazsız yapılabilecekler: (a) `AudioEngineFacade` arayüzü + fake/sessiz adaptör (UI motor gelmeden bağlanabilsin), (b) mix-to-video export'un offline render yolu (renderMix zaten hazır), (c) mic takibi domain mantığı (on-device metrik türetme — saf Dart, test edilebilir).
-2. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
-3. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
-4. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
-5. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
-6. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
-7. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
+1. **Mobil devam (%54, ağırlık 0.40 — en yüksek):** cihazsız yapılabilecekler: (a) **uyku oturumu domain mantığı** — olay akışı + zaman → `RecordSleepSessionDto` (gece sınırı 06:00 kuralı, süre hesabı; saf Dart, API bunu bekliyor). (b) alarm penceresi mantığı (docs/04 §86: pencere içinde hafif uyku sinyali → tetik; saf Dart, test edilebilir). (c) mix-to-video offline render yolu (renderMix hazır).
+2. **İnsan-kapılı (otonom YAPILAMAZ):** native ses grafiği + gerçek cihaz doğrulaması (CLAUDE.md §1.1 kulaklıkla), mikrofon yakalama (platform izni), olay sınıflandırma eşiklerinin gerçek gece kayıtlarıyla ayarlanması (docs/04 §120 fixture'ları).
+3. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
+4. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
+5. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
+6. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
+7. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
+8. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
 
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #128 — on-device dB zarfı + akustik olay tespiti (PR #129, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **🔴 GERÇEK BOŞLUK:** API `movementEvents`/`soundEvents` bekliyor (#44) ve CLAUDE.md
+  §6 "yalnızca türetilmiş metrikler" diyor — ama **mobilde takip adına HİÇBİR ŞEY
+  yoktu**. `core/sleep_tracking/`: dB zarfı + uyarlanabilir tabanlı olay tespiti.
+- **UYDURULMADI:** docs/04 §85 birebir tarif ediyor ("dB zarfı + basit olay
+  sınıflandırması; ham ses diske bile yazılmaz"); §120 çıkış kriteri zaten SİMÜLE
+  beslemeyle testi şart koşuyor → cihazsız yapılabilir kısım tam da bu.
+- flutter analyze temiz; **200 test** (182→200, +18). turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **ASIL KARAR — UYARLANABİLİR TABAN:** sabit eşik gerçek gecede çöker. Fan açılınca
+  taban -55→-35 çıkar ve sabit eşik YÜZLERCE olay üretir → rapor "312 hareket" der,
+  kullanıcı uygulamayı siler. Test: 1000 çerçevelik fan → **≤1 olay**.
+- **TESTİN YAKALADIĞI KENDİ TASARIM KUSURUM:** tabanı olay boyunca dondurdum (uzun
+  horlama bölünmesin diye) ama SONSUZA KADAR dondurunca fan bitmeyen tek olay oldu ve
+  taban hiç uyum sağlamadı. Ayrım eksikti: **kısa aşım OLAY, sürekli aşım SEVİYE
+  KAYMASI** → `maxEventFrames` eklendi, taban yeni seviyeye sıçratılıyor.
+- dB (ham genlik değil): işitme logaritmik. Mutlak dB SPL YOK: cihaz hassasiyeti değişir.
+- Sessizlik -inf değil sonlu taban (-inf aritmetiği zehirlerdi). Refrakter: tek dönme
+  3-4 kez sayılmasın. `finish()`: gecenin son sesi kaybolmasın.
+- **Birim ÇERÇEVE, saniye değil** — varsayılanlar ~50ms/çerçeve varsayar, dosyada yazılı.
+- **GİZLİLİK:** çıktı yalnızca SAYI; zarftan konuşma yeniden kurulamaz.
+
+🔥 **Riskler / açıklar**
+
+- **SINIFLANDIRMA YOK** (hareket/horlama/gürültü): mikrofonla ayırmak süre/periyodiklik
+  analizi ister ve GERÇEK VERİYLE doğrulanmalı. Uydurmak = sayıyı yanlış etiketleyip
+  güvenilir gibi sunmak. **API'nin `movementEvents`/`soundEvents` alanları bu yüzden
+  HÂLÂ doldurulamıyor.**
+- **EŞİKLER AYARLANMADI:** makul başlangıç değerleri; docs/04 §120 fixture'ları yok.
+- Mikrofon YAKALAMA yok (platform işi), uyku modu ekranı yok, alarm yok.
+
+❌ **Yapılmadı**
+
+- Olay sınıflandırma, mikrofon yakalama, uyku modu ekranı, akıllı alarm, native ses
+  grafiği (insan-kapılı), mix-to-video.
 
 ### #127 — mobil `engine_params` → MixSpec ayrıştırıcısı (PR #128, merged)
 
