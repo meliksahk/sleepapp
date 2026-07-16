@@ -1,9 +1,9 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈49% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈50% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████░░░░░░░░░░░░░░░░░░░░] 49%
+[████████████████████░░░░░░░░░░░░░░░░░░░░] 50%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
@@ -14,7 +14,7 @@
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·75 + 0.40·43 + 0.15·12 + 0.15·45 ≈ **49%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·75 + 0.40·45 + 0.15·12 + 0.15·45 ≈ **50%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#100 (mobil mixerState tipleme + içerik→motor bağlantısı; 🔴 #98 iddiamın düzeltmesi):** #99'da sunucu tipledi; mobil hâlâ **`dynamic`** taşıyordu — **CLAUDE.md §4 ihlali** ("dynamic yasak") ve analyzer yakalamıyordu (strict-casts açık bildirimi kapsamaz). `lib`'deki TEK dynamic buydu → artık sıfır. `MixerLayerState`/`MixerState`+`tryParse` (**savunmacı**: sunucu doğruluyor ama istemci eski/yeni olabilir; geçersizse kısmi değil null) + `toMixSpec()` → **içerik→motor zinciri kapandı**, sunucu preset'i gerçekten render ediliyor. `avoid_dynamic_calls` lint eklendi (kuralın uygulanabilir kısmı; açık bildirim hâlâ lint'lenemiyor — dürüstçe not). `flutter test` 153 yeşil (135→153, +18), turbo 18/18, API 244. **🔴 BULGU — #98'deki kendi iddiamı düzeltir:** test 1sn render'da DC=0.0086 verip kırmızı oldu; eşiği gevşetmek yerine ölçtüm → aynı mix: 1sn=0.0086, 2sn=0.0030, 5sn=0.00002, 10sn=0.00019. **"DC" pencere ortalamasıdır ve kısa pencerede gürültülüdür**; #98'de raporladığım dc=0.00002 **evrensel garanti DEĞİL**, 5sn'ye özgü şanslı örnek. Kısa pencerede DC eşiği regresyon bekçisi olarak ANLAMSIZ (ham sinyalinki bazen daha küçük). **Kod değişmedi — filtre doğru, ölçüm iddiam fazlaydı**; uçtan uca testten DC iddiası kaldırıldı, uyarı `dc_blocker.dart`'a yazıldı. İlerleme barı mobil 43→45% (toplam ≈50%). PR #101.
 - **#99 (🔴 preset mixer_state sözleşmesi — tipli + doğrulanır):** `presets.mixer_state` şimdiye dek **serbest jsonb** idi (domain/DTO tipi: `unknown`) → editör herhangi bir JSON koyabilir, hata ancak **kullanıcının telefonunda çalma anında** patlardı. Mevcut seed `{rain:0.7}` sadece kazanç taşıyordu, **ses tipi yoktu** → motor render EDEMEZDİ. Motoru #94–#98'de yazdığım için gereksinimi biliyorum: katman={id,type,gain}; şema mobil `MixSpec` ile birebir hizalı tanımlandı ve **okuma yolunda doğrulanıyor** → bozuk preset istemciye HİÇ ulaşmıyor. **Tolerans yok:** tek katman bozuksa tüm state reddedilir (kısmi mix yok); NaN/Infinity elenir, id benzersiz, max 8 katman (CPU/headroom). **Sessiz düşürme yok:** `Logger.error` + beklenen şema loglanır (CLAUDE.md §0); soundscape yine 200 döner, yalnızca o preset elenir. `Preset.mixerState` artık `MixerState` (unknown DEĞİL); `MixerStateDto`/`MixerLayerDto`; openapi+shared-types regen; e2e seed yeni şemaya taşındı. API **244 test** (222→244, +22): 20 red vakası + sınır değerler + **e2e sözleşme kapısı** (DB'ye bozuk preset yazıldı → istemciye ulaşmadı, 200 korundu). turbo 18/18. İlerleme barı backend 73→75% (toplam ≈49%, bar 20 blok). PR #100. **Not:** yazma yolu (admin CMS) yok; CMS gelince aynı `parseMixerState` girişte de kullanılmalı.
 - **#98 (🔊 offline mix renderer — DSP zinciri birleşti):** kaynaklar → `Mixer` → `DcBlocker`; `MixSpec`/`MixLayer` deklaratif tanım + `renderMix()`. **Spekülatif değil:** hem native grafın eşleşmesi gereken **referans** implementasyon, hem **mix-to-video (viral kanca #3)** için gereken offline üretim. **🔑 Katman dekorelasyonu:** tüm katmanlar aynı seed'i kullansaydı aynı gürültüyü üretir → iki pembe katman birebir aynı olur, toplama sesi zenginleştirmek yerine sadece yükseltirdi. Katman başına asal çarpanla seed; **ölçüldü: aynı tip farklı indekste %0.0 aynı örnek** (tam bağımsız), testle sabit. Ölçümler (uyku mix'i pembe0.5+kahve0.4, 5sn@48k, seed42): rms=0.1274, mad=0.0457, **dc=0.00002** (ham pembenin -0.036'sı zincirde temizlendi → #95→#96 zinciri uçtan uca doğru), **clipped=0**. `flutter test` 135 yeşil (126→135, +9). İlerleme barı mobil 41→43% (toplam ≈48%). PR #99. **Not:** katman hâlâ ses ÇALMIYOR (offline render); native graf + `AudioEngineFacade` (gerçek zamanlı çalma, kesinti/odak) sırada; kulakla doğrulama docs/10.
 - **#97 (🔊 katman mikseri — kazanç rampası / anti-tık):** Ses zincirinin sıradaki halkası. **Asıl mesele zipper noise:** sürgü çekilince kazancı sıçratmak tam ölçekli süreksizlik = duyulur tık (CLAUDE.md "ucuz duyulan hiçbir şey ship edilmez"). Kazançlar hedefe 20 ms doğrusal yürür, durum `mixInto` çağrıları arasında sürer. **Ölçümle kanıtlandı:** rampalı maxDelta=**0.00104** (tam 1/960) vs rampasız sıçrama **1.00000** → ~960×; test ikisini yan yana koyuyor ("rampanın önlediği şey"). **Headroom:** toplam 1'i aşarsa son çare clamp + `clippedSamples` **raporu** (sessizce bozmaz; 1.0+1.0 → 4800/4800 kırpıldı, sayıldı). `flutter test` 126 yeşil (116→126, +10): toplama, rampa deltası/hedefe ulaşma, immediate karşılaştırması, yeni katman sessizden girer, clamp+rapor, **streaming denkliği** (128'lik parçalı == tek seferde), [0,1] clamp, reset. İlerleme barı mobil 39→41% (toplam ≈47%, bar 19 blok). PR #98. **Not:** DC blocker + mikser henüz üretim zincirine BAĞLI DEĞİL; katman hâlâ ses ÇALMIYOR — native graf + `AudioEngineFacade` sırada.
