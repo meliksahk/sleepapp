@@ -12,3 +12,8 @@ final contentControllerProvider = Provider<ContentController>((ref) {
 final soundscapeFeedProvider = FutureProvider<List<Soundscape>>((ref) {
   return ref.read(contentControllerProvider).feed();
 });
+
+/// Soundscape detayı (slug'a göre); yayınlanmamış/yok → null. Detay ekranı izler.
+final soundscapeDetailProvider = FutureProvider.family<SoundscapeDetail?, String>((ref, slug) {
+  return ref.read(contentControllerProvider).soundscape(slug);
+});

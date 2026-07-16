@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../features/archetype/presentation/archetype_test_screen.dart';
+import '../features/content/presentation/soundscape_detail_screen.dart';
 import '../features/content/presentation/soundscape_library_screen.dart';
 import '../features/home/home_screen.dart';
 
@@ -17,6 +18,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/library',
       builder: (context, state) => const SoundscapeLibraryScreen(),
+    ),
+    GoRoute(
+      path: '/library/:slug',
+      builder: (context, state) =>
+          SoundscapeDetailScreen(slug: state.pathParameters['slug'] ?? ''),
     ),
   ],
 );
