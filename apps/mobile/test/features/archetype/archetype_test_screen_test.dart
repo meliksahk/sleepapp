@@ -126,13 +126,14 @@ Future<void> _pump(
   WidgetTester tester,
   ArchetypeController controller, {
   Sharer? sharer,
+  RecordingAnalytics? analytics,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: <Override>[
         archetypeControllerProvider.overrideWithValue(controller),
         // Analytics override — default'u apiClientProvider→FlavorConfig okur (testte yok).
-        analyticsProvider.overrideWithValue(RecordingAnalytics()),
+        analyticsProvider.overrideWithValue(analytics ?? RecordingAnalytics()),
         if (sharer != null) sharerProvider.overrideWithValue(sharer),
       ],
       child: MaterialApp(theme: buildNoctaDarkTheme(), home: const ArchetypeTestScreen()),
@@ -188,9 +189,10 @@ void main() {
     expect(analytics.lastProps?['archetype'], 'deep-ocean');
   });
 
-  testWidgets('sonuçta paylaş → sharer web URL alır, "Link copied" gösterilir', (tester) async {
+  testWidgets('sonuçta paylaş → sharer web URL alır, "Link copied" + share_tapped', (tester) async {
     final sharer = RecordingSharer();
-    await _pump(tester, await _controller(), sharer: sharer);
+    final analytics = RecordingAnalytics();
+    await _pump(tester, await _controller(), sharer: sharer, analytics: analytics);
 
     // Cevapla → sonuç.
     await tester.tap(find.byKey(const Key('opt-q1-q1a')));
@@ -205,6 +207,8 @@ void main() {
     expect(sharer.last?.url, 'https://nocta.app/a/deep-ocean');
     expect(sharer.last?.text, contains('Deep Ocean'));
     expect(find.text('Link copied'), findsOneWidget);
+    // Viral huni: sonuç görüldü + paylaşıldı.
+    expect(analytics.events, containsAll(<String>['archetype_completed', 'share_tapped']));
   });
 
   testWidgets('kayıtlı sonuç varsa doğrudan sonucu gösterir (sihirbaz atlanır)', (tester) async {
