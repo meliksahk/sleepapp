@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈44% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈45% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████░░░░░░░░░░░░░░░░░░░░░░] 44%
+[██████████████████░░░░░░░░░░░░░░░░░░░░░░] 45%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
 | ----------- | -------- | ------- | --------------------------------------------------------------------------- |
 | Backend/API | ~73%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
-| Mobil       | ~33%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
+| Mobil       | ~35%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog              |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·73 + 0.40·33 + 0.15·12 + 0.15·45 ≈ **44%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·73 + 0.40·35 + 0.15·12 + 0.15·45 ≈ **45%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#92 (mobil Gece Raporu ekranı + paylaşım — viral kanca #2):** CLAUDE.md'nin üç çekirdek viral kancasından biri (archetype kartı / **gece raporu** / mix-to-video) mobilde **hiç yüzeyi yoktu**: `nightReport()` controller'da atıl, `/v1/sharing/report` ucu (backend'de hazır) hiç tüketilmiyordu. Artık geçmişten geceye tıklayınca `/report/:night` açılıyor (süre, calm, oturum/hareket/ses) + "Share this night". Paylaşım metni **sunucudan** gelir (kart metni tek kaynak, istemcide kopya yok); `Sharer` portu ile test edilebilir. `NightReportShare` modeli + `reportShare` (404→null) + `nightReportProvider` (family) + route + geçmiş kartları tıklanabilir. **Sağlık iddiası:** calm skoru açık uyarıyla ("not a health score") sunuldu ve **testle sabitlendi**. `flutter analyze` temiz, `flutter test` 91 yeşil (85→91): gösterim, sağlık-uyarısı, boş, hata, paylaşım (sunucu metni, RecordingSharer), kart 404→paylaşım yok. Salt mobil, contract değişmedi. İlerleme barı mobil 33→35% (toplam ≈45%). PR #93. **Kapsam dışı (açıkça):** `report_shared` analitik olayı EKLENMEDİ — sözlükte yok, #90'daki kapı 400'lerdi; sözlük(API)+emisyon(mobil) birlikte ayrı PR'da gitmeli. Görsel paylaşım kartı (görüntü üretimi) + mix-to-video açık.
 - **#91 (web JS bütçe kapısı + 🔴 bütçe çatışması bulgusu):** CLAUDE.md §3.4 JS<90KB kapısı **hiç kurulmamıştı**; kurmak için ölçünce **bütçenin ZATEN İHLAL EDİLDİĞİ** ortaya çıktı: ana sayfa First Load JS **103 kB** (kendi gzip metriğimizle 107 kB) = React 19 (54.2 kB) + Next 15 App Router (46 kB) + **uygulama kodu ~1 kB**. Bağımlılıklar yalnızca next/react/react-dom → kırpılacak şey yok, **90KB bu mimariyle ULAŞILAMAZ**. **Davranış:** CLAUDE.md sormadan değiştirilmedi; bütçe sessizce gerçeğe uydurulmadı. Onun yerine `check-bundle-size.mjs` + `size` turbo görevi + CI → **regresyon bekçisi** (115 kB gzip, kodda/dokümanda "hedef değil" diye etiketli). Karar insana: **DECISIONS_NEEDED.md · D-6** (bütçeyi gerçeğe çek / Astro'ya taşı / LCP-CLS üzerinden tanımla). Kapı **iki yönde doğrulandı**: eşik 115→geçer (107.0 kB, exit 0), eşik 50→exit 1. turbo 18/18 (17→18, yeni size görevi). İlerleme barı web 44→45% (toplam ≈44%). PR #92. **AÇIK:** LCP/CLS (lighthouse-ci) YAPILMADI — Chrome'lu CI job'u gerektirir, D-6'da not.
 - **#90 (analitik olay sözlüğü zorlaması):** docs/01 §7'nin **belgelenmiş ama uygulanmamış** gereksinimi kapatıldı — "sözlükte olmayan event gönderilemez". Olay adı şimdiye dek YALNIZCA regex ile doğrulanıyordu (herhangi bir `[a-z0-9_.]` adı kabul). Artık `KNOWN_EVENT_NAMES` (domain, tek kaynak) + eşlenik `docs/analytics-events.md` (docs/01'in adıyla istediği dosya: sözlük tablosu, ad kuralları, **PII yasağı**, "önce sözlük sonra gönderim" sırası). `unknown_event` hata kodu; biçim kontrolünden sonra sözlük kapısı. Sözlük yalnızca **gerçekten yayılan** olayları içerir (`archetype_completed`, `share_tapped`) — spekülatif olay eklenmedi. API 222 test (217→222): sözlük bilinir/bilinmez, biçim-geçerli-ama-tanımsız, set tutarlılığı, batch tümden red; e2e unknown_event 400 + satır yazılmaz. turbo 17/17. Mobilin iki olayı da sözlükte → kırılma yok. İlerleme barı backend 72→73% (toplam ≈44%, bar 18 blok). PR #91. **Tercih (dürüstçe):** tek tanımsız olay tüm batch'i düşürür (kısmi kabul yok); istemci sözlükten önce olay eklerse o batch kaybolur — bilinçli, dokümanda yazılı.
 - **#89 (mobil detayda "sana uygun sesler"):** Archetype detay ekranına o kimliğe affinity'si olan soundscape listesi (tıklayınca `/library/:slug`). #87'nin kapsam-dışı detay→içerik bağı tamamlandı; test→kimlik→içerik döngüsünün son halkası. `soundscapesForArchetypeProvider` (family: `feed(archetype)` + affinity filtresi) + `_SoundsSection` — **ikincil bölüm**: boş/yükleme/hata → gizli, detay bloklanmaz. `flutter analyze` temiz, `flutter test` 85 yeşil (82→85): liste gösterilir, boşsa gizli, hata detayı bloklamaz. İlerleme barı mobil 32→33% (toplam ≈43%). PR #90. **Not:** `soundscapeFeedProvider` zaten parametresiz → #88 ile sunucuda otomatik kişiselleşiyor, ek temizlik gerekmedi (planlanan "provider temizliği" no-op çıktı).
