@@ -15,6 +15,7 @@ import { RecordSleepSessionUseCase } from './application/record-sleep-session.us
 import { ListSleepSessionsUseCase } from './application/list-sleep-sessions.usecase';
 import { GetNightReportUseCase } from './application/get-night-report.usecase';
 import { GetStreakUseCase } from './application/get-streak.usecase';
+import { GetSleepStatsUseCase } from './application/get-sleep-stats.usecase';
 import { SleepController } from './presentation/sleep.controller';
 
 const providers: Provider[] = [
@@ -62,6 +63,12 @@ const providers: Provider[] = [
       timezones: ProfileTimezoneReader,
       now: Clock,
     ): GetStreakUseCase => new GetStreakUseCase(repo, timezones, now),
+  },
+  {
+    provide: GetSleepStatsUseCase,
+    inject: [SLEEP_SESSION_REPOSITORY],
+    useFactory: (repo: SleepSessionRepository): GetSleepStatsUseCase =>
+      new GetSleepStatsUseCase(repo),
   },
 ];
 

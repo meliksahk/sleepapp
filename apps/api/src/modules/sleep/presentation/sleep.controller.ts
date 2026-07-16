@@ -22,9 +22,16 @@ import { RecordSleepSessionUseCase } from '../application/record-sleep-session.u
 import { ListSleepSessionsUseCase } from '../application/list-sleep-sessions.usecase';
 import { GetNightReportUseCase } from '../application/get-night-report.usecase';
 import { GetStreakUseCase } from '../application/get-streak.usecase';
+import { GetSleepStatsUseCase } from '../application/get-sleep-stats.usecase';
 import { SleepError } from '../domain/errors';
 import type { SleepSession } from '../domain/sleep-session.entity';
-import { NightReportDto, RecordSleepSessionDto, SleepSessionDto, StreakDto } from './dto';
+import {
+  NightReportDto,
+  RecordSleepSessionDto,
+  SleepSessionDto,
+  SleepStatsDto,
+  StreakDto,
+} from './dto';
 
 const NIGHT_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -50,6 +57,7 @@ export class SleepController {
     private readonly list: ListSleepSessionsUseCase,
     private readonly report: GetNightReportUseCase,
     private readonly streak: GetStreakUseCase,
+    private readonly stats: GetSleepStatsUseCase,
   ) {}
 
   @Post('sessions')
@@ -132,5 +140,12 @@ export class SleepController {
   @ApiOkResponse({ type: StreakDto })
   streakStats(@CurrentUser() user: AccessTokenClaims): Promise<StreakDto> {
     return this.streak.execute(user.sub);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Uyku istatistikleri (gece sayısı, toplam/ortalama süre)' })
+  @ApiOkResponse({ type: SleepStatsDto })
+  sleepStats(@CurrentUser() user: AccessTokenClaims): Promise<SleepStatsDto> {
+    return this.stats.execute(user.sub);
   }
 }
