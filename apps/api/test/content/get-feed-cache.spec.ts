@@ -48,6 +48,9 @@ class CountingRepo implements ContentRepository {
   setStatus(): Promise<SoundscapeSummary | null> {
     throw new Error('kullanılmaz');
   }
+  setEngineParams(): Promise<SoundscapeSummary | null> {
+    throw new Error('kullanılmaz');
+  }
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null> {
     throw new Error('kullanılmaz');
   }

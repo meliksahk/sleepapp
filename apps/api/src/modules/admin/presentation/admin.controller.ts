@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -23,6 +24,7 @@ import {
 import {
   ContentError,
   EmptyRecipeError,
+  InvalidRecipeError,
   InvalidSlugError,
   SlugTakenError,
   SoundscapeNotFoundError,
@@ -40,6 +42,7 @@ import { Inject } from '@nestjs/common';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDto } from './soundscape.dto';
 import { CreateSoundscapeDto } from './create-soundscape.dto';
+import { SetRecipeDto } from './recipe.dto';
 import {
   SOUNDSCAPE_CATALOG,
   type CatalogEntry,
@@ -168,6 +171,24 @@ export class AdminController {
     return this.runCatalog(() => this.catalog.unpublish(slug));
   }
 
+  /**
+   * Ses tarifini yaz (docs/03 A1). Yayınlama kapısının (#122) karşılığı: içerik
+   * PANELDEN sese kavuşabilsin — o güne dek tarif yalnızca DB'ye elle girilebiliyordu.
+   */
+  @Put('soundscapes/:slug/recipe')
+  @HttpCode(200)
+  @Roles('owner', 'editor')
+  @ApiOperation({ summary: 'Ses tarifini yaz (sema dogrulamali)' })
+  @ApiOkResponse({ type: AdminSoundscapeDto })
+  @ApiForbiddenResponse({ description: 'Yazma yetkisi yok' })
+  @ApiNotFoundResponse({ description: 'Soundscape yok' })
+  async setRecipe(
+    @Param('slug') slug: string,
+    @Body() dto: SetRecipeDto,
+  ): Promise<AdminSoundscapeDto> {
+    return this.runCatalog(() => this.catalog.setRecipe(slug, dto));
+  }
+
   /** Domain hatalarını HTTP'ye çevirir — tek yerde, uçlar arasında sapma olmasın. */
   private async runCatalog(fn: () => Promise<CatalogEntry>): Promise<AdminSoundscapeDto> {
     try {
@@ -183,6 +204,10 @@ export class AdminController {
       // 409: "isteğin doğru ama kaynak şu an bunu kaldırmıyor".
       if (err instanceof EmptyRecipeError) {
         throw new ConflictException({ code: err.code, message: err.message });
+      }
+      // Geçersiz tarif bir GİRDİ hatasıdır (400), durum çakışması değil.
+      if (err instanceof InvalidRecipeError) {
+        throw new BadRequestException({ code: err.code, message: err.message });
       }
       if (err instanceof InvalidSlugError || err instanceof ContentError) {
         throw new BadRequestException({ code: err.code, message: err.message });

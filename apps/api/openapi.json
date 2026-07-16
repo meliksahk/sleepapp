@@ -808,6 +808,56 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/soundscapes/{slug}/recipe": {
+      "put": {
+        "operationId": "AdminController_setRecipe",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRecipeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSoundscapeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yazma yetkisi yok"
+          },
+          "404": {
+            "description": "Soundscape yok"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ses tarifini yaz (sema dogrulamali)",
+        "tags": ["admin"]
+      }
+    },
     "/v1/content/feed": {
       "get": {
         "operationId": "ContentController_feed",
@@ -1748,6 +1798,32 @@
           }
         },
         "required": ["slug", "titleEn"]
+      },
+      "SetRecipeDto": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "number",
+            "example": 1,
+            "description": "Tarif şema sürümü (docs/04 §79) — eski istemci zarifçe geri düşebilsin"
+          },
+          "layers": {
+            "type": "array",
+            "description": "Mikser katmanları (1–8); type: white|pink|brown, gain 0–1",
+            "example": [
+              {
+                "id": "base",
+                "type": "pink",
+                "gain": 0.5
+              }
+            ],
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": ["schemaVersion", "layers"]
       },
       "SoundscapeDto": {
         "type": "object",

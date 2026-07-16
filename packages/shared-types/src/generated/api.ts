@@ -430,6 +430,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/soundscapes/{slug}/recipe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ses tarifini yaz (sema dogrulamali) */
+        put: operations["AdminController_setRecipe"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/content/feed": {
         parameters: {
             query?: never;
@@ -883,6 +900,26 @@ export interface components {
              * @default []
              */
             archetypeAffinity: string[];
+        };
+        SetRecipeDto: {
+            /**
+             * @description Tarif şema sürümü (docs/04 §79) — eski istemci zarifçe geri düşebilsin
+             * @example 1
+             */
+            schemaVersion: number;
+            /**
+             * @description Mikser katmanları (1–8); type: white|pink|brown, gain 0–1
+             * @example [
+             *       {
+             *         "id": "base",
+             *         "type": "pink",
+             *         "gain": 0.5
+             *       }
+             *     ]
+             */
+            layers: {
+                [key: string]: unknown;
+            }[];
         };
         SoundscapeDto: {
             /** Format: uuid */
@@ -1788,6 +1825,45 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminSoundscapeDto"];
                 };
+            };
+        };
+    };
+    AdminController_setRecipe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRecipeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSoundscapeDto"];
+                };
+            };
+            /** @description Yazma yetkisi yok */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Soundscape yok */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

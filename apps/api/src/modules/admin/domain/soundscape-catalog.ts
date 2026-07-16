@@ -33,6 +33,8 @@ export interface SoundscapeCatalog {
   list(): Promise<CatalogEntry[]>;
   create(input: NewCatalogEntry): Promise<CatalogEntry>;
   publish(slug: string): Promise<CatalogEntry>;
+  /** Ses tarifini yazar (doğrulama content'in işi). */
+  setRecipe(slug: string, recipe: unknown): Promise<CatalogEntry>;
   unpublish(slug: string): Promise<CatalogEntry>;
 }
 

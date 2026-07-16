@@ -105,3 +105,35 @@ gerçekten burada da geçerli mi?
 kullanıcı ihtiyacına değil, kuralın harfine hizmet eder. Ama bu CLAUDE.md
 değişikliği demektir → tek taraflı yapmadım. **Cevap gelene kadar admin'e yeni
 hard-coded metin eklemeye devam edeceğim** (mevcut desen), bunu bilerek.
+
+## D-9 · `soundscapes.layer_defs` kolonunun rolü ne?
+
+**Bağlam:** şemada iki jsonb kolon var: `engine_params` ve `layer_defs` (ilk
+migration'dan beri). Belgeler ikisini ayırıyor ama tanımlamıyor:
+
+- docs/02 §84: `engine_params jsonb -- jeneratif motor parametreleri`, `layer_defs jsonb`
+- docs/03 §68: "engine_params için şema-doğrulamalı JSON editörü ..., layer tanımları,
+  archetype affinity seçici" → ayrı UI kaygıları gibi
+- docs/04 §78–79: "engine_params yalnızca _tarif_", "şeması versiyonludur"
+
+**Ne yaptım (#123):** tarifin TAMAMINI `engine_params`'a koydum:
+`{ schemaVersion: 1, layers: [{id, type, gain}] }`. Gerekçe: mobil motorun tükettiği
+`MixSpec` tam olarak bu (katman = {id,type,gain}); docs/04 "engine_params yalnızca
+tarif" diyor; ve #122'de koyduğum yayınlama kapısı zaten `engine_params`'ı kontrol
+ediyor. **Sonuç: `layer_defs` şu an KULLANILMIYOR** (boş dizi olarak yazılıyor).
+
+**Soru:** hangisi doğru?
+
+1. **Şimdiki gibi kalsın:** tarif tek kolonda (`engine_params`), `layer_defs` ölü.
+   Sonra: `layer_defs` kolonunu migration ile KALDIR (ölü kolon yanıltıcıdır).
+2. **Ayır:** `engine_params` = global motor ayarları (örnekleme hızı, master gain,
+   schema_version), `layer_defs` = katman listesi. Kolon adları bunu ima ediyor.
+   Bu durumda **#122'nin yayınlama kapısı yanlış kolona bakıyor** → `layer_defs`
+   boşsa da ses çıkmaz; kapı oraya taşınmalı.
+3. **Başka bir şey:** `layer_defs` örnek-tabanlı katmanlar (kuş sesi kaydı gibi,
+   docs/04 §78'deki "küçük örnek dosyalar") için ayrılmışsa, jeneratif katmanlar
+   `engine_params`'ta kalır ve `layer_defs` ileride doldurulur.
+
+**Önerim: (3) muhtemelen asıl niyet** — docs/04 hem jeneratif hem örnek-tabanlı
+kaynaktan söz ediyor. Ama emin değilim ve **uydurup şemayı kilitlemek istemedim**.
+Cevap gelene kadar (1) gibi davranıyorum; (2) çıkarsa #122'nin kapısı düzeltilmeli.
