@@ -13,7 +13,10 @@ import {
   SetSoundscapeRecipeUseCase,
   SetSoundscapeStatusUseCase,
 } from '../content';
+import { PrismaService } from '../../shared/infra/prisma.service';
 import { AdminController } from './presentation/admin.controller';
+import { AUDIT_LOG, type AuditLog } from './domain/audit';
+import { PrismaAuditLog } from './infrastructure/prisma-audit-log';
 import {
   OVERVIEW_SOURCE,
   SOUNDSCAPE_CATALOG,
@@ -39,6 +42,11 @@ function toEntry(s: SoundscapeSummary): CatalogEntry {
 }
 
 const providers: Provider[] = [
+  {
+    provide: AUDIT_LOG,
+    inject: [PrismaService],
+    useFactory: (prisma: PrismaService): AuditLog => new PrismaAuditLog(prisma),
+  },
   {
     // Adaptasyon module-def'te: admin, content'in PUBLIC use case'ini kendi portuna
     // bağlar; content'in repo'suna/Prisma modeline dokunmaz (docs/02 §2 boundary).

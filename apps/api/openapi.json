@@ -692,6 +692,34 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/audit": {
+      "get": {
+        "operationId": "AdminController_auditLog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Son panel etkinlikleri (denetim izi)",
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/soundscapes": {
       "get": {
         "operationId": "AdminController_soundscapes",
@@ -1905,6 +1933,42 @@
           }
         },
         "required": ["soundscapes", "waitlist", "shareFunnel"]
+      },
+      "AuditEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actorEmail": {
+            "type": "string",
+            "description": "Eylemi yapan admin (hesap silinse de KORUNUR)"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "soundscape.create",
+              "soundscape.update",
+              "soundscape.publish",
+              "soundscape.unpublish",
+              "soundscape.recipe"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "description": "Hedef (soundscape slug)"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Bağlam (PII yok)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO 8601 UTC (CLAUDE.md §4)"
+          }
+        },
+        "required": ["id", "actorEmail", "action", "target", "details", "createdAt"]
       },
       "AdminSoundscapeDto": {
         "type": "object",

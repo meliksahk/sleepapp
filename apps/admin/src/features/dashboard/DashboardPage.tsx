@@ -4,6 +4,7 @@ import { AppShell } from '@/shared/ui/AppShell';
 import { apiGet } from '@/shared/api/server-client';
 import { LogoutButton } from '@/features/auth/LogoutButton';
 import { shareRateLabel, shareRateHint } from './share-rate';
+import { AuditFeed, type AuditEntry } from './AuditFeed';
 
 interface Overview {
   soundscapes: { draft: number; scheduled: number; published: number };
@@ -18,11 +19,15 @@ interface Overview {
  * uydurma sayı göstermektense yer tutucu kalıyor: YANLIŞ bir metrik, OLMAYAN bir
  * metrikten daha kötüdür — insan ona güvenip karar verir.
  *
- * "Son etkinlik" tablosu kaldırıldı: `audit_log` yok, dolayısıyla o tablo hiçbir
- * zaman dolmayacak boş bir söz veriyordu. Geldiğinde eklenir.
+ * "Son etkinlik" #126'da KALDIRILMIŞTI (audit_log yoktu → hiç dolmayacak boş bir söz);
+ * #134'te iz gelince GERİ EKLENDİ — bu kez gerçek veriyle.
  */
 export async function DashboardPage() {
-  const o = await apiGet<Overview>('/v1/admin/overview');
+  // Paralel: iki bağımsız okuma, biri diğerini beklemesin.
+  const [o, audit] = await Promise.all([
+    apiGet<Overview>('/v1/admin/overview'),
+    apiGet<AuditEntry[]>('/v1/admin/audit'),
+  ]);
   const total = o.soundscapes.published + o.soundscapes.draft + o.soundscapes.scheduled;
 
   return (
@@ -63,10 +68,15 @@ export async function DashboardPage() {
       </section>
 
       <section className="mt-8">
+        <h3 className="mb-3 text-body font-display">Son etkinlik</h3>
+        <AuditFeed entries={audit} />
+      </section>
+
+      <section className="mt-8">
         <h3 className="text-body font-display">Henüz ölçülmeyenler</h3>
         <p className="mt-1 text-body text-ink-secondary">
           D7 retention kohort analizi gerektiriyor (A3). Deneme→ücretli ödeme entegrasyonuna bağlı
-          (F6). Son etkinlik akışı için audit_log gerekiyor.
+          (F6).
         </p>
       </section>
     </AppShell>

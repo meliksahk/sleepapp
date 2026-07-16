@@ -395,6 +395,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Son panel etkinlikleri (denetim izi) */
+        get: operations["AdminController_auditLog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/soundscapes": {
         parameters: {
             query?: never;
@@ -925,6 +942,21 @@ export interface components {
             waitlist: number;
             /** @description Viral kanca sağlığı */
             shareFunnel: components["schemas"]["ShareFunnelDto"];
+        };
+        AuditEntryDto: {
+            id: string;
+            /** @description Eylemi yapan admin (hesap silinse de KORUNUR) */
+            actorEmail: string;
+            /** @enum {string} */
+            action: "soundscape.create" | "soundscape.update" | "soundscape.publish" | "soundscape.unpublish" | "soundscape.recipe";
+            /** @description Hedef (soundscape slug) */
+            target: string;
+            /** @description Bağlam (PII yok) */
+            details: {
+                [key: string]: unknown;
+            };
+            /** @description ISO 8601 UTC (CLAUDE.md §4) */
+            createdAt: string;
         };
         AdminSoundscapeDto: {
             id: string;
@@ -1812,6 +1844,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OverviewDto"];
+                };
+            };
+        };
+    };
+    AdminController_auditLog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditEntryDto"][];
                 };
             };
         };
