@@ -12,4 +12,8 @@ export class PrismaWaitlistRepository implements WaitlistRepository {
       update: {},
     });
   }
+
+  async count(): Promise<number> {
+    return this.prisma.waitlist.count();
+  }
 }

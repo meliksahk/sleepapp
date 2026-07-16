@@ -378,6 +378,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Panel panosu sayilari */
+        get: operations["AdminController_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/soundscapes": {
         parameters: {
             query?: never;
@@ -888,6 +905,16 @@ export interface components {
             userId: string;
             /** @description Bu hesabın sahip olduğu admin rolleri */
             roles: ("owner" | "editor" | "analyst" | "support")[];
+        };
+        SoundscapeCountsDto: {
+            draft: number;
+            scheduled: number;
+            published: number;
+        };
+        OverviewDto: {
+            soundscapes: components["schemas"]["SoundscapeCountsDto"];
+            /** @description Bekleme listesi kayıt sayısı */
+            waitlist: number;
         };
         AdminSoundscapeDto: {
             id: string;
@@ -1757,6 +1784,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AdminController_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewDto"];
+                };
             };
         };
     };

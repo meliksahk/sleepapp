@@ -1,51 +1,64 @@
-import { StatCard, EmptyState, Button, DataTable, type Column } from '@nocta/ui';
+import Link from 'next/link';
+import { StatCard, Button } from '@nocta/ui';
 import { AppShell } from '@/shared/ui/AppShell';
+import { apiGet } from '@/shared/api/server-client';
 import { LogoutButton } from '@/features/auth/LogoutButton';
 
-interface ActivityRow {
-  id: string;
-  action: string;
-  actor: string;
-  when: string;
+interface Overview {
+  soundscapes: { draft: number; scheduled: number; published: number };
+  waitlist: number;
 }
-const activityColumns: Column<ActivityRow>[] = [
-  { key: 'action', header: 'İşlem' },
-  { key: 'actor', header: 'Aktör' },
-  { key: 'when', header: 'Zaman' },
-];
-// Yer tutucu — A3'te audit_log API'sine bağlanacak.
-const activityRows: ActivityRow[] = [];
 
-/** Dashboard dikey dilimi (feature-sliced, docs/03). Metrikler A3'te canlı veriye bağlanır. */
-export function DashboardPage() {
+/**
+ * Dashboard (docs/03). Rakamlar CANLI — ama yalnızca bugün DOĞRU hesaplanabilenler.
+ *
+ * D7 retention kohort analizi ister; deneme→ücretli billing'e (F6) bağlı. İkisi için
+ * uydurma sayı göstermektense yer tutucu kalıyor: YANLIŞ bir metrik, OLMAYAN bir
+ * metrikten daha kötüdür — insan ona güvenip karar verir.
+ *
+ * "Son etkinlik" tablosu kaldırıldı: `audit_log` yok, dolayısıyla o tablo hiçbir
+ * zaman dolmayacak boş bir söz veriyordu. Geldiğinde eklenir.
+ */
+export async function DashboardPage() {
+  const o = await apiGet<Overview>('/v1/admin/overview');
+  const total = o.soundscapes.published + o.soundscapes.draft + o.soundscapes.scheduled;
+
   return (
     <AppShell actions={<LogoutButton />}>
       <h2 className="text-h2 font-display">Overview</h2>
       <p className="mt-1 mb-5 text-body text-ink-secondary">
-        Metrik panosu A3&apos;te canlı veriye bağlanacak (şimdilik yer tutucu).
+        Canlı rakamlar. Henüz ölçülemeyenler aşağıda açıkça belirtilmiştir.
       </p>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="D7 retention" value="—" hint="A3'te" />
-        <StatCard label="Kart paylaşım oranı" value="—" hint="A3'te" />
-        <StatCard label="Bekleme listesi" value="—" hint="A2'de" />
-        <StatCard label="Deneme→ücretli" value="—" hint="F6'da" />
+        <StatCard
+          label="Yayında"
+          value={String(o.soundscapes.published)}
+          hint="kullanıcıların gördüğü"
+        />
+        <StatCard label="Taslak" value={String(o.soundscapes.draft)} hint="yayınlanmamış" />
+        <StatCard label="Bekleme listesi" value={String(o.waitlist)} hint="ön-lansman kaydı" />
+        {/* Sahte sayı YOK: ölçülemeyeni ölçülüyormuş gibi göstermek, insanın ona
+            güvenip yanlış karar vermesi demektir. */}
+        <StatCard label="Deneme→ücretli" value="—" hint="ödeme F6'da" />
       </div>
 
       <section className="mt-8">
         <h3 className="text-body font-display">Soundscapes</h3>
-        <div className="mt-3">
-          <EmptyState
-            title="Henüz içerik yok"
-            description="İçerik CMS'i A1'de gelince ilk soundscape burada oluşturulacak."
-            action={<Button disabled>Yeni soundscape</Button>}
-          />
-        </div>
+        <p className="mt-1 mb-3 text-body text-ink-secondary">
+          {total} kayıt · {o.soundscapes.scheduled} planlı
+        </p>
+        <Link href="/content">
+          <Button>İçeriği yönet</Button>
+        </Link>
       </section>
 
       <section className="mt-8">
-        <h3 className="mb-3 text-body font-display">Son etkinlik</h3>
-        <DataTable columns={activityColumns} rows={activityRows} emptyTitle="Henüz etkinlik yok" />
+        <h3 className="text-body font-display">Henüz ölçülmeyenler</h3>
+        <p className="mt-1 text-body text-ink-secondary">
+          D7 retention ve kart paylaşım oranı analitik olaylardan hesaplanacak (A3). Deneme→ücretli
+          ödeme entegrasyonuna bağlı (F6). Son etkinlik akışı için audit_log gerekiyor.
+        </p>
       </section>
     </AppShell>
   );

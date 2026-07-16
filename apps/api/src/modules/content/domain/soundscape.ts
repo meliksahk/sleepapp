@@ -129,6 +129,8 @@ export interface ContentRepository {
   setEngineParams(slug: string, params: unknown): Promise<SoundscapeSummary | null>;
   /** Başlık/affinity günceller (kısmi); kayıt yoksa null. */
   updateMeta(slug: string, patch: SoundscapeMetaPatch): Promise<SoundscapeSummary | null>;
+  /** Durum başına sayı. Satırları ÇEKMEZ (groupBy) — pano listeye bağlı olmamalı. */
+  countByStatus(): Promise<Record<ContentStatus, number>>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
   /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;

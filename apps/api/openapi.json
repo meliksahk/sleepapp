@@ -667,6 +667,31 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/overview": {
+      "get": {
+        "operationId": "AdminController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Panel panosu sayilari",
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/soundscapes": {
       "get": {
         "operationId": "AdminController_soundscapes",
@@ -1825,6 +1850,34 @@
           }
         },
         "required": ["userId", "roles"]
+      },
+      "SoundscapeCountsDto": {
+        "type": "object",
+        "properties": {
+          "draft": {
+            "type": "number"
+          },
+          "scheduled": {
+            "type": "number"
+          },
+          "published": {
+            "type": "number"
+          }
+        },
+        "required": ["draft", "scheduled", "published"]
+      },
+      "OverviewDto": {
+        "type": "object",
+        "properties": {
+          "soundscapes": {
+            "$ref": "#/components/schemas/SoundscapeCountsDto"
+          },
+          "waitlist": {
+            "type": "number",
+            "description": "Bekleme listesi kayıt sayısı"
+          }
+        },
+        "required": ["soundscapes", "waitlist"]
       },
       "AdminSoundscapeDto": {
         "type": "object",

@@ -51,3 +51,23 @@ export interface SoundscapeCatalog {
 }
 
 export const SOUNDSCAPE_CATALOG = Symbol('SoundscapeCatalog');
+
+/**
+ * Panel panosu rakamları. YALNIZCA bugün DOĞRU hesaplanabilenler burada:
+ * D7 retention (kohort analizi) ve deneme→ücretli (F6/billing) henüz ölçülemez —
+ * onlar için sahte sayı üretmektense panelde dürüst yer tutucu kalır.
+ */
+export interface Overview {
+  readonly soundscapes: {
+    readonly draft: number;
+    readonly scheduled: number;
+    readonly published: number;
+  };
+  readonly waitlist: number;
+}
+
+export interface OverviewSource {
+  read(): Promise<Overview>;
+}
+
+export const OVERVIEW_SOURCE = Symbol('OverviewSource');

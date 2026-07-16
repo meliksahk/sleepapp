@@ -2,6 +2,8 @@
 export interface WaitlistRepository {
   /** İdempotent — aynı e-posta ikinci kez sorunsuz kabul edilir. */
   add(email: string, source: string | null): Promise<void>;
+  /** Kayıt sayısı (panel panosu). Satırları çekmez — COUNT sorgusu. */
+  count(): Promise<number>;
 }
 
 export const WAITLIST_REPOSITORY = Symbol('WaitlistRepository');
