@@ -3,11 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nocta/app/flavor.dart';
 import 'package:nocta/core/design_system/design_system.dart';
+import 'package:nocta/features/archetype/archetype_models.dart';
+import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/content/content_models.dart';
 import 'package:nocta/features/content/content_providers.dart';
 import 'package:nocta/features/home/home_screen.dart';
 import 'package:nocta/features/sleep/sleep_models.dart';
 import 'package:nocta/features/sleep/sleep_providers.dart';
+
+ArchetypeResult _result(String slug) => ArchetypeResult(
+  userId: 'u-1',
+  archetypeSlug: slug,
+  scores: const {},
+  version: 1,
+  createdAt: '2026-07-16T00:00:00.000Z',
+);
 
 Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
   FlavorConfig.current = const FlavorConfig(
@@ -17,7 +27,12 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
   );
   await tester.pumpWidget(
     ProviderScope(
-      overrides: overrides,
+      overrides: <Override>[
+        // Varsayılan: test sonucu yok + boş içerik (kimlik kartı gizli). İlgili test kendi kurar.
+        latestArchetypeResultProvider.overrideWith((ref) async => null),
+        archetypeContentProvider.overrideWith((ref) async => <String, ArchetypeInfo>{}),
+        ...overrides,
+      ],
       child: MaterialApp(theme: buildNoctaDarkTheme(), home: const HomeScreen()),
     ),
   );
@@ -105,5 +120,43 @@ void main() {
     ]);
     expect(find.byKey(const Key('weekly-card')), findsNothing);
     expect(find.text('NOCTA'), findsOneWidget);
+  });
+
+  testWidgets('sonuç varken kimlik kartı (içerik adı) + buton "Retake"', (tester) async {
+    await _pump(tester, [
+      latestArchetypeResultProvider.overrideWith((ref) async => _result('deep-ocean')),
+      archetypeContentProvider.overrideWith(
+        (ref) async => const {
+          'deep-ocean': ArchetypeInfo(
+            slug: 'deep-ocean',
+            name: 'Deep Ocean',
+            tagline: 'Sinks into stillness',
+            summary: '...',
+          ),
+        },
+      ),
+    ]);
+
+    expect(find.byKey(const Key('identity-name')), findsOneWidget);
+    expect(find.text('Deep Ocean'), findsOneWidget);
+    expect(find.text('Sinks into stillness'), findsOneWidget);
+    expect(find.text('Retake the test'), findsOneWidget);
+    expect(find.text('Find your sleep identity'), findsNothing);
+  });
+
+  testWidgets('sonuç yokken kimlik kartı gizli + buton "Find"', (tester) async {
+    await _pump(tester, []); // default: result null
+    expect(find.byKey(const Key('identity-name')), findsNothing);
+    expect(find.text('Find your sleep identity'), findsOneWidget);
+  });
+
+  testWidgets('içerik yüklenmese de sonuç slug ile kimlik kartı gösterilir', (tester) async {
+    await _pump(tester, [
+      latestArchetypeResultProvider.overrideWith((ref) async => _result('dawn-chaser')),
+      // archetypeContentProvider default boş → info yok → slug fallback
+    ]);
+    expect(find.byKey(const Key('identity-name')), findsOneWidget);
+    expect(find.text('dawn-chaser'), findsOneWidget);
+    expect(find.text('Retake the test'), findsOneWidget);
   });
 }

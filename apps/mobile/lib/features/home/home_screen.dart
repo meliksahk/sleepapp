@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/flavor.dart';
 import '../../core/design_system/design_system.dart';
+import '../archetype/archetype_providers.dart';
 import '../content/content_models.dart';
 import '../content/content_providers.dart';
 import '../sleep/sleep_providers.dart';
@@ -15,6 +16,10 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final streak = ref.watch(streakProvider);
     final weekly = ref.watch(weeklyReleaseProvider);
+    final result = ref.watch(latestArchetypeResultProvider);
+    final content = ref.watch(archetypeContentProvider);
+    // Kullanıcının test sonucu var mı → buton "Retake" olur, kimlik kartı görünür.
+    final hasResult = result.maybeWhen(data: (r) => r != null, orElse: () => false);
     return Scaffold(
       body: Center(
         child: Padding(
@@ -36,6 +41,18 @@ class HomeScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
               ),
               const SizedBox(height: NoctaSpace.s6),
+              // Kullanıcının uyku kimliği — sonuç varsa (yükleme/hata/yok → gizli).
+              result.maybeWhen(
+                data: (r) {
+                  if (r == null) return const SizedBox.shrink();
+                  final info = content.maybeWhen(
+                    data: (m) => m[r.archetypeSlug],
+                    orElse: () => null,
+                  );
+                  return _IdentityCard(name: info?.name ?? r.archetypeSlug, tagline: info?.tagline);
+                },
+                orElse: () => const SizedBox.shrink(),
+              ),
               // Streak: yalnızca en az bir gece kaydı varken görünür (yeni kullanıcıda
               // "0 nights streak" göstermek yerine gizli). Yükleme/hata → gizli, home bloklanmaz.
               streak.maybeWhen(
@@ -57,7 +74,8 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: NoctaSpace.s5),
               NButton(
-                label: 'Find your sleep identity',
+                key: const Key('archetype-cta'),
+                label: hasResult ? 'Retake the test' : 'Find your sleep identity',
                 onPressed: () => context.push('/archetype'),
               ),
               const SizedBox(height: NoctaSpace.s2),
@@ -80,6 +98,44 @@ class HomeScreen extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IdentityCard extends StatelessWidget {
+  const _IdentityCard({required this.name, required this.tagline});
+
+  final String name;
+  final String? tagline;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NoctaSpace.s5),
+      child: NCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your sleep identity',
+              style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.accentAurora),
+            ),
+            const SizedBox(height: NoctaSpace.s1),
+            Text(
+              name,
+              key: const Key('identity-name'),
+              style: TextStyle(fontSize: NoctaFontSize.h2, color: NoctaColors.inkPrimary),
+            ),
+            if (tagline != null && tagline!.isNotEmpty) ...[
+              const SizedBox(height: NoctaSpace.s1),
+              Text(
+                tagline!,
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+            ],
+          ],
         ),
       ),
     );
