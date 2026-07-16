@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈52% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈53% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████░░░░░░░░░░░░░░░░░░░░] 52%
+[█████████████████████░░░░░░░░░░░░░░░░░░░] 53%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~79%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~81%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~15%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·79 + 0.40·49 + 0.15·12 + 0.15·45 ≈ **52%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·81 + 0.40·49 + 0.15·15 + 0.15·45 ≈ **53%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,15 +66,52 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kapanış:** auth guard/middleware iskeleti (davetli hesap + rol modeli, docs/03) + feature-sliced boundary lint (app→features→entities→shared). packages/ui (Button/StatCard/EmptyState/Input/DataTable/ConfirmDialog) ✓ iter #15-16.
+1. **admin A0 kalanı:** davetli hesap akışı (argon2id parola + TOTP 2FA, identity modülünde) + panel Next.js middleware (`/admin/me`'ye sorup rolsüzü login'e atar). Sunucu rol kapısı (`@Roles`+`RolesGuard`+`GET /v1/admin/me`) ✓ iter #112. Boundary lint ✓ (zaten kurulu). packages/ui ✓ iter #15-16.
 2. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
-3. **admin A0:** `packages/ui` başlangıcı (Button/Input/DataTable/StatCard/EmptyState) + AppShell + auth guard iskeleti (docs/03) + feature-sliced boundary lint.
-4. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
-5. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
+3. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
+4. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
 
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #112 — admin rol kapısı sunucuda zorlanıyor + admin modülü A0 (PR #113, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **`@Roles(...)` + `RolesGuard`** (identity modülünde — auth kodu yalnızca orada,
+  CLAUDE.md §6) ve ilk tüketicisi `admin` modülü: **`GET /v1/admin/me`**.
+- **🔴 KAPATILAN AÇIK:** roller JWT'ye basılıyor, request'e ekleniyor ve
+  `/v1/auth/me`'de dönüyordu ama **hiçbir yerde kontrol edilmiyordu** — depoda tek
+  bir `RolesGuard`/`@Roles`/`hasRole` yoktu. CLAUDE.md §3.3 "her mutation
+  server-side rol kontrolünden geçer" diyordu; **rol modeli vardı, zorlaması yoktu**.
+- **Kanıt (önce kırmızı):** guard çıkarılıp koşuldu → `expected 403 "Forbidden",
+got 200 "OK"` ×3, "Tests: 3 failed, 4 passed". Guard eklendi → 7/7.
+- API **265 test** (253→265, +12): e2e 7 + RolesGuard unit 5. turbo 18/18.
+- Kontrat değişti → `pnpm gen:api-types` koşuldu, üretilen tipler commit'te.
+
+📌 **Varsayımlar / kararlar**
+
+- `@Roles` **sınıf düzeyinde**: yeni admin ucunda rol koymayı unutmak "herkese açık
+  admin ucu" demek olurdu → varsayılan kapalı.
+- `@Roles()` boşsa **reddedilir** (herkesi almak değil, programlama hatası);
+  `req.user` yoksa reddedilir → guard sırası yanlış kurulursa açık bırakmaz.
+- `/admin/me` yalnızca TANINAN rolleri döner → DB'ye elle yazılmış çöp rol adı
+  panelin yetki mantığına sızmaz.
+- Test sırasında öğrenildi ve sabitlendi: `/v1/auth/refresh` **200** döner (201 değil),
+  ve refresh token **rotasyonlu** — eski token tüketilir.
+
+🔥 **Riskler / açıklar**
+
+- **Admin hesabı oluşturma YOK:** davet akışı, argon2id parola, TOTP 2FA henüz yok.
+  Şu an admin rolü yalnızca **DB'den elle** verilebiliyor. A0 bitmedi.
+- Panel tarafı (Next.js middleware) hâlâ yok — bu PR yalnızca sunucu kapısı.
+- Rol değişimi **refresh'te** yürürlüğe girer: rol geri alınan bir kullanıcı, elindeki
+  access token'ın ömrü boyunca (kısa) admin kalır. Kabul edilebilir ama bilinsin.
+
+❌ **Yapılmadı**
+
+- Admin davet/parola/2FA, panel middleware, audit log. Sıradaki adaylar.
 
 ### #111 — i18n migrasyonu bitti + kural CI'da zorlanıyor (PR #112, merged)
 
