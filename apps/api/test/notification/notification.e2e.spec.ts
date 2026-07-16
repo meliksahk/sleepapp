@@ -91,4 +91,50 @@ describe('Notification token e2e (HTTP)', () => {
       .send({ token: mkToken(), platform: 'windows' })
       .expect(400);
   });
+
+  describe('POST /v1/notifications/test (fan-out)', () => {
+    it('token olmadan 401', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/notifications/test')
+        .send({ title: 'T', body: 'B' })
+        .expect(401);
+    });
+
+    it('cihaz yokken → 200 sent:0 failed:0', async () => {
+      const { token: jwt } = await auth();
+      const res = await request(app.getHttpServer())
+        .post('/v1/notifications/test')
+        .set('Authorization', `Bearer ${jwt}`)
+        .send({ title: 'Test', body: 'Merhaba' })
+        .expect(200);
+      expect(res.body).toEqual({ sent: 0, failed: 0 });
+    });
+
+    it('kayıtlı 2 cihaz → sent:2 (log-adaptörü)', async () => {
+      const { token: jwt } = await auth();
+      for (const platform of ['ios', 'android']) {
+        await request(app.getHttpServer())
+          .post('/v1/notifications/token')
+          .set('Authorization', `Bearer ${jwt}`)
+          .send({ token: mkToken(), platform })
+          .expect(204);
+      }
+      const res = await request(app.getHttpServer())
+        .post('/v1/notifications/test')
+        .set('Authorization', `Bearer ${jwt}`)
+        .send({ title: 'Test', body: 'İki cihaz' })
+        .expect(200);
+      expect(res.body.sent).toBe(2);
+      expect(res.body.failed).toBe(0);
+    });
+
+    it('boş başlık → 400 (validasyon)', async () => {
+      const { token: jwt } = await auth();
+      await request(app.getHttpServer())
+        .post('/v1/notifications/test')
+        .set('Authorization', `Bearer ${jwt}`)
+        .send({ title: '', body: 'B' })
+        .expect(400);
+    });
+  });
 });
