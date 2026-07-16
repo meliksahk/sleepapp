@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nocta/app/flavor.dart';
 import 'package:nocta/core/design_system/design_system.dart';
+import 'package:nocta/features/content/content_models.dart';
+import 'package:nocta/features/content/content_providers.dart';
 import 'package:nocta/features/home/home_screen.dart';
 import 'package:nocta/features/sleep/sleep_models.dart';
 import 'package:nocta/features/sleep/sleep_providers.dart';
@@ -53,5 +55,29 @@ void main() {
     expect(find.byKey(const Key('streak-current')), findsNothing);
     expect(find.text('NOCTA'), findsOneWidget); // home yine görünür
     expect(find.textContaining('flavor: DEV'), findsOneWidget);
+  });
+
+  testWidgets('haftalık yayın kartı görünür (notes gösterilir)', (tester) async {
+    await _pump(tester, [
+      weeklyReleaseProvider.overrideWith(
+        (ref) async => const WeeklyRelease(
+          weekStart: '2026-07-13',
+          notes: 'Yaz serisi',
+          soundscapes: [],
+        ),
+      ),
+    ]);
+
+    expect(find.byKey(const Key('weekly-card')), findsOneWidget);
+    expect(find.text('Yaz serisi'), findsOneWidget);
+    expect(find.text('This week'), findsOneWidget);
+  });
+
+  testWidgets('haftalık yayın yoksa (null) kart gizli, home bloklanmaz', (tester) async {
+    await _pump(tester, [
+      weeklyReleaseProvider.overrideWith((ref) async => null),
+    ]);
+    expect(find.byKey(const Key('weekly-card')), findsNothing);
+    expect(find.text('NOCTA'), findsOneWidget);
   });
 }
