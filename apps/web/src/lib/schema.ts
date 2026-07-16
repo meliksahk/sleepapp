@@ -25,24 +25,34 @@ export function buildArchetypeJsonLd(input: ArticleJsonLdInput): Record<string, 
   };
 }
 
-/** Sayfa gezinti kırıntısı (Home → archetype) — arama sonucu zenginleştirme. */
+/**
+ * Genel gezinti kırıntısı — arama sonucu zenginleştirme (docs/05 §3.1).
+ * `path` site köküne göredir ('' = ana sayfa). Sıra dizideki sıradır.
+ */
+export function buildBreadcrumbTrail(
+  crumbs: ReadonlyArray<{ name: string; path: string }>,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: `${SITE_URL}${c.path}`,
+    })),
+  };
+}
+
+/** Sayfa gezinti kırıntısı (Home → archetype) — genel builder'a delege eder. */
 export function buildBreadcrumbJsonLd(input: {
   slug: string;
   name: string;
 }): Record<string, unknown> {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: input.name,
-        item: `${SITE_URL}/a/${input.slug}`,
-      },
-    ],
-  };
+  return buildBreadcrumbTrail([
+    { name: 'Home', path: '' },
+    { name: input.name, path: `/a/${input.slug}` },
+  ]);
 }
 
 /** Archetype dizin sayfası — sıralı liste (SEO iç bağlantı sinyali). */

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ARCHETYPES } from '@/content/archetypes';
-import { buildArchetypeListJsonLd } from '@/lib/schema';
+import { buildArchetypeListJsonLd, buildBreadcrumbTrail } from '@/lib/schema';
 
 export const metadata: Metadata = {
   title: 'Sleep Identities — All Archetypes | NOCTA',
@@ -14,7 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default function ArchetypesIndexPage() {
-  const jsonLd = buildArchetypeListJsonLd(ARCHETYPES);
+  const jsonLd = [
+    buildArchetypeListJsonLd(ARCHETYPES),
+    buildBreadcrumbTrail([
+      { name: 'Home', path: '' },
+      { name: 'Sleep identities', path: '/archetypes' },
+    ]),
+  ];
   return (
     <>
       <script
