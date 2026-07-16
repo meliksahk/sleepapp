@@ -141,7 +141,72 @@ describe('Admin pano e2e (HTTP)', () => {
     const res = await overview(await tokenFor(['owner'])).expect(200);
     expect(res.body).not.toHaveProperty('d7Retention');
     expect(res.body).not.toHaveProperty('trialConversion');
-    expect(Object.keys(res.body).sort()).toEqual(['soundscapes', 'waitlist']);
+    expect(Object.keys(res.body).sort()).toEqual(['shareFunnel', 'soundscapes', 'waitlist']);
+  });
+
+  describe('paylaşım hunisi (viral kanca sağlığı)', () => {
+    /** Kullanıcı + olayları — huni gerçek analytics_events'ten okunur. */
+    const userWithEvents = async (names: string[]): Promise<void> => {
+      const reg = await request(app.getHttpServer())
+        .post('/v1/auth/device')
+        .send({
+          fingerprint: `fnl-${Date.now()}-${Math.round(process.hrtime()[1])}`,
+          platform: 'ios',
+        })
+        .expect(201);
+      createdUsers.push(reg.body.userId);
+      await request(app.getHttpServer())
+        .post('/v1/analytics/events')
+        .set('Authorization', `Bearer ${reg.body.accessToken}`)
+        .send({
+          events: names.map((name) => ({
+            name,
+            occurredAt: new Date().toISOString(),
+            props: { archetype: 'deep-ocean' },
+          })),
+        })
+        .expect(202);
+    };
+
+    it('ÇEKİRDEK: oran BENZERSİZ KULLANICI üzerinden — bir kullanıcı 5 kez paylaşsa da 1 sayılır', async () => {
+      // Olay saysaydık tek kullanıcı huniyi "%500" gösterirdi. Viral kanca sorusu
+      // "kaç KİŞİ paylaştı?"dır.
+      const token = await tokenFor(['owner']);
+      const before = await overview(token).expect(200);
+
+      await userWithEvents(['archetype_completed', 'share_tapped', 'share_tapped', 'share_tapped']);
+
+      const after = await overview(token).expect(200);
+      expect(after.body.shareFunnel.completed - before.body.shareFunnel.completed).toBe(1);
+      expect(after.body.shareFunnel.shared - before.body.shareFunnel.shared).toBe(1);
+    });
+
+    it('tamamlayıp paylaşmayan kullanıcı paydada sayılır, payda değil', async () => {
+      const token = await tokenFor(['owner']);
+      const before = await overview(token).expect(200);
+
+      await userWithEvents(['archetype_completed']);
+
+      const after = await overview(token).expect(200);
+      expect(after.body.shareFunnel.completed - before.body.shareFunnel.completed).toBe(1);
+      expect(after.body.shareFunnel.shared - before.body.shareFunnel.shared).toBe(0);
+    });
+
+    it('oran hesaplanır ve [0,1] aralığındadır', async () => {
+      const res = await overview(await tokenFor(['owner'])).expect(200);
+      const f = res.body.shareFunnel;
+      if (f.completed > 0) {
+        expect(f.rate).toBeGreaterThanOrEqual(0);
+        expect(f.rate).toBeLessThanOrEqual(1);
+        expect(f.rate).toBeCloseTo(f.shared / f.completed, 6);
+      }
+    });
+
+    it('alanlar sayı (undefined değil)', async () => {
+      const res = await overview(await tokenFor(['owner'])).expect(200);
+      expect(typeof res.body.shareFunnel.completed).toBe('number');
+      expect(typeof res.body.shareFunnel.shared).toBe('number');
+    });
   });
 
   it('analyst panoyu görebilir (salt okunur rol okumaya açık)', async () => {

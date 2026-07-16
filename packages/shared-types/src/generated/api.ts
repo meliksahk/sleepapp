@@ -550,6 +550,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/analytics/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ürün analitik olaylarını yut (batch) */
+        post: operations["AnalyticsController_events"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/notifications/token": {
         parameters: {
             query?: never;
@@ -698,23 +715,6 @@ export interface paths {
         get: operations["SleepController_weeklyTrend"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/analytics/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Ürün analitik olaylarını yut (batch) */
-        post: operations["AnalyticsController_events"];
         delete?: never;
         options?: never;
         head?: never;
@@ -911,10 +911,20 @@ export interface components {
             scheduled: number;
             published: number;
         };
+        ShareFunnelDto: {
+            /** @description Archetype testini tamamlayan BENZERSİZ kullanıcı */
+            completed: number;
+            /** @description Kartını paylaşan benzersiz kullanıcı */
+            shared: number;
+            /** @description shared/completed. Kimse testi tamamlamadıysa NULL — oran tanımsızdır; 0 göstermek "kimse paylaşmıyor" demek olurdu ve bu yanlış olurdu. */
+            rate: Record<string, never> | null;
+        };
         OverviewDto: {
             soundscapes: components["schemas"]["SoundscapeCountsDto"];
             /** @description Bekleme listesi kayıt sayısı */
             waitlist: number;
+            /** @description Viral kanca sağlığı */
+            shareFunnel: components["schemas"]["ShareFunnelDto"];
         };
         AdminSoundscapeDto: {
             id: string;
@@ -1058,6 +1068,31 @@ export interface components {
              * @example tiktok
              */
             source?: string;
+        };
+        AnalyticsEventDto: {
+            /**
+             * @description küçük harf/rakam/_/. (1-64)
+             * @example archetype_completed
+             */
+            name: string;
+            /**
+             * Format: date-time
+             * @description Olay zamanı (ISO 8601, UTC)
+             */
+            occurredAt: string;
+            /** @description Serbest anahtar-değer (PII konmaz) */
+            props?: Record<string, never>;
+        };
+        IngestEventsDto: {
+            /** @description 1-100 olay */
+            events: components["schemas"]["AnalyticsEventDto"][];
+        };
+        IngestAcceptedDto: {
+            /**
+             * @description Kabul edilen olay sayısı
+             * @example 3
+             */
+            accepted: number;
         };
         RegisterTokenDto: {
             /** @description APNs/FCM push token */
@@ -1221,31 +1256,6 @@ export interface components {
              * @example 5
              */
             nightsWithData: number;
-        };
-        AnalyticsEventDto: {
-            /**
-             * @description küçük harf/rakam/_/. (1-64)
-             * @example archetype_completed
-             */
-            name: string;
-            /**
-             * Format: date-time
-             * @description Olay zamanı (ISO 8601, UTC)
-             */
-            occurredAt: string;
-            /** @description Serbest anahtar-değer (PII konmaz) */
-            props?: Record<string, never>;
-        };
-        IngestEventsDto: {
-            /** @description 1-100 olay */
-            events: components["schemas"]["AnalyticsEventDto"][];
-        };
-        IngestAcceptedDto: {
-            /**
-             * @description Kabul edilen olay sayısı
-             * @example 3
-             */
-            accepted: number;
         };
     };
     responses: never;
@@ -2106,6 +2116,29 @@ export interface operations {
             };
         };
     };
+    AnalyticsController_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IngestEventsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestAcceptedDto"];
+                };
+            };
+        };
+    };
     NotificationController_register: {
         parameters: {
             query?: never;
@@ -2310,29 +2343,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WeeklyTrendDto"];
-                };
-            };
-        };
-    };
-    AnalyticsController_events: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IngestEventsDto"];
-            };
-        };
-        responses: {
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["IngestAcceptedDto"];
                 };
             };
         };

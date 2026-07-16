@@ -2,6 +2,7 @@ import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
 import type { SoundscapeSummary } from '../content';
 import { WaitlistModule, CountWaitlistUseCase } from '../waitlist';
+import { AnalyticsModule, GetShareFunnelUseCase } from '../analytics';
 import {
   ContentModule,
   CountSoundscapesUseCase,
@@ -80,17 +81,19 @@ const providers: Provider[] = [
      * diğerini beklemesin.
      */
     provide: OVERVIEW_SOURCE,
-    inject: [CountSoundscapesUseCase, CountWaitlistUseCase],
+    inject: [CountSoundscapesUseCase, CountWaitlistUseCase, GetShareFunnelUseCase],
     useFactory: (
       countSoundscapes: CountSoundscapesUseCase,
       countWaitlist: CountWaitlistUseCase,
+      shareFunnel: GetShareFunnelUseCase,
     ): OverviewSource => ({
       read: async () => {
-        const [soundscapes, waitlist] = await Promise.all([
+        const [soundscapes, waitlist, funnel] = await Promise.all([
           countSoundscapes.execute(),
           countWaitlist.execute(),
+          shareFunnel.execute(),
         ]);
-        return { soundscapes, waitlist };
+        return { soundscapes, waitlist, shareFunnel: funnel };
       },
     }),
   },
@@ -102,7 +105,7 @@ const providers: Provider[] = [
  * application servislerinden tüketilir (repo/Prisma modeline dokunulmaz).
  */
 @Module({
-  imports: [IdentityModule, ContentModule, WaitlistModule],
+  imports: [IdentityModule, ContentModule, WaitlistModule, AnalyticsModule],
   controllers: [AdminController],
   providers,
 })

@@ -1,6 +1,6 @@
 import type { PrismaService } from '../../../shared/infra/prisma.service';
 import type { NewAnalyticsEvent } from '../domain/analytics-event';
-import type { AnalyticsEventRepository } from '../domain/ports';
+import type { AnalyticsEventRepository, ShareFunnelCounts } from '../domain/ports';
 
 export class PrismaAnalyticsEventRepository implements AnalyticsEventRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,5 +15,22 @@ export class PrismaAnalyticsEventRepository implements AnalyticsEventRepository 
       })),
     });
     return result.count;
+  }
+
+  async shareFunnel(): Promise<ShareFunnelCounts> {
+    // BENZERSİZ KULLANICI: tek kullanıcı 5 kez paylaşırsa oran "%500" olurdu.
+    // Prisma'da COUNT(DISTINCT) yok → groupBy(user_id) satır sayısı aynı şeydir
+    // ve DB'de yapılır (satırlar belleğe çekilmez).
+    const [completed, shared] = await Promise.all([
+      this.prisma.analytics_events.groupBy({
+        by: ['user_id'],
+        where: { name: 'archetype_completed' },
+      }),
+      this.prisma.analytics_events.groupBy({
+        by: ['user_id'],
+        where: { name: 'share_tapped' },
+      }),
+    ]);
+    return { completed: completed.length, shared: shared.length };
   }
 }
