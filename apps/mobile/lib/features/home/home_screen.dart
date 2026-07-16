@@ -49,6 +49,12 @@ class HomeScreen extends ConsumerWidget {
                 label: 'Find your sleep identity',
                 onPressed: () => context.push('/archetype'),
               ),
+              const SizedBox(height: NoctaSpace.s2),
+              NButton(
+                label: 'Browse soundscapes',
+                variant: NButtonVariant.ghost,
+                onPressed: () => context.push('/library'),
+              ),
             ],
           ),
         ),
