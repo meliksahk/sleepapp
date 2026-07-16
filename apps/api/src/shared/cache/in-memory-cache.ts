@@ -34,4 +34,10 @@ export class InMemoryCache implements Cache {
   async del(key: string): Promise<void> {
     this.store.delete(key);
   }
+
+  async delByPrefix(prefix: string): Promise<void> {
+    for (const key of this.store.keys()) {
+      if (key.startsWith(prefix)) this.store.delete(key);
+    }
+  }
 }

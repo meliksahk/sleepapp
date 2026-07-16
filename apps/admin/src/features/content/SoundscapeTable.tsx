@@ -1,8 +1,9 @@
 import { DataTable, type Column } from '@nocta/ui';
 import type { AdminSoundscape } from './types';
 import { statusLabel } from './status-label';
+import { StatusButton } from './StatusButton';
 
-const columns: Column<AdminSoundscape>[] = [
+const readColumns: Column<AdminSoundscape>[] = [
   { key: 'title', header: 'Başlık' },
   { key: 'slug', header: 'Slug' },
   { key: 'status', header: 'Durum', render: (r) => statusLabel(r.status) },
@@ -14,6 +15,27 @@ const columns: Column<AdminSoundscape>[] = [
   { key: 'version', header: 'Sürüm', render: (r) => String(r.version) },
 ];
 
-export function SoundscapeTable({ rows }: { rows: AdminSoundscape[] }) {
+/**
+ * Eylem kolonu YALNIZCA yazabilenlere eklenir: yazamayan birine tıklayınca 403
+ * alacağı bir düğme göstermek kötü bir deneyimdir. Gerçek kapı sunucuda (#122).
+ */
+export function SoundscapeTable({
+  rows,
+  canWrite = false,
+}: {
+  rows: AdminSoundscape[];
+  canWrite?: boolean;
+}) {
+  const columns: Column<AdminSoundscape>[] = canWrite
+    ? [
+        ...readColumns,
+        {
+          key: 'actions',
+          header: 'Eylem',
+          render: (r) => <StatusButton slug={r.slug} status={r.status} />,
+        },
+      ]
+    : readColumns;
+
   return <DataTable columns={columns} rows={rows} emptyTitle="Henüz soundscape yok" />;
 }

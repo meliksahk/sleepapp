@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import type {
+  AdminSoundscapeView,
   ContentRepository,
   ContentStatus,
   Preset,
@@ -44,15 +45,7 @@ export class PrismaContentRepository implements ContentRepository {
 
   async findAllSummaries(): Promise<SoundscapeSummary[]> {
     const rows = await this.prisma.soundscapes.findMany({ orderBy: { created_at: 'desc' } });
-    return rows.map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      titleI18n: (r.title_i18n ?? {}) as Record<string, string>,
-      status: r.status as ContentStatus,
-      archetypeAffinity: r.archetype_affinity ?? [],
-      version: r.version,
-      createdAt: r.created_at,
-    }));
+    return rows.map(toSummary);
   }
 
   async createDraft(input: NewSoundscape): Promise<SoundscapeSummary | null> {
@@ -70,15 +63,7 @@ export class PrismaContentRepository implements ContentRepository {
           created_by: input.createdBy,
         },
       });
-      return {
-        id: row.id,
-        slug: row.slug,
-        titleI18n: (row.title_i18n ?? {}) as Record<string, string>,
-        status: row.status as ContentStatus,
-        archetypeAffinity: row.archetype_affinity ?? [],
-        version: row.version,
-        createdAt: row.created_at,
-      };
+      return toSummary(row);
     } catch (e) {
       // P2002 = UNIQUE ihlali (slug). Yarışta "önce sor sonra yaz" yetmez: iki istek
       // aynı anda gelirse ikisi de "yok" görüp ikisi de yazmaya kalkar. DB'nin
@@ -86,6 +71,24 @@ export class PrismaContentRepository implements ContentRepository {
       if (isUniqueViolation(e)) return null;
       throw e;
     }
+  }
+
+  async findAdminBySlug(slug: string): Promise<AdminSoundscapeView | null> {
+    const row = await this.prisma.soundscapes.findUnique({ where: { slug } });
+    if (!row) return null;
+    const params = row.engine_params as Record<string, unknown> | null;
+    return {
+      summary: toSummary(row),
+      // "Tarif var" = en az bir anahtar. `{}` boş sayılır — taslak böyle doğuyor.
+      hasRecipe: params !== null && typeof params === 'object' && Object.keys(params).length > 0,
+    };
+  }
+
+  async setStatus(slug: string, status: ContentStatus): Promise<SoundscapeSummary | null> {
+    const updated = await this.prisma.soundscapes.updateMany({ where: { slug }, data: { status } });
+    if (updated.count === 0) return null;
+    const row = await this.prisma.soundscapes.findUnique({ where: { slug } });
+    return row ? toSummary(row) : null;
   }
 
   async findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null> {
@@ -148,4 +151,25 @@ function toSoundscape(row: SoundscapeRow): Soundscape {
 /** Prisma P2002: benzersizlik kısıtı ihlali. */
 function isUniqueViolation(e: unknown): boolean {
   return typeof e === 'object' && e !== null && (e as { code?: string }).code === 'P2002';
+}
+
+/** Satır → admin özeti. Tek yerde: üç çağrı yeri arasında sapma olmasın. */
+function toSummary(row: {
+  id: string;
+  slug: string;
+  title_i18n: unknown;
+  status: string;
+  archetype_affinity: string[] | null;
+  version: number;
+  created_at: Date;
+}): SoundscapeSummary {
+  return {
+    id: row.id,
+    slug: row.slug,
+    titleI18n: (row.title_i18n ?? {}) as Record<string, string>,
+    status: row.status as ContentStatus,
+    archetypeAffinity: row.archetype_affinity ?? [],
+    version: row.version,
+    createdAt: row.created_at,
+  };
 }

@@ -6,6 +6,11 @@
  */
 export function createErrorMessage(status: number, code?: string): string {
   if (code === 'slug_taken') return 'Bu slug zaten kullanımda. Başka bir slug deneyin.';
+  // Yayınlama kapısı: editörün ne yapması gerektiğini SÖYLE, "409" deme.
+  if (code === 'empty_recipe') {
+    return 'Ses tarifi boş — yayınlanamaz. Önce sesi tanımlayın (tarif editörü henüz yok).';
+  }
+  if (code === 'soundscape_not_found') return 'Kayıt bulunamadı. Liste güncel olmayabilir.';
   if (code === 'invalid_slug') {
     return 'Slug yalnızca küçük harf, rakam ve tire içerebilir (ör. deep-ocean-drift).';
   }

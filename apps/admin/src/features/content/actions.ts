@@ -10,6 +10,10 @@ export interface CreateState {
   createdSlug?: string;
 }
 
+export interface StatusState {
+  error?: string;
+}
+
 /**
  * Taslak oluşturma (Server Action). Token httpOnly çerezde olduğu için çağrı
  * SUNUCUDAN gitmek zorunda — tarayıcı API'ye doğrudan gidemez (#116 kararı).
@@ -44,4 +48,27 @@ export async function createSoundscapeAction(
   // Liste sunucuda render ediliyor → yeni kaydın görünmesi için tazele.
   revalidatePath('/content');
   return { createdSlug: res.data.slug };
+}
+
+/**
+ * Yayınla / yayından kaldır (Server Action).
+ *
+ * Kapıyı (boş tarif) tekrar ETMEZ: karar sunucunun (#122). Buradaki iş, reddi
+ * editörün anlayacağı bir cümleye çevirmek — "409" göstermek işe yaramaz.
+ */
+export async function setStatusAction(
+  _prev: StatusState,
+  formData: FormData,
+): Promise<StatusState> {
+  const slug = String(formData.get('slug') ?? '');
+  const action = String(formData.get('action') ?? '');
+  const path = action === 'unpublish' ? 'unpublish' : 'publish';
+
+  const res = await apiPost<AdminSoundscape>(`/v1/admin/soundscapes/${slug}/${path}`, {});
+  if (!res.ok) {
+    return { error: createErrorMessage(res.status, res.code) };
+  }
+
+  revalidatePath('/content');
+  return {};
 }

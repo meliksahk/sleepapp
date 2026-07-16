@@ -2,5 +2,12 @@
 export { ContentModule } from './content.module';
 export { ListAllSoundscapesUseCase } from './application/list-all-soundscapes.usecase';
 export { CreateSoundscapeUseCase } from './application/create-soundscape.usecase';
-export { ContentError, InvalidSlugError, SlugTakenError } from './domain/errors';
+export { SetSoundscapeStatusUseCase } from './application/set-soundscape-status.usecase';
+export {
+  ContentError,
+  EmptyRecipeError,
+  InvalidSlugError,
+  SlugTakenError,
+  SoundscapeNotFoundError,
+} from './domain/errors';
 export type { SoundscapeSummary, ContentStatus } from './domain/soundscape';

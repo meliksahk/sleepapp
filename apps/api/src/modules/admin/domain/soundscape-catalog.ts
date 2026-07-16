@@ -32,6 +32,8 @@ export interface NewCatalogEntry {
 export interface SoundscapeCatalog {
   list(): Promise<CatalogEntry[]>;
   create(input: NewCatalogEntry): Promise<CatalogEntry>;
+  publish(slug: string): Promise<CatalogEntry>;
+  unpublish(slug: string): Promise<CatalogEntry>;
 }
 
 export const SOUNDSCAPE_CATALOG = Symbol('SoundscapeCatalog');

@@ -21,4 +21,14 @@ describe('createErrorMessage', () => {
   it('kod, duruma göre ÖNCELİKLİ: 400+invalid_slug genel 400 mesajını ezer', () => {
     expect(createErrorMessage(400, 'invalid_slug')).not.toContain('Girdiler geçersiz');
   });
+
+  it('boş tarif → NE YAPACAĞINI söyler, "409" demez', () => {
+    const msg = createErrorMessage(409, 'empty_recipe');
+    expect(msg).toContain('Ses tarifi boş');
+    expect(msg).not.toContain('409');
+  });
+
+  it('bulunamadı → listenin eski olabileceğini ima eder', () => {
+    expect(createErrorMessage(404, 'soundscape_not_found')).toContain('bulunamadı');
+  });
 });

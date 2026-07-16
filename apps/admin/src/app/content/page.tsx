@@ -19,7 +19,7 @@ export default async function ContentPage() {
     <AppShell actions={<LogoutButton />}>
       <h2 className="text-h2 font-display">Soundscapes</h2>
       <p className="mt-1 mb-5 text-body text-ink-secondary">
-        Taslak ve planlı kayıtlar dahil. Yayınlama ve düzenleme A1&apos;in devamında.
+        Taslak ve planlı kayıtlar dahil. Yayınlamak için ses tarifi gerekir.
       </p>
 
       {canWrite && (
@@ -29,7 +29,7 @@ export default async function ContentPage() {
         </section>
       )}
 
-      <SoundscapeTable rows={rows} />
+      <SoundscapeTable rows={rows} canWrite={canWrite} />
     </AppShell>
   );
 }
