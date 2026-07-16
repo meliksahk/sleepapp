@@ -1,5 +1,6 @@
 import { SendNotificationUseCase } from '../../src/modules/notification/application/send-notification.usecase';
 import type { DeviceTokenRepository } from '../../src/modules/notification/domain/device-token';
+import type { NotificationPreferenceReader } from '../../src/modules/notification/domain/notification-preference';
 import type {
   PushMessage,
   PushSender,
@@ -19,6 +20,10 @@ class FakeRepo implements DeviceTokenRepository {
   }
 }
 
+const prefs = (enabled: boolean): NotificationPreferenceReader => ({
+  isEnabledFor: async () => enabled,
+});
+
 describe('SendNotificationUseCase (fan-out)', () => {
   it('kullanıcının tüm cihazlarına gönderir (sent = token sayısı)', async () => {
     const repo = new FakeRepo([
@@ -33,7 +38,7 @@ describe('SendNotificationUseCase (fan-out)', () => {
       },
     };
 
-    const result = await new SendNotificationUseCase(repo, sender).execute('u-1', msg);
+    const result = await new SendNotificationUseCase(repo, sender, prefs(true)).execute('u-1', msg);
 
     expect(result).toEqual({ sent: 3, failed: 0 });
     expect(calls.map((c) => c.token)).toEqual(['t1', 't2', 't3']);
@@ -53,7 +58,7 @@ describe('SendNotificationUseCase (fan-out)', () => {
       },
     };
 
-    const result = await new SendNotificationUseCase(repo, sender).execute('u-1', msg);
+    const result = await new SendNotificationUseCase(repo, sender, prefs(true)).execute('u-1', msg);
 
     expect(result).toEqual({ sent: 2, failed: 1 });
     expect(sent).toEqual(['ok1', 'ok2']); // hata diğerlerini durdurmadı
@@ -68,10 +73,36 @@ describe('SendNotificationUseCase (fan-out)', () => {
       },
     };
 
-    const result = await new SendNotificationUseCase(repo, sender).execute('u-1', msg);
+    const result = await new SendNotificationUseCase(repo, sender, prefs(true)).execute('u-1', msg);
 
     expect(result).toEqual({ sent: 0, failed: 0 });
     expect(called).toBe(false);
+  });
+
+  it('opt-out: kullanıcı bildirimleri kapattıysa cihaz sorgulanmaz ve gönderilmez', async () => {
+    let queried = false;
+    const repo: DeviceTokenRepository = {
+      register: async () => {},
+      findTokensByUser: async () => {
+        queried = true;
+        return [{ token: 't1', platform: 'ios' }];
+      },
+    };
+    let called = false;
+    const sender: PushSender = {
+      send: async () => {
+        called = true;
+      },
+    };
+
+    const result = await new SendNotificationUseCase(repo, sender, prefs(false)).execute(
+      'u-1',
+      msg,
+    );
+
+    expect(result).toEqual({ sent: 0, failed: 0 });
+    expect(called).toBe(false);
+    expect(queried).toBe(false); // opt-out'ta cihaz sorgusu bile yapılmaz
   });
 });
 

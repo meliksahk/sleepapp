@@ -128,6 +128,29 @@ describe('Notification token e2e (HTTP)', () => {
       expect(res.body.failed).toBe(0);
     });
 
+    it('opt-out: profil notificationsEnabled=false ise cihaz olsa da sent:0', async () => {
+      const { token: jwt } = await auth();
+      // Cihaz kaydet (aksi halde zaten 0 olurdu — anlamlı test için önce token ekle).
+      await request(app.getHttpServer())
+        .post('/v1/notifications/token')
+        .set('Authorization', `Bearer ${jwt}`)
+        .send({ token: mkToken(), platform: 'ios' })
+        .expect(204);
+      // Bildirimleri kapat.
+      await request(app.getHttpServer())
+        .patch('/v1/profile')
+        .set('Authorization', `Bearer ${jwt}`)
+        .send({ notificationsEnabled: false })
+        .expect(200);
+
+      const res = await request(app.getHttpServer())
+        .post('/v1/notifications/test')
+        .set('Authorization', `Bearer ${jwt}`)
+        .send({ title: 'Test', body: 'Kapalı' })
+        .expect(200);
+      expect(res.body).toEqual({ sent: 0, failed: 0 });
+    });
+
     it('boş başlık → 400 (validasyon)', async () => {
       const { token: jwt } = await auth();
       await request(app.getHttpServer())
