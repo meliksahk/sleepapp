@@ -92,6 +92,23 @@ void main() {
     expect(await none.latestResult(), isNull);
   });
 
+  test('fetchContent: içerik listesini parse eder', () async {
+    final controller = await _build((req) async {
+      expect(req.url.path, '/v1/archetype/content');
+      return http.Response(
+        jsonEncode(<dynamic>[
+          {'slug': 'deep-ocean', 'name': 'Deep Ocean', 'tagline': 'T1', 'summary': 'S1'},
+          {'slug': 'overthinker', 'name': '3AM Overthinker', 'tagline': 'T2', 'summary': 'S2'},
+        ]),
+        200,
+      );
+    });
+    final list = await controller.fetchContent();
+    expect(list, hasLength(2));
+    expect(list.first.name, 'Deep Ocean');
+    expect(list.first.tagline, 'T1');
+  });
+
   test('fetchShare: 200 → parse, 404 → null', () async {
     final ok = await _build((req) async {
       expect(req.url.path, '/v1/sharing/archetype');

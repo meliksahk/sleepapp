@@ -33,6 +33,17 @@ class ArchetypeController {
     return ArchetypeResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Archetype tanıtım içeriği (public uç) — isim/tagline/özet. Sonuç ekranı
+  /// açıklama için kullanır. authorizedRequest ile (uç public; token yok sayılır).
+  Future<List<ArchetypeInfo>> fetchContent() async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed('/v1/archetype/content', token),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => ArchetypeInfo.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
   /// Paylaşım kartı (kullanıcının sonucundan). Sonuç yoksa (404) null döner.
   Future<ArchetypeShare?> fetchShare() async {
     final res = await _auth.authorizedRequest(

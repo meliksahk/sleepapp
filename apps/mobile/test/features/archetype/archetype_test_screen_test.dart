@@ -74,6 +74,19 @@ Future<ArchetypeController> _controller({bool existingResult = false}) async {
         201,
       );
     }
+    if (req.url.path == '/v1/archetype/content') {
+      return http.Response(
+        jsonEncode(<dynamic>[
+          {
+            'slug': 'deep-ocean',
+            'name': 'Deep Ocean',
+            'tagline': 'You sink into stillness.',
+            'summary': 'You drop into deep, quiet rest quickly.',
+          },
+        ]),
+        200,
+      );
+    }
     if (req.url.path == '/v1/sharing/archetype') {
       return http.Response(
         jsonEncode(<String, dynamic>{
@@ -132,6 +145,9 @@ void main() {
 
     expect(find.byKey(const Key('archetype-result')), findsOneWidget);
     expect(find.text('Deep Ocean'), findsOneWidget); // slug → görünen ad
+    // Tanıtım içeriği (public uç) geldiyse tagline gösterilir.
+    expect(find.byKey(const Key('archetype-tagline')), findsOneWidget);
+    expect(find.text('You sink into stillness.'), findsOneWidget);
   });
 
   testWidgets('sonuçta paylaş → sharer web URL alır, "Link copied" gösterilir', (tester) async {
