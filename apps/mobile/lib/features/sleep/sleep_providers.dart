@@ -17,3 +17,8 @@ final streakProvider = FutureProvider<StreakStats>((ref) {
 final recentSleepSessionsProvider = FutureProvider<List<SleepSession>>((ref) {
   return ref.read(sleepControllerProvider).recentSessions();
 });
+
+/// Uyku istatistikleri — geçmiş ekranı başlığı bunu izler.
+final sleepStatsProvider = FutureProvider<SleepStats>((ref) {
+  return ref.read(sleepControllerProvider).stats();
+});

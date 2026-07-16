@@ -12,20 +12,51 @@ class SleepHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(recentSleepSessionsProvider);
+    final stats = ref.watch(sleepStatsProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Sleep history')),
       body: SafeArea(
-        child: sessions.when(
-          data: (list) => _list(list),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: IconButton(
-              key: const Key('sleep-history-retry'),
-              icon: const Icon(Icons.refresh),
-              iconSize: 40,
-              onPressed: () => ref.invalidate(recentSleepSessionsProvider),
+        child: Column(
+          children: [
+            // İstatistik başlığı — veri gelince (yükleme/hata → gizli).
+            stats.maybeWhen(
+              data: (s) => s.nights == 0
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        NoctaSpace.s5,
+                        NoctaSpace.s5,
+                        NoctaSpace.s5,
+                        0,
+                      ),
+                      child: Text(
+                        '${s.nights} nights · avg ${formatMinutes(s.averageDurationMinutes)}',
+                        key: const Key('sleep-stats'),
+                        style: TextStyle(
+                          fontSize: NoctaFontSize.body,
+                          color: NoctaColors.inkSecondary,
+                        ),
+                      ),
+                    ),
+              orElse: () => const SizedBox.shrink(),
             ),
-          ),
+            Expanded(child: _body(ref, sessions)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _body(WidgetRef ref, AsyncValue<List<SleepSession>> sessions) {
+    return sessions.when(
+      data: (list) => _list(list),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: IconButton(
+          key: const Key('sleep-history-retry'),
+          icon: const Icon(Icons.refresh),
+          iconSize: 40,
+          onPressed: () => ref.invalidate(recentSleepSessionsProvider),
         ),
       ),
     );

@@ -50,6 +50,15 @@ class SleepController {
     return NightReport.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Uyku istatistikleri (gece sayısı, toplam/ortalama süre).
+  Future<SleepStats> stats() async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed('/v1/sleep/stats', token),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return SleepStats.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   Future<StreakStats> streak() async {
     final res = await _auth.authorizedRequest(
       (token) => _client.getAuthed('/v1/sleep/streak', token),
