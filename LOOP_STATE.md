@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈40% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈41% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 40%
+[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 41%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
 | ----------- | -------- | ------- | --------------------------------------------------------------------------- |
 | Backend/API | ~70%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
-| Mobil       | ~28%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
+| Mobil       | ~29%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
 | Web         | ~43%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·70 + 0.40·28 + 0.15·12 + 0.15·43 ≈ **40%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·70 + 0.40·29 + 0.15·12 + 0.15·43 ≈ **41%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#82 (mobil home streak kişisel rekor):** Streak kartı iyileştirmesi — (1) hiç kayıt yokken (totalNights=0) kart gizli (yeni kullanıcıya "0 nights streak" yerine), (2) `longest > current` ise "Best N" kişisel rekor satırı (streak/alışkanlık döngüsü). Seri kopmuş ama geçmiş varsa 0 + Best (yeniden başlamaya teşvik). `_StreakCard(current, longest)`. `flutter analyze` temiz, `flutter test` 75 yeşil (73→75): Best görünür/gizli, totalNights=0 gizli, kopmuş seri+best. İlerleme barı mobil 28→29% (toplam ≈41%). PR #83. **⚠️ SÜREÇ HATASI (dürüstçe):** merge, PR CI _pending_ iken gerçekleşti — bekleme döngüsü `gh pr checks` boş liste döndürünce (checks henüz kaydolmamış) pending=0 sanıp erken "ALL DONE" verdi. Zarar yok: merge sonrası main push CI'ı **success** doğrulandı (`gh run watch --exit-status` EXIT=0). Düzeltme: bundan sonra bekleme döngüsü "en az 1 check VAR ve hepsi pass" koşulu arayacak (boş liste ≠ yeşil).
 - **#81 (web breadcrumb yayılımı):** Genel `buildBreadcrumbTrail(crumbs)` builder'ı (kök-göreli path); archetype breadcrumb'ı buna delege eder (çıktı bit-bit aynı, regresyon yok). `/faq` (Home→FAQ) ve `/archetypes` (Home→Sleep identities) sayfalarına `BreadcrumbList` eklendi — arama zenginleştirme + iç bağlantı sinyali (docs/05 §3.1). web 24 test (23→24: trail sıralı pozisyon + kök-göreli item; archetype breadcrumb delegasyonla korunur). turbo 17/17, build'de iki sayfa da static ○. İlerleme barı web 42→43% (toplam ≈40%). PR #82.
 - **#80 (web SSS + FAQPage yapısal veri):** `/faq` statik SSG sayfası + `FAQPage` JSON-LD (GEO/AI-özet + arama zenginleştirme, docs/05 §4). `buildFaqJsonLd` (schema.ts tek util) + `FAQ_ITEMS` content (6 soru-cevap: ne olduğu, sleep identity, ücretsiz tier, offline ses motoru, gizlilik/ham-mikrofon-yüklenmez, paylaşım kartı). Semantik `dl/dt/dd`. `getSiteRoutes`'a `/faq` (sitemap otomatik). **Sağlık iddiası:** "relaxation & sleep ritual" dili; iki katmanlı tarama (schema banned-words blob'una FAQ + FAQ içeriğine ayrı regex). web 23 test (19→23), turbo 17/17, build'de `/faq` static ○ 164B. İlerleme barı web 40→42% (toplam ≈40%). PR #81. Not: hreflang hâlâ TR içerik gerektiriyor (ertelendi).
 - **#79 (mobil haftalık trend mini-grafiği):** #78 (`GET /v1/sleep/trend`) ucunu tüketen saf Flutter bar grafiği — geçmiş ekranında istatistik başlığı ile liste arasında son 7 gecenin süresi. Harici grafik kütüphanesi YOK (maliyet disiplini): `Row`+`Container` yükseklikleri, çubuk ∝ süre, veri-yok gece ince taban (inkFaint), veri olan gece accentAurora. `WeeklyTrend`/`TrendNight` model + `SleepController.weeklyTrend` + `sleepTrendProvider`. `WeeklyTrendChart` widget. Ekranda `trend.maybeWhen` — nightsWithData=0/yükleme/hata → gizli (dayanıklı). `flutter analyze` temiz, `flutter test` 73 yeşil (71→73): veri olan trend→7 çubuk; veri yok→gizli (mevcut testlere default trend override). Salt mobil (contract değişmedi). İlerleme barı mobil 26→28% → toplam %40. PR #80. Not: eksen etiketleri / dokunma-detay / calmScore serisi ayrı.
