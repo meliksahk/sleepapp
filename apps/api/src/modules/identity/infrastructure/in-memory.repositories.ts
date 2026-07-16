@@ -86,6 +86,21 @@ export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
       }
     }
   }
+
+  async revokeAllExceptFamily(
+    userId: string,
+    keepFamilyId: string,
+    revokedAt: Date,
+  ): Promise<number> {
+    let revoked = 0;
+    for (const [id, rec] of this.byId) {
+      if (rec.userId === userId && rec.familyId !== keepFamilyId && rec.revokedAt === null) {
+        this.byId.set(id, { ...rec, revokedAt });
+        revoked++;
+      }
+    }
+    return revoked;
+  }
 }
 
 export class InMemoryOneTimeTokenRepository implements OneTimeTokenRepository {

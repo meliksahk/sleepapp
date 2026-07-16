@@ -39,6 +39,18 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
       data: { revoked_at: revokedAt },
     });
   }
+
+  async revokeAllExceptFamily(
+    userId: string,
+    keepFamilyId: string,
+    revokedAt: Date,
+  ): Promise<number> {
+    const result = await this.prisma.refresh_tokens.updateMany({
+      where: { user_id: userId, family_id: { not: keepFamilyId }, revoked_at: null },
+      data: { revoked_at: revokedAt },
+    });
+    return result.count;
+  }
 }
 
 function toRecord(row: {

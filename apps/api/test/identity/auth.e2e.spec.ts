@@ -58,4 +58,46 @@ describe('Auth e2e (HTTP)', () => {
       .send({ fingerprint: 'short', platform: 'ios', hacker: true })
       .expect(400);
   });
+
+  describe('POST /v1/auth/sessions/revoke-others', () => {
+    it('token olmadan 401', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/auth/sessions/revoke-others')
+        .send({ refreshToken: 'x'.repeat(20) })
+        .expect(401);
+    });
+
+    it('geçerli oturumda diğer oturum yoksa → 200 revoked:0', async () => {
+      const reg = await request(app.getHttpServer())
+        .post('/v1/auth/device')
+        .send({
+          fingerprint: `revoke-e2e-${Date.now()}-${Math.round(process.hrtime()[1])}`,
+          platform: 'ios',
+        })
+        .expect(201);
+      const { accessToken, refreshToken } = reg.body;
+
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/sessions/revoke-others')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ refreshToken })
+        .expect(200);
+      expect(res.body.revoked).toBe(0);
+    });
+
+    it('geçersiz refresh token → 401', async () => {
+      const reg = await request(app.getHttpServer())
+        .post('/v1/auth/device')
+        .send({
+          fingerprint: `revoke-bad-${Date.now()}-${Math.round(process.hrtime()[1])}`,
+          platform: 'ios',
+        })
+        .expect(201);
+      await request(app.getHttpServer())
+        .post('/v1/auth/sessions/revoke-others')
+        .set('Authorization', `Bearer ${reg.body.accessToken}`)
+        .send({ refreshToken: 'invalid-token-not-real-xxxxx' })
+        .expect(401);
+    });
+  });
 });

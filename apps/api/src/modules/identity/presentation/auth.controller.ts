@@ -22,6 +22,7 @@ import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
 import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { RequestEmailUpgradeUseCase } from '../application/request-email-upgrade.usecase';
 import { VerifyEmailUpgradeUseCase } from '../application/verify-email-upgrade.usecase';
+import { RevokeOtherSessionsUseCase } from '../application/revoke-other-sessions.usecase';
 import { EmailAlreadyTakenError, IdentityError } from '../domain/errors';
 import type { AccessTokenClaims } from '../domain/user.entity';
 import { Inject } from '@nestjs/common';
@@ -35,6 +36,7 @@ import {
   RefreshDto,
   RegisterDeviceDto,
   RequestEmailDto,
+  RevokedSessionsDto,
   SessionResponseDto,
   VerifyEmailDto,
 } from './dto';
@@ -48,6 +50,7 @@ export class AuthController {
     private readonly deleteAccount: DeleteAccountUseCase,
     private readonly requestEmailUpgrade: RequestEmailUpgradeUseCase,
     private readonly verifyEmailUpgrade: VerifyEmailUpgradeUseCase,
+    private readonly revokeOtherSessions: RevokeOtherSessionsUseCase,
     @Inject(IS_PRODUCTION) private readonly isProduction: boolean,
   ) {}
 
@@ -93,6 +96,28 @@ export class AuthController {
   async remove(@CurrentUser() user: AccessTokenClaims): Promise<void> {
     // Yalnızca kendi hesabını siler — scope daima token sub.
     await this.deleteAccount.execute(user.sub);
+  }
+
+  @Post('sessions/revoke-others')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Diğer cihazlardan çık — mevcut oturum hariç tümünü iptal et' })
+  @ApiOkResponse({ type: RevokedSessionsDto })
+  @ApiUnauthorizedResponse({ description: 'Geçersiz refresh token' })
+  async revokeOthers(
+    @CurrentUser() user: AccessTokenClaims,
+    @Body() dto: RefreshDto,
+  ): Promise<RevokedSessionsDto> {
+    try {
+      const revoked = await this.revokeOtherSessions.execute(user.sub, dto.refreshToken);
+      return { revoked };
+    } catch (e) {
+      if (e instanceof IdentityError) {
+        throw new UnauthorizedException({ code: e.code, message: e.message });
+      }
+      throw e;
+    }
   }
 
   @Post('email/request')
