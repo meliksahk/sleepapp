@@ -124,6 +124,29 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logoutSession",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Çıkış yapıldı (token geçersiz olsa bile)"
+          }
+        },
+        "summary": "Çıkış — oturum ailesini iptal eder (idempotent)",
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/me": {
       "get": {
         "operationId": "AuthController_me",

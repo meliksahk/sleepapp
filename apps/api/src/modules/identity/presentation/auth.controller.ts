@@ -16,12 +16,14 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiNoContentResponse,
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RegisterDeviceUseCase } from '../application/register-device.usecase';
 import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
 import { LoginAdminUseCase } from '../application/login-admin.usecase';
+import { LogoutUseCase } from '../application/logout.usecase';
 import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { RequestEmailUpgradeUseCase } from '../application/request-email-upgrade.usecase';
 import { VerifyEmailUpgradeUseCase } from '../application/verify-email-upgrade.usecase';
@@ -66,6 +68,7 @@ export class AuthController {
     private readonly registerDevice: RegisterDeviceUseCase,
     private readonly refreshSession: RefreshSessionUseCase,
     private readonly loginAdmin: LoginAdminUseCase,
+    private readonly logout: LogoutUseCase,
     private readonly deleteAccount: DeleteAccountUseCase,
     private readonly requestEmailUpgrade: RequestEmailUpgradeUseCase,
     private readonly verifyEmailUpgrade: VerifyEmailUpgradeUseCase,
@@ -128,6 +131,18 @@ export class AuthController {
       }
       throw e;
     }
+  }
+
+  /**
+   * Çıkış — refresh token'ın ailesini düşürür. IDEMPOTENT: geçersiz token'da da
+   * 204 döner (yanıt "bu token gerçek miydi?" sorusunu yanıtlamamalı).
+   */
+  @Post('logout')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Çıkış — oturum ailesini iptal eder (idempotent)' })
+  @ApiNoContentResponse({ description: 'Çıkış yapıldı (token geçersiz olsa bile)' })
+  async logoutSession(@Body() dto: RefreshDto): Promise<void> {
+    await this.logout.execute(dto.refreshToken);
   }
 
   @Get('me')

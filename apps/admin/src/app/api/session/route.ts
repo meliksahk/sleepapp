@@ -43,10 +43,42 @@ export async function POST(request: Request): Promise<NextResponse> {
   return out;
 }
 
-/** Çıkış: çerezleri sil. (Sunucudaki oturumu iptal etmek ayrı iş — defterde.) */
-export async function DELETE(): Promise<NextResponse> {
+/**
+ * Çıkış: SUNUCUDAKİ oturumu iptal eder, sonra çerezleri siler.
+ *
+ * Sıra ve "yine de sil" davranışı bilinçli: API'ye ulaşamasak bile çerezleri
+ * temizleriz — kullanıcı "çıkış" dediyse bu cihazda oturum kapanmalıdır. Aksi
+ * halde ağ hatası, kullanıcıyı açık oturumla baş başa bırakırdı.
+ */
+export async function DELETE(request: Request): Promise<NextResponse> {
+  const refreshToken = parseCookie(request.headers.get('cookie'), REFRESH_COOKIE);
+
+  if (refreshToken !== null) {
+    try {
+      await fetch(`${API_BASE}/v1/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+        cache: 'no-store',
+      });
+    } catch {
+      // Yut: sunucuda iptal edemedik ama çerezi yine de sileceğiz (yukarı bkz.).
+      // Token 30 gün geçerli kalır — kabul edilen risk, defterde.
+    }
+  }
+
   const out = NextResponse.json({ ok: true });
   out.cookies.set(ACCESS_COOKIE, '', cookieOptions(0));
   out.cookies.set(REFRESH_COOKIE, '', cookieOptions(0));
   return out;
+}
+
+/** Tek bir çerezi başlıktan okur (route handler'da `cookies()` yerine: test edilebilir). */
+function parseCookie(header: string | null, name: string): string | null {
+  if (header === null) return null;
+  for (const part of header.split(';')) {
+    const [k, ...rest] = part.trim().split('=');
+    if (k === name && rest.length > 0) return decodeURIComponent(rest.join('='));
+  }
+  return null;
 }
