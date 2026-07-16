@@ -82,7 +82,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
-### #136 — 2FA kurulum ekranı: özellik artık ERİŞİLEBİLİR (PR #136'ya eklendi)
+### #136 — 2FA kurulum ekranı + CI kırılganlığı (PR #136 & #137, **merged**)
 
 ✅ **Yapıldı ve doğrulandı**
 
@@ -112,11 +112,8 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ❌ **Yapılmadı / eksik**
 
-- **PR #136 hâlâ MERGE EDİLMEDİ** — GitHub'ın `pulls/{n}/files` ucu ~1 saattir HTML
-  500 dönüyor ve `paths-filter` adımı ona bağlı. Kanıt: aynı çağrı merge edilmiş
-  PR #135 için de patlıyor. Yerelde `flutter analyze` temiz + 238/238 test geçiyor.
-- **CI kırılganlığı (yeni iş adayı):** tek bir GitHub API çağrısı tüm merge'leri
-  bloke edebiliyor. `paths-filter` yerine git-diff tabanlı yol araştırılmalı.
+- 2FA'yı hiçbir hesapta ZORUNLU kılmadım — D-11 (kurtarma politikası) kararı
+  verilmeden zorunlu kılmak, kurtarma yolu olmadığı için kilitleme riski taşır.
 - 2FA sıfırlama / yedek kod yok (D-11). Ekranda kullanıcıya açıkça yazılıyor.
 - D7 retention, zamanlanmış yayın, içerik sayfalama, davet akışı.
 
@@ -125,6 +122,13 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Onaydan sonra sayfa `revalidatePath('/security')` ile tazelenir; aksi hâlde
   kullanıcı etkinleştirdiği hâlde "Kapalı" rozetini görürdü.
 - QR üretilemezse ekran ÇÖKMEZ, anahtar elle girilebilir (orantılılık).
+
+**CI kırılganlığı da bu iterasyonda kapatıldı (PR #137):** `dorny/paths-filter`
+değişen dosyaları GitHub API'sinden okuyordu; uç çökünce **hiçbir PR merge
+edilemiyordu**. Artık `git diff` — dış servise bağlı değil. **Şüphede kalırsan
+ÇALIŞTIR**: taban belirlenemezse iş atlanmaz, koşulur (sessiz atlama, test
+koşmadan yeşil CI demek olurdu — çökmekten beter). 6 senaryo yerelde gerçek git
+geçmişine karşı doğrulandı; PR kendi düzeltmesiyle koştu ve Flutter yeşil geçti.
 
 🔥 **Riskler / açıklar**
 
@@ -136,7 +140,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   değil). **Gerçek kullanıcı için de geçerli bir gözlem:** 2FA yeni bir hata modu
   ekliyor (yanlış kod) ve aynı 5/dk kovasını harcıyor.
 
-### #135 — admin 2FA: TOTP (PR #136, **AÇIK — merge EDİLMEDİ**)
+### #135 — admin 2FA: TOTP (PR #136, **merged**)
 
 ✅ **Yapıldı ve doğrulandı**
 
@@ -160,15 +164,12 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ❌ **Yapılmadı / eksik**
 
-- **PR MERGE EDİLMEDİ.** CI'nin Flutter işi düştü — ama **koddan değil**: 3. adım
-  `dorny/paths-filter@v3`, GitHub'ın `pulls/{n}/files` ucundan **HTML 500 ("Unicorn")**
-  aldı. Kanıt: aynı çağrı **zaten merge edilmiş, yeşil geçmiş PR #135 için de patlıyor**
-  → PR'a özgü değil, GitHub arızası. Yerelde doğruladım: `flutter analyze` temiz,
-  `flutter test` **238/238**. Yani iş yeşil olurdu. **Yine de kırmızıyla merge
-  edilmedi** (CLAUDE.md §4: "CI yeşil olmadan merge yok") — uç düzelince re-run + merge.
-- **Panelde 2FA kurulum ekranı yok.** Uçlar çalışıyor ama QR gösteren ekran yazılmadı
-  → şu an 2FA yalnızca API'ye doğrudan istekle kurulabilir. **Bu hâliyle özellik son
-  kullanıcı için erişilemez.** Sıradaki iş.
+- ~~PR MERGE EDİLMEDİ~~ → **#136'da merge edildi.** O sırada CI'nin Flutter işi
+  GitHub'ın `pulls/{n}/files` arızası yüzünden düşüyordu (koddan değil: 3. adım
+  `paths-filter`, HTML 500 alıyordu; aynı çağrı merge edilmiş PR #135 için de
+  patlıyordu). Kırmızıyla merge etmedim (CLAUDE.md §4); yerine **arızanın kök
+  nedenini CI'den kaldırdım** (PR #137) ve sonra merge ettim.
+- ~~Panelde 2FA kurulum ekranı yok~~ → **#136'da yapıldı.**
 - **2FA sıfırlama ve yedek kod yok:** telefonunu kaybeden admin'i yalnızca DB erişimi
   kurtarır. (Onaylı 2FA'nın üstüne yazmak bilerek 409 — aksi hâlde kodu ele geçiren
   2FA'yı kendi cihazına taşırdı.)
