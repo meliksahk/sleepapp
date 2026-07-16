@@ -8,9 +8,20 @@ final contentControllerProvider = Provider<ContentController>((ref) {
   return ContentController(ref.read(authControllerProvider), ref.read(apiClientProvider));
 });
 
-/// Soundscape feed'i — kütüphane ekranı bunu izler.
+/// Soundscape feed'i — kütüphane ekranı bunu izler. archetype verilmez →
+/// sunucu kullanıcının kendi kimliğine göre sıralar (#88).
 final soundscapeFeedProvider = FutureProvider<List<Soundscape>>((ref) {
   return ref.read(contentControllerProvider).feed();
+});
+
+/// Belirli bir archetype'a uygun soundscape'ler — archetype detay ekranı
+/// "sana uygun sesler" bölümü bunu izler. Yalnızca affinity eşleşenler.
+final soundscapesForArchetypeProvider = FutureProvider.family<List<Soundscape>, String>((
+  ref,
+  slug,
+) async {
+  final list = await ref.read(contentControllerProvider).feed(archetype: slug);
+  return list.where((s) => s.archetypeAffinity.contains(slug)).toList();
 });
 
 /// Soundscape detayı (slug'a göre); yayınlanmamış/yok → null. Detay ekranı izler.
