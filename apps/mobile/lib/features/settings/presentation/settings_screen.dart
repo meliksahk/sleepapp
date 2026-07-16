@@ -21,6 +21,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final revoked = await ref.read(authControllerProvider).revokeOtherSessions();
+      ref.invalidate(activeSessionsProvider); // liste güncellenir
       messenger.showSnackBar(
         SnackBar(content: Text('$revoked other device${revoked == 1 ? '' : 's'} signed out')),
       );
@@ -33,6 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final sessions = ref.watch(activeSessionsProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
@@ -44,6 +46,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Text(
                 'Account security',
                 style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+              // Aktif cihaz sayısı — veri gelince (yükleme/hata → gizli).
+              sessions.maybeWhen(
+                data: (list) => Padding(
+                  padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                  child: Text(
+                    'Active devices: ${list.length}',
+                    key: const Key('active-devices'),
+                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                  ),
+                ),
+                orElse: () => const SizedBox.shrink(),
               ),
               const SizedBox(height: NoctaSpace.s3),
               NButton(

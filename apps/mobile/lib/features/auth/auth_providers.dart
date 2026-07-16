@@ -5,6 +5,7 @@ import '../../core/device/device_identity.dart';
 import '../../core/storage/key_value_store.dart';
 import '../../core/storage/session_store.dart';
 import 'auth_controller.dart';
+import 'session_info.dart';
 
 /// API istemcisi — baseUrl aktif flavor'dan (dev/staging/prod).
 final apiClientProvider = Provider<NoctaApiClient>((ref) {
@@ -27,6 +28,11 @@ final deviceIdentityProvider = Provider<DeviceIdentity>(
 /// Anonim oturum controller'ı.
 final authControllerProvider = Provider<AuthController>((ref) {
   return AuthController(ref.read(apiClientProvider), ref.read(sessionStoreProvider));
+});
+
+/// Kullanıcının aktif oturumları — settings ekranı cihaz listesi bunu izler.
+final activeSessionsProvider = FutureProvider<List<SessionInfo>>((ref) {
+  return ref.read(authControllerProvider).listSessions();
 });
 
 /// Açılış oturumu: device-id çözülür, kayıtlı oturum yoksa anonim kaydolunur

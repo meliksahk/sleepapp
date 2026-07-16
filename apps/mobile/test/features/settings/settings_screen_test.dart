@@ -9,6 +9,7 @@ import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
+import 'package:nocta/features/auth/session_info.dart';
 import 'package:nocta/features/settings/presentation/settings_screen.dart';
 
 Future<AuthController> _auth(int revoked) async {
@@ -57,5 +58,24 @@ void main() {
     await tester.tap(find.byKey(const Key('revoke-others')));
     await tester.pumpAndSettle();
     expect(find.text('1 other device signed out'), findsOneWidget);
+  });
+
+  testWidgets('aktif cihaz sayısı gösterilir', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: <Override>[
+          activeSessionsProvider.overrideWith(
+            (ref) async => const [
+              SessionInfo(familyId: 'a', createdAt: '2026-01-01', expiresAt: '2026-02-01'),
+              SessionInfo(familyId: 'b', createdAt: '2026-01-02', expiresAt: '2026-02-02'),
+            ],
+          ),
+        ],
+        child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SettingsScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('active-devices')), findsOneWidget);
+    expect(find.text('Active devices: 2'), findsOneWidget);
   });
 }

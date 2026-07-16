@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../../core/api/nocta_api_client.dart';
 import '../../core/api/session.dart';
 import '../../core/storage/session_store.dart';
+import 'session_info.dart';
 
 /// Anonim oturum durumu. Uygulama açılışta kayıtlı oturumu geri yükler; yoksa
 /// anonim cihaz kaydı yapar (docs/04 M0). Token'lar SessionStore'da (secure) tutulur.
@@ -64,6 +65,14 @@ class AuthController {
     _session = refreshed;
     await _store.save(refreshed);
     return send(refreshed.accessToken);
+  }
+
+  /// Aktif oturumlar (cihaz listesi) — token'sız meta.
+  Future<List<SessionInfo>> listSessions() async {
+    final res = await authorizedRequest((token) => _client.getAuthed('/v1/auth/sessions', token));
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => SessionInfo.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   /// Diğer cihazlardan çık — mevcut oturum hariç tümünü iptal eder. İptal sayısı.

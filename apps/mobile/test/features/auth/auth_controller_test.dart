@@ -111,6 +111,37 @@ void main() {
     expect(await store.read(), isNull);
   });
 
+  test('listSessions: aktif oturum listesini parse eder (token yok)', () async {
+    final store = InMemorySessionStore();
+    final client = MockClient((req) async {
+      if (req.url.path == '/v1/auth/device') {
+        return http.Response(_session('access', 'r'), 201);
+      }
+      expect(req.url.path, '/v1/auth/sessions');
+      return http.Response(
+        jsonEncode(<dynamic>[
+          {
+            'familyId': 'fam-1',
+            'createdAt': '2026-01-01T00:00:00.000Z',
+            'expiresAt': '2026-02-01T00:00:00.000Z',
+          },
+          {
+            'familyId': 'fam-2',
+            'createdAt': '2026-01-02T00:00:00.000Z',
+            'expiresAt': '2026-02-02T00:00:00.000Z',
+          },
+        ]),
+        200,
+      );
+    });
+    final controller = AuthController(NoctaApiClient(baseUrl: 'http://x', client: client), store);
+    await controller.registerAnonymously('fp');
+
+    final list = await controller.listSessions();
+    expect(list, hasLength(2));
+    expect(list.first.familyId, 'fam-1');
+  });
+
   test('revokeOtherSessions: refresh token gönderir, revoked sayısını döner', () async {
     final store = InMemorySessionStore();
     late Map<String, dynamic> body;
