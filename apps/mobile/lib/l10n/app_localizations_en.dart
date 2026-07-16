@@ -144,5 +144,84 @@ class AppL10nEn extends AppL10n {
   String get settingsSignOutOthersFailed => 'Could not sign out other devices';
 
   @override
+  String get archetypeTestTitle => 'Sleep Identity Test';
+
+  @override
+  String get archetypeTestScoring => 'Scoring…';
+
+  @override
+  String get archetypeTestSeeResult => 'See my result';
+
+  @override
+  String get archetypeYourSleepIdentity => 'Your sleep identity';
+
+  @override
+  String get archetypeShareCopied => 'Link copied';
+
+  @override
+  String get archetypeShareFailed => 'Could not share';
+
+  @override
+  String get archetypeShareButton => 'Share my identity';
+
+  @override
+  String get archetypeShareSharing => 'Sharing…';
+
+  @override
+  String get archetypeRetakeTest => 'Retake test';
+
+  @override
+  String get archetypeDetailTitle => 'Sleep identity';
+
+  @override
+  String get archetypeUnknown => 'Unknown identity';
+
+  @override
+  String get archetypeSoundsThatSuitYou => 'Sounds that suit you';
+
+  @override
+  String get identityHistoryTitle => 'Your identity over time';
+
+  @override
+  String get identityHistoryEmpty => 'No test results yet';
+
+  @override
+  String get identityHistoryCurrent => 'Current';
+
+  @override
+  String get libraryTitle => 'Soundscapes';
+
+  @override
+  String get libraryEmpty => 'No soundscapes yet';
+
+  @override
+  String libraryAffinity(String names) {
+    return 'For $names';
+  }
+
+  @override
+  String get soundscapeDetailTitle => 'Soundscape';
+
+  @override
+  String get soundscapeNotFound => 'Soundscape not found';
+
+  @override
+  String get soundscapePreviewAvailable => 'Preview available';
+
+  @override
+  String sleepHistoryStats(int count, String avg) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count nights · avg $avg',
+      one: '1 night · avg $avg',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sleepHistoryEmpty => 'No sleep recorded yet';
+
+  @override
   String get shareFailed => 'Could not share';
 }

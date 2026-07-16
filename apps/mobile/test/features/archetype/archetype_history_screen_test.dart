@@ -5,6 +5,7 @@ import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/features/archetype/archetype_models.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/archetype/presentation/archetype_history_screen.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 
 ArchetypeResult _r(String slug, String createdAt) => ArchetypeResult(
   userId: 'u-1',
@@ -37,6 +38,8 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
         ...overrides,
       ],
       child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
         theme: buildNoctaDarkTheme(),
         home: const ArchetypeHistoryScreen(),
       ),
@@ -46,28 +49,38 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
 }
 
 void main() {
-  testWidgets('geçmiş listelenir: isimler çözülür, en yenide "Current" rozeti', (tester) async {
+  testWidgets(
+    'geçmiş listelenir: isimler çözülür, en yenide "Current" rozeti',
+    (tester) async {
+      await _pump(tester, [
+        archetypeHistoryProvider.overrideWith(
+          (ref) async => [
+            _r(
+              'deep-ocean',
+              '2026-07-16T10:00:00.000Z',
+            ), // en yeni (sunucu sırası)
+            _r('overthinker', '2026-03-02T22:00:00.000Z'),
+          ],
+        ),
+      ]);
+
+      expect(find.text('Deep Ocean'), findsOneWidget);
+      expect(find.text('3AM Overthinker'), findsOneWidget);
+      // ISO tarihin yalnızca gün kısmı (intl bağımlılığı yok)
+      expect(find.text('2026-07-16'), findsOneWidget);
+      expect(find.text('2026-03-02'), findsOneWidget);
+      // "Current" yalnızca ilk (en yeni) kayıtta
+      expect(find.byKey(const Key('history-current-badge')), findsOneWidget);
+    },
+  );
+
+  testWidgets('içerik yüklenmese de slug ile listelenir (dayanıklı)', (
+    tester,
+  ) async {
     await _pump(tester, [
-      archetypeHistoryProvider.overrideWith(
-        (ref) async => [
-          _r('deep-ocean', '2026-07-16T10:00:00.000Z'), // en yeni (sunucu sırası)
-          _r('overthinker', '2026-03-02T22:00:00.000Z'),
-        ],
+      archetypeContentProvider.overrideWith(
+        (ref) async => <String, ArchetypeInfo>{},
       ),
-    ]);
-
-    expect(find.text('Deep Ocean'), findsOneWidget);
-    expect(find.text('3AM Overthinker'), findsOneWidget);
-    // ISO tarihin yalnızca gün kısmı (intl bağımlılığı yok)
-    expect(find.text('2026-07-16'), findsOneWidget);
-    expect(find.text('2026-03-02'), findsOneWidget);
-    // "Current" yalnızca ilk (en yeni) kayıtta
-    expect(find.byKey(const Key('history-current-badge')), findsOneWidget);
-  });
-
-  testWidgets('içerik yüklenmese de slug ile listelenir (dayanıklı)', (tester) async {
-    await _pump(tester, [
-      archetypeContentProvider.overrideWith((ref) async => <String, ArchetypeInfo>{}),
       archetypeHistoryProvider.overrideWith(
         (ref) async => [_r('dawn-chaser', '2026-07-16T10:00:00.000Z')],
       ),
@@ -84,7 +97,9 @@ void main() {
 
   testWidgets('hata → retry', (tester) async {
     await _pump(tester, [
-      archetypeHistoryProvider.overrideWith((ref) async => throw Exception('ağ')),
+      archetypeHistoryProvider.overrideWith(
+        (ref) async => throw Exception('ağ'),
+      ),
     ]);
     expect(find.byKey(const Key('history-retry')), findsOneWidget);
   });

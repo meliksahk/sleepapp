@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../l10n/app_localizations.dart';
 import '../sleep_models.dart';
 import '../sleep_providers.dart';
 import 'weekly_trend_chart.dart';
 
 /// Uyku geçmişi (docs/04 M1): en yeni oturumları gece + süre ile listeler.
-/// Boş/yükleme/hata durumları. Not: metinler l10n'a M1'de taşınacak.
+/// Boş/yükleme/hata durumları.
 class SleepHistoryScreen extends ConsumerWidget {
   const SleepHistoryScreen({super.key});
 
@@ -17,7 +18,7 @@ class SleepHistoryScreen extends ConsumerWidget {
     final stats = ref.watch(sleepStatsProvider);
     final trend = ref.watch(sleepTrendProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Sleep history')),
+      appBar: AppBar(title: Text(AppL10n.of(context).sleepHistoryTitle)),
       body: SafeArea(
         child: Column(
           children: [
@@ -33,7 +34,10 @@ class SleepHistoryScreen extends ConsumerWidget {
                         0,
                       ),
                       child: Text(
-                        '${s.nights} nights · avg ${formatMinutes(s.averageDurationMinutes)}',
+                        AppL10n.of(context).sleepHistoryStats(
+                          s.nights,
+                          formatMinutes(s.averageDurationMinutes),
+                        ),
                         key: const Key('sleep-stats'),
                         style: TextStyle(
                           fontSize: NoctaFontSize.body,
@@ -58,16 +62,20 @@ class SleepHistoryScreen extends ConsumerWidget {
                     ),
               orElse: () => const SizedBox.shrink(),
             ),
-            Expanded(child: _body(ref, sessions)),
+            Expanded(child: _body(context, ref, sessions)),
           ],
         ),
       ),
     );
   }
 
-  Widget _body(WidgetRef ref, AsyncValue<List<SleepSession>> sessions) {
+  Widget _body(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<SleepSession>> sessions,
+  ) {
     return sessions.when(
-      data: (list) => _list(list),
+      data: (list) => _list(context, list),
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
         child: IconButton(
@@ -80,20 +88,24 @@ class SleepHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _list(List<SleepSession> list) {
+  Widget _list(BuildContext context, List<SleepSession> list) {
     if (list.isEmpty) {
       return Center(
         child: Text(
-          'No sleep recorded yet',
+          AppL10n.of(context).sleepHistoryEmpty,
           key: const Key('sleep-history-empty'),
-          style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+          style: TextStyle(
+            fontSize: NoctaFontSize.body,
+            color: NoctaColors.inkSecondary,
+          ),
         ),
       );
     }
     return ListView.separated(
       padding: const EdgeInsets.all(NoctaSpace.s5),
       itemCount: list.length,
-      separatorBuilder: (context, index) => const SizedBox(height: NoctaSpace.s3),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: NoctaSpace.s3),
       itemBuilder: (context, i) {
         final s = list[i];
         // Tıklama → o gecenin raporu (viral kanca #2).
@@ -106,11 +118,17 @@ class SleepHistoryScreen extends ConsumerWidget {
               children: [
                 Text(
                   s.nightDate,
-                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                  style: TextStyle(
+                    fontSize: NoctaFontSize.body,
+                    color: NoctaColors.inkSecondary,
+                  ),
                 ),
                 Text(
                   s.durationText,
-                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                  style: TextStyle(
+                    fontSize: NoctaFontSize.body,
+                    color: NoctaColors.inkPrimary,
+                  ),
                 ),
               ],
             ),

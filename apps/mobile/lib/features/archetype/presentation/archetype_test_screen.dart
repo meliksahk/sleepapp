@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/share/sharer.dart';
 import '../../analytics/analytics_providers.dart';
 import '../archetype_models.dart';
@@ -8,12 +9,12 @@ import '../archetype_providers.dart';
 
 /// Archetype test ekranı (docs/04 M1): soruları yükle → her soruya bir seçenek →
 /// gönder → sonuç. Veri katmanı ArchetypeController (401'de otomatik refresh).
-/// Not: kullanıcı metinleri l10n'a M1'de taşınacak (M0 hard-coded deseni sürüyor).
 class ArchetypeTestScreen extends ConsumerStatefulWidget {
   const ArchetypeTestScreen({super.key});
 
   @override
-  ConsumerState<ArchetypeTestScreen> createState() => _ArchetypeTestScreenState();
+  ConsumerState<ArchetypeTestScreen> createState() =>
+      _ArchetypeTestScreenState();
 }
 
 class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
@@ -38,7 +39,9 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
       _error = null;
     });
     try {
-      final existing = await ref.read(archetypeControllerProvider).latestResult();
+      final existing = await ref
+          .read(archetypeControllerProvider)
+          .latestResult();
       if (!mounted) return;
       if (existing != null) {
         setState(() {
@@ -93,7 +96,9 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
     if (q == null || !_allAnswered || _submitting) return;
     setState(() => _submitting = true);
     try {
-      final r = await ref.read(archetypeControllerProvider).submitAnswers(q.version, _answers);
+      final r = await ref
+          .read(archetypeControllerProvider)
+          .submitAnswers(q.version, _answers);
       if (!mounted) return;
       setState(() {
         _result = r;
@@ -111,13 +116,15 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sleep Identity Test')),
-      body: SafeArea(child: _body()),
+      appBar: AppBar(title: Text(AppL10n.of(context).archetypeTestTitle)),
+      body: SafeArea(child: _body(context)),
     );
   }
 
-  Widget _body() {
-    if (_result != null) return _ResultView(result: _result!, onRetake: _retake);
+  Widget _body(BuildContext context) {
+    if (_result != null) {
+      return _ResultView(result: _result!, onRetake: _retake);
+    }
     if (_loading) return const Center(child: CircularProgressIndicator());
     if (_error != null) {
       return Center(
@@ -139,7 +146,9 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
           const SizedBox(height: NoctaSpace.s5),
           NButton(
             key: const Key('archetype-submit'),
-            label: _submitting ? 'Scoring…' : 'See my result',
+            label: _submitting
+                ? AppL10n.of(context).archetypeTestScoring
+                : AppL10n.of(context).archetypeTestSeeResult,
             onPressed: _allAnswered && !_submitting ? _submit : null,
           ),
         ],
@@ -155,7 +164,10 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
         children: [
           Text(
             q.prompt,
-            style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+            style: TextStyle(
+              fontSize: NoctaFontSize.body,
+              color: NoctaColors.inkPrimary,
+            ),
           ),
           const SizedBox(height: NoctaSpace.s3),
           for (final o in q.options)
@@ -195,13 +207,17 @@ class _ResultViewState extends ConsumerState<_ResultView> {
     // Sonuç görüntülendi → analitik olayı (viral kanca ölçümü). Bloklamaz.
     ref
         .read(analyticsProvider)
-        .track('archetype_completed', props: {'archetype': widget.result.archetypeSlug});
+        .track(
+          'archetype_completed',
+          props: {'archetype': widget.result.archetypeSlug},
+        );
   }
 
   Future<void> _share() async {
     if (_sharing) return;
     setState(() => _sharing = true);
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppL10n.of(context); // await'ten ONCE (context async gap)
     try {
       final share = await ref.read(archetypeControllerProvider).fetchShare();
       if (share == null) return;
@@ -211,10 +227,17 @@ class _ResultViewState extends ConsumerState<_ResultView> {
       // Viral huni ölçümü: tamamlama → paylaşım (analitik, bloklamaz).
       ref
           .read(analyticsProvider)
-          .track('share_tapped', props: {'archetype': widget.result.archetypeSlug});
-      messenger.showSnackBar(const SnackBar(content: Text('Link copied')));
+          .track(
+            'share_tapped',
+            props: {'archetype': widget.result.archetypeSlug},
+          );
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.archetypeShareCopied)),
+      );
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Could not share')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.archetypeShareFailed)),
+      );
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -230,7 +253,10 @@ class _ResultViewState extends ConsumerState<_ResultView> {
     // Tanıtım içeriği (public uç) — geldiyse tagline/özet göster (yoksa gizli).
     final info = ref
         .watch(archetypeContentProvider)
-        .maybeWhen(data: (m) => m[widget.result.archetypeSlug], orElse: () => null);
+        .maybeWhen(
+          data: (m) => m[widget.result.archetypeSlug],
+          orElse: () => null,
+        );
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(NoctaSpace.s5),
@@ -238,15 +264,21 @@ class _ResultViewState extends ConsumerState<_ResultView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Your sleep identity',
-              style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              AppL10n.of(context).archetypeYourSleepIdentity,
+              style: TextStyle(
+                fontSize: NoctaFontSize.body,
+                color: NoctaColors.inkSecondary,
+              ),
             ),
             const SizedBox(height: NoctaSpace.s3),
             NCard(
               child: Text(
                 info?.name ?? display,
                 key: const Key('archetype-result'),
-                style: TextStyle(fontSize: NoctaFontSize.display, color: NoctaColors.inkPrimary),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.display,
+                  color: NoctaColors.inkPrimary,
+                ),
               ),
             ),
             if (info != null) ...[
@@ -255,25 +287,33 @@ class _ResultViewState extends ConsumerState<_ResultView> {
                 info.tagline,
                 key: const Key('archetype-tagline'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.body,
+                  color: NoctaColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: NoctaSpace.s2),
               Text(
                 info.summary,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.body,
+                  color: NoctaColors.inkSecondary,
+                ),
               ),
             ],
             const SizedBox(height: NoctaSpace.s5),
             NButton(
               key: const Key('archetype-share'),
-              label: _sharing ? 'Sharing…' : 'Share my identity',
+              label: _sharing
+                  ? AppL10n.of(context).archetypeShareSharing
+                  : AppL10n.of(context).archetypeShareButton,
               onPressed: _sharing ? null : _share,
             ),
             const SizedBox(height: NoctaSpace.s2),
             NButton(
               key: const Key('archetype-retake'),
-              label: 'Retake test',
+              label: AppL10n.of(context).archetypeRetakeTest,
               variant: NButtonVariant.ghost,
               onPressed: widget.onRetake,
             ),

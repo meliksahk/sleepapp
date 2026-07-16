@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../l10n/app_localizations.dart';
 import '../archetype_models.dart';
 import '../archetype_providers.dart';
 
@@ -14,14 +15,17 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppL10n.of(context);
     final history = ref.watch(archetypeHistoryProvider);
     final content = ref.watch(archetypeContentProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your identity over time')),
+      appBar: AppBar(title: Text(l10n.identityHistoryTitle)),
       body: SafeArea(
         child: history.when(
-          data: (list) => list.isEmpty ? _empty() : _list(context, ref, list, content),
+          data: (list) => list.isEmpty
+              ? _empty(context)
+              : _list(context, ref, list, content),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
             child: IconButton(
@@ -36,11 +40,14 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _empty() => Center(
+  Widget _empty(BuildContext context) => Center(
     child: Text(
-      'No test results yet',
+      AppL10n.of(context).identityHistoryEmpty,
       key: const Key('history-empty'),
-      style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+      style: TextStyle(
+        fontSize: NoctaFontSize.body,
+        color: NoctaColors.inkSecondary,
+      ),
     ),
   );
 
@@ -53,7 +60,8 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(NoctaSpace.s5),
       itemCount: list.length,
-      separatorBuilder: (context, index) => const SizedBox(height: NoctaSpace.s3),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: NoctaSpace.s3),
       itemBuilder: (context, i) {
         final r = list[i];
         // İsim içerikten çözülür; içerik yoksa slug (dayanıklı — detay ekranıyla aynı).
@@ -81,7 +89,7 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
                     if (i == 0) ...[
                       const SizedBox(height: NoctaSpace.s1),
                       Text(
-                        'Current',
+                        AppL10n.of(context).identityHistoryCurrent,
                         key: const Key('history-current-badge'),
                         style: TextStyle(
                           fontSize: NoctaFontSize.caption,
@@ -93,7 +101,9 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
                 ),
                 Text(
                   // ISO tarihin gün kısmı (intl bağımlılığı eklemeden).
-                  r.createdAt.length >= 10 ? r.createdAt.substring(0, 10) : r.createdAt,
+                  r.createdAt.length >= 10
+                      ? r.createdAt.substring(0, 10)
+                      : r.createdAt,
                   style: TextStyle(
                     fontSize: NoctaFontSize.caption,
                     color: NoctaColors.inkSecondary,

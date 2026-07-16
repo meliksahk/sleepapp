@@ -14,6 +14,7 @@ import 'package:nocta/features/archetype/archetype_controller.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/archetype/presentation/archetype_test_screen.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 
 class RecordingAnalytics implements Analytics {
   final List<String> events = [];
@@ -136,7 +137,12 @@ Future<void> _pump(
         analyticsProvider.overrideWithValue(analytics ?? RecordingAnalytics()),
         if (sharer != null) sharerProvider.overrideWithValue(sharer),
       ],
-      child: MaterialApp(theme: buildNoctaDarkTheme(), home: const ArchetypeTestScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildNoctaDarkTheme(),
+        home: const ArchetypeTestScreen(),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -168,57 +174,79 @@ void main() {
     expect(find.text('You sink into stillness.'), findsOneWidget);
   });
 
-  testWidgets('sonuç görüntülenince archetype_completed analitik olayı gönderilir', (tester) async {
-    final analytics = RecordingAnalytics();
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: <Override>[
-          archetypeControllerProvider.overrideWithValue(await _controller()),
-          analyticsProvider.overrideWithValue(analytics),
-        ],
-        child: MaterialApp(theme: buildNoctaDarkTheme(), home: const ArchetypeTestScreen()),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('opt-q1-q1a')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('archetype-submit')));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'sonuç görüntülenince archetype_completed analitik olayı gönderilir',
+    (tester) async {
+      final analytics = RecordingAnalytics();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: <Override>[
+            archetypeControllerProvider.overrideWithValue(await _controller()),
+            analyticsProvider.overrideWithValue(analytics),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppL10n.localizationsDelegates,
+            supportedLocales: AppL10n.supportedLocales,
+            theme: buildNoctaDarkTheme(),
+            home: const ArchetypeTestScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('opt-q1-q1a')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('archetype-submit')));
+      await tester.pumpAndSettle();
 
-    expect(analytics.events, contains('archetype_completed'));
-    expect(analytics.lastProps?['archetype'], 'deep-ocean');
-  });
+      expect(analytics.events, contains('archetype_completed'));
+      expect(analytics.lastProps?['archetype'], 'deep-ocean');
+    },
+  );
 
-  testWidgets('sonuçta paylaş → sharer web URL alır, "Link copied" + share_tapped', (tester) async {
-    final sharer = RecordingSharer();
-    final analytics = RecordingAnalytics();
-    await _pump(tester, await _controller(), sharer: sharer, analytics: analytics);
+  testWidgets(
+    'sonuçta paylaş → sharer web URL alır, "Link copied" + share_tapped',
+    (tester) async {
+      final sharer = RecordingSharer();
+      final analytics = RecordingAnalytics();
+      await _pump(
+        tester,
+        await _controller(),
+        sharer: sharer,
+        analytics: analytics,
+      );
 
-    // Cevapla → sonuç.
-    await tester.tap(find.byKey(const Key('opt-q1-q1a')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('archetype-submit')));
-    await tester.pumpAndSettle();
+      // Cevapla → sonuç.
+      await tester.tap(find.byKey(const Key('opt-q1-q1a')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('archetype-submit')));
+      await tester.pumpAndSettle();
 
-    // Paylaş → sharer'a paylaşım kartı iletilir + SnackBar.
-    await tester.tap(find.byKey(const Key('archetype-share')));
-    await tester.pumpAndSettle();
+      // Paylaş → sharer'a paylaşım kartı iletilir + SnackBar.
+      await tester.tap(find.byKey(const Key('archetype-share')));
+      await tester.pumpAndSettle();
 
-    expect(sharer.last?.url, 'https://nocta.app/a/deep-ocean');
-    expect(sharer.last?.text, contains('Deep Ocean'));
-    expect(find.text('Link copied'), findsOneWidget);
-    // Viral huni: sonuç görüldü + paylaşıldı.
-    expect(analytics.events, containsAll(<String>['archetype_completed', 'share_tapped']));
-  });
+      expect(sharer.last?.url, 'https://nocta.app/a/deep-ocean');
+      expect(sharer.last?.text, contains('Deep Ocean'));
+      expect(find.text('Link copied'), findsOneWidget);
+      // Viral huni: sonuç görüldü + paylaşıldı.
+      expect(
+        analytics.events,
+        containsAll(<String>['archetype_completed', 'share_tapped']),
+      );
+    },
+  );
 
-  testWidgets('kayıtlı sonuç varsa doğrudan sonucu gösterir (sihirbaz atlanır)', (tester) async {
-    await _pump(tester, await _controller(existingResult: true));
+  testWidgets(
+    'kayıtlı sonuç varsa doğrudan sonucu gösterir (sihirbaz atlanır)',
+    (tester) async {
+      await _pump(tester, await _controller(existingResult: true));
 
-    expect(find.byKey(const Key('archetype-result')), findsOneWidget);
-    expect(find.text('Overthinker'), findsOneWidget);
-    // Sihirbaz gösterilmez (soru/submit yok).
-    expect(find.byKey(const Key('archetype-submit')), findsNothing);
-  });
+      expect(find.byKey(const Key('archetype-result')), findsOneWidget);
+      expect(find.text('Overthinker'), findsOneWidget);
+      // Sihirbaz gösterilmez (soru/submit yok).
+      expect(find.byKey(const Key('archetype-submit')), findsNothing);
+    },
+  );
 
   testWidgets('Retake → sonuçtan sihirbaza döner', (tester) async {
     await _pump(tester, await _controller(existingResult: true));

@@ -22,7 +22,8 @@
     "db:new": "dbmate new",
     "db:rollback": "dbmate down",
     "prepare": "husky",
-    "check:health-claims": "node tooling/check-health-claims.mjs"
+    "check:health-claims": "node tooling/check-health-claims.mjs",
+    "check:i18n": "node tooling/check-hardcoded-strings.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
