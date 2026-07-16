@@ -8,6 +8,8 @@ export interface SleepSessionRepository {
   findByNight(userId: string, nightDate: string): Promise<SleepSession[]>;
   /** Kullanıcının kayıtlı benzersiz gece tarihleri (YYYY-MM-DD, streak için). */
   listNightDates(userId: string): Promise<string[]>;
+  /** Gece tarihi [from, to] (dahil) aralığındaki oturumlar. userId ile scope'lu. */
+  listByNightRange(userId: string, from: string, to: string): Promise<SleepSession[]>;
 }
 
 /** Kullanıcı saat dilimini (başka modül) soyut okur — gece gruplaması için. */

@@ -170,6 +170,45 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body.longest).toBeGreaterThanOrEqual(1);
   });
 
+  it('gece aralığı filtresi (from+to) yalnızca aralıktaki oturumları döner', async () => {
+    const t = await token();
+    await setTz(t, 'UTC');
+    // Gece 2026-06-10 (aralık içi) ve 2026-08-10 (aralık dışı)
+    for (const [start, end] of [
+      ['2026-06-10T22:00:00.000Z', '2026-06-11T04:00:00.000Z'],
+      ['2026-08-10T22:00:00.000Z', '2026-08-11T04:00:00.000Z'],
+    ]) {
+      await request(app.getHttpServer())
+        .post('/v1/sleep/sessions')
+        .set('Authorization', `Bearer ${t}`)
+        .send({ startedAt: start, endedAt: end, movementEvents: 1, soundEvents: 0 })
+        .expect(201);
+    }
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/sessions?from=2026-06-01&to=2026-06-30')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const nights = res.body.map((s: { nightDate: string }) => s.nightDate);
+    expect(nights).toContain('2026-06-10');
+    expect(nights).not.toContain('2026-08-10');
+  });
+
+  it('geçersiz aralık parametreleri → 400 invalid_range', async () => {
+    const t = await token();
+    // yalnızca from
+    await request(app.getHttpServer())
+      .get('/v1/sleep/sessions?from=2026-06-01')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(400);
+    // from > to
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/sessions?from=2026-07-31&to=2026-07-01')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(400);
+    expect(res.body.code).toBe('invalid_range');
+  });
+
   it('liste yalnızca kendi oturumlarını döner (izolasyon)', async () => {
     const a = await token();
     const b = await token();
