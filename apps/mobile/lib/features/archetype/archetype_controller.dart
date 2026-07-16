@@ -63,4 +63,14 @@ class ArchetypeController {
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return ArchetypeResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
+
+  /// Sonuç geçmişi (yeniden eskiye). Hiç test yapılmadıysa boş liste.
+  Future<List<ArchetypeResult>> listResults() async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed('/v1/archetype/results', token),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => ArchetypeResult.fromJson(e as Map<String, dynamic>)).toList();
+  }
 }

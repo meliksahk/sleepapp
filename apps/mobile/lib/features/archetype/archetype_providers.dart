@@ -23,3 +23,8 @@ final archetypeContentProvider = FutureProvider<Map<String, ArchetypeInfo>>((ref
 final latestArchetypeResultProvider = FutureProvider<ArchetypeResult?>((ref) {
   return ref.read(archetypeControllerProvider).latestResult();
 });
+
+/// Sonuç geçmişi (yeniden eskiye) — kimlik geçmişi ekranı + home'daki bağlantı.
+final archetypeHistoryProvider = FutureProvider<List<ArchetypeResult>>((ref) {
+  return ref.read(archetypeControllerProvider).listResults();
+});

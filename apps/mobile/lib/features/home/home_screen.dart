@@ -63,6 +63,29 @@ class HomeScreen extends ConsumerWidget {
                 },
                 orElse: () => const SizedBox.shrink(),
               ),
+              // Kimlik geçmişi bağlantısı — YALNIZCA birden fazla sonuç varsa.
+              // Tek sonuçta "geçmiş" anlamsız olurdu (yükleme/hata → gizli).
+              ref
+                  .watch(archetypeHistoryProvider)
+                  .maybeWhen(
+                    data: (list) => list.length < 2
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(bottom: NoctaSpace.s5),
+                            child: GestureDetector(
+                              key: const Key('identity-history-link'),
+                              onTap: () => context.push('/identity/history'),
+                              child: Text(
+                                '${list.length} identities over time',
+                                style: TextStyle(
+                                  fontSize: NoctaFontSize.caption,
+                                  color: NoctaColors.accentAurora,
+                                ),
+                              ),
+                            ),
+                          ),
+                    orElse: () => const SizedBox.shrink(),
+                  ),
               // Streak: yalnızca en az bir gece kaydı varken görünür (yeni kullanıcıda
               // "0 nights streak" göstermek yerine gizli). Yükleme/hata → gizli, home bloklanmaz.
               streak.maybeWhen(
