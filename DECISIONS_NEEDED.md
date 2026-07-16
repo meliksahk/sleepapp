@@ -169,3 +169,35 @@ fixture'ları — henüz YOK) ayarlanmadı. Yani rapor "12 hareket" derken aslı
 etiketi ona eşitlemek hem dürüst hem de fixture'lar gelince (2)'ye düşmeden
 iyileştirilebilir. Karar gelene kadar mevcut etiketler duruyor — bu bilinçli bir
 borçtur, gece raporu ekranı henüz gerçek veriyle beslenmiyor (mikrofon yakalama yok).
+
+---
+
+## D-11 — 2FA sıfırlama: telefonunu kaybeden admin ne yapacak?
+
+**Bağlam:** #135'te admin TOTP 2FA geldi (PR #136). Onaylı 2FA'nın üstüne yazmak
+**bilerek** 409 döner: aksi hâlde oturumu ele geçiren saldırgan 2FA'yı kendi
+cihazına taşıyabilirdi. Ama bu, madalyonun diğer yüzünü doğuruyor: **telefonunu
+kaybeden admin'i şu an yalnızca DB'ye elle müdahale kurtarır.**
+
+Bu tek kişilik bir projede gerçek bir risk: `owner` hesabı tek ve kilitlenirse
+panele girilemez.
+
+**Seçenekler:**
+
+1. **Yedek kodlar (backup codes):** kurulumda 8-10 tek kullanımlık kod üretilir,
+   kullanıcı saklar. Standart çözüm (GitHub/Google böyle yapar). Maliyeti: bir
+   tablo + üretim/harcama akışı + "bir kez gösterilir" ekranı.
+2. **`owner` başkasının 2FA'sını sıfırlayabilir:** ekip büyüyünce doğal çözüm, ama
+   `owner`ın KENDİ kilidini açmaz — tek kişilik ekipte asıl sorunu çözmez.
+3. **Parola + e-posta doğrulamasıyla sıfırlama:** magic-link altyapısı zaten var.
+   Ama 2FA'nın koruduğu şeyi (parola sızıntısı) sıfırlama yolu hâline getirir —
+   e-postaya erişen saldırgan 2FA'yı atlar. **2FA'yı büyük ölçüde anlamsızlaştırır.**
+4. **Hiçbiri — DB erişimi tek kurtarma yolu.** Bugünkü durum. Dürüst ama kırılgan.
+
+**Önerim: (1) + (2).** Yedek kodlar `owner`ın kendini kurtarmasını sağlar; (2) ekip
+büyüdüğünde editor/analyst için pratik. (3) reddedilmeli — korumayı kendi eliyle
+deler.
+
+**Karar gelene kadar:** 2FA isteğe bağlı ve hiçbir hesapta zorunlu değil; kurulum
+ekranı da henüz yok (uçlar var). Yani kimse kilitlenemez — ama 2FA de fiilen
+kullanılmıyor. Zorunlu kılmadan ÖNCE bu kararın verilmesi gerekiyor.
