@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { POST, DELETE } from './route';
-import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/features/auth/session';
+import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/shared/auth/session';
 
 /**
  * Giriş vekilinin çekirdek sözleşmesi: token'lar httpOnly ÇEREZE yazılır ve

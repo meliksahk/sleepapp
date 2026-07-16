@@ -1,6 +1,11 @@
 /**
  * Panel oturum çerezleri (docs/03 A0).
  *
+ * NEDEN `shared/`: çerez adları/ayarları TEK bir dikey dilime ait değil — middleware,
+ * route handler, sunucu API istemcisi ve auth dilimi hepsi kullanır. `features/auth`
+ * altındayken `shared/api` oradan import etmek zorunda kalıyordu ve boundary lint bunu
+ * (haklı olarak) reddetti: alt katman üst katmana bakamaz.
+ *
  * NEDEN httpOnly ÇEREZ, NEDEN localStorage DEĞİL: panelde token localStorage'da
  * dursa, herhangi bir XSS (bir bağımlılık, bir içerik alanı) admin token'ını
  * okuyabilirdi — sistemdeki en yetkili anahtar. httpOnly çerez JS'ten okunamaz;

@@ -4,6 +4,7 @@ import type { UserArchetypeReader } from '../../src/modules/content/domain/user-
 import type {
   ContentRepository,
   Soundscape,
+  SoundscapeSummary,
   SoundscapeDetail,
   WeeklyRelease,
 } from '../../src/modules/content/domain/soundscape';
@@ -32,6 +33,9 @@ class CountingRepo implements ContentRepository {
     return this.data;
   }
   findPublishedBySlug(): Promise<SoundscapeDetail | null> {
+    throw new Error('kullanılmaz');
+  }
+  findAllSummaries(): Promise<SoundscapeSummary[]> {
     throw new Error('kullanılmaz');
   }
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null> {

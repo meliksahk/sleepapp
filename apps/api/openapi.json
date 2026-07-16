@@ -667,6 +667,34 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/soundscapes": {
+      "get": {
+        "operationId": "AdminController_soundscapes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminSoundscapeDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tum soundscape kayitlari (taslak/planli/yayinlanmis)",
+        "tags": ["admin"]
+      }
+    },
     "/v1/content/feed": {
       "get": {
         "operationId": "ContentController_feed",
@@ -1549,6 +1577,40 @@
           }
         },
         "required": ["userId", "roles"]
+      },
+      "AdminSoundscapeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "description": "Görünen başlık (EN; yoksa slug)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "scheduled", "published"]
+          },
+          "archetypeAffinity": {
+            "description": "Uygun uyku kimlikleri",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "version": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO 8601 UTC (CLAUDE.md §4)"
+          }
+        },
+        "required": ["id", "slug", "title", "status", "archetypeAffinity", "version", "createdAt"]
       },
       "SoundscapeDto": {
         "type": "object",

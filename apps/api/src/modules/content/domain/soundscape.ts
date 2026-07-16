@@ -60,8 +60,26 @@ export interface WeeklyRelease {
   readonly soundscapes: readonly Soundscape[];
 }
 
+/**
+ * Admin listesi için ÖZET — `Soundscape` DEĞİL, bilerek ayrı bir okuma modeli.
+ * İki sebep: (1) panelin ihtiyacı olan `status` uygulama entity'sinde YOK ve oraya
+ * eklemek, uygulamanın hiç umursamadığı bir alanı her yere taşırdı; (2) panel ağır
+ * `engineParams`/`layerDefs` alanlarını listede taşımamalı (liste 100 satır olabilir).
+ */
+export interface SoundscapeSummary {
+  readonly id: string;
+  readonly slug: string;
+  readonly titleI18n: Record<string, string>;
+  readonly status: ContentStatus;
+  readonly archetypeAffinity: readonly string[];
+  readonly version: number;
+  readonly createdAt: Date;
+}
+
 export interface ContentRepository {
   findPublished(): Promise<Soundscape[]>;
+  /** TÜM soundscape'ler (taslak/planlı/yayınlanmış) — yalnızca admin okuma yolu. */
+  findAllSummaries(): Promise<SoundscapeSummary[]>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
   /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;

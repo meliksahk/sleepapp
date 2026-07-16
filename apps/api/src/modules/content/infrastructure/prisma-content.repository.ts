@@ -1,9 +1,11 @@
 import { Logger } from '@nestjs/common';
 import type {
   ContentRepository,
+  ContentStatus,
   Preset,
   Soundscape,
   SoundscapeDetail,
+  SoundscapeSummary,
   WeeklyRelease,
 } from '../domain/soundscape';
 import { parseMixerState } from '../domain/mixer-state';
@@ -37,6 +39,19 @@ export class PrismaContentRepository implements ContentRepository {
       orderBy: { created_at: 'desc' },
     });
     return rows.map(toSoundscape);
+  }
+
+  async findAllSummaries(): Promise<SoundscapeSummary[]> {
+    const rows = await this.prisma.soundscapes.findMany({ orderBy: { created_at: 'desc' } });
+    return rows.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      titleI18n: (r.title_i18n ?? {}) as Record<string, string>,
+      status: r.status as ContentStatus,
+      archetypeAffinity: r.archetype_affinity ?? [],
+      version: r.version,
+      createdAt: r.created_at,
+    }));
   }
 
   async findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null> {
