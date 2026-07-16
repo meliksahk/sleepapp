@@ -102,13 +102,19 @@ export class PrismaSleepSessionRepository implements SleepSessionRepository {
     };
   }
 
+  /**
+   * Kullanıcının TÜM benzersiz gece tarihleri. **Sınır YOK** (bilinçli):
+   * `computeStreak` hem `totalNights` (= tarih sayısı) hem `longest` (tüm zamanların
+   * en uzun serisi) için tarihlerin TAMAMINA ihtiyaç duyar. Eskiden `take: 400`
+   * vardı → 400+ gecesi olan kullanıcıda ikisi de SESSİZCE yanlıştı.
+   * Maliyet küçük: yalnızca distinct tarih kolonu (10 yıl ≈ 3.6k satır).
+   */
   async listNightDates(userId: string): Promise<string[]> {
     const rows = await this.prisma.sleep_sessions.findMany({
       where: { user_id: userId },
       distinct: ['night_date'],
       select: { night_date: true },
       orderBy: { night_date: 'desc' },
-      take: 400,
     });
     return rows.map((r) => r.night_date.toISOString().slice(0, 10));
   }
