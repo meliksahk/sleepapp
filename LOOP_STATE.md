@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈57% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈58% — F1–F5 (otonom kapsam)
 
 ```
-[███████████████████████░░░░░░░░░░░░░░░░░] 57%
+[███████████████████████░░░░░░░░░░░░░░░░░] 58%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~87%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~89%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~35%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·87 + 0.40·49 + 0.15·35 + 0.15·45 ≈ **57%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·89 + 0.40·49 + 0.15·35 + 0.15·45 ≈ **58%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,8 +66,8 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kalanı:** (a) **refresh grace window** (iki-sekme yarışı → sert çıkış; API tarafı). (b) TOTP 2FA. (c) davet akışı + parola sıfırlama. (d) hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117.
-2. **A1 içerik CMS'i:** dashboard'u canlı veriye bağla, soundscape CRUD (admin artık giriş yapılabilir durumda — asıl ürün işi buradan başlıyor).
+1. **A1 içerik CMS'i (ARTIK ÖNCELİK):** dashboard'u canlı veriye bağla, soundscape CRUD. Oturum yaşam döngüsü #112–#118'de tamamlandı; panel giriş yapılabilir ve oturum sağlam → **asıl ürün işi buradan başlıyor**. 7 iterasyondur auth/güvenlik yapıldı, yeter.
+2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
 5. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
@@ -76,6 +76,46 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #118 — refresh yarış toleransı: meşru sekmeler artık atılmıyor (PR #119, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Rotasyondan sonraki kısa pencerede (`REFRESH_REUSE_GRACE_MS`, varsayılan 10sn) aynı
+  token "çalıntı" değil **yarış** sayılır → aile düşmez. #117'de işaretlediğim risk kapandı.
+- **GERÇEK EŞZAMANLILIK TESTİNİN BULDUĞU KENDİ HATAM (asıl değer):** grace'i ekledim,
+  gerçek iki paralel istekle ölçtüm → **hâlâ A=200, B=401**. Sebep: rotasyonda ÖNCE
+  `markRevoked` SONRA `mint` yapılıyordu; arada ailede **bir an aktif token kalmıyor**,
+  o boşluğa düşen sekme "aile ölü" görüp yarışı reuse sanıyor ve aileyi düşürüyordu →
+  **grace tamamen işlevsizdi**. Sıralı birim testler bunu GÖREMİYORDU. Sıra düzeltildi
+  (önce bas, sonra iptal et) → **5/5 turda iki sekme de sağ kaldı**. Karar artık çağrı
+  sırasına bakan bir testle sabit.
+- **Çıkışı bozmadığı ölçüldü:** çıkış 204 → hemen sonra refresh **401**. (Naif grace,
+  çıkıştan sonraki 10sn'de yeni oturum basıp çıkışı sessizce etkisiz kılardı; bu yüzden
+  grace yalnızca **aile canlıyken** uygulanıyor — yeni port `hasActiveInFamily`.)
+- **Donmuş saatli testin bulduğu 2. hata:** `<=` tek başına yazılınca `grace=0` (KATI)
+  modunda bile fark=0 → tolerans uygulanıyordu. `reuseGraceMs > 0 &&` eklendi.
+- API **289 test** (283→289). turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **Bedeli açıkça:** token'ı çalan biri meşru rotasyondan sonraki 10sn içinde kullanırsa
+  yakalanmaz; pencere dışında hâlâ yakalanır. Endüstride yerleşik takas (Auth0 "reuse
+  interval"). **`REFRESH_REUSE_GRACE_MS=0` ile kapatılabilir** — bilinçli.
+- Middleware'in "yalnızca gezintide yenile" kısıtı DURUYOR: derinlemesine savunma +
+  prefetch/RSC'de gereksiz token üretmemek.
+- `problem-details` e2e katı moda sabitlendi (o dosya filtreyi test eder).
+
+🔥 **Riskler / açıklar**
+
+- **Ders (üçüncü kez):** eşzamanlılık hatası yalnızca GERÇEK eşzamanlı istekle görünür.
+  Birim testler yeşilken sistem bozuktu.
+- Middleware hâlâ token DOĞRULAMAZ — gerçek kapı sunucuda.
+- Dashboard hâlâ yer tutucu; i18n yok (**D-8 kararı bekliyor**).
+
+❌ **Yapılmadı**
+
+- TOTP 2FA, davet akışı, hesap-başına kilitleme, `.env.example`, A1 içerik CMS'i.
 
 ### #117 — sessiz oturum yenileme + GERÇEK çıkış (PR #118, merged)
 
