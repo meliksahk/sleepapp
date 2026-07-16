@@ -36,6 +36,60 @@ Float32List whiteNoise(int samples, {required int seed}) {
   return out;
 }
 
+/// Pembe gürültü (1/f) — **Voss-McCartney**: farklı oktavlarda güncellenen [rows]
+/// bağımsız beyaz üreteç toplanır; her satır bir öncekinin yarısı sıklıkta yenilenir.
+/// Spektral eğim beyaz ile kahverengi ARASINDADIR (uyku sesinin klasiği: "yağmur/
+/// şelale" karakteri). Çıkış tepe değeri 1'e normalize edilir.
+///
+/// ⚠️ DC NOTU (ölçüm: dc≈-0.036, white/brown'da ≈0.000): pembe gürültüde artık DC
+/// **beklenen**tir, hata değil. En yavaş satır 2^(rows-1) örnekte bir yenilenir
+/// (rows=16 → 32768); sonlu pencerede bu düşük-frekans enerjisi sabit kayma gibi
+/// görünür — 1/f'in DC'ye doğru sınırsız enerjisinin doğal sonucu.
+/// **Çalma yolunda DC engelleyici (high-pass) GEREKİR** — aksi halde headroom
+/// israfı + hoparlör zorlanması. Burada bilerek ham bırakıldı: buffer ortalamasını
+/// çıkarmak offline'da işe yarar ama streaming native grafta mümkün değil; sorunu
+/// gizlemek yerine görünür tutuyoruz (bkz. LOOP_STATE #95).
+Float32List pinkNoise(int samples, {required int seed, int rows = 16}) {
+  assert(rows >= 1 && rows <= 30, 'rows [1,30] aralığında olmalı');
+  final rng = _Lcg(seed);
+  final values = List<double>.filled(rows, 0.0);
+  var runningSum = 0.0;
+  for (var i = 0; i < rows; i++) {
+    values[i] = rng.nextBipolar();
+    runningSum += values[i];
+  }
+
+  final out = Float32List(samples);
+  var peak = 0.0;
+  var counter = 0;
+  for (var i = 0; i < samples; i++) {
+    counter++;
+    // Sayaçtaki sondaki sıfır biti sayısı → hangi satır yenilenecek.
+    // Satır k, 2^k örnekte bir güncellenir → oktav başına eşit enerji (1/f).
+    var n = counter;
+    var row = 0;
+    while ((n & 1) == 0 && row < rows - 1) {
+      n >>= 1;
+      row++;
+    }
+    runningSum -= values[row];
+    values[row] = rng.nextBipolar();
+    runningSum += values[row];
+
+    // Satır toplamı + bir beyaz örnek (yüksek frekans dolgusu), ortalamaya indir.
+    final s = (runningSum + rng.nextBipolar()) / (rows + 1);
+    out[i] = s;
+    final a = s.abs();
+    if (a > peak) peak = a;
+  }
+  if (peak > 0) {
+    for (var i = 0; i < samples; i++) {
+      out[i] = out[i] / peak;
+    }
+  }
+  return out;
+}
+
 /// Kahverengi (Brownian) gürültü: beyazın **sızıntılı integrali** → düşük frekans
 /// ağırlıklı, kulağa "derin"/yumuşak gelir. [leak] sıfıra yaklaştıkça daha koyu;
 /// sızıntı DC kaymasını (drift) engeller. Çıkış tepe değeri 1'e normalize edilir.

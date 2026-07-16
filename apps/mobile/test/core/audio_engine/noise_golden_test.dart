@@ -76,6 +76,41 @@ void main() {
     });
   });
 
+  group('pembe gürültü golden (5 sn @ 48kHz, seed 42)', () {
+    final p = pinkNoise(_samples, seed: 42);
+
+    test('RMS snapshot', () {
+      expect(rms(p), closeTo(0.228, 0.02));
+    });
+
+    test('pürüzsüzlük snapshot (1/f)', () {
+      expect(meanAbsDelta(p), closeTo(0.095, 0.02));
+    });
+
+    test('tepe 1.0’a normalize (kırpma yok)', () {
+      expect(_peak(p), closeTo(1.0, 1e-6));
+    });
+
+    test('artık DC beklenen sınırda (1/f doğası — çalmada high-pass gerekir)', () {
+      // white/brown ≈0.000; pembede ölçülen -0.036. Bu HATA DEĞİL: en yavaş satır
+      // 32768 örnekte bir yenilenir → sonlu pencerede düşük frekans DC gibi görünür.
+      // Eşik gerçeği yansıtır; sessizce gevşetilmiş bir tolerans değil (bkz. noise.dart).
+      expect(dcOffset(p).abs(), lessThan(0.05));
+    });
+
+    test('spektral eğim 1/f: beyaz > pembe > kahverengi (asıl özellik)', () {
+      final w = whiteNoise(_samples, seed: 42);
+      final b = brownNoise(_samples, seed: 42);
+      final mw = meanAbsDelta(w), mp = meanAbsDelta(p), mb = meanAbsDelta(b);
+      expect(mw, greaterThan(mp)); // pembe beyazdan koyu
+      expect(mp, greaterThan(mb)); // ama kahverengiden parlak
+    });
+
+    test('determinizm: aynı seed → birebir aynı', () {
+      expect(pinkNoise(1000, seed: 7), equals(pinkNoise(1000, seed: 7)));
+    });
+  });
+
   group('istatistik yardımcıları — sınır durumları', () {
     test('boş buffer → 0', () {
       final empty = whiteNoise(0, seed: 1);
