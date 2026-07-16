@@ -209,6 +209,39 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body.code).toBe('invalid_range');
   });
 
+  it('stats: gece sayısı + toplam/ortalama süre', async () => {
+    const t = await token();
+    await setTz(t, 'UTC');
+    // İki gece: 2026-09-10 (300dk) ve 2026-09-11 (360dk)
+    for (const [start, end] of [
+      ['2026-09-10T22:00:00.000Z', '2026-09-11T03:00:00.000Z'],
+      ['2026-09-11T22:00:00.000Z', '2026-09-12T04:00:00.000Z'],
+    ]) {
+      await request(app.getHttpServer())
+        .post('/v1/sleep/sessions')
+        .set('Authorization', `Bearer ${t}`)
+        .send({ startedAt: start, endedAt: end, movementEvents: 0, soundEvents: 0 })
+        .expect(201);
+    }
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/stats')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.nights).toBe(2);
+    expect(res.body.totalDurationMinutes).toBe(660);
+    expect(res.body.averageDurationMinutes).toBe(330);
+  });
+
+  it('stats: kayıt yokken hepsi 0', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/stats')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body).toEqual({ nights: 0, totalDurationMinutes: 0, averageDurationMinutes: 0 });
+  });
+
   it('liste yalnızca kendi oturumlarını döner (izolasyon)', async () => {
     const a = await token();
     const b = await token();
