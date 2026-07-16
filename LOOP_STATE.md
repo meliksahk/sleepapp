@@ -82,6 +82,60 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+### #136 — 2FA kurulum ekranı: özellik artık ERİŞİLEBİLİR (PR #136'ya eklendi)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **`/security` ekranı**: QR + elle giriş anahtarı + onay formu + durum rozeti.
+  #135'te uçlar vardı ama ekran yoktu → 2FA yalnızca curl ile kurulabiliyordu;
+  yani **özellik son kullanıcı için erişilemezdi**. Kendi raporumda işaretlediğim
+  boşluk kapatıldı.
+- `GET /v1/auth/admin/totp`: **`enabled` ile `pending` AYRI** — "anahtar var" ile
+  "2FA etkin" aynı şey değil; birleştirmek kod üretemeyen kullanıcıyı "korunuyor"
+  göstermek olurdu. `/me`'ye eklenmedi: orası DB'ye gitmiyor ve mobil sık çağırıyor.
+- **QR sunucuda üretilir** (`qrcode` 135KB, MIT): `/security` = 1.69 kB, First Load
+  104 kB (paylaşılan taban 102 kB) → kütüphane istemciye İNMİYOR.
+- **HATA DÜZELTİLDİ (önce failing test, CLAUDE.md §5):** `server-client.write()`
+  `res.ok` olunca KOŞULSUZ `res.json()` çağırıyordu → gövdesiz 204'te SyntaxError,
+  yani `WriteResult` dönmek yerine ÇÖKÜYORDU. 2FA onay ucu tam olarak 204 döner.
+- **CANLI SİSTEM** (gerçek API + gerçek Postgres, 16 iddia): kur → yarıda kalmışken
+  giriş hâlâ serbest → yanlış kod etkinleştirmiyor → onay → **kodsuz giriş 401** →
+  kodla 200 → **aynı kod tekrar 401** → yeniden kurulum 409. **Hepsi geçti.**
+- **GERÇEK TARAYICI**: kur → QR çizildi (192px, `viewBox 0 0 51 51`) → onayla →
+  rozet "Etkin" → çıkış → **doğru parolayla giriş REDDEDİLDİ, kod alanı kendiliğinden
+  açıldı** → kodla panele girildi. Halka kapandı.
+- Testler: 20 e2e + 9 action + 5 server-client + 9 form + 3 vekil. Kapı 9/9 yeşil.
+
+⚠️ **Yapıldı, doğrulanmadı**
+
+- Yok.
+
+❌ **Yapılmadı / eksik**
+
+- **PR #136 hâlâ MERGE EDİLMEDİ** — GitHub'ın `pulls/{n}/files` ucu ~1 saattir HTML
+  500 dönüyor ve `paths-filter` adımı ona bağlı. Kanıt: aynı çağrı merge edilmiş
+  PR #135 için de patlıyor. Yerelde `flutter analyze` temiz + 238/238 test geçiyor.
+- **CI kırılganlığı (yeni iş adayı):** tek bir GitHub API çağrısı tüm merge'leri
+  bloke edebiliyor. `paths-filter` yerine git-diff tabanlı yol araştırılmalı.
+- 2FA sıfırlama / yedek kod yok (D-11). Ekranda kullanıcıya açıkça yazılıyor.
+- D7 retention, zamanlanmış yayın, içerik sayfalama, davet akışı.
+
+📌 **Varsayımlar**
+
+- Onaydan sonra sayfa `revalidatePath('/security')` ile tazelenir; aksi hâlde
+  kullanıcı etkinleştirdiği hâlde "Kapalı" rozetini görürdü.
+- QR üretilemezse ekran ÇÖKMEZ, anahtar elle girilebilir (orantılılık).
+
+🔥 **Riskler / açıklar**
+
+- Gizli anahtar DB'de **şifresiz**; DB dökümü sızarsa 2FA anahtarları da sızar.
+- 2FA **zorunlu değil** — D-11 kararı verilmeden zorunlu kılmak, kurtarma yolu
+  olmadığı için hesapları kilitleme riski taşır.
+- Canlı doğrulamada 5/dk giriş limiti script'i 429'a düşürdü; API'yi
+  `ADMIN_LOGIN_LIMIT=100` ile yeniden başlatıp tekrarladım (ölçülen şey 2FA, limit
+  değil). **Gerçek kullanıcı için de geçerli bir gözlem:** 2FA yeni bir hata modu
+  ekliyor (yanlış kod) ve aynı 5/dk kovasını harcıyor.
+
 ### #135 — admin 2FA: TOTP (PR #136, **AÇIK — merge EDİLMEDİ**)
 
 ✅ **Yapıldı ve doğrulandı**
