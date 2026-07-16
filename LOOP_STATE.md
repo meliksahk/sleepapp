@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈53% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈54% — F1–F5 (otonom kapsam)
 
 ```
-[█████████████████████░░░░░░░░░░░░░░░░░░░] 53%
+[██████████████████████░░░░░░░░░░░░░░░░░░] 54%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~82%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~85%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~15%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~18%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·82 + 0.40·49 + 0.15·15 + 0.15·45 ≈ **53%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·85 + 0.40·49 + 0.15·18 + 0.15·45 ≈ **54%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kalanı:** (a) admin parola girişi — argon2id, `password_hash` kolonu HAZIR ama kullanılmıyor; `@node-rs/argon2` (prebuilt napi, node-gyp yok, MIT) düşünülüyor. (b) ilk admin'i kuran seed script'i. (c) TOTP 2FA. (d) davet akışı. (e) panel Next.js middleware. Sunucu rol kapısı ✓ #112, audience ayrımı ✓ #113. Boundary lint ✓ (zaten kurulu). packages/ui ✓ #15-16.
+1. **admin A0 kalanı:** (a) **panel Next.js middleware + login sayfası** — API hazır, panel hâlâ bağlanmadı (en yüksek değer). (b) giriş ucuna sıkı rate-limit (kaba kuvvet). (c) TOTP 2FA. (d) davet akışı + parola sıfırlama. Rol kapısı ✓ #112, audience ✓ #113, parola girişi + admin:create ✓ #114. Boundary lint ✓. packages/ui ✓ #15-16.
 2. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
 3. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
 4. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
@@ -74,6 +74,45 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #114 — admin parola girişi (argon2id) + ilk admin script'i (PR #115, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `POST /v1/auth/admin/login` + argon2id (`Argon2idPasswordHasher`) +
+  `pnpm --filter @nocta/api admin:create`. #112→#113→#114 zinciri kapandı: admin
+  token'ı artık DB kurcalamadan, gerçek girişle alınıyor.
+- **GERÇEK SUNUCUDA uçtan uca doğrulandı** (curl, :3099): script hesap kurdu →
+  giriş 200+token → `/v1/admin/me` 200 `{"roles":["editor"]}` → yanlış parola 401 →
+  olmayan hesap AYNI 401 gövdesi → **mobil cihaz token'ı `/admin/me`'de 403**.
+  Kanıt hesabı sonra silindi (doğrulandı: kalan 0).
+- **Kullanıcı sayımı savunması ÖLÇÜLDÜ:** yanlış parola 13.6ms / olmayan hesap
+  14.3ms (sahte doğrulama atlansaydı ~0ms). **Sabit-zaman iddia etmiyorum.**
+- API **276 test** (267→276). turbo 18/18. Kontrat → `gen:api-types`.
+
+📌 **Varsayımlar / kararlar**
+
+- **Bağımlılık ölçüldü** (LOOP.md >1MB kuralı): `@node-rs/argon2` 37K + makinede TEK
+  platform binary (win 469K / linux 632K) ≈ **506K**, MIT, node-gyp yok.
+  Elenenler: `argon2` 1.03MB+node-gyp, `hash-wasm` 1.8MB.
+- Parola hash'i domain `User`'a KOYULMADI (User me/refresh/guard'da dolaşır) → ayrı
+  `AdminCredentials`. `PasswordHasher` ≠ `TokenHasher` (ayrı port, ayrı gerekçe).
+- İlk admin ENDPOINT değil SCRIPT: "ilk admini yaratan" uç kimliksiz erişilebilir olurdu.
+- argon2 params OWASP 2024 asgarisi (19MiB/2/1) — artırmak bir KAPASİTE kararıdır.
+
+🔥 **Riskler / açıklar**
+
+- **TOTP 2FA YOK** (CLAUDE.md §3.3 istiyor) — A0 hâlâ bitmedi.
+- **Davet akışı yok**: hesap ve parola sıfırlama yalnızca script'le.
+- **Giriş ucuna özel sıkı rate-limit yok** — global throttler (route başına) geçerli;
+  kaba kuvvet için yetersiz olabilir. Ayrı iş.
+- Script parolayı argümandan alır → shell geçmişine düşer (bilinçli takas, belgelendi).
+- **Ders:** script'i çalıştırmasam iki hata sessiz kalırdı — pnpm `--`'ı argüman
+  olarak geçiriyordu ve script `.env` yüklemiyordu. "Yazdım" ≠ "çalışıyor".
+
+❌ **Yapılmadı**
+
+- TOTP 2FA, davet akışı, panel Next.js middleware, giriş rate-limit'i, audit log.
 
 ### #113 — JWT audience ayrımı zorlanıyor (PR #114, merged)
 
