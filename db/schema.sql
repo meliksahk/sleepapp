@@ -53,6 +53,21 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: admin_audit_log; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.admin_audit_log (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    actor_id uuid,
+    actor_email text NOT NULL,
+    action text NOT NULL,
+    target text NOT NULL,
+    details jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: analytics_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -280,6 +295,14 @@ CREATE TABLE public.weekly_releases (
 
 
 --
+-- Name: admin_audit_log admin_audit_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_audit_log
+    ADD CONSTRAINT admin_audit_log_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: analytics_events analytics_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -480,6 +503,20 @@ ALTER TABLE ONLY public.weekly_releases
 
 
 --
+-- Name: admin_audit_log_target_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX admin_audit_log_target_idx ON public.admin_audit_log USING btree (target, created_at DESC);
+
+
+--
+-- Name: admin_audit_log_time_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX admin_audit_log_time_idx ON public.admin_audit_log USING btree (created_at DESC);
+
+
+--
 -- Name: analytics_events_name_time_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -554,6 +591,14 @@ CREATE INDEX idx_soundscapes_status ON public.soundscapes USING btree (status);
 --
 
 CREATE INDEX sleep_sessions_user_night_idx ON public.sleep_sessions USING btree (user_id, night_date DESC);
+
+
+--
+-- Name: admin_audit_log admin_audit_log_actor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.admin_audit_log
+    ADD CONSTRAINT admin_audit_log_actor_id_fkey FOREIGN KEY (actor_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -652,4 +697,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120010'),
     ('20260715120011'),
     ('20260715120012'),
-    ('20260715120013');
+    ('20260715120013'),
+    ('20260717000001');

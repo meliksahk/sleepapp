@@ -43,9 +43,11 @@ import { Inject } from '@nestjs/common';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { OverviewDto } from './overview.dto';
+import { AuditEntryDto } from './audit.dto';
 import { CreateSoundscapeDto } from './create-soundscape.dto';
 import { SetRecipeDto } from './recipe.dto';
 import { UpdateSoundscapeDto } from './update-soundscape.dto';
+import { AUDIT_LOG, type AuditLog, type NewAuditEntry } from '../domain/audit';
 import {
   OVERVIEW_SOURCE,
   SOUNDSCAPE_CATALOG,
@@ -70,6 +72,7 @@ export class AdminController {
   constructor(
     @Inject(SOUNDSCAPE_CATALOG) private readonly catalog: SoundscapeCatalog,
     @Inject(OVERVIEW_SOURCE) private readonly overviewSource: OverviewSource,
+    @Inject(AUDIT_LOG) private readonly audit: AuditLog,
   ) {}
 
   @Get('me')
@@ -92,6 +95,28 @@ export class AdminController {
   @ApiOkResponse({ type: OverviewDto })
   async overview(): Promise<OverviewDto> {
     return this.overviewSource.read();
+  }
+
+  /**
+   * Son panel etkinlikleri (docs/03 "Son etkinlik"). Okuma: her panel rolü —
+   * analyst'in "ne oldu?" sorusuna bakabilmesi salt okunurluğa aykırı değil.
+   *
+   * Sabit 20 kayıt: pano bir AKIŞ özeti, arşiv değil. Tam geçmiş için filtreli
+   * bir uç gerekir (ayrı iş) — sınırsız liste sessizce O(n) olurdu.
+   */
+  @Get('audit')
+  @ApiOperation({ summary: 'Son panel etkinlikleri (denetim izi)' })
+  @ApiOkResponse({ type: AuditEntryDto, isArray: true })
+  async auditLog(): Promise<AuditEntryDto[]> {
+    const entries = await this.audit.recent(20);
+    return entries.map((e) => ({
+      id: e.id,
+      actorEmail: e.actorEmail,
+      action: e.action,
+      target: e.target,
+      details: e.details,
+      createdAt: e.createdAt.toISOString(),
+    }));
   }
 
   /**
@@ -143,6 +168,12 @@ export class AdminController {
         // demesine güvenmek, denetim izini işe yaramaz kılardı.
         createdBy: user.sub,
       });
+      await this.audit.record({
+        actorId: user.sub,
+        action: 'soundscape.create',
+        target: e.slug,
+        details: { title: e.title },
+      });
       return {
         id: e.id,
         slug: e.slug,
@@ -174,8 +205,15 @@ export class AdminController {
   @ApiOkResponse({ type: AdminSoundscapeDto })
   @ApiForbiddenResponse({ description: 'Yazma yetkisi yok' })
   @ApiNotFoundResponse({ description: 'Soundscape yok' })
-  async publish(@Param('slug') slug: string): Promise<AdminSoundscapeDto> {
-    return this.runCatalog(() => this.catalog.publish(slug));
+  async publish(
+    @Param('slug') slug: string,
+    @CurrentUser() user: AccessTokenClaims,
+  ): Promise<AdminSoundscapeDto> {
+    return this.runCatalog(() => this.catalog.publish(slug), {
+      actorId: user.sub,
+      action: 'soundscape.publish',
+      target: slug,
+    });
   }
 
   /**
@@ -187,8 +225,15 @@ export class AdminController {
   @Roles('owner', 'editor')
   @ApiOperation({ summary: 'Soundscape yayindan kaldir (taslaga dondurur)' })
   @ApiOkResponse({ type: AdminSoundscapeDto })
-  async unpublish(@Param('slug') slug: string): Promise<AdminSoundscapeDto> {
-    return this.runCatalog(() => this.catalog.unpublish(slug));
+  async unpublish(
+    @Param('slug') slug: string,
+    @CurrentUser() user: AccessTokenClaims,
+  ): Promise<AdminSoundscapeDto> {
+    return this.runCatalog(() => this.catalog.unpublish(slug), {
+      actorId: user.sub,
+      action: 'soundscape.unpublish',
+      target: slug,
+    });
   }
 
   /**
@@ -225,8 +270,14 @@ export class AdminController {
   async setRecipe(
     @Param('slug') slug: string,
     @Body() dto: SetRecipeDto,
+    @CurrentUser() user: AccessTokenClaims,
   ): Promise<AdminSoundscapeDto> {
-    return this.runCatalog(() => this.catalog.setRecipe(slug, dto));
+    return this.runCatalog(() => this.catalog.setRecipe(slug, dto), {
+      actorId: user.sub,
+      action: 'soundscape.recipe',
+      target: slug,
+      details: { layers: dto.layers.length },
+    });
   }
 
   /**
@@ -243,19 +294,43 @@ export class AdminController {
   async updateSoundscape(
     @Param('slug') slug: string,
     @Body() dto: UpdateSoundscapeDto,
+    @CurrentUser() user: AccessTokenClaims,
   ): Promise<AdminSoundscapeDto> {
-    return this.runCatalog(() =>
-      this.catalog.update(slug, {
-        titleEn: dto.titleEn,
-        archetypeAffinity: dto.archetypeAffinity,
-      }),
+    return this.runCatalog(
+      () =>
+        this.catalog.update(slug, {
+          titleEn: dto.titleEn,
+          archetypeAffinity: dto.archetypeAffinity,
+        }),
+      {
+        actorId: user.sub,
+        action: 'soundscape.update',
+        target: slug,
+        // Yalnızca NE değişti — değerler değil (gövde PII taşımaz ilkesi).
+        details: {
+          changed: [
+            ...(dto.titleEn === undefined ? [] : ['title']),
+            ...(dto.archetypeAffinity === undefined ? [] : ['affinity']),
+          ],
+        },
+      },
     );
   }
 
-  /** Domain hatalarını HTTP'ye çevirir — tek yerde, uçlar arasında sapma olmasın. */
-  private async runCatalog(fn: () => Promise<CatalogEntry>): Promise<AdminSoundscapeDto> {
+  /**
+   * Domain hatalarını HTTP'ye çevirir — tek yerde, uçlar arasında sapma olmasın.
+   *
+   * `auditEntry` verilirse iz YALNIZCA BAŞARIDA yazılır: reddedilen bir yayınlama
+   * denemesini "yayınladı" diye kaydetmek, izi yalandan beter yapardı.
+   */
+  private async runCatalog(
+    fn: () => Promise<CatalogEntry>,
+    auditEntry?: NewAuditEntry,
+  ): Promise<AdminSoundscapeDto> {
     try {
-      return toDto(await fn());
+      const entry = await fn();
+      if (auditEntry) await this.audit.record(auditEntry);
+      return toDto(entry);
     } catch (err) {
       if (err instanceof SoundscapeNotFoundError) {
         throw new NotFoundException({ code: err.code, message: err.message });
