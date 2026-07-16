@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈61% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈63% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████████░░░░░░░░░░░░░░░░] 61%
+[█████████████████████████░░░░░░░░░░░░░░░] 63%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~91%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~93%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~50%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~58%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·91 + 0.40·49 + 0.15·50 + 0.15·45 ≈ **61%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·93 + 0.40·49 + 0.15·58 + 0.15·45 ≈ **63%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 devam:** (a) **yayınlama** (`PATCH` status: draft→published) — CMS'in asıl eylemi; taslak oluşturulabiliyor ama YAYINLANAMIYOR. (b) düzenleme (başlık/affinity). (c) dashboard canlı veri. (d) sayfalama. Liste ✓ #119, oluşturma API + rol daraltması ✓ #120, panel formu ✓ #121.
+1. **A1 devam:** (a) **ses tarifi editörü** — yayınlama kapısı var ama tarifi doldurmanın PANELDEN yolu yok; içerik ancak DB'den üretilebiliyor. En büyük eksik. (b) düzenleme (başlık/affinity). (c) dashboard canlı veri. (d) sayfalama. Liste ✓ #119, oluşturma ✓ #120, panel formu ✓ #121, yayınlama + cache düzeltmesi ✓ #122.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,47 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #122 — yayınlama/geri çekme + 🔴 bayat feed cache hatası (PR #123, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `POST .../publish` + `/unpublish` + panelde satır başına Yayınla/Geri çek düğmesi.
+- **🔴 CANLI ÖLÇÜMÜN BULDUĞU GERÇEK HATA (asıl değer):** uçları yazdım, gerçek sunucuda
+  denedim → **geri çekilen içerik feed'de KALDI**. Feed archetype başına 5dk cache'leniyor
+  ve durum değişimi cache'i temizlemiyordu → **"yanlış içerik canlıda" senaryosunda geri
+  çekme 5 DAKİKA işe yaramıyordu**; üstelik kendi yorumumda "geri çekmek daima anında"
+  yazıyordu. **Testlerim göremiyordu çünkü hiçbiri cache'i ÖNCE ISITMIYORDU** — oysa
+  gerçek senaryo tam da bu.
+- **Kanıt (önce kırmızı):** ısıtmalı iki test → "Tests: 2 failed, 10 passed". Cache
+  temizleme eklendi → 12/12. Canlıda da doğrulandı (ısıtılmış cache + geri çek → anında).
+- **Yayınlama kapısı:** BOŞ ses tarifi yayınlanamaz (409) — feed `engineParams`'ı
+  uygulamaya taşır, boş tarif = görünen ama SES ÇIKARMAYAN kayıt.
+- API **318 test** (306→318), admin **55 test** (48→55), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- Yayından kaldırmada kapı YOK: geri çekmek daima güvenli; boş tarifli kayıt bile
+  çekilebilir (acil çekme koşula takılmamalı — testle sabit).
+- `Cache.delByPrefix` eklendi: feed ~9 anahtara yayılır; tek tek `del` archetype listesini
+  cache tüketicisine bildirmek olurdu. Redis (B4) SCAN+DEL ile karşılar.
+- Geçersizleştirme KABA (tüm varyantlar): ince ayar yanlış yapılırsa SESSİZ bayat içerik;
+  içerik değişimi seyrek, feed ucuz.
+- `EmptyRecipeError` → 409 (400 değil): istek doğru, engel kaynağın MEVCUT DURUMU.
+
+🔥 **Riskler / açıklar**
+
+- **Ders (dördüncü kez):** cache/eşzamanlılık hataları yalnızca GERÇEK koşuşturmada
+  görünüyor. Bu iterasyonda testlerim yeşilken sistem bozuktu — canlı deneme kurtardı.
+- **Ses tarifi editörü YOK** → pratikte yayınlanabilir içerik ancak DB/seed ile üretiliyor.
+  Bu, kapının doğal ve dürüst sonucu; asıl editör deneyimi (mikser/katmanlar) ayrı iş.
+- `scheduled` durumu + `publish_at` kullanılmıyor (şema var, akış yok).
+- Dashboard yer tutucu; sayfalama yok; i18n yok (**D-8 kararı bekliyor**).
+
+❌ **Yapılmadı**
+
+- Ses tarifi editörü, düzenleme (başlık/affinity), zamanlanmış yayın, dashboard canlı
+  veri, sayfalama, TOTP 2FA, davet akışı, `.env.example`.
 
 ### #121 — panelde taslak oluşturma formu (PR #122, merged)
 
