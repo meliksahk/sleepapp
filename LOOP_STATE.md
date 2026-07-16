@@ -1,11 +1,31 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
+## 🚧 İlerleme: ≈39% — F1–F5 (otonom kapsam)
+
+```
+[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 39%
+```
+
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
+| ----------- | -------- | ------- | --------------------------------------------------------------------------- |
+| Backend/API | ~70%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
+| Mobil       | ~26%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
+| Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
+| Web         | ~40%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
+
+> **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
+> yüzdelerinin ağırlıklı ortalaması = 0.30·70 + 0.40·26 + 0.15·12 + 0.15·40 ≈ **39%**.
+> F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
+> iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
+
+---
+
 > İnsanın loop'u denetlediği tek ekran. Her iterasyonda güncellenir (LOOP.md §6).
 > Kanıt olmadan ✅ yazılmaz (Dürüstlük Protokolü).
 
 **Aktif faz:** F1 (Temel) — F0 kickoff kapandı.
 **Repo:** https://github.com/meliksahk/sleepapp (private)
-**Son güncelleme:** 2026-07-15
+**Son güncelleme:** 2026-07-16
 
 ---
 

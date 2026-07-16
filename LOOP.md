@@ -8,6 +8,24 @@ kendiliğinden geç. Her iterasyonda bu dosyayı baştan sona uygula. CLAUDE.md
 (özellikle Dürüstlük Protokolü) her zaman geçerlidir; çelişkide CLAUDE.md
 kazanır.
 
+## İlerleme göstergesi (her iterasyonda güncelle)
+
+`LOOP_STATE.md`'nin **en üstünde** bir yüzde barı + yüzey tablosu durur. Bu,
+insanın "ne kadar bitti?" sorusuna tek bakışta yanıttır. Her iterasyonun sonunda
+(§6) yeniden hesapla ve güncelle.
+
+- **Kapsam:** yalnızca otonom fazlar **F1–F5** (docs/01 §6). F6 (ödeme + lansman)
+  insan-kapılı olduğu için yüzdeye KATILMAZ; bittiğinde ayrıca not düşülür.
+- **Model:** dört yüzeyin kaba tamamlanma yüzdesinin ağırlıklı ortalaması.
+  Ağırlıklar (efor tahmini): **Mobil 0.40, Backend 0.30, Admin 0.15, Web 0.15**.
+  Toplam = `0.30·backend + 0.40·mobil + 0.15·admin + 0.15·web`.
+- **Dürüstlük:** bu bir TAHMİNDİR; "kesin ölçüm" gibi sunma. Bir yüzey yüzdesini
+  yalnızca o iterasyonda o yüzeyde somut, test edilmiş bir dilim bittiyse artır
+  (birkaç puan). Çekirdek özellik (ör. ses motoru) bitmeden mobil yüzdesini
+  şişirme. Bar 40 karakter: dolu = `round(yüzde/100·40)` adet `█`, kalanı `░`.
+- **Nerede:** tek kaynak `LOOP_STATE.md` üstüdür (LOOP.md'deki bu bölüm yalnızca
+  kuralı tanımlar; buraya sayı yazma).
+
 ## Her iterasyonun adımları
 
 1. DURUM OKU: `LOOP_STATE.md`'yi ve aktif fazın dokümanını (`docs/0X-*.md`)
@@ -26,8 +44,10 @@ test`) koş. Kanıtsız "çalışıyor" yazmak yasak — Dürüstlük Protokolü
    aç, CI yeşilse PR'ı merge et (squash). PR açıklamasına DURUM RAPORU
    bloğunu koy.
 6. DEFTERİ GÜNCELLE: `LOOP_STATE.md`'ye ekle: iterasyon no, yapılan iş, PR
-   linki, DURUM RAPORU, sıradaki iş. Bu dosya insanın loop'u denetlediği
-   tek ekrandır — asla atlama.
+   linki, DURUM RAPORU, sıradaki iş. Ayrıca en üstteki **İlerleme
+   göstergesi**ni (yüzde barı + yüzey tablosu) yeniden hesaplayıp güncelle
+   (bkz. "İlerleme göstergesi"). Bu dosya insanın loop'u denetlediği tek
+   ekrandır — asla atlama.
 7. TEMPO: Devam edecek iş varsa hemen sürdür; CI/dış olay bekleniyorsa
    uyanmayı ona göre zamanla.
 
