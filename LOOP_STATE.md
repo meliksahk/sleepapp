@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈41% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈42% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████░░░░░░░░░░░░░░░░░░░░░░░░] 41%
+[█████████████████░░░░░░░░░░░░░░░░░░░░░░░] 42%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
 | ----------- | -------- | ------- | --------------------------------------------------------------------------- |
 | Backend/API | ~71%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
-| Mobil       | ~30%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
+| Mobil       | ~31%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
 | Web         | ~44%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·71 + 0.40·30 + 0.15·12 + 0.15·44 ≈ **41%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·71 + 0.40·31 + 0.15·12 + 0.15·44 ≈ **42%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#86 (mobil home uyku kimliği):** Kullanıcı testi yaptıysa home'da uyku kimliği kartı (isim + tagline, `archetypeContentProvider`'dan çözülür; içerik yoksa slug fallback) + CTA "Find your sleep identity"→"Retake the test". Gerçek ürün döngüsü: `GET /v1/archetype/result` + `latestResult()` ilk kez UI'da tüketiliyor. Yeni `latestArchetypeResultProvider`, `_IdentityCard` (yükleme/hata/yok → gizli). `flutter analyze` temiz, `flutter test` 79 yeşil (76→79): kimlik kartı+Retake; sonuç yok→gizli+Find; slug fallback. Salt mobil, contract değişmedi. İlerleme barı mobil 30→31% (toplam ≈42%, bar 17 blok). PR #87. Not: kimlik kartına tıklama→detay ayrı.
 - **#85 (web site geneli footer):** Ortak `SiteFooter` (root layout) — her SSG sayfasına iç bağlantı (Sleep identities / Take the test / FAQ) → SEO iç-link sinyali + keşfedilebilirlik. Semantik `<footer>` + erişilebilir `<nav aria-label="Footer">`, "relaxation & sleep ritual" dili. web 27 test (24→27: href'ler, aria-label, sağlık taraması). turbo 17/17, build tüm sayfalarda footer. İlerleme barı web 43→44% (toplam ≈41%). PR #86.
 - **#84 (mobil soundscape affinity etiketi):** Kütüphane kartında `archetypeAffinity` okunur etiketle gösterilir ("For Deep Ocean · Delta Drifter") — archetype↔ses bağı (çekirdek ürün döngüsü), modeldeki alan ilk kez UI'da. `Soundscape.affinityLabel({max=2})` + `_humanizeSlug`. Kartta affinity varsa caption altyazı (yoksa gizli). `flutter analyze` temiz, `flutter test` 76 yeşil (75→76): affinityLabel ilk-2/boş + kartta var/yok. Salt mobil, contract değişmedi. İlerleme barı mobil 29→30% (toplam ≈41%). PR #85. Not: tam archetype adları (ör. "3AM Overthinker") için içerik eşlemesi ayrı.
 - **#83 (API güvenlik başlıkları — B4 sertleşme):** Zero-dependency `SecurityHeadersMiddleware` (helmet YOK) — tüm rotalara, guard'lardan önce: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Cross-Origin-Resource-Policy: same-origin`. main.ts'te `X-Powered-By` kapatıldı (framework parmak izi). 213 test (211→213): e2e başarılı+401 yanıtta başlıklar. turbo 17/17. Contract değişmedi. **CI:** düzeltilmiş bekleme kalıbıyla (≥2 check VAR + hepsi pass) yeşil doğrulandı, sonra merge. İlerleme barı backend 70→71% (toplam ≈41%). PR #84. Not: X-Powered-By kapatma main.ts bootstrap'ında → e2e (createNestApplication) kapsamı dışında (dürüstçe). CSP/HSTS → VPS/deploy fazı.
