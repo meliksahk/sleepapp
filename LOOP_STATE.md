@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈60% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈61% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████████░░░░░░░░░░░░░░░░] 60%
+[████████████████████████░░░░░░░░░░░░░░░░] 61%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~91%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~42%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~50%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·91 + 0.40·49 + 0.15·42 + 0.15·45 ≈ **60%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·91 + 0.40·49 + 0.15·50 + 0.15·45 ≈ **61%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 devam:** (a) **panelden oluşturma formu** — API hazır (#120), panel hâlâ salt okunur. (b) **yayınlama** (`PATCH` status: draft→published) — CMS'in asıl eylemi. (c) düzenleme. (d) dashboard canlı veri. (e) sayfalama. Liste ✓ #119, oluşturma API + rol daraltması ✓ #120.
+1. **A1 devam:** (a) **yayınlama** (`PATCH` status: draft→published) — CMS'in asıl eylemi; taslak oluşturulabiliyor ama YAYINLANAMIYOR. (b) düzenleme (başlık/affinity). (c) dashboard canlı veri. (d) sayfalama. Liste ✓ #119, oluşturma API + rol daraltması ✓ #120, panel formu ✓ #121.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,46 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #121 — panelde taslak oluşturma formu (PR #122, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `/content`'te "Yeni taslak" formu (Server Action); yalnızca owner/editor'e gösterilir.
+- **GERÇEK SUNUCUDA:** editor `/content` → form GÖRÜNÜYOR · analyst → form GİZLİ ·
+  editor oturumuyla kayıt oluşturuldu → panelin görünür gövdesinde "Form Proof",
+  "form-proof-1", "Taslak". Kanıt verisi silindi.
+- admin **48 test** (30→48). turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **Server Action, route handler DEĞİL:** token httpOnly çerezde → çağrı zaten sunucudan
+  gitmek zorunda (#116); ayrı proxy uç gereksiz katman olurdu.
+- **`revalidatePath('/content')`:** liste sunucuda render ediliyor; tazelenmezse editör
+  kaydettiğini GÖREMEZDİ (testle sabit).
+- **Doğrulama TEKRAR EDİLMEDİ:** slug/çakışma/rol sunucunun işi (#120). Panelde tekrar
+  etmek iki doğruluk kaynağı yaratır, biri sessizce eskir.
+- **`createErrorMessage` ayırt edici:** "bir şeyler ters gitti" slug'ı dolu editörü
+  çaresiz bırakırdı. 409/400/403 ayrı.
+- Formun rol-kapısı yalnızca UX; gerçek kapı sunucuda (§3.3). Sızsa bile 403 gelir ve
+  form mesajı gösterir (testle sabit).
+- `apiPost` hata FIRLATMAZ, ayrık sonuç döner: yazma hataları OLAĞAN sonuçlardır.
+
+🔥 **Riskler / açıklar**
+
+- **DÜRÜSTLÜK:** Server Action'ın KENDİSİ gerçek tarayıcı gönderimiyle koşulmadı
+  (Next-Action protokolü curl'le zahmetli). Action birim testlerle (fetch mock'lu),
+  beslediği API yolu + sayfa render'ı canlı doğrulandı.
+- **Kendi hatam:** commit mesajında test sayısını 30→44 yazdım, gerçek 30→48.
+  PR gövdesi düzeltildi + PR'a düzeltme yorumu eklendi.
+- Ses tarifi editörü YOK: taslak boş `engine_params` ile doğuyor — asıl editör
+  deneyimi (mikser/katmanlar) hâlâ uzak.
+- Sayfalama yok; i18n yok (**D-8 kararı bekliyor**).
+
+❌ **Yapılmadı**
+
+- Yayınlama (draft→published), düzenleme, ses tarifi editörü, dashboard canlı veri,
+  sayfalama, TOTP 2FA, davet akışı, `.env.example`.
 
 ### #120 — taslak oluşturma + rol daraltması (PR #121, merged)
 
