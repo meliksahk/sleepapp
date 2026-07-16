@@ -18,3 +18,7 @@ linter:
   rules:
     prefer_single_quotes: true
     require_trailing_commas: true
+    # CLAUDE.md §4 "dynamic yasak": açık `dynamic` BİLDİRİMİ analyzer ile
+    # yakalanamaz (strict-casts/inference bunu kapsamaz), ama dynamic üzerinden
+    # yapılan çağrılar yakalanır — kuralın uygulanabilir kısmı.
+    avoid_dynamic_calls: true
