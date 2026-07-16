@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildArchetypeJsonLd,
+  buildArchetypeListJsonLd,
   buildBreadcrumbJsonLd,
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
@@ -38,12 +39,25 @@ describe('schema.org JSON-LD builders', () => {
     expect(site.url).toBe(org.url);
   });
 
+  it('ItemList: sıralı archetype listesi', () => {
+    const ld = buildArchetypeListJsonLd([
+      { slug: 'deep-ocean', name: 'Deep Ocean' },
+      { slug: 'overthinker', name: '3AM Overthinker' },
+    ]);
+    expect(ld['@type']).toBe('ItemList');
+    const items = ld.itemListElement as Array<{ position: number; name: string; url: string }>;
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ position: 1, name: 'Deep Ocean' });
+    expect(items[1]?.url).toContain('/a/overthinker');
+  });
+
   it('SAĞLIK İDDİASI YOK — yasak kelimeler hiçbir JSON-LD metninde geçmez', () => {
     const blob = JSON.stringify([
       buildArchetypeJsonLd(sample),
       buildBreadcrumbJsonLd(sample),
       buildOrganizationJsonLd(),
       buildWebSiteJsonLd(),
+      buildArchetypeListJsonLd([{ slug: 'deep-ocean', name: 'Deep Ocean' }]),
     ]).toLowerCase();
     for (const banned of ['cure', 'treat', 'therapy', 'clinically', 'medical', 'disease']) {
       expect(blob).not.toContain(banned);
