@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈71% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈72% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████████████░░░░░░░░░░░░] 71%
+[█████████████████████████████░░░░░░░░░░░] 72%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
-| Mobil       | ~57%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Mobil       | ~59%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·57 + 0.15·80 + 0.15·45 ≈ **71%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·59 + 0.15·80 + 0.15·45 ≈ **72%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,8 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Mobil devam (%57, ağırlık 0.40 — en yüksek):** cihazsız kalan işler: (a) **uyku oturumu birleştirici** — dedektör + alarm + saat → API'nin beklediği oturum (süre, olay sayıları). NOT: `movementEvents`/`soundEvents` SINIFLANDIRMA istiyor ve o gerçek veri ister → şimdilik tek "olay sayısı" ile mi gönderilecek, ürün kararı (D-10 adayı). (b) mix-to-video offline render yolu (renderMix hazır). (c) uyku modu ekranı (UI; mikrofon yakalama olmadan da iskelet kurulabilir).
+1. **Mobil devam (%59, ağırlık 0.40 — en yüksek):** cihazsız kalan işler: (a) **oturumu API'ye gönderen controller** — taslak hazır (#130), `POST /v1/sleep/sessions` boşta duruyor; idempotency + hata yolu test edilebilir. (b) mix-to-video offline render yolu (renderMix hazır). (c) uyku modu ekranı iskeleti.
+   **Zincir durumu:** DSP ✓ #96-98 · tarif ayrıştırıcı ✓ #127 · olay tespiti ✓ #128 · alarm ✓ #129 · oturum taslağı ✓ #130. Eksik halka: **mikrofon yakalama (platform, insan-kapılı)** ve **native ses grafiği (insan-kapılı)**.
 2. **İnsan-kapılı (otonom YAPILAMAZ):** native ses grafiği + gerçek cihaz doğrulaması (CLAUDE.md §1.1 kulaklıkla), mikrofon yakalama (platform izni), olay sınıflandırma eşiklerinin gerçek gece kayıtlarıyla ayarlanması (docs/04 §120 fixture'ları).
 3. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
 4. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
@@ -78,6 +79,40 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #130 — uyku oturumu birleştirici + olay sınıflandırma (PR #131, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Dedektör olayları + oturum zamanı → API'nin beklediği `RecordSleepSessionDto`
+  taslağı. #128 olayları buluyordu ama API'nin istediği iki sayıya çevrilemiyordu.
+- flutter analyze temiz; **235 test** (222→235, +13). turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **AYRIM DOĞRULANMADI ve SAKLANMIYOR:** süre-tabanlı (kısa=hareket, uzun=ses)
+  docs/04 §85'in "basit sınıflandırma"sının en savunulabilir hâli — ama bir ÖLÇÜM
+  DEĞİL, VARSAYIM. Testler DAVRANIŞI sabitliyor, DOĞRULUĞU değil (dosyada+testte yazılı).
+- **UTC + ISO 8601 zorunlu** (CLAUDE.md §4): yerel saatle göndermek sunucudaki "gece"
+  gruplamasını (06:00 sınırı) SESSİZCE kaydırırdı → kullanıcı gecesini yanlış günde
+  görürdü. Testle sabit.
+- **HAM VERİ SIZMAZ:** gövdede yalnızca 4 alan (2 zaman + 2 sayı); zarf/dB/olay
+  detayı gitmez — CLAUDE.md §6'nın somut hâli, testle sabit.
+- Eşik ayarlanabilir: fixture'lar gelince değişecek TEK şey o olsun.
+
+🔥 **Riskler / açıklar**
+
+- **📌 D-10 AÇILDI:** rapor "12 hareket" derken aslında "12 kısa akustik olay" diyor;
+  kullanıcı "12 kez döndüm" diye okur. Sağlık iddiası değil ama **YANLIŞ KESİNLİK**.
+  **Önerim:** etiketleri ölçtüğümüz şeye eşitle ("Kısa hareketlenmeler"/"Yüksek anlar")
+  — yalnızca i18n metni değişir. Karar gelene kadar mevcut etiketler duruyor
+  (bilinçli borç; gece raporu henüz gerçek veriyle beslenmiyor).
+- Mikrofon yakalama, uyku modu ekranı, oturumu API'ye GÖNDERME yok.
+
+❌ **Yapılmadı**
+
+- Mikrofon yakalama (platform), uyku modu ekranı, oturum gönderme, native ses grafiği
+  (insan-kapılı), mix-to-video.
 
 ### #129 — akıllı alarm penceresi + aktivite köprüsü (PR #130, merged)
 
