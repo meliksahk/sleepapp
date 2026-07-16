@@ -82,6 +82,64 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+### #135 — admin 2FA: TOTP (PR #136, **AÇIK — merge EDİLMEDİ**)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **TOTP 2FA (RFC 6238)** — CLAUDE.md §3.3'ün şart koştuğu, `totp_secret` kolonu
+  init'ten beri şemada duran ama **hiçbir kodun dokunmadığı** koruma. Sistemdeki en
+  değerli hesap (owner) yalnızca parolayla korunuyordu.
+- **Kütüphane yerine `node:crypto`** (otplib 580KB / otpauth 953KB ölçüldü, reddedildi):
+  HMAC yazılmıyor, doğruluk **RFC 4226 App.D (10) + RFC 6238 App.B (6) = 16 resmî
+  vektörle** kanıtlanıyor. Kripto identity'de kalıyor (§6).
+- **Kur → onayla akışı:** 2FA yalnızca geçerli bir kodla etkinleşir. Tek adım olsaydı,
+  anahtarı Authenticator'a girmeden bırakan kullanıcı **kendini kalıcı kilitlerdi**.
+- **Tekrar saldırısı kapısı** (RFC 6238 §5.2): kullanılan sayaç DB'de → omuz üstünden
+  görülen kod 30 sn içinde ikinci kez kullanılamaz.
+- Testler: 29 birim + **15 e2e (gerçek HTTP + gerçek DB)** + 9 form + 3 vekil.
+  Çekirdek kanıt: onaylı 2FA'da **parola doğru olsa bile kodsuz giriş 401**.
+- `lint typecheck test build` → **9/9 görev yeşil**. CI'da **TS workspace geçti**.
+
+⚠️ **Yapıldı, doğrulanmadı**
+
+- Yok — bu iterasyonda çalıştırılmadan bırakılan kod yok.
+
+❌ **Yapılmadı / eksik**
+
+- **PR MERGE EDİLMEDİ.** CI'nin Flutter işi düştü — ama **koddan değil**: 3. adım
+  `dorny/paths-filter@v3`, GitHub'ın `pulls/{n}/files` ucundan **HTML 500 ("Unicorn")**
+  aldı. Kanıt: aynı çağrı **zaten merge edilmiş, yeşil geçmiş PR #135 için de patlıyor**
+  → PR'a özgü değil, GitHub arızası. Yerelde doğruladım: `flutter analyze` temiz,
+  `flutter test` **238/238**. Yani iş yeşil olurdu. **Yine de kırmızıyla merge
+  edilmedi** (CLAUDE.md §4: "CI yeşil olmadan merge yok") — uç düzelince re-run + merge.
+- **Panelde 2FA kurulum ekranı yok.** Uçlar çalışıyor ama QR gösteren ekran yazılmadı
+  → şu an 2FA yalnızca API'ye doğrudan istekle kurulabilir. **Bu hâliyle özellik son
+  kullanıcı için erişilemez.** Sıradaki iş.
+- **2FA sıfırlama ve yedek kod yok:** telefonunu kaybeden admin'i yalnızca DB erişimi
+  kurtarır. (Onaylı 2FA'nın üstüne yazmak bilerek 409 — aksi hâlde kodu ele geçiren
+  2FA'yı kendi cihazına taşırdı.)
+- D7 retention, zamanlanmış yayın, içerik sayfalama, davet akışı.
+
+📌 **Varsayımlar**
+
+- Pencere **±1 adım** (±30 sn): 0 olsaydı saat kayması meşru kodu reddederdi; daha
+  geniş olsaydı çalınan kod daha uzun yaşardı.
+- Onaydan hemen sonra **aynı kodla giriş yapılamaz** (sayaç yandı). Kabul edilebilir:
+  kullanıcının zaten oturumu var. Ürün kararı sayılırsa gözden geçirilebilir.
+- 2FA **isteğe bağlı**; hiçbir admin için zorunlu kılınmadı (zorunlu kılmak, kurulum
+  ekranı olmadan mevcut hesapları kilitlerdi).
+
+🔥 **Riskler / açıklar**
+
+- **En önemlisi:** kurulum ekranı gelene kadar 2FA pratikte **kullanılmıyor** — kod
+  yazıldı diye koruma açılmış olmuyor. "TOTP var" demek şu an yanıltıcı olur.
+- Kaba kuvvet limiti (5/dk) **IP başına**; kod alanı da aynı limitte. Hesap başına
+  kilitleme hâlâ yok (#115'ten beri açık).
+- Gizli anahtar **açık metin** dönüyor (kurulumda kaçınılmaz) ve DB'de **şifresiz**
+  duruyor. DB dökümü sızarsa 2FA anahtarları da sızar. Uygulama katmanı şifrelemesi
+  ayrı bir iş — anahtar yönetimi gerektirir.
+- Diff hedefi (<400) aşıldı: ~686 el yazımı + ~671 test satırı.
+
 ### #134 — panel denetim izi: kim ne yaptı (PR #135, merged)
 
 ✅ **Yapıldı ve doğrulandı**
