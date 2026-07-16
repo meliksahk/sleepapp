@@ -208,6 +208,10 @@ class _ResultViewState extends ConsumerState<_ResultView> {
       await ref
           .read(sharerProvider)
           .share(ShareContent(text: share.title, url: share.webUrl));
+      // Viral huni ölçümü: tamamlama → paylaşım (analitik, bloklamaz).
+      ref
+          .read(analyticsProvider)
+          .track('share_tapped', props: {'archetype': widget.result.archetypeSlug});
       messenger.showSnackBar(const SnackBar(content: Text('Link copied')));
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Could not share')));
