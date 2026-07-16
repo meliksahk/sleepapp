@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:nocta/core/api/nocta_api_client.dart';
 import 'package:nocta/core/design_system/design_system.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
@@ -68,7 +69,11 @@ Future<void> _pump(WidgetTester tester, NoctaApiClient api, AuthController auth)
         authControllerProvider.overrideWithValue(auth),
         apiClientProvider.overrideWithValue(api),
       ],
-      child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SettingsScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildNoctaDarkTheme(),
+        home: const SettingsScreen()),
     ),
   );
   await tester.pumpAndSettle();
@@ -105,7 +110,11 @@ void main() {
             ],
           ),
         ],
-        child: MaterialApp(theme: buildNoctaDarkTheme(), home: const SettingsScreen()),
+        child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildNoctaDarkTheme(),
+        home: const SettingsScreen()),
       ),
     );
     await tester.pumpAndSettle();

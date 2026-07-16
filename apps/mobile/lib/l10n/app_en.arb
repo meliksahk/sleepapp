@@ -39,6 +39,87 @@
   "shareLinkCopied": "Link copied",
   "@shareLinkCopied": { "description": "Paylaşım başarılı (interim: panoya kopyalanır)" },
 
+  "homeTagline": "Your night has an identity",
+  "@homeTagline": { "description": "Home ekranı alt başlığı (marka sözü)" },
+
+  "homeIdentityCardLabel": "Your sleep identity",
+  "@homeIdentityCardLabel": { "description": "Kimlik kartı üst etiketi" },
+
+  "homeIdentityHistoryLink": "{count, plural, other{{count} identities over time}}",
+  "@homeIdentityHistoryLink": {
+    "description": "Kimlik gecmisi baglantisi; yalnizca 2+ sonucta gosterilir",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeStreakLabel": "{count, plural, =1{night streak} other{nights streak}}",
+  "@homeStreakLabel": {
+    "description": "Streak etiketi. COGUL ICU ile: Ingilizce -s mantigi koda gomulemez (TR'de calismaz)",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeStreakBest": "Best {count}",
+  "@homeStreakBest": {
+    "description": "Kisisel rekor (en uzun seri); yalnizca guncelden buyukse",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeWeeklyLabel": "This week",
+  "@homeWeeklyLabel": { "description": "Haftalik yayin karti ust etiketi" },
+
+  "homeWeeklyCount": "{count, plural, =1{1 soundscape this week} other{{count} soundscapes this week}}",
+  "@homeWeeklyCount": {
+    "description": "Haftalik yayin notu yoksa yedek metin. COGUL ICU ile.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "homeFindIdentity": "Find your sleep identity",
+  "@homeFindIdentity": { "description": "Henuz test yapilmamisken ana CTA" },
+
+  "homeRetakeTest": "Retake the test",
+  "@homeRetakeTest": { "description": "Sonuc varken ana CTA" },
+
+  "homeBrowseSoundscapes": "Browse soundscapes",
+  "@homeBrowseSoundscapes": { "description": "Kutuphaneye git" },
+
+  "sleepHistoryTitle": "Sleep history",
+  "@sleepHistoryTitle": { "description": "Uyku gecmisi ekrani basligi / home butonu" },
+
+  "settingsTitle": "Settings",
+  "@settingsTitle": { "description": "Ayarlar ekrani basligi / home butonu" },
+
+  "settingsNotificationsSection": "Notifications",
+  "@settingsNotificationsSection": { "description": "Ayarlar bolum basligi" },
+
+  "settingsPushNotifications": "Push notifications",
+  "@settingsPushNotifications": { "description": "Bildirim ac/kapa anahtari etiketi" },
+
+  "settingsNotificationsUpdateFailed": "Could not update notification setting",
+  "@settingsNotificationsUpdateFailed": { "description": "Bildirim tercihi PATCH hatasi" },
+
+  "settingsAccountSecuritySection": "Account security",
+  "@settingsAccountSecuritySection": { "description": "Ayarlar bolum basligi" },
+
+  "settingsActiveDevices": "Active devices: {count}",
+  "@settingsActiveDevices": {
+    "description": "Aktif oturum sayisi",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "settingsLogOutOthers": "Log out other devices",
+  "@settingsLogOutOthers": { "description": "Diger cihazlardan cikis butonu" },
+
+  "settingsSigningOut": "Signing out…",
+  "@settingsSigningOut": { "description": "Cikis islemi surerken buton etiketi" },
+
+  "settingsDevicesSignedOut": "{count, plural, =1{1 other device signed out} other{{count} other devices signed out}}",
+  "@settingsDevicesSignedOut": {
+    "description": "Cikis sonucu. COGUL ICU ile: eski kod elle -s ekliyordu, TR'de yanlis olurdu.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "settingsSignOutOthersFailed": "Could not sign out other devices",
+  "@settingsSignOutOthersFailed": { "description": "Diger cihazlardan cikis hatasi" },
+
   "shareFailed": "Could not share",
   "@shareFailed": { "description": "Paylaşım hatası" }
 }
