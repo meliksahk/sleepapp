@@ -40,16 +40,20 @@ describe('Admin rol kapısı e2e (HTTP)', () => {
   };
 
   /**
-   * Kullanıcıya rol verip refresh ile rolleri taşıyan yeni token çifti alır.
-   * DİKKAT: refresh token ROTASYONLUDUR — eski token tüketilir. Bu yüzden çağıran
-   * daima DÖNEN refreshToken ile devam etmelidir (aksi halde 401 alır).
+   * Kullanıcıyı ADMIN HESABINA çevirip (kind + roller) refresh ile yeni token çifti
+   * alır. `kind: 'admin'` şart: audience bundan türetilir; rol tek başına yetmez —
+   * cihaz akışından çıkan 'anonymous' hesap rol verilse bile panele giremez.
+   *
+   * DİKKAT: refresh token ROTASYONLUDUR — eski token tüketilir. Çağıran daima
+   * DÖNEN refreshToken ile devam etmelidir (aksi halde 401 alır).
    */
   const promoteAndRefresh = async (
     userId: string,
     refreshToken: string,
     roles: string[],
+    kind: 'admin' | 'anonymous' = 'admin',
   ): Promise<{ accessToken: string; refreshToken: string }> => {
-    await prisma.users.update({ where: { id: userId }, data: { roles } });
+    await prisma.users.update({ where: { id: userId }, data: { roles, kind } });
     const res = await request(app.getHttpServer())
       .post('/v1/auth/refresh')
       .send({ refreshToken })
@@ -129,6 +133,17 @@ describe('Admin rol kapısı e2e (HTTP)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(res.body.roles).toEqual(['owner']);
+  });
+
+  it('ÇEKİRDEK İDDİA 2: admin ROLÜ olan ama admin HESABI olmayan (anonim/mobil) → 403', async () => {
+    // Mobil token cihazda uzun süre durur; rol tek başına panel anahtarı OLMAMALI.
+    // Bu tam da JWT `aud` iddiasının var oluş sebebi — #113'e dek kontrol edilmiyordu.
+    const { userId, refreshToken } = await registerDevice();
+    const { accessToken } = await promoteAndRefresh(userId, refreshToken, ['owner'], 'anonymous');
+    await request(app.getHttpServer())
+      .get('/v1/admin/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(403);
   });
 
   it('rol geri alınınca erişim biter (refresh sonrası)', async () => {

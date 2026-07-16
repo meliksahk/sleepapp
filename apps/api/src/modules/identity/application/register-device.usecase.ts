@@ -1,3 +1,4 @@
+import { audienceForKind } from '../domain/user.entity';
 import type { DeviceRegistration, IssuedSession, User } from '../domain/user.entity';
 import type { Clock, IdGenerator, UserRepository } from '../domain/ports';
 import type { SessionMinter } from './session-minter';
@@ -37,6 +38,7 @@ export class RegisterDeviceUseCase {
       userId: user.id,
       roles: user.roles,
       familyId: this.ids.uuid(),
+      aud: audienceForKind(user.kind),
     });
   }
 }

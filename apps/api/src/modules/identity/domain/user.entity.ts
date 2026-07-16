@@ -9,6 +9,16 @@ export interface User {
   readonly createdAt: Date;
 }
 
+/**
+ * Token audience'ı KULLANICI TÜRÜNDEN türetilir — çağıranın seçimine bırakılmaz.
+ * Neden: "hangi aud?" sorusunu her çağrı yerinde yeniden yanıtlamak, bir yerde
+ * yanlış yanıtlamak demektir. Admin hesabı (kind='admin') panel oturumu açar;
+ * cihaz akışı daima 'anonymous' üretir → mobil token asla 'admin' olamaz.
+ */
+export function audienceForKind(kind: UserKind): 'app' | 'admin' {
+  return kind === 'admin' ? 'admin' : 'app';
+}
+
 /** Anonim cihaz kaydı girdisi. */
 export interface DeviceRegistration {
   readonly fingerprint: string;

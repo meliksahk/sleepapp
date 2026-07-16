@@ -1,4 +1,4 @@
-import type { IssuedSession, RefreshTokenRecord } from '../domain/user.entity';
+import type { AccessTokenClaims, IssuedSession, RefreshTokenRecord } from '../domain/user.entity';
 import type {
   AccessTokenSigner,
   Clock,
@@ -32,10 +32,12 @@ export class SessionMinter {
     userId: string;
     roles: readonly string[];
     familyId: string;
+    /** Çağıran `audienceForKind(user.kind)` ile verir — burada tahmin edilmez. */
+    aud: AccessTokenClaims['aud'];
   }): Promise<IssuedSession> {
     const now = this.clock.now();
     const accessToken = await this.signer.sign(
-      { sub: params.userId, roles: params.roles, aud: 'app' },
+      { sub: params.userId, roles: params.roles, aud: params.aud },
       this.config.accessTokenTtl,
     );
 

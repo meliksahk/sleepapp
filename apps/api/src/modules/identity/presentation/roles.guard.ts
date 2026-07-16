@@ -17,6 +17,12 @@ import type { AuthedRequest } from './auth.guard';
  * VARSAYILAN GÜVENLİ: metadata yoksa guard karar vermez (true) — kapıyı AuthGuard
  * tutar. Ama metadata VARSA ve boşsa, bu bir programlama hatasıdır: "@Roles()"
  * yazıp herkesi içeri almak sessiz bir açık olurdu → açıkça reddedilir.
+ *
+ * AUDIENCE: `@Roles` yalnızca `AdminRole` alır (tip zorlar) → böyle işaretli her
+ * handler tanım gereği bir PANEL handler'ıdır ve `aud: 'admin'` ister. Bu, JWT'nin
+ * `aud` iddiasının belgelenmiş amacıdır ("mobil/admin token'ı karışmasını önler")
+ * — #113'e dek iddia basılıyordu ama HİÇBİR yerde kontrol edilmiyordu. Etkisi:
+ * cihazda saklanan uzun ömürlü mobil token, admin yetkisi taşıyabiliyordu.
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -33,7 +39,10 @@ export class RolesGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest<AuthedRequest>();
-    const held = req.user?.roles ?? [];
+    if (req.user?.aud !== 'admin') {
+      throw new ForbiddenException('Bu işlem için panel oturumu gerekli.');
+    }
+    const held = req.user.roles;
     if (!required.some((role) => held.includes(role))) {
       throw new ForbiddenException('Bu işlem için yetkiniz yok.');
     }
