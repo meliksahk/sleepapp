@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/flavor.dart';
 import '../../core/design_system/design_system.dart';
+import '../../l10n/app_localizations.dart';
 import '../archetype/archetype_providers.dart';
 import '../content/content_models.dart';
 import '../content/content_providers.dart';
@@ -19,6 +20,7 @@ class HomeScreen extends ConsumerWidget {
     final result = ref.watch(latestArchetypeResultProvider);
     final content = ref.watch(archetypeContentProvider);
     // Kullanıcının test sonucu var mı → buton "Retake" olur, kimlik kartı görünür.
+    final l10n = AppL10n.of(context);
     final hasResult = result.maybeWhen(
       data: (r) => r != null,
       orElse: () => false,
@@ -40,7 +42,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: NoctaSpace.s3),
               Text(
-                'Your night has an identity',
+                l10n.homeTagline,
                 style: TextStyle(
                   fontSize: NoctaFontSize.body,
                   color: NoctaColors.inkSecondary,
@@ -76,7 +78,7 @@ class HomeScreen extends ConsumerWidget {
                               key: const Key('identity-history-link'),
                               onTap: () => context.push('/identity/history'),
                               child: Text(
-                                '${list.length} identities over time',
+                                l10n.homeIdentityHistoryLink(list.length),
                                 style: TextStyle(
                                   fontSize: NoctaFontSize.caption,
                                   color: NoctaColors.accentAurora,
@@ -110,26 +112,24 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: NoctaSpace.s5),
               NButton(
                 key: const Key('archetype-cta'),
-                label: hasResult
-                    ? 'Retake the test'
-                    : 'Find your sleep identity',
+                label: hasResult ? l10n.homeRetakeTest : l10n.homeFindIdentity,
                 onPressed: () => context.push('/archetype'),
               ),
               const SizedBox(height: NoctaSpace.s2),
               NButton(
-                label: 'Browse soundscapes',
+                label: l10n.homeBrowseSoundscapes,
                 variant: NButtonVariant.ghost,
                 onPressed: () => context.push('/library'),
               ),
               const SizedBox(height: NoctaSpace.s2),
               NButton(
-                label: 'Sleep history',
+                label: l10n.sleepHistoryTitle,
                 variant: NButtonVariant.ghost,
                 onPressed: () => context.push('/sleep'),
               ),
               const SizedBox(height: NoctaSpace.s2),
               NButton(
-                label: 'Settings',
+                label: l10n.settingsTitle,
                 variant: NButtonVariant.ghost,
                 onPressed: () => context.push('/settings'),
               ),
@@ -164,7 +164,7 @@ class _IdentityCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Your sleep identity',
+                AppL10n.of(context).homeIdentityCardLabel,
                 style: TextStyle(
                   fontSize: NoctaFontSize.caption,
                   color: NoctaColors.accentAurora,
@@ -215,7 +215,7 @@ class _WeeklyCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'This week',
+                AppL10n.of(context).homeWeeklyLabel,
                 style: TextStyle(
                   fontSize: NoctaFontSize.body,
                   color: NoctaColors.accentAurora,
@@ -223,8 +223,7 @@ class _WeeklyCard extends StatelessWidget {
               ),
               const SizedBox(height: NoctaSpace.s2),
               Text(
-                release.notes ??
-                    '$count soundscape${count == 1 ? '' : 's'} this week',
+                release.notes ?? AppL10n.of(context).homeWeeklyCount(count),
                 key: const Key('weekly-note'),
                 style: TextStyle(
                   fontSize: NoctaFontSize.body,
@@ -263,7 +262,7 @@ class _StreakCard extends StatelessWidget {
               ),
             ),
             Text(
-              current == 1 ? 'night streak' : 'nights streak',
+              AppL10n.of(context).homeStreakLabel(current),
               style: TextStyle(
                 fontSize: NoctaFontSize.body,
                 color: NoctaColors.inkSecondary,
@@ -272,7 +271,7 @@ class _StreakCard extends StatelessWidget {
             if (showBest) ...[
               const SizedBox(height: NoctaSpace.s2),
               Text(
-                'Best $longest',
+                AppL10n.of(context).homeStreakBest(longest),
                 key: const Key('streak-best'),
                 style: TextStyle(
                   fontSize: NoctaFontSize.caption,

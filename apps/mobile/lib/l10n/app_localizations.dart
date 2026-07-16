@@ -159,6 +159,132 @@ abstract class AppL10n {
   /// **'Link copied'**
   String get shareLinkCopied;
 
+  /// Home ekranı alt başlığı (marka sözü)
+  ///
+  /// In en, this message translates to:
+  /// **'Your night has an identity'**
+  String get homeTagline;
+
+  /// Kimlik kartı üst etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Your sleep identity'**
+  String get homeIdentityCardLabel;
+
+  /// Kimlik gecmisi baglantisi; yalnizca 2+ sonucta gosterilir
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{{count} identities over time}}'**
+  String homeIdentityHistoryLink(int count);
+
+  /// Streak etiketi. COGUL ICU ile: Ingilizce -s mantigi koda gomulemez (TR'de calismaz)
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{night streak} other{nights streak}}'**
+  String homeStreakLabel(int count);
+
+  /// Kisisel rekor (en uzun seri); yalnizca guncelden buyukse
+  ///
+  /// In en, this message translates to:
+  /// **'Best {count}'**
+  String homeStreakBest(int count);
+
+  /// Haftalik yayin karti ust etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get homeWeeklyLabel;
+
+  /// Haftalik yayin notu yoksa yedek metin. COGUL ICU ile.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 soundscape this week} other{{count} soundscapes this week}}'**
+  String homeWeeklyCount(int count);
+
+  /// Henuz test yapilmamisken ana CTA
+  ///
+  /// In en, this message translates to:
+  /// **'Find your sleep identity'**
+  String get homeFindIdentity;
+
+  /// Sonuc varken ana CTA
+  ///
+  /// In en, this message translates to:
+  /// **'Retake the test'**
+  String get homeRetakeTest;
+
+  /// Kutuphaneye git
+  ///
+  /// In en, this message translates to:
+  /// **'Browse soundscapes'**
+  String get homeBrowseSoundscapes;
+
+  /// Uyku gecmisi ekrani basligi / home butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep history'**
+  String get sleepHistoryTitle;
+
+  /// Ayarlar ekrani basligi / home butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// Ayarlar bolum basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get settingsNotificationsSection;
+
+  /// Bildirim ac/kapa anahtari etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get settingsPushNotifications;
+
+  /// Bildirim tercihi PATCH hatasi
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update notification setting'**
+  String get settingsNotificationsUpdateFailed;
+
+  /// Ayarlar bolum basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Account security'**
+  String get settingsAccountSecuritySection;
+
+  /// Aktif oturum sayisi
+  ///
+  /// In en, this message translates to:
+  /// **'Active devices: {count}'**
+  String settingsActiveDevices(int count);
+
+  /// Diger cihazlardan cikis butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Log out other devices'**
+  String get settingsLogOutOthers;
+
+  /// Cikis islemi surerken buton etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out…'**
+  String get settingsSigningOut;
+
+  /// Cikis sonucu. COGUL ICU ile: eski kod elle -s ekliyordu, TR'de yanlis olurdu.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 other device signed out} other{{count} other devices signed out}}'**
+  String settingsDevicesSignedOut(int count);
+
+  /// Diger cihazlardan cikis hatasi
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign out other devices'**
+  String get settingsSignOutOthersFailed;
+
   /// Paylaşım hatası
   ///
   /// In en, this message translates to:

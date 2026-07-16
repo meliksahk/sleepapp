@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nocta/app/flavor.dart';
 import 'package:nocta/core/design_system/design_system.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 import 'package:nocta/features/archetype/archetype_models.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/content/content_models.dart';
@@ -35,7 +36,11 @@ Future<void> _pump(WidgetTester tester, List<Override> overrides) async {
         archetypeHistoryProvider.overrideWith((ref) async => <ArchetypeResult>[]),
         ...overrides,
       ],
-      child: MaterialApp(theme: buildNoctaDarkTheme(), home: const HomeScreen()),
+      child: MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        theme: buildNoctaDarkTheme(),
+        home: const HomeScreen()),
     ),
   );
   await tester.pumpAndSettle();

@@ -10,7 +10,6 @@ import '../sleep_providers.dart';
 
 /// Gece Raporu (docs/04, viral kanca #2) — bir gecenin özeti + paylaşım.
 /// Paylaşım metni sunucudan gelir (GET /v1/sharing/report) → kart metni tek kaynak.
-/// Not: metinler l10n'a M1'de taşınacak.
 class NightReportScreen extends ConsumerStatefulWidget {
   const NightReportScreen({super.key, required this.nightDate});
 
