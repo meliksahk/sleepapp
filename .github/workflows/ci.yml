@@ -56,7 +56,7 @@ jobs:
             ghcr.io/amacneil/dbmate --wait up
       # Turbo cache path-filtering sağlar: değişmeyen paketler cache-hit (anında).
       - name: Lint / typecheck / test / build
-        run: pnpm turbo run lint typecheck test build
+        run: pnpm turbo run lint typecheck test build size
 
   mobile:
     name: Flutter (apps/mobile)

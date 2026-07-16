@@ -19,6 +19,10 @@
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     },
+    "size": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
     "gen": {
       "cache": false
     },

@@ -5,6 +5,29 @@
 
 ## Açık kararlar
 
+### D-6 · Web JS bütçesi 90KB, mevcut mimariyle ULAŞILAMAZ (yeni bulgu)
+
+- **Durum:** CLAUDE.md §3.4 web bütçesi: **JS < 90KB (ana sayfa)**. Bu kapı hiç kurulmamıştı;
+  iter #91'de ölçünce **bütçenin zaten ihlal edildiği** ortaya çıktı.
+- **Ölçüm (2026-07-16, `next build`):** ana sayfa First Load JS = **103 kB**
+  (kendi gzip metriğimizle ~107 kB). Dağılım:
+  - React 19 runtime: **54.2 kB**
+  - Next 15 App Router runtime: **46 kB**
+  - **Uygulama kodu: ~1 kB** → şişkinlik bizde değil, framework tabanında.
+  - `apps/web` bağımlılıkları yalnızca `next`, `react`, `react-dom` (kırpılacak paket yok).
+- **Sonuç:** 90KB, Next.js App Router + React ile **erişilemez**; taban zaten 102 kB.
+- **Seçenekler:**
+  1. **Bütçeyi gerçeğe çek** (ör. <110KB) ve CLAUDE.md §3.4'ü güncelle — Next kalır, en ucuz.
+  2. **Tanıtım sitesini hidrasyonsuz mimariye taşı** (Astro / plain SSG): 90KB kolayca tutulur,
+     ama `/test` gibi interaktif parçalar yeniden yazılır + `packages/ui` paylaşımı kopar (pahalı).
+  3. **Bütçeyi "JS" yerine LCP/CLS üzerinden tanımla** (asıl kullanıcı etkisi orada; 103 kB
+     gzip statik sitede LCP'yi zorlamıyor).
+- **Varsayım (şimdilik, loop bununla ilerledi):** Seçenek 1'e yakın davranıldı ama **CLAUDE.md
+  DEĞİŞTİRİLMEDİ** (kural dosyasını sormadan değiştirmem). Bunun yerine `pnpm --filter @nocta/web size`
+  ile **regresyon bekçisi** eklendi (eşik 115 kB gzip, CI'da zorlanır). Bekçi hedef değildir —
+  yalnızca sessiz büyümeyi durdurur. Karar gelince eşik/CLAUDE.md birlikte güncellenir.
+- **Ayrıca ertelendi:** LCP/CLS ölçümü (lighthouse-ci) — Chrome'lu CI job'u gerektirir, ayrı iterasyon.
+
 ### D-1 · Repo görünürlüğü vs. branch protection (öncelikli)
 
 - **Durum:** GitHub free planda private repoda branch protection/ruleset API'si kapalı (BLOCKERS B-4).
