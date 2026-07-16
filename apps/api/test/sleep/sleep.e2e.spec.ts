@@ -2,11 +2,25 @@ import 'reflect-metadata';
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../../src/app.module';
 
 /** sleep e2e (gerçek DB). Kayıt + gece gruplama + izolasyon. Cross-module timezone. */
 describe('Sleep e2e (HTTP)', () => {
   let app: INestApplication;
+  const prisma = new PrismaClient();
+
+  /** Kayıt + token + userId (toplu insert gereken testler için). */
+  const tokenAndUser = async (): Promise<{ token: string; userId: string }> => {
+    const res = await request(app.getHttpServer())
+      .post('/v1/auth/device')
+      .send({
+        fingerprint: `sleep-bulk-${Date.now()}-${Math.round(process.hrtime()[1])}`,
+        platform: 'ios',
+      })
+      .expect(201);
+    return { token: res.body.accessToken, userId: res.body.userId };
+  };
 
   const token = async (): Promise<string> => {
     const res = await request(app.getHttpServer())
@@ -28,6 +42,7 @@ describe('Sleep e2e (HTTP)', () => {
   };
 
   beforeAll(async () => {
+    await prisma.$connect();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('v1', { exclude: ['health'] });
@@ -38,6 +53,7 @@ describe('Sleep e2e (HTTP)', () => {
   });
 
   afterAll(async () => {
+    await prisma.$disconnect();
     await app.close();
   });
 
@@ -168,6 +184,37 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body.totalNights).toBeGreaterThanOrEqual(1);
     expect(res.body.current).toBeGreaterThanOrEqual(1); // bugün/dün → canlı
     expect(res.body.longest).toBeGreaterThanOrEqual(1);
+  });
+
+  it('streak: 400’den FAZLA gecede sınır yok (regresyon: eskiden take:400 kırpardı)', async () => {
+    const { token: t, userId } = await tokenAndUser();
+    // 450 ardışık gece. Eski kod son 400'ü çekerdi → totalNights=400, longest=400.
+    // Doğrusu: 450/450. Bu test eski kodda KIRMIZI olurdu.
+    // HTTP yerine toplu insert: 450 istek yavaş olurdu; burada OKUMA yolu test ediliyor.
+    const start = Date.UTC(2023, 0, 1);
+    await prisma.sleep_sessions.createMany({
+      data: Array.from({ length: 450 }, (_, i) => {
+        const night = new Date(start + i * 86_400_000);
+        return {
+          user_id: userId,
+          started_at: new Date(night.getTime() + 22 * 3600_000),
+          ended_at: new Date(night.getTime() + 28 * 3600_000),
+          night_date: night,
+          duration_minutes: 360,
+          movement_events: 0,
+          sound_events: 0,
+        };
+      }),
+    });
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/streak')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.totalNights).toBe(450); // eskiden 400
+    expect(res.body.longest).toBe(450); // hepsi ardışık; eskiden 400
+
+    await prisma.sleep_sessions.deleteMany({ where: { user_id: userId } });
   });
 
   it('gece aralığı filtresi (from+to) yalnızca aralıktaki oturumları döner', async () => {
