@@ -72,7 +72,8 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 2. **İnsan-kapılı (otonom YAPILAMAZ):** native ses grafiği + gerçek cihaz doğrulaması (CLAUDE.md §1.1 kulaklıkla), mikrofon yakalama (platform izni), olay sınıflandırma eşiklerinin gerçek gece kayıtlarıyla ayarlanması (docs/04 §120 fixture'ları).
 3. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
 4. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
-5. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
+5. ~~`.env.example` oluştur~~ — **bu madde yanlış bir bulguya dayanıyordu** (dosya
+   zaten vardı); gerçek sorun bayatlıktı, #132'de düzeltildi + kapı eklendi.
 6. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
 7. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
 8. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
@@ -80,6 +81,43 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #132 — `.env.example` bayatlığı + sürüklenme kapısı (PR #133, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **🔴 KENDİ YANLIŞ BULGUMU DÜZELTTİM:** #115'te "`.env.example` depoda YOK" yazmıştım
+  ve **üç raporda tekrarladım — YANLIŞTI**. Dosya var ve commit'li; aramam hatalıydı.
+- **Gerçek sorun ÖLÇÜLDÜ:** dosya BAYATTI — şemadaki **23 değişkenin 11'i eksikti**
+  (MAGIC_LINK__, WEB_BASE_URL, APP_DEEPLINK_SCHEME, MAX_REQUEST_BODY_BYTES,
+  THROTTLE__, ADMIN_LOGIN_LIMIT, REFRESH_REUSE_GRACE_MS, MINIO_REGION,
+  MINIO_BUCKET_SOUNDSCAPES). Yani son ~10 iterasyonda eklediğim her env eksikti.
+- **Kanıt (önce kırmızı):** kapı yazıldı → exit=1, 11 eksiği tam isabetle listeledi.
+  Dosya düzeltildi → ✓ 23 senkron. Kapı yorumlanmış satırı da yakalıyor
+  (`# ADMIN_LOGIN_LIMIT=5` belgelemez, kandırır → exit=1).
+- `pnpm check:env-example` CI'a bağlandı. turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **ÜRETMEK YERİNE KAPI:** `.env.example` yalnızca API'yi değil admin/web
+  değişkenlerini ve "neden böyle" yorumlarını da taşıyor; şemadan üretmek o bilgiyi
+  silerdi. Kapı, insanın yazdığı dosyanın şemayla ÇELİŞMEDİĞİNİ garanti eder.
+- Ayrıştırma tam TS parser DEĞİL (şema düz nesne literali ve öyle kalmalı); şekil
+  değişirse kapı **ÇÖKER** — sessizce boş küme dönüp işlevsiz kalmaz.
+
+🔥 **Riskler / açıklar**
+
+- **Ders:** bir bulguyu doğrulamadan deftere yazdım ve üç kez tekrarladım. "Aramam
+  bir şey bulamadı" ≠ "yok".
+- **Bu iterasyonda mobil ekranı YAPMADIM, bilerek:** uyku modu ekranı mikrofon
+  yakalama olmadan "dinliyorum" der ama hep 0 olay kaydeder — sahte özellik olurdu.
+  Mobilin kalan çekirdek işi insan-kapılı (mikrofon izni, kulaklıkla ses doğrulaması);
+  LOOP.md "bir yüzey blokeyse diğerine geç" diyor.
+
+❌ **Yapılmadı**
+
+- Uyku modu ekranı (mikrofon gelmeden dürüst değil), mikrofon yakalama, native ses
+  grafiği, mix-to-video.
 
 ### #131 — tek serileştirme kaynağı + uçtan uca zincir testi (PR #132, merged)
 
@@ -701,6 +739,10 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   Panel kodu yazmadan önce vitest kurulmalı.
 - **🆕 BULGU: `.env.example` depoda YOK** — CLAUDE.md §6 "örnekleri `.env.example`"
   diyor; hiç oluşturulmamış. Yeni geliştirici hangi env'lerin gerektiğini bilemez.
+  > **⛔ BU BULGU YANLIŞTI (#132'de düzeltildi).** Dosya VAR ve commit'li; aramam
+  > hatalıydı ve bunu üç raporda tekrarladım. Gerçek sorun bayatlıktı: 23 env
+  > değişkeninin 11'i eksikti. #132'de dosya güncellendi + `check:env-example`
+  > kapısı eklendi.
 - **🆕 BULGU: admin'de i18n altyapısı yok** ve mevcut metinler hard-coded Türkçe.
   Mobilde bu borcu #109-111'de kapattım; admin'de aynısı duruyor. Ama admin İÇ
   yüzeydir (personel) — EN/TR gerekli mi? Ürün kararı → D-8 olarak sorulmalı.
