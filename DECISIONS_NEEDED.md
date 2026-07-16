@@ -80,3 +80,28 @@
 - Marka adı **NOCTA** çalışma kod adı (docs/06) — netleşince token/isim tek yerden değişir.
 - Archetype slug'ları (deep-ocean/overthinker/delta-drifter/dawn-chaser) taslak.
 - Fiyatlandırma/paywall: F6'ya (docs/10) ertelendi.
+
+## D-8 · Admin panelinde i18n gerekli mi?
+
+**Bağlam:** CLAUDE.md §4 "tüm kullanıcı metinleri baştan itibaren i18n dosyalarında
+(web/admin: namespace'li JSON). Hard-code string PR'da reddedilir." Mobilde bu borcu
+#109–#111'de kapattım ve `pnpm check:i18n` kapısıyla zorluyorum.
+
+**Durum:** `apps/admin` içinde i18n altyapısı YOK; mevcut metinler hard-coded Türkçe
+("Overview", "İşlem", "Aktör", "Henüz içerik yok"...). Yani kural admin'de ihlal
+ediliyor — mobilde olduğu gibi, sessizce büyüyor.
+
+**Soru:** admin İÇ yüzeydir (yalnızca personel: owner/editor/analyst/support). Kural
+gerçekten burada da geçerli mi?
+
+1. **Uygula:** admin'e de i18n kur, mevcut metinleri taşı, kapıyı admin'e genişlet.
+   Kural tek; istisna açmak kuralı aşındırır. Maliyet: altyapı + refactor + her yeni
+   ekranda ek iş.
+2. **Muaf tut:** CLAUDE.md §4'e "admin hariç (iç yüzey, tek dil TR)" istisnası yaz.
+   Maliyet: ileride admin'e yabancı bir editör/analist katılırsa geri dönüş pahalı.
+3. **Ertele:** kuralı koru ama admin i18n'ini F5'e bırak, borcu defterde tut.
+
+**Önerim: (2)** — admin tek kişilik bir ekibin iç aracı; i18n burada gerçek bir
+kullanıcı ihtiyacına değil, kuralın harfine hizmet eder. Ama bu CLAUDE.md
+değişikliği demektir → tek taraflı yapmadım. **Cevap gelene kadar admin'e yeni
+hard-coded metin eklemeye devam edeceğim** (mevcut desen), bunu bilerek.

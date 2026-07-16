@@ -8,13 +8,13 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~85%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~86%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~18%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·85 + 0.40·49 + 0.15·18 + 0.15·45 ≈ **54%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·86 + 0.40·49 + 0.15·18 + 0.15·45 ≈ **54%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,14 +66,52 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kalanı:** (a) **panel Next.js middleware + login sayfası** — API hazır, panel hâlâ bağlanmadı (en yüksek değer). (b) giriş ucuna sıkı rate-limit (kaba kuvvet). (c) TOTP 2FA. (d) davet akışı + parola sıfırlama. Rol kapısı ✓ #112, audience ✓ #113, parola girişi + admin:create ✓ #114. Boundary lint ✓. packages/ui ✓ #15-16.
-2. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
-3. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
-4. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
+1. **admin A0 kalanı:** (a) **admin'e vitest kur** — şu an HİÇ test yok, panel kodu yazmadan önce şart. (b) **panel login sayfası + middleware** (API hazır; httpOnly cookie kararı verilecek). (c) TOTP 2FA. (d) davet akışı + parola sıfırlama. (e) hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi + admin:create ✓ #114, giriş limiti ✓ #115.
+2. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
+3. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
+4. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
+5. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
 
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #115 — admin girişine kaba kuvvet limiti (PR #116, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `POST /v1/auth/admin/login` → **5 deneme/dk** (`ADMIN_LOGIN_LIMIT`, varsayılan 5).
+- **ÖLÇÜLDÜ:** global limit route başına **60/dk** → tek IP'den **günde 86.400**
+  parola denemesi. #114'te işaretlediğim risk gerçekti.
+- **Kanıt (önce kırmızı):** `expected 429, got 401` — 6. deneme de geçiyordu.
+  Limit eklendi → yeşil. Tek IP'li kaba kuvvet **12× yavaşladı**.
+- API **277 test** (276→277). turbo 18/18. Kontrat → `gen:api-types`.
+
+📌 **Varsayımlar / kararlar**
+
+- **Boundary lint iş başında:** limiti env'e bağlarken `loadEnv()`'i controller'a
+  import ettim → lint reddetti (presentation ↛ shared/config). **Kuralı gevşetmedim,
+  deseni düzelttim:** `Resolvable` ile istek anında `process.env`; değer env.ts
+  şemasında olduğu için açılışta zod DOĞRULAR, bozuksa güvenli varsayılana (5) düşer.
+- Giriş e2e'si limiti yükseltir (o dosya kimlik doğrulamayı test eder); limitin
+  kendisi kendi e2e'sinde sabitlenir → kapsam dışı kalmıyor.
+
+🔥 **Riskler / açıklar**
+
+- **Limit IP BAŞINA** — botnet/proxy ile dağıtan saldırgan yine deneyebilir. Asıl
+  çözüm HESAP başına kilitleme; yeni DB alanı ister (migration) → ayrı iş.
+- **🆕 BULGU: admin'de HİÇ test yok** — `apps/admin/package.json`'da `test` script'i
+  bile yok, yani turbo'nun "18/18 başarılı"sı admin için **hiçbir şey koşmuyor**.
+  Panel kodu yazmadan önce vitest kurulmalı.
+- **🆕 BULGU: `.env.example` depoda YOK** — CLAUDE.md §6 "örnekleri `.env.example`"
+  diyor; hiç oluşturulmamış. Yeni geliştirici hangi env'lerin gerektiğini bilemez.
+- **🆕 BULGU: admin'de i18n altyapısı yok** ve mevcut metinler hard-coded Türkçe.
+  Mobilde bu borcu #109-111'de kapattım; admin'de aynısı duruyor. Ama admin İÇ
+  yüzeydir (personel) — EN/TR gerekli mi? Ürün kararı → D-8 olarak sorulmalı.
+
+❌ **Yapılmadı**
+
+- TOTP 2FA, davet akışı, hesap-başına kilitleme, panel login sayfası + middleware.
 
 ### #114 — admin parola girişi (argon2id) + ilk admin script'i (PR #115, merged)
 
