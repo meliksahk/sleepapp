@@ -3,6 +3,7 @@ import {
   buildArchetypeJsonLd,
   buildArchetypeListJsonLd,
   buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from './schema';
@@ -51,6 +52,20 @@ describe('schema.org JSON-LD builders', () => {
     expect(items[1]?.url).toContain('/a/overthinker');
   });
 
+  it('FAQPage: mainEntity Question/acceptedAnswer yapısı', () => {
+    const ld = buildFaqJsonLd([
+      { question: 'What is NOCTA?', answer: 'A relaxation and sleep ritual app.' },
+      { question: 'Is it free?', answer: 'Yes, generous free tier.' },
+    ]);
+    expect(ld['@type']).toBe('FAQPage');
+    type Q = { '@type': string; name: string; acceptedAnswer: { '@type': string; text: string } };
+    const items = ld.mainEntity as Q[];
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ '@type': 'Question', name: 'What is NOCTA?' });
+    expect(items[0]?.acceptedAnswer).toMatchObject({ '@type': 'Answer' });
+    expect(items[1]?.acceptedAnswer.text).toContain('free tier');
+  });
+
   it('SAĞLIK İDDİASI YOK — yasak kelimeler hiçbir JSON-LD metninde geçmez', () => {
     const blob = JSON.stringify([
       buildArchetypeJsonLd(sample),
@@ -58,6 +73,9 @@ describe('schema.org JSON-LD builders', () => {
       buildOrganizationJsonLd(),
       buildWebSiteJsonLd(),
       buildArchetypeListJsonLd([{ slug: 'deep-ocean', name: 'Deep Ocean' }]),
+      buildFaqJsonLd([
+        { question: 'What is NOCTA?', answer: 'A relaxation and sleep ritual app.' },
+      ]),
     ]).toLowerCase();
     for (const banned of ['cure', 'treat', 'therapy', 'clinically', 'medical', 'disease']) {
       expect(blob).not.toContain(banned);
