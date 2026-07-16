@@ -1,5 +1,6 @@
 import type {
   AccessTokenClaims,
+  ActiveSessionInfo,
   DeviceRegistration,
   OneTimeTokenRecord,
   RefreshTokenRecord,
@@ -68,6 +69,8 @@ export interface RefreshTokenRepository {
   revokeFamily(familyId: string, revokedAt: Date): Promise<void>;
   /** userId'nin keepFamilyId HARİÇ tüm aktif token'larını iptal eder; iptal sayısı. */
   revokeAllExceptFamily(userId: string, keepFamilyId: string, revokedAt: Date): Promise<number>;
+  /** Kullanıcının aktif (iptal edilmemiş, süresi geçmemiş) oturumları — token'sız. */
+  listActiveByUser(userId: string, now: Date): Promise<ActiveSessionInfo[]>;
 }
 
 // DI token'ları (Nest provider'ları bu sembollerle bağlanır).

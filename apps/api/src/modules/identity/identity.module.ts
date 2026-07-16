@@ -40,6 +40,7 @@ import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
 import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
+import { GetActiveSessionsUseCase } from './application/get-active-sessions.usecase';
 import { AuthorizeUseCase } from './application/authorize.usecase';
 import { AuthController } from './presentation/auth.controller';
 import { AuthGuard } from './presentation/auth.guard';
@@ -133,6 +134,12 @@ const providers: Provider[] = [
       hasher: TokenHasher,
       clock: Clock,
     ): RevokeOtherSessionsUseCase => new RevokeOtherSessionsUseCase(refreshTokens, hasher, clock),
+  },
+  {
+    provide: GetActiveSessionsUseCase,
+    inject: [REFRESH_TOKEN_REPOSITORY, CLOCK],
+    useFactory: (refreshTokens: RefreshTokenRepository, clock: Clock): GetActiveSessionsUseCase =>
+      new GetActiveSessionsUseCase(refreshTokens, clock),
   },
   {
     provide: ONE_TIME_TOKEN_REPOSITORY,

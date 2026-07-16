@@ -1,4 +1,5 @@
 import type {
+  ActiveSessionInfo,
   DeviceRegistration,
   OneTimeTokenRecord,
   RefreshTokenRecord,
@@ -100,6 +101,21 @@ export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
       }
     }
     return revoked;
+  }
+
+  async listActiveByUser(userId: string, now: Date): Promise<ActiveSessionInfo[]> {
+    const active: ActiveSessionInfo[] = [];
+    for (const rec of this.byId.values()) {
+      if (
+        rec.userId === userId &&
+        rec.revokedAt === null &&
+        rec.expiresAt.getTime() > now.getTime()
+      ) {
+        active.push({ familyId: rec.familyId, createdAt: rec.createdAt, expiresAt: rec.expiresAt });
+      }
+    }
+    active.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return active;
   }
 }
 

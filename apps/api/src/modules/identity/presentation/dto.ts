@@ -26,6 +26,13 @@ export class RevokedSessionsDto {
   revoked!: number;
 }
 
+export class SessionInfoDto {
+  @ApiProperty({ format: 'uuid', description: 'Oturum (cihaz zinciri) kimliği' })
+  familyId!: string;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ format: 'date-time' }) expiresAt!: string;
+}
+
 export class SessionResponseDto {
   @ApiProperty()
   accessToken!: string;
