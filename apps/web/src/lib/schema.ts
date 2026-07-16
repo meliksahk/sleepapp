@@ -45,6 +45,23 @@ export function buildBreadcrumbJsonLd(input: {
   };
 }
 
+/** Archetype dizin sayfası — sıralı liste (SEO iç bağlantı sinyali). */
+export function buildArchetypeListJsonLd(
+  items: ReadonlyArray<{ slug: string; name: string }>,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Sleep identities',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      url: `${SITE_URL}/a/${item.slug}`,
+    })),
+  };
+}
+
 /** Site geneli Organization — her sayfada (root layout). */
 export function buildOrganizationJsonLd(): Record<string, unknown> {
   return {
