@@ -9,7 +9,7 @@
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "jest --runInBand --passWithNoTests",
+    "test": "jest --runInBand --coverage --passWithNoTests",
     "test:watch": "jest --watch",
     "keys:gen": "node scripts/gen-keys.mjs",
     "openapi:export": "node scripts/export-openapi.mjs",
