@@ -38,7 +38,7 @@ describe('isValidEventName', () => {
 
 describe('olay sözlüğü (docs/analytics-events.md)', () => {
   it('sözlükteki olaylar bilinir', () => {
-    for (const n of ['archetype_completed', 'share_tapped']) {
+    for (const n of ['archetype_completed', 'share_tapped', 'report_shared']) {
       expect(isKnownEventName(n)).toBe(true);
     }
   });

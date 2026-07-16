@@ -21,6 +21,7 @@ export function isValidEventName(name: string): boolean {
 export const KNOWN_EVENT_NAMES: ReadonlySet<string> = new Set([
   'archetype_completed', // archetype testi tamamlandı (props: archetype)
   'share_tapped', // archetype kartı paylaşıldı (props: archetype)
+  'report_shared', // gece raporu paylaşıldı (props yok — gece tarihi PII'ye yakın)
 ]);
 
 export function isKnownEventName(name: string): boolean {

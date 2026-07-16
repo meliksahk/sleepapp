@@ -8,6 +8,8 @@ import 'package:nocta/core/api/nocta_api_client.dart';
 import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/core/share/sharer.dart';
 import 'package:nocta/core/storage/session_store.dart';
+import 'package:nocta/features/analytics/analytics.dart';
+import 'package:nocta/features/analytics/analytics_providers.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart' show sharerProvider;
 import 'package:nocta/features/auth/auth_controller.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
@@ -31,6 +33,15 @@ class RecordingSharer implements Sharer {
   final List<ShareContent> shared = [];
   @override
   Future<void> share(ShareContent content) async => shared.add(content);
+}
+
+/// İzlenen olayları kaydeden sahte Analytics (ağa çıkmaz).
+class RecordingAnalytics implements Analytics {
+  final List<String> events = [];
+  @override
+  void track(String name, {Map<String, dynamic>? props}) => events.add(name);
+  @override
+  Future<int> flush() async => 0;
 }
 
 /// /v1/sharing/report ucunu yönlendiren MockClient tabanlı auth+api.
@@ -70,19 +81,21 @@ Future<(NoctaApiClient, AuthController)> _api({required bool hasShare}) async {
   return (api, auth);
 }
 
-Future<RecordingSharer> _pump(
+Future<(RecordingSharer, RecordingAnalytics)> _pump(
   WidgetTester tester, {
   required List<Override> overrides,
   bool hasShare = true,
 }) async {
   final (api, auth) = await _api(hasShare: hasShare);
   final sharer = RecordingSharer();
+  final analytics = RecordingAnalytics();
   await tester.pumpWidget(
     ProviderScope(
       overrides: <Override>[
         authControllerProvider.overrideWithValue(auth),
         apiClientProvider.overrideWithValue(api),
         sharerProvider.overrideWithValue(sharer),
+        analyticsProvider.overrideWithValue(analytics),
         ...overrides,
       ],
       child: MaterialApp(
@@ -92,7 +105,7 @@ Future<RecordingSharer> _pump(
     ),
   );
   await tester.pumpAndSettle();
-  return sharer;
+  return (sharer, analytics);
 }
 
 void main() {
@@ -137,8 +150,10 @@ void main() {
     expect(find.byKey(const Key('report-retry')), findsOneWidget);
   });
 
-  testWidgets('paylaş → sunucudan gelen kart metni paylaşılır', (tester) async {
-    final sharer = await _pump(
+  testWidgets('paylaş → sunucudan gelen kart metni paylaşılır + report_shared izlenir', (
+    tester,
+  ) async {
+    final (sharer, analytics) = await _pump(
       tester,
       overrides: [nightReportProvider(_night).overrideWith((ref) async => _report)],
     );
@@ -150,10 +165,12 @@ void main() {
     expect(sharer.shared.first.text, 'My night: 7h 42m');
     expect(sharer.shared.first.url, 'https://nocta.app/r/abc');
     expect(find.text('Link copied'), findsOneWidget);
+    // Viral huni: paylaşım başarılıysa olay (sözlükte tanımlı).
+    expect(analytics.events, contains('report_shared'));
   });
 
-  testWidgets('paylaşım kartı yoksa (404) → bilgilendirme, paylaşım yok', (tester) async {
-    final sharer = await _pump(
+  testWidgets('paylaşım kartı yoksa (404) → bilgilendirme, paylaşım + olay yok', (tester) async {
+    final (sharer, analytics) = await _pump(
       tester,
       hasShare: false,
       overrides: [nightReportProvider(_night).overrideWith((ref) async => _report)],
@@ -164,5 +181,6 @@ void main() {
 
     expect(sharer.shared, isEmpty);
     expect(find.text('No report for this night'), findsOneWidget);
+    expect(analytics.events, isEmpty); // paylaşım olmadıysa olay da yok
   });
 }

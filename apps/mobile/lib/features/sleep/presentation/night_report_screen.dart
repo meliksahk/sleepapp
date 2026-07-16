@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../core/share/sharer.dart';
+import '../../analytics/analytics_providers.dart';
 import '../../archetype/archetype_providers.dart' show sharerProvider;
 import '../sleep_models.dart';
 import '../sleep_providers.dart';
@@ -32,6 +33,9 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
         return;
       }
       await ref.read(sharerProvider).share(ShareContent(text: share.title, url: share.webUrl));
+      // Viral huni ölçümü (analitik bloklamaz). props YOK: gece tarihi PII'ye yakın
+      // ve huni için gereksiz (docs/analytics-events.md).
+      ref.read(analyticsProvider).track('report_shared');
       messenger.showSnackBar(const SnackBar(content: Text('Link copied')));
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('Could not share')));
