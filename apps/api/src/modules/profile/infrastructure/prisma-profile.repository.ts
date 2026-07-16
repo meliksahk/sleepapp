@@ -20,6 +20,9 @@ export class PrismaProfileRepository implements ProfileRepository {
         chronotype: update.chronotype ?? null,
         ...(update.locale !== undefined ? { locale: update.locale } : {}),
         ...(update.timezone !== undefined ? { timezone: update.timezone } : {}),
+        ...(update.notificationsEnabled !== undefined
+          ? { notifications_enabled: update.notificationsEnabled }
+          : {}),
       },
       // update: yalnızca verilen alanlar (undefined → değişmez, null → temizler).
       update: {
@@ -27,6 +30,9 @@ export class PrismaProfileRepository implements ProfileRepository {
         ...(update.chronotype !== undefined ? { chronotype: update.chronotype } : {}),
         ...(update.locale !== undefined ? { locale: update.locale } : {}),
         ...(update.timezone !== undefined ? { timezone: update.timezone } : {}),
+        ...(update.notificationsEnabled !== undefined
+          ? { notifications_enabled: update.notificationsEnabled }
+          : {}),
       },
     });
     return toProfile(row);
@@ -39,6 +45,7 @@ function toProfile(row: {
   chronotype: string | null;
   locale: string;
   timezone: string;
+  notifications_enabled: boolean;
 }): Profile {
   return {
     userId: row.id,
@@ -46,5 +53,6 @@ function toProfile(row: {
     chronotype: row.chronotype,
     locale: row.locale,
     timezone: row.timezone,
+    notificationsEnabled: row.notifications_enabled,
   };
 }

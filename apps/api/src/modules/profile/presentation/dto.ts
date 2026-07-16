@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { IsBcp47Locale, IsIanaTimeZone } from './field.validators';
 
 const CHRONOTYPES = ['lion', 'bear', 'wolf', 'dolphin'] as const;
@@ -29,6 +29,11 @@ export class UpdateProfileDto {
   @MaxLength(64)
   @IsIanaTimeZone()
   timezone?: string;
+
+  @ApiPropertyOptional({ example: true, description: 'Push bildirim tercihi' })
+  @IsOptional()
+  @IsBoolean()
+  notificationsEnabled?: boolean;
 }
 
 export class ProfileResponseDto {
@@ -46,4 +51,7 @@ export class ProfileResponseDto {
 
   @ApiProperty({ example: 'UTC' })
   timezone!: string;
+
+  @ApiProperty({ example: true })
+  notificationsEnabled!: boolean;
 }

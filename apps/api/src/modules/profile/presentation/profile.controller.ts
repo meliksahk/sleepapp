@@ -35,6 +35,7 @@ export class ProfileController {
       chronotype: dto.chronotype,
       locale: dto.locale,
       timezone: dto.timezone,
+      notificationsEnabled: dto.notificationsEnabled,
     });
   }
 }

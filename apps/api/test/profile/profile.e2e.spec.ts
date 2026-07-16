@@ -49,7 +49,33 @@ describe('Profile e2e (HTTP)', () => {
       chronotype: null,
       locale: 'en',
       timezone: 'UTC',
+      notificationsEnabled: true, // varsayılan açık
     });
+  });
+
+  it('notificationsEnabled PATCH ile kapatılır ve kalıcı olur', async () => {
+    const { token } = await registerAndToken();
+    const patched = await request(app.getHttpServer())
+      .patch('/v1/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ notificationsEnabled: false })
+      .expect(200);
+    expect(patched.body.notificationsEnabled).toBe(false);
+
+    const after = await request(app.getHttpServer())
+      .get('/v1/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(after.body.notificationsEnabled).toBe(false);
+  });
+
+  it('notificationsEnabled boolean değilse 400', async () => {
+    const { token } = await registerAndToken();
+    await request(app.getHttpServer())
+      .patch('/v1/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ notificationsEnabled: 'evet' })
+      .expect(400);
   });
 
   it('PATCH upsert eder ve sonraki GET kalıcı değeri döner', async () => {
