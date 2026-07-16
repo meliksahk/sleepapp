@@ -1,40 +1,34 @@
-import { aggregateStats } from '../../src/modules/sleep/domain/stats';
-import type { SleepSession } from '../../src/modules/sleep/domain/sleep-session.entity';
+import { statsFromAggregate } from '../../src/modules/sleep/domain/stats';
 
-const s = (nightDate: string, durationMinutes: number): SleepSession => ({
-  id: `${nightDate}-${durationMinutes}`,
-  userId: 'u',
-  startedAt: new Date(),
-  endedAt: new Date(),
-  nightDate,
-  durationMinutes,
-  movementEvents: 0,
-  soundEvents: 0,
-  createdAt: new Date(),
-});
-
-describe('aggregateStats', () => {
-  it('oturum yoksa hepsi 0', () => {
-    expect(aggregateStats([])).toEqual({
+describe('statsFromAggregate', () => {
+  it('kayıt yoksa hepsi 0', () => {
+    expect(statsFromAggregate({ nights: 0, sessionCount: 0, totalDurationMinutes: 0 })).toEqual({
       nights: 0,
       totalDurationMinutes: 0,
       averageDurationMinutes: 0,
     });
   });
 
-  it('gece sayısı benzersiz, toplam + ortalama (yuvarlanmış)', () => {
-    const stats = aggregateStats([
-      s('2026-03-10', 400),
-      s('2026-03-10', 20), // aynı gece (nap) → nights tekil
-      s('2026-03-09', 480),
-    ]);
-    expect(stats.nights).toBe(2); // 2026-03-10 + 2026-03-09
-    expect(stats.totalDurationMinutes).toBe(900);
-    expect(stats.averageDurationMinutes).toBe(300); // 900/3
+  it('ortalama OTURUM başına hesaplanır (gece başına değil)', () => {
+    // 3 oturum / 2 gece (biri nap), toplam 900 dk → 900/3 = 300 (900/2=450 DEĞİL)
+    expect(statsFromAggregate({ nights: 2, sessionCount: 3, totalDurationMinutes: 900 })).toEqual({
+      nights: 2,
+      totalDurationMinutes: 900,
+      averageDurationMinutes: 300,
+    });
   });
 
-  it('ortalama yuvarlar', () => {
-    const stats = aggregateStats([s('2026-03-10', 100), s('2026-03-11', 101)]);
-    expect(stats.averageDurationMinutes).toBe(101); // 201/2 = 100.5 → 101
+  it('ortalama yuvarlanır', () => {
+    // 201/2 = 100.5 → 101
+    expect(
+      statsFromAggregate({ nights: 2, sessionCount: 2, totalDurationMinutes: 201 })
+        .averageDurationMinutes,
+    ).toBe(101);
+  });
+
+  it('gece sayısı depodan gelir, oturum sayısından bağımsızdır', () => {
+    const stats = statsFromAggregate({ nights: 1, sessionCount: 5, totalDurationMinutes: 500 });
+    expect(stats.nights).toBe(1); // aynı gecede 5 oturum
+    expect(stats.averageDurationMinutes).toBe(100);
   });
 });

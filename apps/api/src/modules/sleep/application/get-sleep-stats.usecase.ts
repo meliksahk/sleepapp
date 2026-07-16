@@ -1,14 +1,14 @@
-import { aggregateStats, type SleepStats } from '../domain/stats';
+import { statsFromAggregate, type SleepStats } from '../domain/stats';
 import type { SleepSessionRepository } from '../domain/ports';
 
-/** Kullanıcının son oturumlarından uyku istatistikleri (en fazla son 100 oturum). */
+/**
+ * Kullanıcının TÜM kayıtları üzerinden uyku istatistikleri.
+ * Eskiden son 100 oturumla sınırlıydı → 100+ gecesi olanda sessizce kısmi veri.
+ */
 export class GetSleepStatsUseCase {
-  private static readonly WINDOW = 100;
-
   constructor(private readonly repo: SleepSessionRepository) {}
 
   async execute(userId: string): Promise<SleepStats> {
-    const sessions = await this.repo.listRecentByUser(userId, GetSleepStatsUseCase.WINDOW);
-    return aggregateStats(sessions);
+    return statsFromAggregate(await this.repo.aggregateFor(userId));
   }
 }

@@ -1,6 +1,7 @@
 import { ListSleepSessionsUseCase } from '../../src/modules/sleep/application/list-sleep-sessions.usecase';
 import type { SleepSessionRepository } from '../../src/modules/sleep/domain/ports';
 import type { SleepSession } from '../../src/modules/sleep/domain/sleep-session.entity';
+import type { SleepAggregate } from '../../src/modules/sleep/domain/stats';
 
 class SpyRepo implements SleepSessionRepository {
   recentLimit?: number;
@@ -21,6 +22,9 @@ class SpyRepo implements SleepSessionRepository {
   async listByNightRange(_userId: string, from: string, to: string): Promise<SleepSession[]> {
     this.range = { from, to };
     return [];
+  }
+  aggregateFor(): Promise<SleepAggregate> {
+    throw new Error('kullanılmaz');
   }
 }
 

@@ -233,6 +233,36 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body.averageDurationMinutes).toBe(330);
   });
 
+  it('stats: 100’den FAZLA oturumda pencere yok (regresyon: eskiden son 100 sayılırdı)', async () => {
+    const t = await token();
+    await setTz(t, 'UTC');
+    // 120 ayrı gece × 60 dk. Eski kod son 100'ü sayardı → nights=100, total=6000.
+    // Doğrusu: nights=120, total=7200. Bu test eski kodda KIRMIZI olurdu.
+    const rows = Array.from({ length: 120 }, (_, i) => {
+      const day = new Date(Date.UTC(2025, 0, 1 + i));
+      const start = new Date(day.getTime() + 22 * 3600_000); // 22:00
+      return {
+        startedAt: start.toISOString(),
+        endedAt: new Date(start.getTime() + 60 * 60_000).toISOString(), // 60 dk
+      };
+    });
+    for (const r of rows) {
+      await request(app.getHttpServer())
+        .post('/v1/sleep/sessions')
+        .set('Authorization', `Bearer ${t}`)
+        .send({ startedAt: r.startedAt, endedAt: r.endedAt, movementEvents: 0, soundEvents: 0 })
+        .expect(201);
+    }
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/sleep/stats')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(res.body.nights).toBe(120); // eskiden 100
+    expect(res.body.totalDurationMinutes).toBe(7200); // eskiden 6000
+    expect(res.body.averageDurationMinutes).toBe(60);
+  });
+
   it('stats: kayıt yokken hepsi 0', async () => {
     const t = await token();
     const res = await request(app.getHttpServer())

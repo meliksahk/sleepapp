@@ -1,4 +1,5 @@
 import type { NewSleepSession, SleepSession } from './sleep-session.entity';
+import type { SleepAggregate } from './stats';
 
 /** sleep_sessions erişimi — her metod userId ile scope'lanır (docs/02 §2.1). */
 export interface SleepSessionRepository {
@@ -10,6 +11,11 @@ export interface SleepSessionRepository {
   listNightDates(userId: string): Promise<string[]>;
   /** Gece tarihi [from, to] (dahil) aralığındaki oturumlar. userId ile scope'lu. */
   listByNightRange(userId: string, from: string, to: string): Promise<SleepSession[]>;
+  /**
+   * Kullanıcının TÜM oturumlarının toplamı — DB tarafında hesaplanır.
+   * Pencere YOK: istatistik "son N oturum"a hapsolmamalı (bkz. stats.ts).
+   */
+  aggregateFor(userId: string): Promise<SleepAggregate>;
 }
 
 /** Kullanıcı saat dilimini (başka modül) soyut okur — gece gruplaması için. */
