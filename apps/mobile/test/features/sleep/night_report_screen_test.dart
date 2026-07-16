@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:nocta/core/api/nocta_api_client.dart';
 import 'package:nocta/core/design_system/design_system.dart';
+import 'package:nocta/l10n/app_localizations.dart';
 import 'package:nocta/core/share/sharer.dart';
 import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/analytics/analytics.dart';
@@ -100,6 +101,9 @@ Future<(RecordingSharer, RecordingAnalytics)> _pump(
       ],
       child: MaterialApp(
         theme: buildNoctaDarkTheme(),
+        // Ekran artık l10n kullanıyor → delegate'ler şart (üretimdeki app.dart ile aynı).
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
         home: const NightReportScreen(nightDate: _night),
       ),
     ),

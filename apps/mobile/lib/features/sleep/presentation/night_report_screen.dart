@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/share/sharer.dart';
 import '../../analytics/analytics_providers.dart';
 import '../../archetype/archetype_providers.dart' show sharerProvider;
@@ -26,19 +27,23 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
     if (_sharing) return;
     setState(() => _sharing = true);
     final messenger = ScaffoldMessenger.of(context);
+    // l10n await'ten ÖNCE yakalanır (context async gap'te kullanılmaz — analyzer kuralı).
+    final l10n = AppL10n.of(context);
     try {
       final share = await ref.read(sleepControllerProvider).reportShare(widget.nightDate);
       if (share == null) {
-        messenger.showSnackBar(const SnackBar(content: Text('No report for this night')));
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.nightReportNoShareCard)),
+        );
         return;
       }
       await ref.read(sharerProvider).share(ShareContent(text: share.title, url: share.webUrl));
       // Viral huni ölçümü (analitik bloklamaz). props YOK: gece tarihi PII'ye yakın
       // ve huni için gereksiz (docs/analytics-events.md).
       ref.read(analyticsProvider).track('report_shared');
-      messenger.showSnackBar(const SnackBar(content: Text('Link copied')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.shareLinkCopied)));
     } catch (_) {
-      messenger.showSnackBar(const SnackBar(content: Text('Could not share')));
+      messenger.showSnackBar(SnackBar(content: Text(l10n.shareFailed)));
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -48,10 +53,10 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
   Widget build(BuildContext context) {
     final report = ref.watch(nightReportProvider(widget.nightDate));
     return Scaffold(
-      appBar: AppBar(title: const Text('Night report')),
+      appBar: AppBar(title: Text(AppL10n.of(context).nightReportTitle)),
       body: SafeArea(
         child: report.when(
-          data: (r) => r == null ? _empty() : _report(r),
+          data: (r) => r == null ? _empty(context) : _report(context, r),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
             child: IconButton(
@@ -66,15 +71,16 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
     );
   }
 
-  Widget _empty() => Center(
+  Widget _empty(BuildContext context) => Center(
     child: Text(
-      'No sleep recorded for this night',
+      AppL10n.of(context).nightReportEmpty,
       key: const Key('report-empty'),
       style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
     ),
   );
 
-  Widget _report(NightReport r) {
+  Widget _report(BuildContext context, NightReport r) {
+    final l10n = AppL10n.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(NoctaSpace.s5),
       child: Column(
@@ -96,27 +102,27 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Calm ${r.calmScore}/100',
+                  l10n.nightReportCalm(r.calmScore),
                   key: const Key('report-calm'),
                   style: TextStyle(fontSize: NoctaFontSize.h2, color: NoctaColors.accentAurora),
                 ),
                 const SizedBox(height: NoctaSpace.s1),
                 // Sağlık iddiası YOK: uygulama-içi göreli dinginlik ölçüsü.
                 Text(
-                  'An in-app calm measure for your ritual — not a health score.',
+                  l10n.nightReportCalmDisclaimer,
                   style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkFaint),
                 ),
               ],
             ),
           ),
           const SizedBox(height: NoctaSpace.s3),
-          _Row(label: 'Sessions', value: '${r.sessionCount}'),
-          _Row(label: 'Movement events', value: '${r.movementEvents}'),
-          _Row(label: 'Sound events', value: '${r.soundEvents}'),
+          _Row(label: l10n.nightReportSessions, value: '${r.sessionCount}'),
+          _Row(label: l10n.nightReportMovementEvents, value: '${r.movementEvents}'),
+          _Row(label: l10n.nightReportSoundEvents, value: '${r.soundEvents}'),
           const SizedBox(height: NoctaSpace.s5),
           NButton(
             key: const Key('report-share'),
-            label: _sharing ? 'Sharing…' : 'Share this night',
+            label: _sharing ? l10n.nightReportSharing : l10n.nightReportShare,
             onPressed: _sharing ? null : _share,
           ),
         ],

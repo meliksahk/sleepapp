@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design_system/nocta_theme.dart';
 import '../features/analytics/analytics_flusher.dart';
@@ -60,6 +61,9 @@ class _AppRootState extends ConsumerState<_AppRoot> {
       title: 'NOCTA',
       debugShowCheckedModeBanner: false,
       theme: widget.theme,
+      // i18n (CLAUDE.md §4). Kaynak dil EN; TR arb eklenince kod değişmez.
+      localizationsDelegates: AppL10n.localizationsDelegates,
+      supportedLocales: AppL10n.supportedLocales,
       routerConfig: appRouter,
     );
   }

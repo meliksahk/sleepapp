@@ -33,7 +33,9 @@ const ROOTS = [
 /** Ek tekil dosyalar (AI/arama yüzeyi). */
 const FILES = ['apps/web/public/llms.txt'];
 
-const EXTENSIONS = new Set(['.dart', '.ts', '.tsx', '.js', '.jsx', '.txt', '.md']);
+// .arb DAHİL: i18n'e geçişle birlikte kullanıcı metni arb dosyalarına taşınıyor —
+// taranmazsa kapı tam da metnin yaşadığı yeri gözden kaçırırdı (#109'da fark edildi).
+const EXTENSIONS = new Set(['.dart', '.ts', '.tsx', '.js', '.jsx', '.txt', '.md', '.arb']);
 const SKIP_DIRS = new Set(['node_modules', '.next', 'generated', 'build', '.dart_tool']);
 
 /**
