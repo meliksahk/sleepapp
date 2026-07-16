@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈56% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈57% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████████░░░░░░░░░░░░░░░░░░] 56%
+[███████████████████████░░░░░░░░░░░░░░░░░] 57%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~86%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~87%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~28%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~35%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·86 + 0.40·49 + 0.15·28 + 0.15·45 ≈ **56%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·87 + 0.40·49 + 0.15·35 + 0.15·45 ≈ **57%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,15 +66,56 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kalanı:** (a) **token yenileme + çıkış butonu** — şu an 15dk sonra oturum sessizce ölüyor (en görünür eksik). (b) TOTP 2FA. (c) davet akışı + parola sıfırlama. (d) hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116.
-2. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
-3. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
-4. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
-5. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
+1. **admin A0 kalanı:** (a) **refresh grace window** (iki-sekme yarışı → sert çıkış; API tarafı). (b) TOTP 2FA. (c) davet akışı + parola sıfırlama. (d) hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117.
+2. **A1 içerik CMS'i:** dashboard'u canlı veriye bağla, soundscape CRUD (admin artık giriş yapılabilir durumda — asıl ürün işi buradan başlıyor).
+3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
+4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
+5. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
+6. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
 
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #117 — sessiz oturum yenileme + GERÇEK çıkış (PR #118, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Middleware oturumu **sessizce yeniliyor** — panel 15dk'da bir login'e atmıyor.
+- **`POST /v1/auth/logout` EKLENDİ** (hiç yoktu) — çıkış artık sunucudaki oturumu
+  gerçekten iptal ediyor. + çıkış butonu.
+- **GERÇEK SUNUCUDA** (`ACCESS_TOKEN_TTL=20s` ile, 15dk beklemeden): giriş 200 →
+  access geçerliyken sayfa 200 → **22sn sonra (access ÖLDÜ) sayfa hâlâ 200** = sessiz
+  yenileme → refresh token çerezde **rotasyona uğradı** → çıkış 200 → **eski refresh
+  token API'de 401** = sunucu oturumu gerçekten iptal → panel 307. Kanıt hesabı silindi.
+- API **283 test** (277→283), admin **27 test** (23→27), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **YARIŞ KORUMASI (asıl karar):** refresh rotasyonlu + reuse-detection'lı → aynı
+  token'la iki EŞZAMANLI yenileme TÜM AİLEYİ düşürür. Bu yüzden yenileme yalnızca
+  **sayfa gezintisinde** (`sec-fetch-mode: navigate`); prefetch/RSC paralel akar.
+- **Testin yakaladığı KENDİ HATAM:** yorumuma "API ulaşılamıyorsa çerezleri silme"
+  yazmıştım ama kod hem reddi hem kesintiyi tek `null` ile dönüp ikisinde de siliyordu.
+  Artık ayrık tip: `rejected` → temizle, `unreachable` → DOKUNMA.
+- Çıkış **AİLEYİ** düşürür (tek token değil) ve **idempotent+sessiz** (bilinmeyen
+  token'da da 204 — yanıt "bu token gerçek miydi?" kâhini olmamalı).
+- **Boundary lint yine yakaladı:** AppShell (shared) LogoutButton'ı (features) import
+  edemez → `actions` SLOT'u; bileşeni app katmanı geçiriyor. Kural gevşetilmedi.
+
+🔥 **Riskler / açıklar**
+
+- **İKİ SEKME YARIŞI (çözülmedi):** iki sekme aynı anda gezinirse eşzamanlı yenileme
+  hâlâ mümkün → aile düşer → sert çıkış. Gerçek çözüm API'de kısa **grace window**
+  veya tek-uçuş kilidi. **Sıradaki adaylardan.**
+- Middleware hâlâ token DOĞRULAMAZ (yalnızca çerez varlığı) — gerçek kapı sunucuda.
+- Dashboard hâlâ yer tutucu (canlı veri yok).
+- i18n yok (hard-coded TR) — **D-8 kararı bekliyor**.
+
+❌ **Yapılmadı**
+
+- TOTP 2FA, davet akışı, hesap-başına kilitleme, iki-sekme yarışı, `.env.example`,
+  dashboard'un canlı veriye bağlanması.
 
 ### #116 — panel girişi (httpOnly çerez) + kapı + admin'e vitest (PR #117, merged)
 
