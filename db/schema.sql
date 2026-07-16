@@ -251,7 +251,9 @@ CREATE TABLE public.users (
     totp_secret text,
     roles text[] DEFAULT '{}'::text[] NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    deleted_at timestamp with time zone
+    deleted_at timestamp with time zone,
+    totp_confirmed_at timestamp with time zone,
+    totp_last_counter bigint
 );
 
 
@@ -698,4 +700,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120011'),
     ('20260715120012'),
     ('20260715120013'),
-    ('20260717000001');
+    ('20260717000001'),
+    ('20260718000001');

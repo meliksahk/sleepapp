@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class RegisterDeviceDto {
   @ApiProperty({ description: 'Cihaz başına benzersiz parmak izi', example: 'abc123-device' })
@@ -33,6 +33,49 @@ export class AdminLoginDto {
   @MinLength(12)
   @MaxLength(200)
   password!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'İki adımlı doğrulama kodu (yalnızca hesapta 2FA etkinse gerekir). ' +
+      'Eksikse yanıt 401 + code=totp_required döner.',
+    example: '123456',
+  })
+  @IsOptional()
+  @IsString()
+  // Tam 6 hane: biçimsiz girdi HMAC hesaplanmadan burada elenir.
+  @Matches(/^\d{6}$/, { message: 'totpCode 6 haneli olmalı' })
+  totpCode?: string;
+}
+
+export class TotpConfirmDto {
+  @ApiProperty({ description: 'Authenticator uygulamasındaki 6 haneli kod', example: '123456' })
+  @IsString()
+  @Matches(/^\d{6}$/, { message: 'code 6 haneli olmalı' })
+  code!: string;
+}
+
+export class TotpStatusResponseDto {
+  @ApiProperty({ description: 'İki adımlı doğrulama etkin mi (onaylanmış mı)' })
+  enabled!: boolean;
+
+  @ApiProperty({
+    description: 'Anahtar üretilmiş ama onaylanmamış — kurulum yarıda kalmış',
+  })
+  pending!: boolean;
+}
+
+export class TotpEnrollResponseDto {
+  @ApiProperty({
+    description: 'Base32 gizli anahtar — elle giriş için. Bir daha GÖSTERİLMEZ.',
+    example: 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ',
+  })
+  secret!: string;
+
+  @ApiProperty({
+    description: 'QR koduna gömülecek otpauth:// URI',
+    example: 'otpauth://totp/NOCTA%3Aowner%40nocta.app?secret=...&issuer=NOCTA',
+  })
+  otpauthUri!: string;
 }
 
 export class RevokedSessionsDto {

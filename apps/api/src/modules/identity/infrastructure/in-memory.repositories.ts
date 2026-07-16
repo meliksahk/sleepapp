@@ -22,6 +22,10 @@ export class InMemoryUserRepository implements UserRepository {
   private readonly userIdByFingerprint = new Map<string, string>();
   private readonly emailByUserId = new Map<string, string>();
   private readonly passwordHashByUserId = new Map<string, string>();
+  private readonly totpByUserId = new Map<
+    string,
+    { secret: string; confirmedAt: Date | null; lastCounter: number | null }
+  >();
 
   async createWithDevice(user: User, device: DeviceRegistration): Promise<void> {
     this.usersById.set(user.id, user);
@@ -47,14 +51,50 @@ export class InMemoryUserRepository implements UserRepository {
   /** Test/dev sahtesi: parola hash'i `passwordHashByUserId` ile kurulur. */
   async findAdminCredentialsByEmail(email: string): Promise<AdminCredentials | null> {
     const user = await this.findByEmail(email);
-    if (!user || user.kind !== 'admin') return null;
+    return user ? this.toAdminCredentials(user) : null;
+  }
+
+  async findAdminCredentialsById(userId: string): Promise<AdminCredentials | null> {
+    const user = this.usersById.get(userId);
+    return user ? this.toAdminCredentials(user) : null;
+  }
+
+  private toAdminCredentials(user: User): AdminCredentials | null {
+    if (user.kind !== 'admin') return null;
     const passwordHash = this.passwordHashByUserId.get(user.id);
-    if (!passwordHash) return null;
-    return { userId: user.id, roles: user.roles, passwordHash };
+    const email = this.emailByUserId.get(user.id);
+    if (!passwordHash || !email) return null;
+    const totp = this.totpByUserId.get(user.id);
+    return {
+      userId: user.id,
+      email,
+      roles: user.roles,
+      passwordHash,
+      totpSecret: totp?.secret ?? null,
+      totpConfirmedAt: totp?.confirmedAt ?? null,
+      totpLastCounter: totp?.lastCounter ?? null,
+    };
   }
 
   setPasswordHash(userId: string, hash: string): void {
     this.passwordHashByUserId.set(userId, hash);
+  }
+
+  async setTotpSecret(userId: string, secret: string): Promise<void> {
+    // Yeni anahtar = yeni kurulum: onay ve sayaç sıfırlanır (Prisma ile aynı davranış).
+    this.totpByUserId.set(userId, { secret, confirmedAt: null, lastCounter: null });
+  }
+
+  async confirmTotp(userId: string, confirmedAt: Date, counter: number): Promise<void> {
+    const current = this.totpByUserId.get(userId);
+    if (!current) return;
+    this.totpByUserId.set(userId, { ...current, confirmedAt, lastCounter: counter });
+  }
+
+  async recordTotpCounter(userId: string, counter: number): Promise<void> {
+    const current = this.totpByUserId.get(userId);
+    if (!current) return;
+    this.totpByUserId.set(userId, { ...current, lastCounter: counter });
   }
 
   async upgradeToEmail(userId: string, email: string, _verifiedAt: Date): Promise<void> {

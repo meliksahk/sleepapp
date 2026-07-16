@@ -55,3 +55,30 @@ export class InvalidCredentialsError extends IdentityError {
     super('invalid_credentials', 'E-posta veya parola hatalı.');
   }
 }
+
+/**
+ * Parola DOĞRU ama 2FA kodu gerekiyor/geçersiz.
+ *
+ * NEDEN InvalidCredentialsError'DAN AYRI: parolanın doğru olduğunu zaten kanıtladık;
+ * "kod da lazım" demek burada yeni bir bilgi sızdırmaz — panelin kod alanını
+ * göstermesi için bunu BİLMESİ gerekir. Sızıntı endişesi kod hatasında da yok:
+ * saldırgan bu noktaya ancak geçerli parolayla gelebilir.
+ */
+export class TotpRequiredError extends IdentityError {
+  constructor() {
+    super('totp_required', 'İki adımlı doğrulama kodu gerekli.');
+  }
+}
+
+export class InvalidTotpError extends IdentityError {
+  constructor() {
+    super('invalid_totp', 'İki adımlı doğrulama kodu geçersiz.');
+  }
+}
+
+/** Zaten onaylanmış 2FA yeniden kurulamaz (bkz. EnrollTotpUseCase). */
+export class TotpAlreadyEnabledError extends IdentityError {
+  constructor() {
+    super('totp_already_enabled', 'İki adımlı doğrulama zaten etkin.');
+  }
+}

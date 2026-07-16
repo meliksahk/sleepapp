@@ -1,7 +1,8 @@
 import { audienceForKind } from '../domain/user.entity';
 import type { IssuedSession } from '../domain/user.entity';
-import { InvalidCredentialsError } from '../domain/errors';
-import type { IdGenerator, PasswordHasher, UserRepository } from '../domain/ports';
+import { InvalidCredentialsError, InvalidTotpError, TotpRequiredError } from '../domain/errors';
+import type { Clock, IdGenerator, PasswordHasher, UserRepository } from '../domain/ports';
+import { verifyTotp } from '../domain/totp';
 import type { SessionMinter } from './session-minter';
 
 /**
@@ -29,9 +30,10 @@ export class LoginAdminUseCase {
     private readonly passwords: PasswordHasher,
     private readonly ids: IdGenerator,
     private readonly sessions: SessionMinter,
+    private readonly clock: Clock,
   ) {}
 
-  async execute(email: string, password: string): Promise<IssuedSession> {
+  async execute(email: string, password: string, totpCode?: string): Promise<IssuedSession> {
     const found = await this.users.findAdminCredentialsByEmail(email.trim().toLowerCase());
 
     if (found === null) {
@@ -44,6 +46,14 @@ export class LoginAdminUseCase {
       throw new InvalidCredentialsError();
     }
 
+    // SIRA ÖNEMLİ: 2FA parola DOĞRULANDIKTAN SONRA sorulur. Önce sorsaydık, kod
+    // istenip istenmemesi "bu e-posta 2FA'lı bir admin mi?" sorusunu parolayı hiç
+    // bilmeyen birine yanıtlardı — yukarıdaki sahte-hash ile kapattığımız sayım
+    // kanalını yeniden açardı.
+    if (found.totpConfirmedAt !== null) {
+      await this.assertTotp(found.userId, found.totpSecret, found.totpLastCounter, totpCode);
+    }
+
     return this.sessions.mint({
       userId: found.userId,
       roles: found.roles,
@@ -51,6 +61,34 @@ export class LoginAdminUseCase {
       // Repo yalnızca kind='admin' döndürür → audience daima 'admin'.
       aud: audienceForKind('admin'),
     });
+  }
+
+  /**
+   * 2FA kapısı. Geçerliyse kullanılan sayacı KAYDEDER — bu kayıt olmadan aynı kod
+   * 30 sn boyunca tekrar tekrar kullanılabilirdi (RFC 6238 §5.2).
+   */
+  private async assertTotp(
+    userId: string,
+    secret: string | null,
+    lastCounter: number | null,
+    code: string | undefined,
+  ): Promise<void> {
+    // Onaylı ama anahtarsız hesap OLMAMALI (confirmTotp ikisini birlikte yazar).
+    // Yine de olursa: giriş REDDEDİLİR. Alternatif "2FA'yı atla" olurdu — bozuk
+    // veri, korumanın sessizce kapanması anlamına GELMEMELİ.
+    if (secret === null) {
+      throw new InvalidTotpError();
+    }
+    if (code === undefined || code === '') {
+      throw new TotpRequiredError();
+    }
+
+    const used = verifyTotp(secret, code, this.clock.now().getTime(), lastCounter ?? undefined);
+    if (used === null) {
+      throw new InvalidTotpError();
+    }
+
+    await this.users.recordTotpCounter(userId, used);
   }
 
   private async getDummyHash(): Promise<string> {

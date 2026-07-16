@@ -42,6 +42,9 @@ import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
 import { LoginAdminUseCase } from './application/login-admin.usecase';
+import { EnrollTotpUseCase } from './application/enroll-totp.usecase';
+import { ConfirmTotpUseCase } from './application/confirm-totp.usecase';
+import { GetTotpStatusUseCase } from './application/get-totp-status.usecase';
 import { LogoutUseCase } from './application/logout.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
 import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
@@ -140,13 +143,30 @@ const providers: Provider[] = [
   },
   {
     provide: LoginAdminUseCase,
-    inject: [USER_REPOSITORY, PASSWORD_HASHER, ID_GENERATOR, SessionMinter],
+    inject: [USER_REPOSITORY, PASSWORD_HASHER, ID_GENERATOR, SessionMinter, CLOCK],
     useFactory: (
       users: UserRepository,
       passwords: PasswordHasher,
       ids: IdGenerator,
       sessions: SessionMinter,
-    ): LoginAdminUseCase => new LoginAdminUseCase(users, passwords, ids, sessions),
+      clock: Clock,
+    ): LoginAdminUseCase => new LoginAdminUseCase(users, passwords, ids, sessions, clock),
+  },
+  {
+    provide: EnrollTotpUseCase,
+    inject: [USER_REPOSITORY],
+    useFactory: (users: UserRepository): EnrollTotpUseCase => new EnrollTotpUseCase(users),
+  },
+  {
+    provide: GetTotpStatusUseCase,
+    inject: [USER_REPOSITORY],
+    useFactory: (users: UserRepository): GetTotpStatusUseCase => new GetTotpStatusUseCase(users),
+  },
+  {
+    provide: ConfirmTotpUseCase,
+    inject: [USER_REPOSITORY, CLOCK],
+    useFactory: (users: UserRepository, clock: Clock): ConfirmTotpUseCase =>
+      new ConfirmTotpUseCase(users, clock),
   },
   {
     provide: LogoutUseCase,

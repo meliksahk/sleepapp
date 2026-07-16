@@ -66,7 +66,14 @@ modules/sleep/
 ```sql
 -- Kimlik (kendi auth'umuz)
 users(id uuid PK, kind enum(anonymous/registered/admin), email UNIQUE NULL,
-      email_verified_at, password_hash NULL, totp_secret NULL,
+      email_verified_at, password_hash NULL,
+      -- Admin 2FA (RFC 6238). Üçü BİRLİKTE anlamlı:
+      --   totp_secret       : base32 anahtar (kurulumda üretilir)
+      --   totp_confirmed_at : NULL iken 2FA ZORUNLU DEĞİL — kurulumu yarıda bırakan
+      --                       kullanıcının kendini kalıcı kilitlemesini önler
+      --   totp_last_counter : son kabul edilen adım; aynı kodun ikinci kez
+      --                       kullanılmasını engeller (RFC 6238 §5.2 tekrar saldırısı)
+      totp_secret NULL, totp_confirmed_at NULL, totp_last_counter NULL,
       roles text[], created_at, deleted_at)
 auth_devices(id, user_id FK, device_fingerprint UNIQUE, platform, created_at)
 refresh_tokens(id, user_id FK, token_hash UNIQUE, family_id,   -- rotation + reuse detection

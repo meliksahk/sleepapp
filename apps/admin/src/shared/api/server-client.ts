@@ -67,7 +67,13 @@ async function write<T>(
     cache: 'no-store',
   });
 
-  if (res.ok) return { ok: true, data: (await res.json()) as T };
+  // 204 (No Content) GÖVDESİZDİR ve `res.json()` orada SyntaxError atar — yani
+  // fonksiyon `WriteResult` dönmek yerine ÇÖKERDİ ve çağıran asla `ok:true` göremezdi.
+  // 2FA onay ucu (`POST /totp/confirm`) tam olarak 204 döner.
+  if (res.ok) {
+    if (res.status === 204) return { ok: true, data: undefined as T };
+    return { ok: true, data: (await res.json()) as T };
+  }
 
   // API'nin problem+json gövdesindeki `code` taşınır: mesajı ondan seçeceğiz.
   let code: string | undefined;

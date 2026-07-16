@@ -54,8 +54,20 @@ export interface AccessTokenSigner {
  * User her yerde dolaşır (me, refresh, guard) — hash'in oraya sızma riski yaratmaz. */
 export interface AdminCredentials {
   readonly userId: string;
+  /** Hesabın e-postası — otpauth etiketi için. İstemciden ALINMAZ: kullanıcı kendi
+   * etiketini uydurabilir ve başka hesabın anahtarıymış gibi kaydedebilirdi. */
+  readonly email: string;
   readonly roles: readonly string[];
   readonly passwordHash: string;
+  /** Kurulu gizli anahtar; kurulum yarıda kalmış olabilir (bkz. totpConfirmedAt). */
+  readonly totpSecret: string | null;
+  /**
+   * 2FA yalnızca BU DOLUYSA zorunludur. Sırf `totpSecret` doluysa zorunlu kılmak,
+   * kodu Authenticator'a girmeden yarıda bırakan kullanıcıyı kalıcı kilitlerdi.
+   */
+  readonly totpConfirmedAt: Date | null;
+  /** Son kabul edilen TOTP sayacı — tekrar saldırısı kapısı (RFC 6238 §5.2). */
+  readonly totpLastCounter: number | null;
 }
 
 /** users + auth_devices erişimi. Repository userId scope'unu zorunlu kılar (docs/02 §2.1). */
@@ -66,10 +78,25 @@ export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
   /** kind='admin' + parolası kurulu + silinmemiş kullanıcı; yoksa null. */
   findAdminCredentialsByEmail(email: string): Promise<AdminCredentials | null>;
+  /** Aynısı, kimlik doğrulanmış istek için (token'da e-posta yok, yalnızca `sub`). */
+  findAdminCredentialsById(userId: string): Promise<AdminCredentials | null>;
   /** Anonim kullanıcıyı e-posta ile 'registered'a yükseltir. */
   upgradeToEmail(userId: string, email: string, verifiedAt: Date): Promise<void>;
   /** Hesabı sil — FK kaskadı ile tüm ilişkili veri temizlenir (App Store zorunluluğu). */
   deleteById(id: string): Promise<void>;
+
+  /** 2FA gizli anahtarını yazar (henüz zorunlu kılmaz — onay ayrı adım). */
+  setTotpSecret(userId: string, secret: string): Promise<void>;
+
+  /**
+   * İlk geçerli kodla 2FA'yı etkinleştirir ve kullanılan sayacı işaretler.
+   * Tek metot: onay ile ilk sayacın yazımı ATOMİK olmalı — arada kalırsa aynı kod
+   * bir kez daha kullanılabilirdi.
+   */
+  confirmTotp(userId: string, confirmedAt: Date, counter: number): Promise<void>;
+
+  /** Girişte kullanılan sayacı işaretler (aynı kod bir daha geçmesin). */
+  recordTotpCounter(userId: string, counter: number): Promise<void>;
 }
 
 /** one_time_tokens erişimi — magic link / e-posta doğrulama. */
