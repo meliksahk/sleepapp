@@ -388,7 +388,8 @@ export interface paths {
         /** Tum soundscape kayitlari (taslak/planli/yayinlanmis) */
         get: operations["AdminController_soundscapes"];
         put?: never;
-        post?: never;
+        /** Yeni taslak soundscape olustur */
+        post: operations["AdminController_createSoundscape"];
         delete?: never;
         options?: never;
         head?: never;
@@ -831,6 +832,23 @@ export interface components {
             version: number;
             /** @description ISO 8601 UTC (CLAUDE.md §4) */
             createdAt: string;
+        };
+        CreateSoundscapeDto: {
+            /**
+             * @description URL kimliği (küçük-harf-kebab)
+             * @example deep-ocean-drift
+             */
+            slug: string;
+            /**
+             * @description İngilizce başlık (birincil dil)
+             * @example Deep Ocean Drift
+             */
+            titleEn: string;
+            /**
+             * @description Uygun uyku kimlikleri (archetype slug)
+             * @default []
+             */
+            archetypeAffinity: string[];
         };
         SoundscapeDto: {
             /** Format: uuid */
@@ -1643,6 +1661,43 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminSoundscapeDto"][];
                 };
+            };
+        };
+    };
+    AdminController_createSoundscape: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSoundscapeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSoundscapeDto"];
+                };
+            };
+            /** @description Yazma yetkisi yok (analyst/support okur, yazamaz) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Slug zaten kullanimda */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

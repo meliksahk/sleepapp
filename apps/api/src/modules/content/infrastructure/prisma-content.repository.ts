@@ -3,6 +3,7 @@ import type {
   ContentRepository,
   ContentStatus,
   Preset,
+  NewSoundscape,
   Soundscape,
   SoundscapeDetail,
   SoundscapeSummary,
@@ -52,6 +53,39 @@ export class PrismaContentRepository implements ContentRepository {
       version: r.version,
       createdAt: r.created_at,
     }));
+  }
+
+  async createDraft(input: NewSoundscape): Promise<SoundscapeSummary | null> {
+    try {
+      const row = await this.prisma.soundscapes.create({
+        data: {
+          slug: input.slug,
+          title_i18n: input.titleI18n,
+          // Ses tarifi BOŞ başlar: taslak, editörün doldurması için bir iskelettir.
+          // Uygulama taslakları hiç görmediği için boş tarif kimseye ulaşmaz.
+          engine_params: {},
+          layer_defs: [],
+          archetype_affinity: [...input.archetypeAffinity],
+          status: 'draft',
+          created_by: input.createdBy,
+        },
+      });
+      return {
+        id: row.id,
+        slug: row.slug,
+        titleI18n: (row.title_i18n ?? {}) as Record<string, string>,
+        status: row.status as ContentStatus,
+        archetypeAffinity: row.archetype_affinity ?? [],
+        version: row.version,
+        createdAt: row.created_at,
+      };
+    } catch (e) {
+      // P2002 = UNIQUE ihlali (slug). Yarışta "önce sor sonra yaz" yetmez: iki istek
+      // aynı anda gelirse ikisi de "yok" görüp ikisi de yazmaya kalkar. DB'nin
+      // kısıtına GÜVENİYORUZ — tek doğruluk kaynağı orası.
+      if (isUniqueViolation(e)) return null;
+      throw e;
+    }
   }
 
   async findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null> {
@@ -109,4 +143,9 @@ function toSoundscape(row: SoundscapeRow): Soundscape {
     archetypeAffinity: row.archetype_affinity,
     version: row.version,
   };
+}
+
+/** Prisma P2002: benzersizlik kısıtı ihlali. */
+function isUniqueViolation(e: unknown): boolean {
+  return typeof e === 'object' && e !== null && (e as { code?: string }).code === 'P2002';
 }

@@ -21,8 +21,17 @@ export interface CatalogEntry {
   readonly createdAt: Date;
 }
 
+/** Yeni taslak girdisi (panelden). */
+export interface NewCatalogEntry {
+  readonly slug: string;
+  readonly titleEn: string;
+  readonly archetypeAffinity: readonly string[];
+  readonly createdBy: string;
+}
+
 export interface SoundscapeCatalog {
   list(): Promise<CatalogEntry[]>;
+  create(input: NewCatalogEntry): Promise<CatalogEntry>;
 }
 
 export const SOUNDSCAPE_CATALOG = Symbol('SoundscapeCatalog');
