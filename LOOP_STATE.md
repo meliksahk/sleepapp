@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈63% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈64% — F1–F5 (otonom kapsam)
 
 ```
-[█████████████████████████░░░░░░░░░░░░░░░] 63%
+[██████████████████████████░░░░░░░░░░░░░░] 64%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~93%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~95%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~58%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·93 + 0.40·49 + 0.15·58 + 0.15·45 ≈ **63%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·95 + 0.40·49 + 0.15·58 + 0.15·45 ≈ **64%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 devam:** (a) **ses tarifi editörü** — yayınlama kapısı var ama tarifi doldurmanın PANELDEN yolu yok; içerik ancak DB'den üretilebiliyor. En büyük eksik. (b) düzenleme (başlık/affinity). (c) dashboard canlı veri. (d) sayfalama. Liste ✓ #119, oluşturma ✓ #120, panel formu ✓ #121, yayınlama + cache düzeltmesi ✓ #122.
+1. **A1 devam:** (a) **panelde tarif formu** — API hazır (#123), editör hâlâ curl'süz tarif yazamıyor (docs/03: "jsonschema + form hibrit; ham JSON'a advanced sekmesinde izin"). (b) düzenleme (başlık/affinity). (c) dashboard canlı veri. (d) sayfalama. Liste ✓ #119, oluşturma ✓ #120, panel formu ✓ #121, yayınlama + cache ✓ #122, tarif API ✓ #123.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,43 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #123 — ses tarifi ucu (şema doğrulamalı) (PR #124, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `PUT /v1/admin/soundscapes/:slug/recipe` — sözleşme:
+  `{ schemaVersion: 1, layers: [{id, type: white|pink|brown, gain: 0–1}] }`.
+- **#122'nin kapısı artık açılabiliyor:** o güne dek içerik ancak DB'ye elle müdahaleyle
+  yayınlanabiliyordu. Kapı vardı, anahtar yoktu.
+- **GERÇEK SUNUCUDA:** oluştur 201 → tarifsiz publish **409** → bozuk tarif **400** →
+  geçerli tarif 200 → publish 200 → feed'de `engineParams` görünüyor. Kanıt verisi silindi.
+- API **334 test** (318→334, +16): 8 bozuk girdi × "DB'ye giremez" + kapı açılır +
+  feed'e ulaşır + **ısıtılmış cache ile anında güncellenir**. turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **Sözleşme UYDURULMADI:** mobil motorun `MixSpec`'iyle birebir + mevcut
+  `parseMixerState` kurallarıyla aynı. Katman doğrulama TEK yerde (`parseLayers`).
+- **`schemaVersion` zorunlu** (docs/04 §79 istiyor); **bilinmeyen sürüm REDDEDİLİR** —
+  anlamadığımız veriyi istemciye aktarmak hatayı telefona ertelemek olurdu.
+- DTO kasıtlı SIĞ, asıl sözleşme domain'de (iki kopya olsaydı biri eskirdi).
+- Doğrulanmış hâl yazılır, ham girdi değil → fazladan alanlar elenir.
+- **Cache düşürülür** — #122'nin dersi uygulandı, ısıtılmış-cache testiyle sabit.
+
+🔥 **Riskler / açıklar**
+
+- **📌 D-9 SORULDU:** tarifin tamamını `engine_params`'a koydum; şemadaki `layer_defs`
+  kolonunun rolü belgelerde NET DEĞİL ve **kullanılmıyor**. Uydurup şemayı kilitlemedim.
+  **Seçenek (2) çıkarsa #122'nin yayınlama kapısı yanlış kolona bakıyor demektir.**
+- **Panel formu YOK** — bu PR API tarafı; editör hâlâ curl'süz tarif yazamıyor.
+- Düzenleme (başlık/affinity), zamanlanmış yayın, dashboard canlı veri, sayfalama yok.
+- i18n yok (**D-8 kararı bekliyor**).
+
+❌ **Yapılmadı**
+
+- Panel tarif formu, düzenleme, zamanlanmış yayın, dashboard canlı veri, sayfalama,
+  TOTP 2FA, davet akışı, `.env.example`.
 
 ### #122 — yayınlama/geri çekme + 🔴 bayat feed cache hatası (PR #123, merged)
 
