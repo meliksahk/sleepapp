@@ -1,4 +1,4 @@
-import { evaluateFlag, parseRules } from '../../src/modules/flags/domain/flag';
+import { compareVersions, evaluateFlag, parseRules } from '../../src/modules/flags/domain/flag';
 import { CryptoBucketHasher } from '../../src/modules/flags/infrastructure/crypto-bucket-hasher';
 
 describe('flag evaluation (saf domain)', () => {
@@ -27,6 +27,60 @@ describe('flag evaluation (saf domain)', () => {
       enabled: true,
       rolloutPercentage: 20,
     });
+  });
+
+  it('parseRules segment alanlarını okur (platforms + minAppVersion)', () => {
+    expect(
+      parseRules({ enabled: true, platforms: ['ios', 42, 'android'], minAppVersion: '1.4.0' }),
+    ).toEqual({ enabled: true, platforms: ['ios', 'android'], minAppVersion: '1.4.0' });
+    // boş/geçersiz platform dizisi atlanır
+    expect(parseRules({ enabled: true, platforms: [] })).toEqual({ enabled: true });
+  });
+
+  describe('platform allowlist (fail-closed)', () => {
+    const rules = { enabled: true, platforms: ['ios'] };
+    it('eşleşen platform → açık', () => {
+      expect(evaluateFlag(rules, 0, { platform: 'ios' })).toBe(true);
+    });
+    it('eşleşmeyen platform → kapalı', () => {
+      expect(evaluateFlag(rules, 0, { platform: 'android' })).toBe(false);
+    });
+    it('context yoksa → kapalı (fail-closed)', () => {
+      expect(evaluateFlag(rules, 0)).toBe(false);
+    });
+  });
+
+  describe('minAppVersion (fail-closed)', () => {
+    const rules = { enabled: true, minAppVersion: '1.4.0' };
+    it('yeni/eşit sürüm → açık', () => {
+      expect(evaluateFlag(rules, 0, { appVersion: '1.4.0' })).toBe(true);
+      expect(evaluateFlag(rules, 0, { appVersion: '1.5.2' })).toBe(true);
+    });
+    it('eski sürüm → kapalı', () => {
+      expect(evaluateFlag(rules, 0, { appVersion: '1.3.9' })).toBe(false);
+    });
+    it('sürüm yoksa → kapalı (fail-closed)', () => {
+      expect(evaluateFlag(rules, 0)).toBe(false);
+    });
+  });
+
+  it('segment + rollout birlikte: her ikisi de geçmeli', () => {
+    const rules = { enabled: true, platforms: ['ios'], rolloutPercentage: 50 };
+    expect(evaluateFlag(rules, 30, { platform: 'ios' })).toBe(true);
+    expect(evaluateFlag(rules, 70, { platform: 'ios' })).toBe(false); // rollout dışı
+    expect(evaluateFlag(rules, 30, { platform: 'android' })).toBe(false); // platform dışı
+  });
+});
+
+describe('compareVersions', () => {
+  it('küçük/eşit/büyük', () => {
+    expect(compareVersions('1.3.9', '1.4.0')).toBe(-1);
+    expect(compareVersions('1.4.0', '1.4.0')).toBe(0);
+    expect(compareVersions('2.0.0', '1.9.9')).toBe(1);
+  });
+  it('farklı uzunluk (eksik parça = 0)', () => {
+    expect(compareVersions('1.4', '1.4.0')).toBe(0);
+    expect(compareVersions('1.4.1', '1.4')).toBe(1);
   });
 });
 
