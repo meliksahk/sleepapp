@@ -20,6 +20,13 @@ class Soundscape {
   /// Verilen dile göre başlık; yoksa 'en', o da yoksa slug.
   String title(String locale) => titleI18n[locale] ?? titleI18n['en'] ?? slug;
 
+  /// archetypeAffinity slug'larını okunur etikete çevirir (ilk [max] tanesi):
+  /// ['deep-ocean','delta-drifter'] → 'Deep Ocean · Delta Drifter'. Boşsa ''.
+  String affinityLabel({int max = 2}) {
+    if (archetypeAffinity.isEmpty) return '';
+    return archetypeAffinity.take(max).map(_humanizeSlug).join(' · ');
+  }
+
   factory Soundscape.fromJson(Map<String, dynamic> json) => Soundscape(
         id: json['id'] as String,
         slug: json['slug'] as String,
@@ -31,6 +38,13 @@ class Soundscape {
         version: json['version'] as int,
       );
 }
+
+/// 'delta-drifter' → 'Delta Drifter' (slug → başlık biçimi).
+String _humanizeSlug(String slug) => slug
+    .split('-')
+    .where((w) => w.isNotEmpty)
+    .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+    .join(' ');
 
 class Preset {
   const Preset({required this.archetypeSlug, required this.mixerState});
