@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈67% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈68% — F1–F5 (otonom kapsam)
 
 ```
-[███████████████████████████░░░░░░░░░░░░░] 67%
+[███████████████████████████░░░░░░░░░░░░░] 68%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~74%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·49 + 0.15·74 + 0.15·45 ≈ **67%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·49 + 0.15·80 + 0.15·45 ≈ **68%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,16 +66,53 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 kalanı:** (a) **dashboard canlı veri** — panelin ilk ekranı hâlâ yer tutucu "—" gösteriyor; içerik yönetimi çalışırken bu en görünür sahtelik. (b) sayfalama. (c) zamanlanmış yayın. **A1 içerik CMS'i TAMAM:** liste #119, oluşturma #120, panel formu #121, yayınlama+cache #122, tarif API #123, tarif editörü #124, başlık/affinity #125.
-2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
-3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
-4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
-5. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
-6. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
+1. **Mobil'e dön (%49 — en düşük ağırlıklı yüzey, ağırlık 0.40):** admin 7 iterasyonda %35→%80 oldu; asıl ürün mobilde ve çekirdek özellik (ses motoru: native graf + `AudioEngineFacade`) hâlâ yok. DSP saf Dart hazır (#96-98) ama **hiç ses ÇALMIYOR**. Not: native graf gerçek cihaz doğrulaması ister (kulaklıkla) — otonom olarak ne kadarı yapılabilir, iterasyon başında değerlendirilecek.
+2. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
+3. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
+4. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
+5. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
+6. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
+7. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
 
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #126 — canlı pano: gerçek rakamlar, dürüst boşluklar (PR #127, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `GET /v1/admin/overview` + panelin ANA EKRANI canlı rakam gösteriyor
+  (yayında/taslak/planlı + bekleme listesi). Dört sahte "—" gitti.
+- **GERÇEK SUNUCUDA:** API `{"soundscapes":{"draft":1,"scheduled":0,"published":1},
+"waitlist":1}` · panel 200 ve görünür metinde "Yayında 1", "Taslak 1",
+  "Bekleme listesi 1", "2 kayıt · 0 planlı"; **sahte tablo yok** (`<table>` yok).
+- API **360 test** (352→360), admin 71 test, turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **DÜRÜSTLÜK ASIL KARAR:** yalnızca bugün DOĞRU hesaplanabilenler eklendi. D7
+  retention (kohort analizi) ve deneme→ücretli (billing yok) için **sahte sayı
+  üretmedim** — yanlış metrik, olmayan metrikten kötüdür; insan ona güvenip karar
+  verir. Panelde ne olmadığı ve NEDEN olmadığı yazıyor. **Test sabitliyor:** yanıtta
+  `d7Retention`/`trialConversion` YOK, anahtar kümesi tam olarak {soundscapes, waitlist}.
+- **"Son etkinlik" tablosu KALDIRILDI:** `audit_log` yok → hiç dolmayacak boş bir söz.
+- **Sayım COUNT/groupBy ile, listeyi çekerek DEĞİL** — pano her açılışta katalogu
+  belleğe alsaydı sessizce O(n) olurdu (#101'in hata sınıfı).
+- groupBy eksik durumları 0 ile doldurulur (yoksa panelde "undefined").
+- Pano kaynağı İKİ modülün PUBLIC use case'ini birleştiriyor (content + waitlist).
+
+🔥 **Riskler / açıklar**
+
+- **Kendi varsayımım yanlıştı:** `POST /v1/waitlist` 201 değil **202** dönüyormuş;
+  testi gerçeğe uydurdum.
+- D7/paylaşım oranı (A3), deneme→ücretli (F6), audit_log yok — panelde açıkça yazılı.
+- Zamanlanmış yayın, sayfalama yok; `layer_defs` **D-9**; i18n **D-8** bekliyor.
+
+❌ **Yapılmadı**
+
+- D7/paylaşım oranı hesabı, audit_log, zamanlanmış yayın, sayfalama, TOTP 2FA,
+  davet akışı, `.env.example`.
 
 ### #125 — başlık/affinity düzenleme (PR #126, merged)
 
