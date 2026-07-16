@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../content/content_providers.dart';
 import '../archetype_providers.dart';
 
 /// Archetype detay ekranı (docs/04) — bir uyku kimliğinin isim/tagline/özetini
@@ -49,6 +51,7 @@ class ArchetypeDetailScreen extends ConsumerWidget {
                     info.summary,
                     style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
                   ),
+                  _SoundsSection(slug: slug),
                 ],
               ),
             );
@@ -64,6 +67,54 @@ class ArchetypeDetailScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Bu kimliğe uygun sesler — detay→içerik döngüsü. Boş/yükleme/hata → gizli
+/// (bölüm ikincil; detay ekranını bloklamaz).
+class _SoundsSection extends ConsumerWidget {
+  const _SoundsSection({required this.slug});
+
+  final String slug;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sounds = ref.watch(soundscapesForArchetypeProvider(slug));
+    return sounds.maybeWhen(
+      data: (list) {
+        if (list.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: NoctaSpace.s6),
+            Text(
+              'Sounds that suit you',
+              key: const Key('sounds-heading'),
+              style: TextStyle(fontSize: NoctaFontSize.h2, color: NoctaColors.inkPrimary),
+            ),
+            const SizedBox(height: NoctaSpace.s3),
+            for (final s in list)
+              Padding(
+                padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
+                child: GestureDetector(
+                  key: Key('detail-sound-${s.slug}'),
+                  onTap: () => context.push('/library/${s.slug}'),
+                  child: NCard(
+                    child: Text(
+                      s.title('en'),
+                      style: TextStyle(
+                        fontSize: NoctaFontSize.body,
+                        color: NoctaColors.inkPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }
