@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈66% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈67% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████████████░░░░░░░░░░░░░░] 66%
+[███████████████████████████░░░░░░░░░░░░░] 67%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~95%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~68%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~74%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·95 + 0.40·49 + 0.15·68 + 0.15·45 ≈ **66%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·49 + 0.15·74 + 0.15·45 ≈ **67%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 kalanı:** (a) **başlık/affinity düzenleme** — tarif düzenlenebiliyor ama başlık düzeltilemiyor. (b) dashboard canlı veri (yer tutucu metrikler duruyor). (c) sayfalama. (d) zamanlanmış yayın (`scheduled` + `publish_at` şemada var, akış yok). A1 çekirdeği TAMAM: liste #119, oluşturma #120, panel formu #121, yayınlama+cache #122, tarif API #123, tarif editörü #124.
+1. **A1 kalanı:** (a) **dashboard canlı veri** — panelin ilk ekranı hâlâ yer tutucu "—" gösteriyor; içerik yönetimi çalışırken bu en görünür sahtelik. (b) sayfalama. (c) zamanlanmış yayın. **A1 içerik CMS'i TAMAM:** liste #119, oluşturma #120, panel formu #121, yayınlama+cache #122, tarif API #123, tarif editörü #124, başlık/affinity #125.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,40 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #125 — başlık/affinity düzenleme (PR #126, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `PATCH /v1/admin/soundscapes/:slug` (kısmi) + panelde "Bilgiler" formu.
+  **A1'in son büyük eksiği kapandı** — tarif düzenlenebiliyordu ama başlık düzeltilemiyordu.
+- **GERÇEK SUNUCUDA:** yayındaki kaydın başlığı düzeltildi → DB'de
+  `{"en":"Doğru Yazım","tr":"Türkçe Başlık"}` — **TR KORUNDU**; affinity güncellendi;
+  slug enjeksiyonu 400. Kanıt verisi silindi.
+- API **352 test** (340→352), admin **71 test** (66→71), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **SLUG DEĞİŞTİRİLEMEZ, panelde alanı bile YOK:** derin linkte yaşar ve paylaşılan
+  kartlarda dolaşır → değiştirmek dışarıdaki linkleri sessizce kırardı. Düzenlenebilir
+  göstermek, tutulamayacak söz vermek olurdu. Yeniden adlandırma → yönlendirme tablosu (ayrı iş).
+- **EN düzenlemesi DİĞER DİLLERİ SİLMEZ:** `title_i18n` çok dilli; komple yazmak TR'yi
+  sessizce uçururdu. Mevcut nesne okunup üzerine yazılıyor.
+- **KISMİ:** verilmeyen alana dokunulmaz; `affinity: []` ise TEMİZLEME (ikisi karışmıyor).
+- **Cache düşürülür:** feed hem `titleI18n` hem `archetypeAffinity` taşır (affinity
+  SIRALAMAYI bile değiştirir) — ısıtılmış-cache testiyle sabit.
+- `status` gövdeden enjekte edilemez (yayınlama kapısı delinmesin).
+
+🔥 **Riskler / açıklar**
+
+- Zamanlanmış yayın yok (`scheduled` + `publish_at` şemada var, akış yok).
+- Dashboard hâlâ yer tutucu; sayfalama yok.
+- `layer_defs` kullanılmıyor — **D-9 bekliyor**; i18n yok — **D-8 bekliyor**.
+
+❌ **Yapılmadı**
+
+- Zamanlanmış yayın, dashboard canlı veri, sayfalama, TOTP 2FA, davet akışı,
+  `.env.example`.
 
 ### #124 — panelde ses tarifi editörü + admin detay ucu (PR #125, merged)
 
