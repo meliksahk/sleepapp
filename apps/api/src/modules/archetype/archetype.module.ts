@@ -14,6 +14,7 @@ import { RandomSlugGenerator } from './infrastructure/random-slug.generator';
 import { GetQuestionsUseCase } from './application/get-questions.usecase';
 import { SubmitAnswersUseCase } from './application/submit-answers.usecase';
 import { GetLatestResultUseCase } from './application/get-latest-result.usecase';
+import { ListResultsUseCase } from './application/list-results.usecase';
 import { ScoreWebUseCase } from './application/score-web.usecase';
 import { GetWebResultUseCase } from './application/get-web-result.usecase';
 import { ArchetypeController } from './presentation/archetype.controller';
@@ -36,6 +37,12 @@ const providers: Provider[] = [
     inject: [ARCHETYPE_RESULT_REPOSITORY],
     useFactory: (repo: ArchetypeResultRepository): SubmitAnswersUseCase =>
       new SubmitAnswersUseCase(repo),
+  },
+  {
+    provide: ListResultsUseCase,
+    inject: [ARCHETYPE_RESULT_REPOSITORY],
+    useFactory: (repo: ArchetypeResultRepository): ListResultsUseCase =>
+      new ListResultsUseCase(repo),
   },
   {
     provide: GetLatestResultUseCase,

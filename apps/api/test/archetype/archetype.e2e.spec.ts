@@ -63,6 +63,57 @@ describe('Archetype e2e (HTTP)', () => {
     expect(result.body.archetypeSlug).toBe('overthinker');
   });
 
+  it('sonuç geçmişi: testi tekrar edince kayıtlar birikir, yeniden eskiye sıralı', async () => {
+    const { token: t } = await token();
+    const allA = { q1: 'q1a', q2: 'q2a', q3: 'q3a', q4: 'q4a', q5: 'q5a', q6: 'q6a' };
+
+    // 1) overthinker
+    await request(app.getHttpServer())
+      .post('/v1/archetype/answers')
+      .set('Authorization', `Bearer ${t}`)
+      .send({ version: 1, answers: allB })
+      .expect(201);
+    // 2) testi tekrar et → deep-ocean (kimlik zamanla değişir)
+    await request(app.getHttpServer())
+      .post('/v1/archetype/answers')
+      .set('Authorization', `Bearer ${t}`)
+      .send({ version: 1, answers: allA })
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get('/v1/archetype/results')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+
+    // Eskiden yalnızca EN SON sonuç erişilebiliyordu; ilk kayıt kayıp görünürdü.
+    expect(res.body).toHaveLength(2);
+    expect(res.body[0].archetypeSlug).toBe('deep-ocean'); // en yeni önce
+    expect(res.body[1].archetypeSlug).toBe('overthinker');
+    // /result hâlâ en sonu döner (geçmiş onu değiştirmez)
+    const latest = await request(app.getHttpServer())
+      .get('/v1/archetype/result')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(latest.body.archetypeSlug).toBe('deep-ocean');
+  });
+
+  it('izolasyon: geçmiş yalnızca kendi sonuçlarını içerir', async () => {
+    const a = await token();
+    const b = await token();
+    await request(app.getHttpServer())
+      .post('/v1/archetype/answers')
+      .set('Authorization', `Bearer ${a.token}`)
+      .send({ version: 1, answers: allB })
+      .expect(201);
+
+    // B hiç test yapmadı → boş geçmiş (A'nınkini GÖRMEZ)
+    const res = await request(app.getHttpServer())
+      .get('/v1/archetype/results')
+      .set('Authorization', `Bearer ${b.token}`)
+      .expect(200);
+    expect(res.body).toEqual([]);
+  });
+
   it('eksik cevap → 400', async () => {
     const { token: t } = await token();
     await request(app.getHttpServer())

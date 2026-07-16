@@ -403,6 +403,34 @@
         "tags": ["archetype"]
       }
     },
+    "/v1/archetype/results": {
+      "get": {
+        "operationId": "ArchetypeController_results",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArchetypeResultResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kullanıcının archetype sonuç geçmişi (yeniden eskiye; testi tekrar edince büyür)",
+        "tags": ["archetype"]
+      }
+    },
     "/v1/archetype/web/questions": {
       "get": {
         "operationId": "WebArchetypeController_questions",

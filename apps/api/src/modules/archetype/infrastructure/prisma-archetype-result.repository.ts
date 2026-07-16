@@ -37,6 +37,14 @@ export class PrismaArchetypeResultRepository implements ArchetypeResultRepositor
     });
     return row ? toResult(row) : null;
   }
+
+  async listByUserId(userId: string): Promise<ArchetypeResult[]> {
+    const rows = await this.prisma.archetype_results.findMany({
+      where: { user_id: userId },
+      orderBy: { created_at: 'desc' },
+    });
+    return rows.map(toResult);
+  }
 }
 
 function toResult(row: ArchetypeRow): ArchetypeResult {

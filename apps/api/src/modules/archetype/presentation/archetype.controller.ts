@@ -14,6 +14,7 @@ import type { QuestionMatrix } from '../domain/archetype';
 import { GetQuestionsUseCase } from '../application/get-questions.usecase';
 import { SubmitAnswersUseCase } from '../application/submit-answers.usecase';
 import { GetLatestResultUseCase } from '../application/get-latest-result.usecase';
+import { ListResultsUseCase } from '../application/list-results.usecase';
 import { ArchetypeError } from '../domain/errors';
 import { ArchetypeResultResponseDto, QuestionsResponseDto, SubmitAnswersDto } from './dto';
 
@@ -26,6 +27,7 @@ export class ArchetypeController {
     private readonly getQuestions: GetQuestionsUseCase,
     private readonly submitAnswers: SubmitAnswersUseCase,
     private readonly getLatestResult: GetLatestResultUseCase,
+    private readonly listResults: ListResultsUseCase,
   ) {}
 
   @Get('questions')
@@ -62,5 +64,14 @@ export class ArchetypeController {
       throw new NotFoundException({ code: 'no_result', message: 'Henüz archetype sonucu yok.' });
     }
     return latest;
+  }
+
+  @Get('results')
+  @ApiOperation({
+    summary: 'Kullanıcının archetype sonuç geçmişi (yeniden eskiye; testi tekrar edince büyür)',
+  })
+  @ApiOkResponse({ type: [ArchetypeResultResponseDto] })
+  results(@CurrentUser() user: AccessTokenClaims): Promise<ArchetypeResultResponseDto[]> {
+    return this.listResults.execute(user.sub);
   }
 }

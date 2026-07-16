@@ -225,6 +225,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/archetype/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanıcının archetype sonuç geçmişi (yeniden eskiye; testi tekrar edince büyür) */
+        get: operations["ArchetypeController_results"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/archetype/web/questions": {
         parameters: {
             query?: never;
@@ -1300,6 +1317,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArchetypeResultResponseDto"];
+                };
+            };
+        };
+    };
+    ArchetypeController_results: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchetypeResultResponseDto"][];
                 };
             };
         };
