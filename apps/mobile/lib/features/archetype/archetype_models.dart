@@ -45,6 +45,28 @@ class ArchetypeQuestions {
       );
 }
 
+/// Archetype tanıtım içeriği (GET /v1/archetype/content). İsim/tagline/özet.
+class ArchetypeInfo {
+  const ArchetypeInfo({
+    required this.slug,
+    required this.name,
+    required this.tagline,
+    required this.summary,
+  });
+
+  final String slug;
+  final String name;
+  final String tagline;
+  final String summary;
+
+  factory ArchetypeInfo.fromJson(Map<String, dynamic> json) => ArchetypeInfo(
+        slug: json['slug'] as String,
+        name: json['name'] as String,
+        tagline: json['tagline'] as String,
+        summary: json['summary'] as String,
+      );
+}
+
 /// Paylaşım kartı (GET /v1/sharing/archetype). Web URL + deep link + kopya metin.
 class ArchetypeShare {
   const ArchetypeShare({

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/share/sharer.dart';
 import '../auth/auth_providers.dart';
 import 'archetype_controller.dart';
+import 'archetype_models.dart';
 
 /// Archetype test controller'ı — auth (oturum + refresh) + api client üzerine.
 final archetypeControllerProvider = Provider<ArchetypeController>((ref) {
@@ -10,3 +11,9 @@ final archetypeControllerProvider = Provider<ArchetypeController>((ref) {
 
 /// Paylaşım adaptörü — interim: panoya kopyalar (native share sheet ertelendi).
 final sharerProvider = Provider<Sharer>((ref) => ClipboardSharer());
+
+/// Archetype tanıtım içeriği slug→info haritası (sonuç ekranı açıklaması).
+final archetypeContentProvider = FutureProvider<Map<String, ArchetypeInfo>>((ref) async {
+  final list = await ref.read(archetypeControllerProvider).fetchContent();
+  return {for (final info in list) info.slug: info};
+});

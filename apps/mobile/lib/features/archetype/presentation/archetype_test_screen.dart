@@ -213,6 +213,10 @@ class _ResultViewState extends ConsumerState<_ResultView> {
         .split('-')
         .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
+    // Tanıtım içeriği (public uç) — geldiyse tagline/özet göster (yoksa gizli).
+    final info = ref
+        .watch(archetypeContentProvider)
+        .maybeWhen(data: (m) => m[widget.result.archetypeSlug], orElse: () => null);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(NoctaSpace.s5),
@@ -226,11 +230,26 @@ class _ResultViewState extends ConsumerState<_ResultView> {
             const SizedBox(height: NoctaSpace.s3),
             NCard(
               child: Text(
-                display,
+                info?.name ?? display,
                 key: const Key('archetype-result'),
                 style: TextStyle(fontSize: NoctaFontSize.display, color: NoctaColors.inkPrimary),
               ),
             ),
+            if (info != null) ...[
+              const SizedBox(height: NoctaSpace.s3),
+              Text(
+                info.tagline,
+                key: const Key('archetype-tagline'),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+              const SizedBox(height: NoctaSpace.s2),
+              Text(
+                info.summary,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+            ],
             const SizedBox(height: NoctaSpace.s5),
             NButton(
               key: const Key('archetype-share'),
