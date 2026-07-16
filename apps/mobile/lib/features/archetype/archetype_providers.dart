@@ -17,3 +17,9 @@ final archetypeContentProvider = FutureProvider<Map<String, ArchetypeInfo>>((ref
   final list = await ref.read(archetypeControllerProvider).fetchContent();
   return {for (final info in list) info.slug: info};
 });
+
+/// Kullanıcının en son archetype sonucu (henüz test yapılmadıysa null) —
+/// home kimlik kartı bunu izler.
+final latestArchetypeResultProvider = FutureProvider<ArchetypeResult?>((ref) {
+  return ref.read(archetypeControllerProvider).latestResult();
+});
