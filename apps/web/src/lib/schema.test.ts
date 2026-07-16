@@ -3,6 +3,7 @@ import {
   buildArchetypeJsonLd,
   buildArchetypeListJsonLd,
   buildBreadcrumbJsonLd,
+  buildBreadcrumbTrail,
   buildFaqJsonLd,
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
@@ -16,6 +17,21 @@ describe('schema.org JSON-LD builders', () => {
     expect(ld['@type']).toBe('Article');
     expect(ld.url).toContain('/a/deep-ocean');
     expect((ld.isPartOf as { '@type': string })['@type']).toBe('WebSite');
+  });
+
+  it('buildBreadcrumbTrail: sıralı pozisyon + kök-göreli item URL', () => {
+    const ld = buildBreadcrumbTrail([
+      { name: 'Home', path: '' },
+      { name: 'FAQ', path: '/faq' },
+    ]);
+    expect(ld['@type']).toBe('BreadcrumbList');
+    type Item = { position: number; name: string; item: string };
+    const items = ld.itemListElement as [Item, Item];
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ position: 1, name: 'Home' });
+    expect(items[0].item).not.toContain('/faq'); // kök: sadece SITE_URL
+    expect(items[1]).toMatchObject({ position: 2, name: 'FAQ' });
+    expect(items[1].item).toContain('/faq');
   });
 
   it('BreadcrumbList: Home → archetype, doğru pozisyonlar', () => {

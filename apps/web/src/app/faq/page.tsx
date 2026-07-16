@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FAQ_ITEMS } from '@/content/faq';
-import { buildFaqJsonLd } from '@/lib/schema';
+import { buildBreadcrumbTrail, buildFaqJsonLd } from '@/lib/schema';
 
 export const metadata: Metadata = {
   title: 'FAQ — NOCTA Sleep Ritual',
@@ -15,7 +15,13 @@ export const metadata: Metadata = {
 };
 
 export default function FaqPage() {
-  const jsonLd = buildFaqJsonLd(FAQ_ITEMS);
+  const jsonLd = [
+    buildFaqJsonLd(FAQ_ITEMS),
+    buildBreadcrumbTrail([
+      { name: 'Home', path: '' },
+      { name: 'FAQ', path: '/faq' },
+    ]),
+  ];
   return (
     <>
       <script
