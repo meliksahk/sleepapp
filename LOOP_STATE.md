@@ -6,15 +6,15 @@
 [██████████████████░░░░░░░░░░░░░░░░░░░░░░] 46%
 ```
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                     |
-| ----------- | -------- | ------- | ------------------------------------------------------------------------ |
-| Backend/API | ~73%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)    |
-| Mobil       | ~38%     | 0.40    | **ses motoru: DC blocker + native graf + mikser**, mic takibi, mix-video |
-| Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI               |
-| Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog           |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
+| ----------- | -------- | ------- | ---------------------------------------------------------------------- |
+| Backend/API | ~73%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)  |
+| Mobil       | ~39%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·73 + 0.40·38 + 0.15·12 + 0.15·45 ≈ **46%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·73 + 0.40·39 + 0.15·12 + 0.15·45 ≈ **46%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#96 (🔊 DC engelleyici — #95 bulgusu KAPANDI):** #95'te bulup "sıradaki iş" diye yazdığım açık kapatıldı: pembe gürültünün artık DC'si kaynağında temizleniyor. **Kritik tasarım:** durumlu tek-kutuplu yüksek geçiren (`y[n]=x[n]-x[n-1]+R·y[n-1]`, R=0.9995) — **"buffer ortalamasını çıkar" DEĞİL**, çünkü native graf sesi 128–1024'lük callback'lerle parça parça işler; ortalama çıkarma tüm buffer'ı görmeyi gerektirir. **Testle kanıtlandı:** parçalı (128'lik) işleme = tek seferde işleme **birebir aynı** → native'e birebir taşınabilir. Ölçümler: pink dc -0.03568→**0.00060** (60×); white rms 0.5763→0.5764 (sinyal bozulmuyor); sabit 1.0 girişi→0.00000; kesim **3.82 Hz** @48k (bas duyulur kalır). `flutter test` 116 yeşil (110→116, +6), analyze temiz. İlerleme barı mobil 38→39% (toplam ≈46%). PR #97. **Not:** filtre henüz üretim yoluna bağlı değil — mikser/graf gelince zincire girecek; katman hâlâ ses ÇALMIYOR.
 - **#95 (🔊 pembe gürültü — Voss-McCartney + DC bulgusu):** #94'te sıraya bırakılan pembe gürültü (1/f, uyku sesinin klasiği). 16 beyaz üreteç farklı oktavlarda yenilenir (satır k, 2^k örnekte bir) → oktav başına eşit enerji. Golden değerler yine **ÖLÇÜLEREK**: pink rms=0.2279, mad=0.0950, peak=1.0000. **Asıl özellik testle sabit:** spektral eğim white(0.6652) > pink(0.0950) > brown(0.0433) → pembe tam ortada. `flutter test` 110 yeşil (104→110), analyze temiz. PR #96. **🟡 BULGU (gizlenmedi):** pembede artık **DC=-0.036** (white/brown ≈0.000). Hata DEĞİL — en yavaş satır 32768 örnekte bir yenilenir, sonlu pencerede 1/f'in düşük-frekans enerjisi sabit kayma gibi görünür. **Neden "düzeltilmedi":** buffer ortalamasını çıkarınca DC ~0 olur ve testler tertemiz geçerdi, ama bu numara yalnızca offline buffer'da çalışır — **streaming native grafta (AVAudioEngine/Oboe) aynı DC geri gelir**; yani sorunu çözmez, saklardı ve native'de sürpriz olurdu. Ham bırakıldı; **çalma yolunda DC engelleyici (high-pass) GEREKİR** — kodda + testte + burada yazılı. **SIRADAKİ İŞ:** DC blocker/high-pass biquad + golden testi.
 - **#94 (🔊 ses motoru DSP çekirdeği — ilk taş):** Projenin **en büyük boşluğuna** başlandı. `core/audio_engine/dsp/noise.dart` — saf Dart, platformdan bağımsız: deterministik LCG (`Random` değil — golden testler tekrarlanabilir olmalı), `whiteNoise`, `brownNoise` (beyazın **sızıntılı integrali**; sızıntı DC drift'ini engeller, tepe 1'e normalize → kırpma yok) + istatistik yardımcıları `rms`/`dcOffset`/`meanAbsDelta` (FFT'siz spektral eğim vekili). **docs/04 §80 birebir uygulandı**: 5 sn buffer'ın istatistik snapshot'ı, örnek eşitliği DEĞİL (platform toleransı). Beklenen değerler implementasyondan **ÖLÇÜLEREK** alındı (uydurulmadı): white rms=0.5763 (teori 1/√3=0.5774 ✓), dc=0.0002; brown rms=0.2517, dc=0.0007, peak=1.0000, pürüzsüzlük beyazın ~15 katı düşük. `flutter analyze` temiz, `flutter test` 104 yeşil (91→104, +13): determinizm, golden snapshot'lar, sınırlılık, boş/tek-örnek. İlerleme barı mobil 35→37% (toplam ≈46%). PR #95. **DÜRÜSTLÜK:** bu katman **HENÜZ SES ÇALMAZ** — native graf (AVAudioEngine/Oboe) + `AudioEngineFacade` ayrı; bu dosya onların doğruluk ölçütü. Pink (Voss) bilinçli olarak sıraya bırakıldı (PR küçük kalsın).
 - **#93 (report_shared olayı — sözlük + emisyon atomik):** #92'de bilinçli bırakılan uç kapatıldı. Olay sözlüğe (API) ve mobile (emisyon) **aynı PR'da** girdi — `docs/analytics-events.md`'deki sıra kuralı gereği ("önce sözlük, sonra gönderim"); ayrı gitseydi #90'daki kapı batch'i 400'lerdi. Viral huninin ikinci ayağı artık ölçülebilir: archetype (`archetype_completed`→`share_tapped`) + gece raporu (`report_shared`). **props YOK (bilinçli):** tek anlamlı aday gece tarihiydi → PII'ye yakın (CLAUDE.md §6) + huni için gereksiz; gerekçe dokümanda. `flutter analyze` temiz, mobil 91 yeşil, turbo 18/18, API 222. Testler: sözlük bilir; mobil paylaşımda olay izlenir, **kart 404'te olay YOK** (yalnızca gerçekten paylaşılınca sayılır). İlerleme barı değişmedi (≈45% — küçük ölçüm dilimi). PR #94.
