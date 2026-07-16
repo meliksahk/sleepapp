@@ -745,11 +745,28 @@ export interface components {
             notes: Record<string, never> | null;
             soundscapes: components["schemas"]["SoundscapeDto"][];
         };
+        MixerLayerDto: {
+            /**
+             * @description Katman kimliği (preset içinde benzersiz)
+             * @example rain
+             */
+            id: string;
+            /**
+             * @example pink
+             * @enum {string}
+             */
+            type: "white" | "pink" | "brown";
+            /** @example 0.5 */
+            gain: number;
+        };
+        MixerStateDto: {
+            /** @description 1..8 katman */
+            layers: components["schemas"]["MixerLayerDto"][];
+        };
         PresetDto: {
             archetypeSlug: string;
-            mixerState: {
-                [key: string]: unknown;
-            } | null;
+            /** @description Doğrulanmış mixer durumu */
+            mixerState: components["schemas"]["MixerStateDto"];
         };
         SoundscapeDetailDto: {
             soundscape: components["schemas"]["SoundscapeDto"];

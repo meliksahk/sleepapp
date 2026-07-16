@@ -2,6 +2,8 @@
  * İçerik domain (docs/02 §3, docs/04). Soundscape = ses TARİFİ (engine_params);
  * MP3 stream yok, üretim on-device. Feed archetype affinity'ye göre sıralanır (saf).
  */
+import type { MixerState } from './mixer-state';
+
 export type ContentStatus = 'draft' | 'scheduled' | 'published';
 
 export interface Soundscape {
@@ -16,7 +18,9 @@ export interface Soundscape {
 
 export interface Preset {
   readonly archetypeSlug: string;
-  readonly mixerState: unknown;
+  /** Doğrulanmış mixer durumu — `unknown` DEĞİL: bozuk preset domain'e giremez
+   * (adaptör okuma yolunda `parseMixerState` ile eler, bkz. mixer-state.ts). */
+  readonly mixerState: MixerState;
 }
 
 export interface SoundscapeDetail {

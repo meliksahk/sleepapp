@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import type {
   ContentRepository,
   Preset,
@@ -5,6 +6,7 @@ import type {
   SoundscapeDetail,
   WeeklyRelease,
 } from '../domain/soundscape';
+import { parseMixerState } from '../domain/mixer-state';
 import type { PrismaService } from '../../../shared/infra/prisma.service';
 
 interface SoundscapeRow {
@@ -25,6 +27,8 @@ interface SoundscapeDetailRow extends SoundscapeRow {
 }
 
 export class PrismaContentRepository implements ContentRepository {
+  private readonly logger = new Logger('ContentRepository');
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findPublished(): Promise<Soundscape[]> {
@@ -42,10 +46,21 @@ export class PrismaContentRepository implements ContentRepository {
     });
     if (!row) return null;
     const detailRow = row as unknown as SoundscapeDetailRow;
-    const presets: Preset[] = row.presets.map((p: PresetRow) => ({
-      archetypeSlug: p.archetype_slug,
-      mixerState: p.mixer_state,
-    }));
+    // Sözleşme kapısı: mixer_state serbest jsonb'dir. Bozuk preset'i domain'e
+    // ALMAYIZ — aksi halde hata kullanıcının telefonunda, çalma anında patlar.
+    // Sessizce elemek yerine LOGLARIZ ki bozuk içerik görünür olsun (CLAUDE.md §0).
+    const presets: Preset[] = [];
+    for (const p of row.presets as PresetRow[]) {
+      const mixerState = parseMixerState(p.mixer_state);
+      if (!mixerState) {
+        this.logger.error(
+          `Geçersiz mixer_state → preset atlandı (soundscape=${slug}, archetype=${p.archetype_slug}). ` +
+            'Beklenen şema: {layers:[{id,type:white|pink|brown,gain:0..1}]} (docs/02).',
+        );
+        continue;
+      }
+      presets.push({ archetypeSlug: p.archetype_slug, mixerState });
+    }
     return {
       soundscape: toSoundscape(row),
       presets,

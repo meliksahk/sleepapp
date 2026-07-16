@@ -46,7 +46,18 @@ describe('Content e2e (HTTP)', () => {
       data: { ...base, slug: slugs.draft, archetype_affinity: ['overthinker'], status: 'draft' },
     });
     await prisma.presets.create({
-      data: { soundscape_id: over.id, archetype_slug: 'overthinker', mixer_state: { rain: 0.7 } },
+      data: {
+        soundscape_id: over.id,
+        archetype_slug: 'overthinker',
+        // Yeni sözleşme (docs/02): {layers:[{id,type,gain}]}. Eski serbest biçim
+        // ({rain:0.7}) artık geçersiz — tip bilgisi taşımadığı için motor render edemezdi.
+        mixer_state: {
+          layers: [
+            { id: 'rain', type: 'pink', gain: 0.7 },
+            { id: 'deep', type: 'brown', gain: 0.3 },
+          ],
+        },
+      },
     });
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -105,10 +116,37 @@ describe('Content e2e (HTTP)', () => {
     expect(res.body.soundscape.slug).toBe(slugs.over);
     expect(res.body.presets).toHaveLength(1);
     expect(res.body.presets[0].archetypeSlug).toBe('overthinker');
+    // mixerState artık TİPLİ sözleşme (serbest jsonb değil): motorun MixSpec'iyle hizalı
+    expect(res.body.presets[0].mixerState.layers).toEqual([
+      { id: 'rain', type: 'pink', gain: 0.7 },
+      { id: 'deep', type: 'brown', gain: 0.3 },
+    ]);
     // preview_asset_key → presigned URL (offline üretim): anahtar + imza içerir
     expect(typeof res.body.previewUrl).toBe('string');
     expect(res.body.previewUrl).toContain('previews/over.opus');
     expect(res.body.previewUrl).toMatch(/X-Amz-Signature=/);
+  });
+
+  it('SÖZLEŞME KAPISI: bozuk mixer_state’li preset istemciye ULAŞMAZ', async () => {
+    // Eski/serbest biçim ({rain:0.7}) doğrudan DB'ye yazılır (admin CMS yok).
+    // Okuma yolu onu elemeli — aksi halde hata kullanıcının telefonunda patlardı.
+    const bad = await prisma.presets.create({
+      data: {
+        soundscape_id: (await prisma.soundscapes.findFirst({ where: { slug: slugs.deep } }))!.id,
+        archetype_slug: 'deep-ocean',
+        mixer_state: { rain: 0.7 }, // tip bilgisi yok → geçersiz
+      },
+    });
+
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get(`/v1/content/soundscapes/${slugs.deep}`)
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+
+    // Soundscape yine servis edilir; yalnızca bozuk preset düşer (200 korunur).
+    expect(res.body.presets).toHaveLength(0);
+    await prisma.presets.delete({ where: { id: bad.id } });
   });
 
   it('preview_asset_key olmayan soundscape → previewUrl null', async () => {

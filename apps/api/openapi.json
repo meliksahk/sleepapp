@@ -1469,6 +1469,41 @@
         },
         "required": ["weekStart", "notes", "soundscapes"]
       },
+      "MixerLayerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "rain",
+            "description": "Katman kimliği (preset içinde benzersiz)"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["white", "pink", "brown"],
+            "example": "pink"
+          },
+          "gain": {
+            "type": "number",
+            "example": 0.5,
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": ["id", "type", "gain"]
+      },
+      "MixerStateDto": {
+        "type": "object",
+        "properties": {
+          "layers": {
+            "description": "1..8 katman",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MixerLayerDto"
+            }
+          }
+        },
+        "required": ["layers"]
+      },
       "PresetDto": {
         "type": "object",
         "properties": {
@@ -1476,9 +1511,12 @@
             "type": "string"
           },
           "mixerState": {
-            "type": "object",
-            "additionalProperties": true,
-            "nullable": true
+            "description": "Doğrulanmış mixer durumu",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MixerStateDto"
+              }
+            ]
           }
         },
         "required": ["archetypeSlug", "mixerState"]
