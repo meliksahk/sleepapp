@@ -49,7 +49,7 @@ describe('Analytics e2e (HTTP)', () => {
       .send({
         events: [
           { name: 'archetype_completed', occurredAt: '2026-05-01T10:00:00.000Z', props: { v: 1 } },
-          { name: 'sleep.session.recorded', occurredAt: '2026-05-01T22:00:00.000Z' },
+          { name: 'share_tapped', occurredAt: '2026-05-01T22:00:00.000Z' },
         ],
       })
       .expect(202);
@@ -76,5 +76,18 @@ describe('Analytics e2e (HTTP)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ events: [{ name: 'Bad Name', occurredAt: '2026-05-01T10:00:00.000Z' }] })
       .expect(400);
+  });
+
+  it('sözlükte olmayan olay → 400 unknown_event (docs/analytics-events.md)', async () => {
+    const { token, userId } = await registerAndToken();
+    const res = await request(app.getHttpServer())
+      .post('/v1/analytics/events')
+      .set('Authorization', `Bearer ${token}`)
+      // biçimi geçerli ama sözlükte yok
+      .send({ events: [{ name: 'totally_made_up', occurredAt: '2026-05-01T10:00:00.000Z' }] })
+      .expect(400);
+    expect(res.body.code).toBe('unknown_event');
+    // batch reddedildi → hiçbir satır yazılmadı
+    expect(await prisma.analytics_events.count({ where: { user_id: userId } })).toBe(0);
   });
 });
