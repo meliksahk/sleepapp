@@ -59,6 +59,15 @@ class SleepController {
     return SleepStats.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Son 7 gecenin uyku trendi (grafik için).
+  Future<WeeklyTrend> weeklyTrend() async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed('/v1/sleep/trend', token),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return WeeklyTrend.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   Future<StreakStats> streak() async {
     final res = await _auth.authorizedRequest(
       (token) => _client.getAuthed('/v1/sleep/streak', token),

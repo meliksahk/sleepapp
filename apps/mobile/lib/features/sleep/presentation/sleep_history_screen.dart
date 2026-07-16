@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../sleep_models.dart';
 import '../sleep_providers.dart';
+import 'weekly_trend_chart.dart';
 
 /// Uyku geçmişi (docs/04 M1): en yeni oturumları gece + süre ile listeler.
 /// Boş/yükleme/hata durumları. Not: metinler l10n'a M1'de taşınacak.
@@ -13,6 +14,7 @@ class SleepHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(recentSleepSessionsProvider);
     final stats = ref.watch(sleepStatsProvider);
+    final trend = ref.watch(sleepTrendProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Sleep history')),
       body: SafeArea(
@@ -37,6 +39,21 @@ class SleepHistoryScreen extends ConsumerWidget {
                           color: NoctaColors.inkSecondary,
                         ),
                       ),
+                    ),
+              orElse: () => const SizedBox.shrink(),
+            ),
+            // Son 7 gece mini grafiği — veri olan gece varsa (yükleme/hata/boş → gizli).
+            trend.maybeWhen(
+              data: (t) => t.nightsWithData == 0
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        NoctaSpace.s5,
+                        NoctaSpace.s4,
+                        NoctaSpace.s5,
+                        0,
+                      ),
+                      child: WeeklyTrendChart(trend: t),
                     ),
               orElse: () => const SizedBox.shrink(),
             ),

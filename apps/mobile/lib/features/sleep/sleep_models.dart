@@ -29,6 +29,40 @@ class SleepStats {
       );
 }
 
+/// Bir gecenin trend kovası (GET /v1/sleep/trend içindeki bir öğe).
+class TrendNight {
+  const TrendNight({required this.nightDate, required this.durationMinutes});
+
+  final String nightDate;
+  final int durationMinutes;
+
+  factory TrendNight.fromJson(Map<String, dynamic> json) => TrendNight(
+        nightDate: json['nightDate'] as String,
+        durationMinutes: json['durationMinutes'] as int,
+      );
+}
+
+/// Son 7 gecenin uyku trendi (GET /v1/sleep/trend). Geceler eskiden yeniye.
+class WeeklyTrend {
+  const WeeklyTrend({
+    required this.nights,
+    required this.averageDurationMinutes,
+    required this.nightsWithData,
+  });
+
+  final List<TrendNight> nights;
+  final int averageDurationMinutes;
+  final int nightsWithData;
+
+  factory WeeklyTrend.fromJson(Map<String, dynamic> json) => WeeklyTrend(
+        nights: (json['nights'] as List<dynamic>)
+            .map((e) => TrendNight.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        averageDurationMinutes: json['averageDurationMinutes'] as int,
+        nightsWithData: json['nightsWithData'] as int,
+      );
+}
+
 class SleepSession {
   const SleepSession({
     required this.id,
