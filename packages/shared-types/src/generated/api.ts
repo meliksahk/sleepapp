@@ -87,6 +87,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/admin/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 2FA durumu (etkin / yarıda kalmış) */
+        get: operations["AuthController_getTotpStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/admin/totp/enroll": {
         parameters: {
             query?: never;
@@ -817,6 +834,12 @@ export interface components {
              */
             totpCode?: string;
         };
+        TotpStatusResponseDto: {
+            /** @description İki adımlı doğrulama etkin mi (onaylanmış mı) */
+            enabled: boolean;
+            /** @description Anahtar üretilmiş ama onaylanmamış — kurulum yarıda kalmış */
+            pending: boolean;
+        };
         TotpEnrollResponseDto: {
             /**
              * @description Base32 gizli anahtar — elle giriş için. Bir daha GÖSTERİLMEZ.
@@ -1477,6 +1500,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AuthController_getTotpStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotpStatusResponseDto"];
+                };
             };
         };
     };

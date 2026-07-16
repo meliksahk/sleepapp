@@ -54,6 +54,16 @@ export class TotpConfirmDto {
   code!: string;
 }
 
+export class TotpStatusResponseDto {
+  @ApiProperty({ description: 'İki adımlı doğrulama etkin mi (onaylanmış mı)' })
+  enabled!: boolean;
+
+  @ApiProperty({
+    description: 'Anahtar üretilmiş ama onaylanmamış — kurulum yarıda kalmış',
+  })
+  pending!: boolean;
+}
+
 export class TotpEnrollResponseDto {
   @ApiProperty({
     description: 'Base32 gizli anahtar — elle giriş için. Bir daha GÖSTERİLMEZ.',

@@ -257,6 +257,48 @@ describe('Admin TOTP 2FA e2e (HTTP)', () => {
       .expect(204);
   });
 
+  describe('durum ucu (panel rozeti)', () => {
+    const status = (token: string) =>
+      request(app.getHttpServer())
+        .get('/v1/auth/admin/totp')
+        .set('Authorization', `Bearer ${token}`);
+
+    it('kurulum yapılmamış → enabled:false, pending:false', async () => {
+      const acc = await adminAccount();
+      const res = await status(acc.token).expect(200);
+      expect(res.body).toEqual({ enabled: false, pending: false });
+    });
+
+    it('ÇEKİRDEK: yarıda kalmış kurulum → pending, enabled DEĞİL', async () => {
+      // "Anahtar var" ile "2FA etkin" AYNI ŞEY DEĞİL. Bunları birleştirmek, kod
+      // üretemeyen kullanıcıyı "korunuyor" göstermek olurdu — yalan.
+      const acc = await adminAccount();
+      await request(app.getHttpServer())
+        .post('/v1/auth/admin/totp/enroll')
+        .set('Authorization', `Bearer ${acc.token}`)
+        .expect(200);
+
+      const res = await status(acc.token).expect(200);
+      expect(res.body).toEqual({ enabled: false, pending: true });
+    });
+
+    it('onaylanmış kurulum → enabled', async () => {
+      const acc = await enrolledAccount();
+      const res = await status(acc.token).expect(200);
+      expect(res.body).toEqual({ enabled: true, pending: false });
+    });
+
+    it('durum GİZLİ ANAHTARI sızdırmaz (rozet için gerekli değil)', async () => {
+      const acc = await enrolledAccount();
+      const res = await status(acc.token).expect(200);
+      expect(JSON.stringify(res.body)).not.toContain(acc.secret);
+    });
+
+    it('kimlik doğrulaması ister (401)', async () => {
+      await request(app.getHttpServer()).get('/v1/auth/admin/totp').expect(401);
+    });
+  });
+
   it('biçimsiz kod doğrulama katmanında elenir (400)', async () => {
     const acc = await enrolledAccount();
     await login(acc.email, { totpCode: '12345' }).expect(400);

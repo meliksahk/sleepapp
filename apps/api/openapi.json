@@ -124,6 +124,31 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/admin/totp": {
+      "get": {
+        "operationId": "AuthController_getTotpStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "2FA durumu (etkin / yarıda kalmış)",
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/admin/totp/enroll": {
       "post": {
         "operationId": "AuthController_totpEnroll",
@@ -1617,6 +1642,20 @@
           }
         },
         "required": ["email", "password"]
+      },
+      "TotpStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "İki adımlı doğrulama etkin mi (onaylanmış mı)"
+          },
+          "pending": {
+            "type": "boolean",
+            "description": "Anahtar üretilmiş ama onaylanmamış — kurulum yarıda kalmış"
+          }
+        },
+        "required": ["enabled", "pending"]
       },
       "TotpEnrollResponseDto": {
         "type": "object",

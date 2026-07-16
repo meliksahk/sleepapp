@@ -26,6 +26,7 @@ import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
 import { LoginAdminUseCase } from '../application/login-admin.usecase';
 import { EnrollTotpUseCase } from '../application/enroll-totp.usecase';
 import { ConfirmTotpUseCase } from '../application/confirm-totp.usecase';
+import { GetTotpStatusUseCase } from '../application/get-totp-status.usecase';
 import { LogoutUseCase } from '../application/logout.usecase';
 import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { RequestEmailUpgradeUseCase } from '../application/request-email-upgrade.usecase';
@@ -51,6 +52,7 @@ import {
   SessionResponseDto,
   TotpConfirmDto,
   TotpEnrollResponseDto,
+  TotpStatusResponseDto,
   VerifyEmailDto,
 } from './dto';
 
@@ -75,6 +77,7 @@ export class AuthController {
     private readonly loginAdmin: LoginAdminUseCase,
     private readonly enrollTotp: EnrollTotpUseCase,
     private readonly confirmTotp: ConfirmTotpUseCase,
+    private readonly totpStatus: GetTotpStatusUseCase,
     private readonly logout: LogoutUseCase,
     private readonly deleteAccount: DeleteAccountUseCase,
     private readonly requestEmailUpgrade: RequestEmailUpgradeUseCase,
@@ -138,6 +141,16 @@ export class AuthController {
       }
       throw e;
     }
+  }
+
+  /** Panelin "2FA durumu" rozeti — kendi hesabının durumu (`sub` token'dan). */
+  @Get('admin/totp')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '2FA durumu (etkin / yarıda kalmış)' })
+  @ApiOkResponse({ type: TotpStatusResponseDto })
+  async getTotpStatus(@CurrentUser() claims: AccessTokenClaims): Promise<TotpStatusResponseDto> {
+    return this.totpStatus.execute(claims.sub);
   }
 
   /**
