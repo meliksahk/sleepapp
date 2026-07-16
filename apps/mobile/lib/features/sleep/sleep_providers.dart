@@ -23,6 +23,11 @@ final sleepStatsProvider = FutureProvider<SleepStats>((ref) {
   return ref.read(sleepControllerProvider).stats();
 });
 
+/// Bir gecenin raporu (yoksa null) — gece raporu ekranı bunu izler.
+final nightReportProvider = FutureProvider.family<NightReport?, String>((ref, nightDate) {
+  return ref.read(sleepControllerProvider).nightReport(nightDate);
+});
+
 /// Son 7 gecenin trendi — geçmiş ekranı mini grafiği bunu izler.
 final sleepTrendProvider = FutureProvider<WeeklyTrend>((ref) {
   return ref.read(sleepControllerProvider).weeklyTrend();

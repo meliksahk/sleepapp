@@ -5,6 +5,7 @@ import '../features/content/presentation/soundscape_detail_screen.dart';
 import '../features/content/presentation/soundscape_library_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/sleep/presentation/night_report_screen.dart';
 import '../features/sleep/presentation/sleep_history_screen.dart';
 
 /// Uygulama route'ları — tek dosyada tip güvenli (docs/04). M1'de büyür.
@@ -35,6 +36,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/sleep',
       builder: (context, state) => const SleepHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/report/:night',
+      builder: (context, state) => NightReportScreen(nightDate: state.pathParameters['night'] ?? ''),
     ),
     GoRoute(
       path: '/settings',

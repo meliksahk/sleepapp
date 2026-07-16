@@ -50,6 +50,19 @@ class SleepController {
     return NightReport.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Gece raporu paylaşım kartı (viral kanca #2); o gecede rapor yoksa (404) null.
+  Future<NightReportShare?> reportShare(String nightDate) async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed(
+        '/v1/sharing/report?night=${Uri.encodeQueryComponent(nightDate)}',
+        token,
+      ),
+    );
+    if (res.statusCode == 404) return null;
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return NightReportShare.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   /// Uyku istatistikleri (gece sayısı, toplam/ortalama süre).
   Future<SleepStats> stats() async {
     final res = await _auth.authorizedRequest(
