@@ -1,3 +1,4 @@
+import type { users as UserRow } from '@prisma/client';
 import type { DeviceRegistration, User } from '../../domain/user.entity';
 import type { AdminCredentials, UserRepository } from '../../domain/ports';
 import type { PrismaService } from '../../../../shared/infra/prisma.service';
@@ -42,13 +43,59 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async findAdminCredentialsByEmail(email: string): Promise<AdminCredentials | null> {
-    const row = await this.prisma.users.findUnique({ where: { email } });
-    // Üç koşul da şart: admin türü, parolası kurulu, silinmemiş. Silinen hesabın
-    // satırı bir süre durabilir — kaskad silme öncesi giriş yapabilmesi olmaz.
-    if (!row || row.kind !== 'admin' || !row.password_hash || row.deleted_at !== null) {
+    return this.toAdminCredentials(await this.prisma.users.findUnique({ where: { email } }));
+  }
+
+  async findAdminCredentialsById(userId: string): Promise<AdminCredentials | null> {
+    return this.toAdminCredentials(await this.prisma.users.findUnique({ where: { id: userId } }));
+  }
+
+  /** Tek yerde: iki arama yolunun AYNI kabul kurallarını uygulaması şart. */
+  private toAdminCredentials(row: UserRow | null): AdminCredentials | null {
+    // Dört koşul da şart: admin türü, e-postası ve parolası kurulu, silinmemiş.
+    // Silinen hesabın satırı bir süre durabilir — kaskad silme öncesi giriş yapamaz.
+    if (!row || row.kind !== 'admin' || !row.password_hash || !row.email) {
       return null;
     }
-    return { userId: row.id, roles: row.roles, passwordHash: row.password_hash };
+    if (row.deleted_at !== null) {
+      return null;
+    }
+    return {
+      userId: row.id,
+      email: row.email,
+      roles: row.roles,
+      passwordHash: row.password_hash,
+      totpSecret: row.totp_secret,
+      totpConfirmedAt: row.totp_confirmed_at,
+      // bigint → number: Prisma bigint kolonu BigInt döner ve BigInt, number ile
+      // yapılan `<=` karşılaştırmasında sessizce YANLIŞ sonuç vermez ama tip
+      // hatası verir; JSON'a da serileşmez. Sayaç = unix_saniye/30 ≈ 5.6e7 —
+      // Number.MAX_SAFE_INTEGER'ın (9e15) çok altında, dönüşüm kayıpsız.
+      totpLastCounter: row.totp_last_counter === null ? null : Number(row.totp_last_counter),
+    };
+  }
+
+  async setTotpSecret(userId: string, secret: string): Promise<void> {
+    // Onay ve sayaç SIFIRLANIR: yeni anahtar yeni kurulumdur. Eski sayacı bırakmak,
+    // yeni anahtarın ilk kodlarını "kullanılmış" sayıp kurulumu bozardı.
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: { totp_secret: secret, totp_confirmed_at: null, totp_last_counter: null },
+    });
+  }
+
+  async confirmTotp(userId: string, confirmedAt: Date, counter: number): Promise<void> {
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: { totp_confirmed_at: confirmedAt, totp_last_counter: BigInt(counter) },
+    });
+  }
+
+  async recordTotpCounter(userId: string, counter: number): Promise<void> {
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: { totp_last_counter: BigInt(counter) },
+    });
   }
 
   async upgradeToEmail(userId: string, email: string, verifiedAt: Date): Promise<void> {

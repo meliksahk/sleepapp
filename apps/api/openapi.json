@@ -124,6 +124,68 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/admin/totp/enroll": {
+      "post": {
+        "operationId": "AuthController_totpEnroll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpEnrollResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "2FA zaten etkin"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "2FA kurulumu: gizli anahtar üret (henüz etkin değil)",
+        "tags": ["auth"]
+      }
+    },
+    "/v1/auth/admin/totp/confirm": {
+      "post": {
+        "operationId": "AuthController_totpConfirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TotpConfirmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "2FA etkinleştirildi"
+          },
+          "401": {
+            "description": "Kod geçersiz"
+          },
+          "409": {
+            "description": "2FA zaten etkin"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "2FA kurulumu: ilk kodla etkinleştir",
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/logout": {
       "post": {
         "operationId": "AuthController_logoutSession",
@@ -1547,9 +1609,41 @@
           "password": {
             "type": "string",
             "description": "Parola"
+          },
+          "totpCode": {
+            "type": "string",
+            "description": "İki adımlı doğrulama kodu (yalnızca hesapta 2FA etkinse gerekir). Eksikse yanıt 401 + code=totp_required döner.",
+            "example": "123456"
           }
         },
         "required": ["email", "password"]
+      },
+      "TotpEnrollResponseDto": {
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": "string",
+            "description": "Base32 gizli anahtar — elle giriş için. Bir daha GÖSTERİLMEZ.",
+            "example": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
+          },
+          "otpauthUri": {
+            "type": "string",
+            "description": "QR koduna gömülecek otpauth:// URI",
+            "example": "otpauth://totp/NOCTA%3Aowner%40nocta.app?secret=...&issuer=NOCTA"
+          }
+        },
+        "required": ["secret", "otpauthUri"]
+      },
+      "TotpConfirmDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Authenticator uygulamasındaki 6 haneli kod",
+            "example": "123456"
+          }
+        },
+        "required": ["code"]
       },
       "MeResponseDto": {
         "type": "object",

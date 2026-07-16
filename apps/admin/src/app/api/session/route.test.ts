@@ -60,6 +60,49 @@ describe('POST /api/session', () => {
     expect(res.status).toBe(429);
   });
 
+  it("ÇEKİRDEK: totp_required kodu forma İLETİLİR (yoksa 2FA'lı hesap giremez)", async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ code: 'totp_required', message: 'Kod gerekli.' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ),
+    );
+
+    const res = await POST(loginRequest());
+    expect(res.status).toBe(401);
+    // Kod yutulursa form "parola hatalı" der ve kod alanını hiç açmaz: parolası
+    // DOĞRU olan admin panele HİÇ giremez — sessiz bir kilitlenme.
+    expect(await res.json()).toMatchObject({ code: 'totp_required' });
+  });
+
+  it("2FA kodu API'ye GEÇİRİLİR (vekil gövdeyi kırpmamalı)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(apiSession), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await POST(loginRequest({ email: 'a@b.c', password: 'password-1234', totpCode: '123456' }));
+
+    const args = fetchMock.mock.calls[0];
+    if (!args) throw new Error('API hiç çağrılmadı');
+    expect(JSON.parse((args[1] as { body: string }).body).totpCode).toBe('123456');
+  });
+
+  it('gövdesiz 401 çökmez, kod null döner', async () => {
+    // API bir gün gövdesiz 401 dönerse vekil 500'e düşmemeli: 401 zaten doğru yanıt.
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
+
+    const res = await POST(loginRequest());
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({ code: null });
+  });
+
   it("bozuk gövde → 400 (API'ye hiç gidilmez)", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

@@ -87,6 +87,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/admin/totp/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 2FA kurulumu: gizli anahtar üret (henüz etkin değil) */
+        post: operations["AuthController_totpEnroll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/admin/totp/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 2FA kurulumu: ilk kodla etkinleştir */
+        post: operations["AuthController_totpConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -777,6 +811,30 @@ export interface components {
             email: string;
             /** @description Parola */
             password: string;
+            /**
+             * @description İki adımlı doğrulama kodu (yalnızca hesapta 2FA etkinse gerekir). Eksikse yanıt 401 + code=totp_required döner.
+             * @example 123456
+             */
+            totpCode?: string;
+        };
+        TotpEnrollResponseDto: {
+            /**
+             * @description Base32 gizli anahtar — elle giriş için. Bir daha GÖSTERİLMEZ.
+             * @example GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ
+             */
+            secret: string;
+            /**
+             * @description QR koduna gömülecek otpauth:// URI
+             * @example otpauth://totp/NOCTA%3Aowner%40nocta.app?secret=...&issuer=NOCTA
+             */
+            otpauthUri: string;
+        };
+        TotpConfirmDto: {
+            /**
+             * @description Authenticator uygulamasındaki 6 haneli kod
+             * @example 123456
+             */
+            code: string;
         };
         MeResponseDto: {
             /** Format: uuid */
@@ -1415,6 +1473,68 @@ export interface operations {
             };
             /** @description Çok fazla giriş denemesi (5/dk) */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_totpEnroll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TotpEnrollResponseDto"];
+                };
+            };
+            /** @description 2FA zaten etkin */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_totpConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TotpConfirmDto"];
+            };
+        };
+        responses: {
+            /** @description 2FA etkinleştirildi */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Kod geçersiz */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 2FA zaten etkin */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -28,7 +28,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     // API'nin durum kodu AYNEN yansıtılır: 401 (kimlik) ve 429 (çok deneme) farklı
     // şeylerdir; ikisini 401'de birleştirmek kullanıcıyı "parolam yanlış" sanıp
     // denemeye devam ettirirdi.
-    return NextResponse.json({ error: 'login_failed' }, { status: res.status });
+    //
+    // `code` da geçirilir çünkü 401'in İKİ ANLAMI var: "parola yanlış" ve "2FA kodu
+    // gerekli". Ayırmazsak form, parolası DOĞRU olan kullanıcıya "parola hatalı"
+    // der ve kod alanını hiç göstermez — 2FA'lı hesap panele hiç giremez.
+    //
+    // Sızıntı yok: bu noktaya ancak DOĞRU parolayla gelinir (bkz. identity/errors.ts).
+    return NextResponse.json(
+      { error: 'login_failed', code: await errorCode(res) },
+      { status: res.status },
+    );
   }
 
   const session = (await res.json()) as {
@@ -41,6 +50,24 @@ export async function POST(request: Request): Promise<NextResponse> {
   out.cookies.set(ACCESS_COOKIE, session.accessToken, cookieOptions(session.accessTokenExpiresIn));
   out.cookies.set(REFRESH_COOKIE, session.refreshToken, cookieOptions(REFRESH_MAX_AGE));
   return out;
+}
+
+/**
+ * API'nin hata kodunu güvenle çıkarır. Gövde okunamazsa/biçimsizse null döner:
+ * giriş yolunu bir JSON ayrıştırma hatası yüzünden 500'e çevirmek, kullanıcıyı
+ * anlamsız bir hatayla baş başa bırakırdı — 401 zaten doğru yanıt.
+ */
+async function errorCode(res: Response): Promise<string | null> {
+  try {
+    const body: unknown = await res.json();
+    if (typeof body === 'object' && body !== null && 'code' in body) {
+      const { code } = body as { code: unknown };
+      return typeof code === 'string' ? code : null;
+    }
+  } catch {
+    // Gövde yok/bozuk — kod bilinmiyor, çağıran genel mesaja düşer.
+  }
+  return null;
 }
 
 /**

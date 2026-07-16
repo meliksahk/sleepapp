@@ -16,6 +16,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiConflictResponse,
   ApiNoContentResponse,
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
@@ -23,13 +24,15 @@ import {
 import { RegisterDeviceUseCase } from '../application/register-device.usecase';
 import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
 import { LoginAdminUseCase } from '../application/login-admin.usecase';
+import { EnrollTotpUseCase } from '../application/enroll-totp.usecase';
+import { ConfirmTotpUseCase } from '../application/confirm-totp.usecase';
 import { LogoutUseCase } from '../application/logout.usecase';
 import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { RequestEmailUpgradeUseCase } from '../application/request-email-upgrade.usecase';
 import { VerifyEmailUpgradeUseCase } from '../application/verify-email-upgrade.usecase';
 import { RevokeOtherSessionsUseCase } from '../application/revoke-other-sessions.usecase';
 import { GetActiveSessionsUseCase } from '../application/get-active-sessions.usecase';
-import { EmailAlreadyTakenError, IdentityError } from '../domain/errors';
+import { EmailAlreadyTakenError, IdentityError, TotpAlreadyEnabledError } from '../domain/errors';
 import type { AccessTokenClaims } from '../domain/user.entity';
 import { Inject } from '@nestjs/common';
 import { AuthGuard } from './auth.guard';
@@ -46,6 +49,8 @@ import {
   RevokedSessionsDto,
   SessionInfoDto,
   SessionResponseDto,
+  TotpConfirmDto,
+  TotpEnrollResponseDto,
   VerifyEmailDto,
 } from './dto';
 
@@ -68,6 +73,8 @@ export class AuthController {
     private readonly registerDevice: RegisterDeviceUseCase,
     private readonly refreshSession: RefreshSessionUseCase,
     private readonly loginAdmin: LoginAdminUseCase,
+    private readonly enrollTotp: EnrollTotpUseCase,
+    private readonly confirmTotp: ConfirmTotpUseCase,
     private readonly logout: LogoutUseCase,
     private readonly deleteAccount: DeleteAccountUseCase,
     private readonly requestEmailUpgrade: RequestEmailUpgradeUseCase,
@@ -123,10 +130,68 @@ export class AuthController {
   @ApiTooManyRequestsResponse({ description: 'Çok fazla giriş denemesi (5/dk)' })
   async adminLogin(@Body() dto: AdminLoginDto): Promise<SessionResponseDto> {
     try {
-      return await this.loginAdmin.execute(dto.email, dto.password);
+      return await this.loginAdmin.execute(dto.email, dto.password, dto.totpCode);
     } catch (e) {
       if (e instanceof IdentityError) {
         // Hangi koşulun düştüğü SÖYLENMEZ (kullanıcı sayımı) — tek mesaj.
+        throw new UnauthorizedException({ code: e.code, message: e.message });
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * 2FA kurulumu 1. adım (CLAUDE.md §3.3). Kimliği doğrulanmış hesap KENDİ anahtarını
+   * alır — `sub` token'dan gelir, gövdeden DEĞİL (aksi hâlde bir admin başkasının
+   * 2FA'sını kurabilirdi).
+   *
+   * Bu, gizli anahtarın açık metin geçtiği tek an — TOTP'nin doğası gereği kaçınılmaz.
+   * Anahtar ASLA loglanmaz; yanıt önbelleklenemez.
+   */
+  @Post('admin/totp/enroll')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: adminLoginLimit, ttl: 60_000 } })
+  @ApiOperation({ summary: '2FA kurulumu: gizli anahtar üret (henüz etkin değil)' })
+  @ApiOkResponse({ type: TotpEnrollResponseDto })
+  @ApiConflictResponse({ description: '2FA zaten etkin' })
+  async totpEnroll(@CurrentUser() claims: AccessTokenClaims): Promise<TotpEnrollResponseDto> {
+    return this.runTotp(() => this.enrollTotp.execute(claims.sub));
+  }
+
+  /**
+   * 2FA kurulumu 2. adım: ilk geçerli kodla etkinleştir. Kod istemenin sebebi
+   * kilitlenmeyi önlemek — kullanıcı "kod üretebiliyorum" kanıtını verir.
+   */
+  @Post('admin/totp/confirm')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: adminLoginLimit, ttl: 60_000 } })
+  @ApiOperation({ summary: '2FA kurulumu: ilk kodla etkinleştir' })
+  @ApiNoContentResponse({ description: '2FA etkinleştirildi' })
+  @ApiUnauthorizedResponse({ description: 'Kod geçersiz' })
+  @ApiConflictResponse({ description: '2FA zaten etkin' })
+  async totpConfirm(
+    @CurrentUser() claims: AccessTokenClaims,
+    @Body() dto: TotpConfirmDto,
+  ): Promise<void> {
+    await this.runTotp(() => this.confirmTotp.execute(claims.sub, dto.code));
+  }
+
+  /**
+   * TOTP hata eşlemesi tek yerde: "zaten etkin" 409 (çakışma — istek biçimsel olarak
+   * doğru ama durum elvermiyor), kod hataları 401.
+   */
+  private async runTotp<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (e) {
+      if (e instanceof TotpAlreadyEnabledError) {
+        throw new ConflictException({ code: e.code, message: e.message });
+      }
+      if (e instanceof IdentityError) {
         throw new UnauthorizedException({ code: e.code, message: e.message });
       }
       throw e;
