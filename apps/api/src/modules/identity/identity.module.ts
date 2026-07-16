@@ -116,15 +116,23 @@ const providers: Provider[] = [
   },
   {
     provide: RefreshSessionUseCase,
-    inject: [REFRESH_TOKEN_REPOSITORY, USER_REPOSITORY, TOKEN_HASHER, CLOCK, SessionMinter],
+    inject: [REFRESH_TOKEN_REPOSITORY, USER_REPOSITORY, TOKEN_HASHER, CLOCK, SessionMinter, ENV],
     useFactory: (
       refreshTokens: RefreshTokenRepository,
       users: UserRepository,
       hasher: TokenHasher,
       clock: Clock,
       sessions: SessionMinter,
+      env: Env,
     ): RefreshSessionUseCase =>
-      new RefreshSessionUseCase(refreshTokens, users, hasher, clock, sessions),
+      new RefreshSessionUseCase(
+        refreshTokens,
+        users,
+        hasher,
+        clock,
+        sessions,
+        env.REFRESH_REUSE_GRACE_MS,
+      ),
   },
   {
     provide: PASSWORD_HASHER,

@@ -31,6 +31,10 @@ const EnvSchema = z.object({
   // "gezinme" için makul, "parola tahmini" için değil. Ayarlanabilir çünkü bu bir
   // operasyon kararı — ama YÜKSELTMEK kaba kuvvet kapısını açar, bilinçli yapılsın.
   ADMIN_LOGIN_LIMIT: z.coerce.number().int().positive().default(5),
+  // Rotasyondan sonra aynı refresh token'ın "yarış" sayıldığı pencere (ms).
+  // İki sekme aynı anda yenilerse kullanıcıyı atmamak için. 0 = katı davranış.
+  // Büyütmek, çalıntı token'ın yakalanmadığı pencereyi büyütür — bilinçli olsun.
+  REFRESH_REUSE_GRACE_MS: z.coerce.number().int().nonnegative().default(10_000),
 
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
