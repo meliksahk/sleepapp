@@ -1,5 +1,7 @@
 import {
+  isKnownEventName,
   isValidEventName,
+  KNOWN_EVENT_NAMES,
   MAX_EVENTS_PER_BATCH,
 } from '../../src/modules/analytics/domain/analytics-event';
 import { IngestEventsUseCase } from '../../src/modules/analytics/application/ingest-events.usecase';
@@ -34,12 +36,42 @@ describe('isValidEventName', () => {
   });
 });
 
+describe('olay sözlüğü (docs/analytics-events.md)', () => {
+  it('sözlükteki olaylar bilinir', () => {
+    for (const n of ['archetype_completed', 'share_tapped']) {
+      expect(isKnownEventName(n)).toBe(true);
+    }
+  });
+
+  it('sözlükte olmayan (biçimi geçerli) olay bilinmez', () => {
+    expect(isValidEventName('totally_made_up')).toBe(true); // biçim tamam
+    expect(isKnownEventName('totally_made_up')).toBe(false); // ama sözlükte yok
+  });
+
+  it('sözlükteki her ad biçim kuralına uyar (tutarlılık)', () => {
+    for (const n of KNOWN_EVENT_NAMES) {
+      expect(isValidEventName(n)).toBe(true);
+    }
+  });
+});
+
 describe('IngestEventsUseCase', () => {
   it('geçerli batch kaydeder ve sayı döner', async () => {
     const repo = new FakeRepo();
-    const n = await new IngestEventsUseCase(repo).execute('u', [ev('a_b'), ev('c.d')]);
+    const n = await new IngestEventsUseCase(repo).execute('u', [
+      ev('archetype_completed'),
+      ev('share_tapped'),
+    ]);
     expect(n).toBe(2);
     expect(repo.saved).toHaveLength(2);
+  });
+
+  it('sözlükte olmayan ad → unknown_event (batch tümden reddedilir)', async () => {
+    const repo = new FakeRepo();
+    await expect(
+      new IngestEventsUseCase(repo).execute('u', [ev('archetype_completed'), ev('made_up')]),
+    ).rejects.toMatchObject({ code: 'unknown_event' });
+    expect(repo.saved).toHaveLength(0); // kısmi kabul yok
   });
 
   it('boş batch → empty_batch', async () => {

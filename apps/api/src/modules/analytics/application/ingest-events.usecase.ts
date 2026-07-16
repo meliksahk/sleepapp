@@ -1,4 +1,5 @@
 import {
+  isKnownEventName,
   isValidEventName,
   MAX_EVENTS_PER_BATCH,
   type NewAnalyticsEvent,
@@ -26,6 +27,10 @@ export class IngestEventsUseCase {
     for (const e of events) {
       if (!isValidEventName(e.name)) {
         throw new AnalyticsError('invalid_event_name', `Geçersiz olay adı: ${e.name}`);
+      }
+      // Sözlük kapısı (docs/01 §7): tanımsız olay veri kalitesini bozar → reddedilir.
+      if (!isKnownEventName(e.name)) {
+        throw new AnalyticsError('unknown_event', `Sözlükte olmayan olay: ${e.name}`);
       }
     }
     return this.repo.saveBatch(userId, events);
