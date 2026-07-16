@@ -129,6 +129,72 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/sessions": {
+      "get": {
+        "operationId": "AuthController_sessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionInfoDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kullanıcının aktif oturumları (cihaz listesi, token'sız)",
+        "tags": ["auth"]
+      }
+    },
+    "/v1/auth/sessions/revoke-others": {
+      "post": {
+        "operationId": "AuthController_revokeOthers",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedSessionsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Geçersiz refresh token"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Diğer cihazlardan çık — mevcut oturum hariç tümünü iptal et",
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/email/request": {
       "post": {
         "operationId": "AuthController_requestEmail",
@@ -416,10 +482,52 @@
         "tags": ["archetype-web"]
       }
     },
+    "/v1/archetype/content": {
+      "get": {
+        "operationId": "ArchetypeContentController_content",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArchetypeInfoDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Tüm archetype tanıtım içeriği (isim/tagline/özet)",
+        "tags": ["archetype"]
+      }
+    },
     "/v1/flags": {
       "get": {
         "operationId": "FlagsController_flags",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "platform",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "ios",
+              "type": "string"
+            }
+          },
+          {
+            "name": "appVersion",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "1.4.0",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -440,7 +548,7 @@
             "bearer": []
           }
         ],
-        "summary": "Kullanıcı için değerlendirilmiş feature flag haritası",
+        "summary": "Kullanıcı + context için değerlendirilmiş feature flag haritası",
         "tags": ["flags"]
       }
     },
@@ -590,6 +698,284 @@
         "summary": "Push cihaz token kaydı (idempotent)",
         "tags": ["notification"]
       }
+    },
+    "/v1/notifications/test": {
+      "post": {
+        "operationId": "NotificationController_test",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FanOutResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kendi cihazlarına test push (fan-out doğrulama)",
+        "tags": ["notification"]
+      }
+    },
+    "/v1/sharing/archetype": {
+      "get": {
+        "operationId": "SharingController_archetype",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchetypeShareDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kullanıcının archetype sonucundan paylaşım kartı + deep link",
+        "tags": ["sharing"]
+      }
+    },
+    "/v1/sharing/report": {
+      "get": {
+        "operationId": "SharingController_report",
+        "parameters": [
+          {
+            "name": "night",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-07-15",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NightReportShareDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bir gecenin raporundan paylaşım kartı (gece raporu, viral kanca #2)",
+        "tags": ["sharing"]
+      }
+    },
+    "/v1/sleep/sessions": {
+      "post": {
+        "operationId": "SleepController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordSleepSessionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SleepSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Uyku oturumu kaydı (on-device türetilmiş metrikler)",
+        "tags": ["sleep"]
+      },
+      "get": {
+        "operationId": "SleepController_recent",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-07-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-07-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SleepSessionDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Uyku oturumları — en yeni N veya gece aralığı (from+to)",
+        "tags": ["sleep"]
+      }
+    },
+    "/v1/sleep/report": {
+      "get": {
+        "operationId": "SleepController_nightReport",
+        "parameters": [
+          {
+            "name": "night",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-07-15",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NightReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bir gecenin uyku raporu (özet + paylaşılabilir kart verisi)",
+        "tags": ["sleep"]
+      }
+    },
+    "/v1/sleep/streak": {
+      "get": {
+        "operationId": "SleepController_streakStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreakDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kullanıcının uyku serisi (current/longest/totalNights)",
+        "tags": ["sleep"]
+      }
+    },
+    "/v1/analytics/events": {
+      "post": {
+        "operationId": "AnalyticsController_events",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestEventsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ürün analitik olaylarını yut (batch)",
+        "tags": ["analytics"]
+      }
     }
   },
   "info": {
@@ -671,6 +1057,36 @@
           }
         },
         "required": ["userId", "roles"]
+      },
+      "SessionInfoDto": {
+        "type": "object",
+        "properties": {
+          "familyId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Oturum (cihaz zinciri) kimliği"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["familyId", "createdAt", "expiresAt"]
+      },
+      "RevokedSessionsDto": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "number",
+            "example": 2,
+            "description": "İptal edilen diğer oturum sayısı"
+          }
+        },
+        "required": ["revoked"]
       },
       "RequestEmailDto": {
         "type": "object",
@@ -900,6 +1316,26 @@
         },
         "required": ["shareSlug", "archetypeSlug", "scores", "version", "createdAt"]
       },
+      "ArchetypeInfoDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "enum": ["deep-ocean", "overthinker", "delta-drifter", "dawn-chaser"]
+          },
+          "name": {
+            "type": "string",
+            "example": "Deep Ocean"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": ["slug", "name", "tagline", "summary"]
+      },
       "SoundscapeDto": {
         "type": "object",
         "properties": {
@@ -1030,6 +1466,277 @@
           }
         },
         "required": ["token", "platform"]
+      },
+      "TestNotificationDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Test",
+            "maxLength": 80
+          },
+          "body": {
+            "type": "string",
+            "example": "Bu bir test bildirimidir.",
+            "maxLength": 240
+          }
+        },
+        "required": ["title", "body"]
+      },
+      "FanOutResultDto": {
+        "type": "object",
+        "properties": {
+          "sent": {
+            "type": "number",
+            "example": 2,
+            "description": "Başarılı gönderim sayısı"
+          },
+          "failed": {
+            "type": "number",
+            "example": 0,
+            "description": "Başarısız gönderim sayısı"
+          }
+        },
+        "required": ["sent", "failed"]
+      },
+      "ArchetypeShareDto": {
+        "type": "object",
+        "properties": {
+          "archetypeSlug": {
+            "type": "string",
+            "enum": ["deep-ocean", "overthinker", "delta-drifter", "dawn-chaser"]
+          },
+          "title": {
+            "type": "string",
+            "example": "My sleep identity is Deep Ocean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "webUrl": {
+            "type": "string",
+            "example": "https://nocta.app/a/deep-ocean"
+          },
+          "deepLink": {
+            "type": "string",
+            "example": "nocta://a/deep-ocean"
+          }
+        },
+        "required": ["archetypeSlug", "title", "description", "webUrl", "deepLink"]
+      },
+      "NightReportShareDto": {
+        "type": "object",
+        "properties": {
+          "nightDate": {
+            "type": "string",
+            "example": "2026-07-15"
+          },
+          "title": {
+            "type": "string",
+            "example": "My night: 7h 42m"
+          },
+          "subtitle": {
+            "type": "string",
+            "example": "Calm 85/100 · NOCTA sleep ritual"
+          },
+          "durationText": {
+            "type": "string",
+            "example": "7h 42m"
+          },
+          "calmScore": {
+            "type": "number",
+            "example": 85
+          },
+          "webUrl": {
+            "type": "string",
+            "example": "https://nocta.app"
+          },
+          "deepLink": {
+            "type": "string",
+            "example": "nocta://report/2026-07-15"
+          }
+        },
+        "required": [
+          "nightDate",
+          "title",
+          "subtitle",
+          "durationText",
+          "calmScore",
+          "webUrl",
+          "deepLink"
+        ]
+      },
+      "RecordSleepSessionDto": {
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Uyku başlangıcı (ISO 8601, UTC)"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Uyku bitişi (ISO 8601, UTC)"
+          },
+          "movementEvents": {
+            "type": "number",
+            "example": 12,
+            "description": "On-device hareket olayı sayısı (türetilmiş)"
+          },
+          "soundEvents": {
+            "type": "number",
+            "example": 3,
+            "description": "On-device ses olayı sayısı (türetilmiş)"
+          }
+        },
+        "required": ["startedAt", "endedAt", "movementEvents", "soundEvents"]
+      },
+      "SleepSessionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nightDate": {
+            "type": "string",
+            "example": "2026-07-15",
+            "description": "Gece etiketi (yerel gün, 06:00 sınırı)"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 462
+          },
+          "movementEvents": {
+            "type": "number",
+            "example": 12
+          },
+          "soundEvents": {
+            "type": "number",
+            "example": 3
+          }
+        },
+        "required": [
+          "id",
+          "startedAt",
+          "endedAt",
+          "nightDate",
+          "durationMinutes",
+          "movementEvents",
+          "soundEvents"
+        ]
+      },
+      "NightReportDto": {
+        "type": "object",
+        "properties": {
+          "nightDate": {
+            "type": "string",
+            "example": "2026-07-15"
+          },
+          "sessionCount": {
+            "type": "number",
+            "example": 1
+          },
+          "totalDurationMinutes": {
+            "type": "number",
+            "example": 462
+          },
+          "movementEvents": {
+            "type": "number",
+            "example": 12
+          },
+          "soundEvents": {
+            "type": "number",
+            "example": 3
+          },
+          "calmScore": {
+            "type": "number",
+            "example": 85,
+            "description": "Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil"
+          }
+        },
+        "required": [
+          "nightDate",
+          "sessionCount",
+          "totalDurationMinutes",
+          "movementEvents",
+          "soundEvents",
+          "calmScore"
+        ]
+      },
+      "StreakDto": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "number",
+            "example": 5,
+            "description": "Şu anki ardışık gece serisi"
+          },
+          "longest": {
+            "type": "number",
+            "example": 12,
+            "description": "En uzun ardışık seri"
+          },
+          "totalNights": {
+            "type": "number",
+            "example": 40,
+            "description": "Kayıtlı toplam gece"
+          }
+        },
+        "required": ["current", "longest", "totalNights"]
+      },
+      "AnalyticsEventDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "archetype_completed",
+            "description": "küçük harf/rakam/_/. (1-64)"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Olay zamanı (ISO 8601, UTC)"
+          },
+          "props": {
+            "type": "object",
+            "description": "Serbest anahtar-değer (PII konmaz)"
+          }
+        },
+        "required": ["name", "occurredAt"]
+      },
+      "IngestEventsDto": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "description": "1-100 olay",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEventDto"
+            }
+          }
+        },
+        "required": ["events"]
+      },
+      "IngestAcceptedDto": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "number",
+            "example": 3,
+            "description": "Kabul edilen olay sayısı"
+          }
+        },
+        "required": ["accepted"]
       }
     }
   }
