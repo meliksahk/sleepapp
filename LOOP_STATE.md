@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈59% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈60% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████████░░░░░░░░░░░░░░░░] 59%
+[████████████████████████░░░░░░░░░░░░░░░░] 60%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~89%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~91%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~42%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·89 + 0.40·49 + 0.15·42 + 0.15·45 ≈ **59%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·91 + 0.40·49 + 0.15·42 + 0.15·45 ≈ **60%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 devam:** (a) **soundscape CRUD** — oluştur/düzenle/yayınla + rol daraltması (`editor`+`owner` yazar, `analyst` yazamaz). (b) dashboard'u canlı veriye bağla. (c) sayfalama (içerik büyüyünce). Liste (salt okunur) ✓ #119.
+1. **A1 devam:** (a) **panelden oluşturma formu** — API hazır (#120), panel hâlâ salt okunur. (b) **yayınlama** (`PATCH` status: draft→published) — CMS'in asıl eylemi. (c) düzenleme. (d) dashboard canlı veri. (e) sayfalama. Liste ✓ #119, oluşturma API + rol daraltması ✓ #120.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,42 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #120 — taslak oluşturma + rol daraltması (PR #121, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `POST /v1/admin/soundscapes` — taslak oluşturur. **Yazma yalnızca owner+editor**;
+  analyst/support okur ama yazamaz (CLAUDE.md §3.3 "analyst salt okunur" ilk kez zorlandı).
+- **GERÇEK SUNUCUDA:** editor → 201 `{"status":"draft"}` · analyst → **403** ·
+  analyst GET → 200. Kanıt verisi silindi.
+- API **306 test** (295→306), turbo 19/19. Kontrat → `gen:api-types`.
+
+📌 **Varsayımlar / kararlar**
+
+- **Durum daima 'draft':** yayınlamak AYRI ve bilinçli adım. Tek çağrıda "oluştur ve
+  yayınla" olsaydı yanlış kayıt kullanıcılara yazım hatası kadar kolay ulaşırdı.
+- **`created_by` TOKEN'dan, gövdeden DEĞİL** — istemcinin "ben şuyum" demesine güvenmek
+  denetim izini işe yaramaz kılardı (test gerçek userId ile doğruluyor).
+- **Slug çakışması DB'nin UNIQUE kısıtına bırakıldı:** "önce sor sonra yaz" yarışta iki
+  kaydı da geçirirdi. P2002 → 409.
+- Slug NORMALİZE (trim+küçült) ama boşluk/alt-çizgi/eğik çizgi RED: slug derin linkte yaşar.
+- `whitelist` sayesinde gövdeden `status` enjekte EDİLEMEZ (testle sabit).
+
+🔥 **Riskler / açıklar**
+
+- **Kendi hatam #1:** ilk denetim-izi iddiam TAUTOLOJİYDİ (`created_by`'ı kendisiyle
+  karşılaştırıyordu) — hiçbir şey kanıtlamıyordu. Düzeltildi.
+- **Kendi hatam #2:** iki testim ÇELİŞİYORDU (biri büyük harf normalize, diğeri red
+  bekliyordu). Normalizasyon doğru karar; test düzeltildi.
+- **Panel formu YOK** — bu PR yalnızca API. Panelden oluşturma sıradaki iş.
+- Düzenleme/yayınlama yok; ses tarifi düzenleme yok (taslak boş `engine_params` ile doğar).
+- Sayfalama yok; i18n yok (**D-8 kararı bekliyor**).
+
+❌ **Yapılmadı**
+
+- Panel oluşturma formu, PATCH/publish, ses tarifi editörü, dashboard canlı veri,
+  sayfalama, TOTP 2FA, davet akışı, `.env.example`.
 
 ### #119 — içerik listesi: panel taslakları görüyor (A1 başladı) (PR #120, merged)
 
