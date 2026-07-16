@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈68% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈69% — F1–F5 (otonom kapsam)
 
 ```
-[███████████████████████████░░░░░░░░░░░░░] 68%
+[████████████████████████████░░░░░░░░░░░░] 69%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
-| Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Mobil       | ~51%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·49 + 0.15·80 + 0.15·45 ≈ **68%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·51 + 0.15·80 + 0.15·45 ≈ **69%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Mobil'e dön (%49 — en düşük ağırlıklı yüzey, ağırlık 0.40):** admin 7 iterasyonda %35→%80 oldu; asıl ürün mobilde ve çekirdek özellik (ses motoru: native graf + `AudioEngineFacade`) hâlâ yok. DSP saf Dart hazır (#96-98) ama **hiç ses ÇALMIYOR**. Not: native graf gerçek cihaz doğrulaması ister (kulaklıkla) — otonom olarak ne kadarı yapılabilir, iterasyon başında değerlendirilecek.
+1. **Mobil devam (%51, ağırlık 0.40 — en yüksek):** ses zinciri artık DSP (#96-98) + tarif ayrıştırıcı (#127) ile hazır, ama **native graf İNSAN-KAPILI** (gerçek cihaz + kulaklık, CLAUDE.md §1.1). Cihazsız yapılabilecekler: (a) `AudioEngineFacade` arayüzü + fake/sessiz adaptör (UI motor gelmeden bağlanabilsin), (b) mix-to-video export'un offline render yolu (renderMix zaten hazır), (c) mic takibi domain mantığı (on-device metrik türetme — saf Dart, test edilebilir).
 2. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
 3. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 4. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
@@ -77,6 +77,40 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #127 — mobil `engine_params` → MixSpec ayrıştırıcısı (PR #128, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **🔴 GERÇEK BOŞLUK KAPANDI:** sunucuda tarif zinciri kuruldu (#123–#125) ama **mobil
+  `engineParams`'ı TAMAMEN DÜŞÜRÜYORDU** ("motor gelince eklenecek" yorumu). Admin'de
+  yazılan tarif istemcinin modeline hiç ulaşmıyordu. Artık ulaşıyor + doğrulanıyor.
+- flutter analyze temiz; **182 test** (159→182, +23). turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **NEDEN NATIVE MOTOR DEĞİL (dürüstlük):** defterde sıradaki iş oydu; ama CLAUDE.md
+  §1.1 "ses değişiklikleri GERÇEK CİHAZDA KULAKLIKLA doğrulanır" diyor. **Duyamadığım
+  ses kodunu ship etmek** hem o ilkeyi hem Dürüstlük Protokolü'nü ihlal ederdi.
+  Motorun ihtiyaç duyacağı, CİHAZSIZ doğrulanabilir halkayı yaptım.
+- **ÇÖKME YOK, zarifçe null** (docs/04 §79 açıkça istiyor): uygulama mağazada yıllarca
+  yaşar, bir gün v2 tarif görebilir → atmak kütüphaneyi çökertirdi.
+- **TOLERANS YOK:** kısmen geçerli tarif sessizce YANLIŞ ses üretir — duyulmayan hata,
+  duyulan hatadan beterdir. Bilinmeyen kaynak türü "yaklaşık"la değiştirilmez.
+- **Bozuk tarif KAYDI DÜŞÜRMEZ** (yalnızca mixSpec null) — yoksa kütüphane sessizce boşalırdı.
+- `gain` `num` kabul: JSON'da 1 ile 1.0 aynı; `is double` yazsam gain:1 sessizce reddedilirdi.
+
+🔥 **Riskler / açıklar**
+
+- **`mixSpec`'in RUNTIME TÜKETİCİSİ YOK — ses hâlâ ÇALMIYOR.** Değeri: sözleşme
+  istemcide doğrulanıyor, parser cihazsız test edilebiliyor. Motor geldiğinde tüketecek.
+- `isPlayable` alanı eklemiştim, kullanan olmadığı için KALDIRDIM (spekülatif API).
+- **Native graf İNSAN-KAPILI:** gerçek cihaz + kulaklık ister. Otonom yapılamaz.
+
+❌ **Yapılmadı**
+
+- Native ses grafiği (AVAudioEngine/Oboe) + `AudioEngineFacade`, mic takibi + alarm,
+  mix-to-video. D7/paylaşım oranı, audit_log, zamanlanmış yayın, sayfalama.
 
 ### #126 — canlı pano: gerçek rakamlar, dürüst boşluklar (PR #127, merged)
 
