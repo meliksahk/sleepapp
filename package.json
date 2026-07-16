@@ -23,7 +23,8 @@
     "db:rollback": "dbmate down",
     "prepare": "husky",
     "check:health-claims": "node tooling/check-health-claims.mjs",
-    "check:i18n": "node tooling/check-hardcoded-strings.mjs"
+    "check:i18n": "node tooling/check-hardcoded-strings.mjs",
+    "check:env-example": "node tooling/check-env-example.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

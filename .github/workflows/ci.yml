@@ -66,6 +66,11 @@ jobs:
       - name: Hard-coded string scan (CLAUDE.md §4)
         run: pnpm check:i18n
 
+      # .env.example bir kez bayatladı (23 değişkenin 11'i eksikti). İnsan
+      # disiplinine bırakılan kural, kural değil temennidir.
+      - name: .env.example drift scan (CLAUDE.md §6)
+        run: pnpm check:env-example
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest
