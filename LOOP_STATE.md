@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈58% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈59% — F1–F5 (otonom kapsam)
 
 ```
-[███████████████████████░░░░░░░░░░░░░░░░░] 58%
+[████████████████████████░░░░░░░░░░░░░░░░] 59%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~89%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~35%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~42%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·89 + 0.40·49 + 0.15·35 + 0.15·45 ≈ **58%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·89 + 0.40·49 + 0.15·42 + 0.15·45 ≈ **59%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **A1 içerik CMS'i (ARTIK ÖNCELİK):** dashboard'u canlı veriye bağla, soundscape CRUD. Oturum yaşam döngüsü #112–#118'de tamamlandı; panel giriş yapılabilir ve oturum sağlam → **asıl ürün işi buradan başlıyor**. 7 iterasyondur auth/güvenlik yapıldı, yeter.
+1. **A1 devam:** (a) **soundscape CRUD** — oluştur/düzenle/yayınla + rol daraltması (`editor`+`owner` yazar, `analyst` yazamaz). (b) dashboard'u canlı veriye bağla. (c) sayfalama (içerik büyüyünce). Liste (salt okunur) ✓ #119.
 2. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
 3. **`.env.example` oluştur** (CLAUDE.md §6 istiyor, depoda yok) — küçük, bağımsız iş.
 4. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
@@ -76,6 +76,43 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #119 — içerik listesi: panel taslakları görüyor (A1 başladı) (PR #120, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `GET /v1/admin/soundscapes` (taslak/planlı/yayınlanmış hepsi) + panelde `/content`
+  listesi + sunucu tarafı API istemcisi (httpOnly çerezden token okur).
+- **7 iterasyonluk auth/güvenlik serisi bitti; ASIL ÜRÜN İŞİ başladı.**
+- **GERÇEK SUNUCUDA:** taslak+yayın seed → panel `/content` 200; görünür gövdede
+  "CMS Proof Draft" + "CMS Proof Published", "Taslak"/"Yayında", "deep-ocean".
+  **10 `<td>` = 2 satır × 5 kolon** (boş durum DEĞİL, gerçek tablo). Kanıt verisi silindi.
+- API **295 test** (289→295), admin **30 test** (27→30), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **Boundary lint iki kez dayattı, ikisi de haklıydı:** (1) `admin/domain` content'in
+  module-api'sini import edemez → `CatalogStatus` admin'in KENDİ sözleşmesi (eşleme
+  module-def'te açık; content iç tipini değiştirirse orada derleme hatası verir, admin
+  sessizce kırılmaz). (2) `shared/api` `features/auth`'u import edemez → çerez sabitleri
+  `shared/auth/`e taşındı; zaten oraya aitti (4 yer kullanıyor, tek dilime ait değil).
+- `SoundscapeSummary` AYRI okuma modeli: `status` uygulama entity'sinde yok + ağır
+  `engineParams`/`layerDefs` listede taşınmamalı (testle sabit).
+- Ayrı use case, feed'e bayrak DEĞİL: feed "yayınlanmış+affinity" bir ÜRÜN kararı.
+- Cache YOK: editör az önce kaydettiğini görmeli. 401'de sunucu istemcisi YENİLEMEZ
+  (Server Component çerez yazamaz — yenileme middleware'in işi).
+
+🔥 **Riskler / açıklar**
+
+- **Salt okunur:** yazma (CRUD) yok. Rol daraltması da CRUD ile gelecek (şu an analyst
+  dahil her panel rolü GÖREBİLİYOR — okuma için doğru).
+- **Sayfalama yok:** liste tüm kayıtları döner. İçerik büyürse gerekir.
+- Dashboard hâlâ yer tutucu; i18n yok (**D-8 kararı bekliyor**).
+
+❌ **Yapılmadı**
+
+- Soundscape CRUD, dashboard canlı veri, sayfalama, TOTP 2FA, davet akışı,
+  hesap-başına kilitleme, `.env.example`.
 
 ### #118 — refresh yarış toleransı: meşru sekmeler artık atılmıyor (PR #119, merged)
 
