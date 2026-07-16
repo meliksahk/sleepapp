@@ -103,6 +103,15 @@ export class InMemoryRefreshTokenRepository implements RefreshTokenRepository {
     }
   }
 
+  async hasActiveInFamily(familyId: string, now: Date): Promise<boolean> {
+    for (const rec of this.byId.values()) {
+      if (rec.familyId === familyId && rec.revokedAt === null && rec.expiresAt > now) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   async revokeAllExceptFamily(
     userId: string,
     keepFamilyId: string,

@@ -90,6 +90,12 @@ export interface RefreshTokenRepository {
   findByHash(tokenHash: string): Promise<RefreshTokenRecord | null>;
   markRevoked(id: string, revokedAt: Date): Promise<void>;
   revokeFamily(familyId: string, revokedAt: Date): Promise<void>;
+  /**
+   * Ailede hâlâ AKTİF (iptal edilmemiş, süresi geçmemiş) token var mı?
+   * Grace window'un "iyi niyetli yarış mı, ölü oturum mu?" ayrımı buna dayanır:
+   * normal rotasyondan sonra aile canlıdır; çıkış/reuse sonrası değildir.
+   */
+  hasActiveInFamily(familyId: string, now: Date): Promise<boolean>;
   /** userId'nin keepFamilyId HARİÇ tüm aktif token'larını iptal eder; iptal sayısı. */
   revokeAllExceptFamily(userId: string, keepFamilyId: string, revokedAt: Date): Promise<number>;
   /** Kullanıcının aktif (iptal edilmemiş, süresi geçmemiş) oturumları — token'sız. */

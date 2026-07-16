@@ -29,6 +29,8 @@ export async function buildIdentityStack(opts?: {
   accessTtl?: number;
   refreshTtl?: number;
   clock?: MutableClock;
+  /** Varsayılan 0 = KATI: mevcut reuse testleri grace'ten etkilenmez, açıkça isteyen verir. */
+  reuseGraceMs?: number;
 }) {
   const clock = opts?.clock ?? new MutableClock();
   const ids = new UuidIdGenerator();
@@ -48,7 +50,14 @@ export async function buildIdentityStack(opts?: {
     refreshTokens,
     signer,
     registerDevice: new RegisterDeviceUseCase(users, ids, clock, minter),
-    refreshSession: new RefreshSessionUseCase(refreshTokens, users, hasher, clock, minter),
+    refreshSession: new RefreshSessionUseCase(
+      refreshTokens,
+      users,
+      hasher,
+      clock,
+      minter,
+      opts?.reuseGraceMs ?? 0,
+    ),
     authorize: new AuthorizeUseCase(signer),
   };
 }

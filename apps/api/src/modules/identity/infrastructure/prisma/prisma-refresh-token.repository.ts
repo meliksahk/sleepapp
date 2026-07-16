@@ -40,6 +40,13 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
     });
   }
 
+  async hasActiveInFamily(familyId: string, now: Date): Promise<boolean> {
+    const count = await this.prisma.refresh_tokens.count({
+      where: { family_id: familyId, revoked_at: null, expires_at: { gt: now } },
+    });
+    return count > 0;
+  }
+
   async revokeAllExceptFamily(
     userId: string,
     keepFamilyId: string,

@@ -77,16 +77,16 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   /**
-   * YALNIZCA SAYFA GEZİNTİSİNDE yenile — YARIŞ KORUMASI.
+   * YALNIZCA SAYFA GEZİNTİSİNDE yenile.
    *
-   * Refresh token ROTASYONLU ve yeniden kullanım tespitlidir: aynı token'la iki
-   * EŞZAMANLI yenileme, API'de "çalıntı token" sayılır ve TÜM AİLEYİ düşürür
-   * (refresh-session.usecase.ts) → kullanıcı sert biçimde atılır. Prefetch/RSC
-   * istekleri paralel akar; hepsinde yenilemeye kalkmak bu yarışı davet ederdi.
-   * Gezinti istekleri seri olduğu için risk küçülür.
+   * Yarışın ASIL çözümü artık API'de: rotasyondan sonraki kısa pencerede aynı
+   * token'la gelen istek "çalıntı" değil YARIŞ sayılır (REFRESH_REUSE_GRACE_MS,
+   * refresh-session.usecase.ts) → iki sekme birbirini artık atmıyor.
    *
-   * KALAN RİSK (çözülmedi, defterde): iki sekme aynı anda gezinirse yarış hâlâ
-   * mümkün. Gerçek çözüm API tarafında kısa "grace window" veya tek-uçuş kilidi.
+   * Buradaki kısıt yine de duruyor, iki nedenle: (1) derinlemesine savunma —
+   * grace kapatılırsa (0) panel yine sağ kalır; (2) prefetch/RSC istekleri paralel
+   * akar, her birinde yenilemek gereksiz token üretir. Gezinti istekleri seyrek
+   * ve seridir.
    */
   if (request.headers.get('sec-fetch-mode') !== 'navigate') {
     return redirectToLogin(request, false);

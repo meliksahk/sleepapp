@@ -9,7 +9,14 @@ import { ProblemDetailsFilter } from '../../src/shared/http/problem-details.filt
 describe('ProblemDetails filter e2e', () => {
   let app: INestApplication;
 
+  const originalGrace = process.env.REFRESH_REUSE_GRACE_MS;
+
   beforeAll(async () => {
+    // Bu dosya ProblemDetails FİLTRESİNİ test eder; reuse yalnızca hata üretmek için
+    // kullanılan araçtır. Varsayılan yarış toleransı (grace) devredeyken anlık reuse
+    // meşru sayılır ve hata hiç doğmaz → katı moda sabitle. Grace'in KENDİSİ kendi
+    // dosyasında test edilir (refresh-grace.spec.ts) → kapsam dışı kalmıyor.
+    process.env.REFRESH_REUSE_GRACE_MS = '0';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('v1', { exclude: ['health'] });
@@ -21,6 +28,7 @@ describe('ProblemDetails filter e2e', () => {
   });
 
   afterAll(async () => {
+    process.env.REFRESH_REUSE_GRACE_MS = originalGrace;
     await app.close();
   });
 
