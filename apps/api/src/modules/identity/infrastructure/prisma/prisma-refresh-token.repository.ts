@@ -1,4 +1,4 @@
-import type { RefreshTokenRecord } from '../../domain/user.entity';
+import type { ActiveSessionInfo, RefreshTokenRecord } from '../../domain/user.entity';
 import type { RefreshTokenRepository } from '../../domain/ports';
 import type { PrismaService } from '../../../../shared/infra/prisma.service';
 
@@ -50,6 +50,19 @@ export class PrismaRefreshTokenRepository implements RefreshTokenRepository {
       data: { revoked_at: revokedAt },
     });
     return result.count;
+  }
+
+  async listActiveByUser(userId: string, now: Date): Promise<ActiveSessionInfo[]> {
+    const rows = await this.prisma.refresh_tokens.findMany({
+      where: { user_id: userId, revoked_at: null, expires_at: { gt: now } },
+      select: { family_id: true, created_at: true, expires_at: true },
+      orderBy: { created_at: 'desc' },
+    });
+    return rows.map((r) => ({
+      familyId: r.family_id,
+      createdAt: r.created_at,
+      expiresAt: r.expires_at,
+    }));
   }
 }
 

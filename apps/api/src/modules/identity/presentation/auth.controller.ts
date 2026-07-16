@@ -23,6 +23,7 @@ import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { RequestEmailUpgradeUseCase } from '../application/request-email-upgrade.usecase';
 import { VerifyEmailUpgradeUseCase } from '../application/verify-email-upgrade.usecase';
 import { RevokeOtherSessionsUseCase } from '../application/revoke-other-sessions.usecase';
+import { GetActiveSessionsUseCase } from '../application/get-active-sessions.usecase';
 import { EmailAlreadyTakenError, IdentityError } from '../domain/errors';
 import type { AccessTokenClaims } from '../domain/user.entity';
 import { Inject } from '@nestjs/common';
@@ -37,6 +38,7 @@ import {
   RegisterDeviceDto,
   RequestEmailDto,
   RevokedSessionsDto,
+  SessionInfoDto,
   SessionResponseDto,
   VerifyEmailDto,
 } from './dto';
@@ -51,6 +53,7 @@ export class AuthController {
     private readonly requestEmailUpgrade: RequestEmailUpgradeUseCase,
     private readonly verifyEmailUpgrade: VerifyEmailUpgradeUseCase,
     private readonly revokeOtherSessions: RevokeOtherSessionsUseCase,
+    private readonly getActiveSessions: GetActiveSessionsUseCase,
     @Inject(IS_PRODUCTION) private readonly isProduction: boolean,
   ) {}
 
@@ -96,6 +99,20 @@ export class AuthController {
   async remove(@CurrentUser() user: AccessTokenClaims): Promise<void> {
     // Yalnızca kendi hesabını siler — scope daima token sub.
     await this.deleteAccount.execute(user.sub);
+  }
+
+  @Get('sessions')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Kullanıcının aktif oturumları (cihaz listesi, token'sız)" })
+  @ApiOkResponse({ type: [SessionInfoDto] })
+  async sessions(@CurrentUser() user: AccessTokenClaims): Promise<SessionInfoDto[]> {
+    const list = await this.getActiveSessions.execute(user.sub);
+    return list.map((s) => ({
+      familyId: s.familyId,
+      createdAt: s.createdAt.toISOString(),
+      expiresAt: s.expiresAt.toISOString(),
+    }));
   }
 
   @Post('sessions/revoke-others')

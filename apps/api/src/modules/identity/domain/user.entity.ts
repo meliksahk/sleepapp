@@ -39,6 +39,13 @@ export interface RefreshTokenRecord {
   readonly createdAt: Date;
 }
 
+/** Aktif oturum özeti (cihaz listesi) — token HİÇ dışa verilmez. */
+export interface ActiveSessionInfo {
+  readonly familyId: string;
+  readonly createdAt: Date;
+  readonly expiresAt: Date;
+}
+
 /** Access JWT içindeki iddialar. aud ayrımı mobil/admin token'ı karışmasını önler (docs/02 §2.1). */
 export interface AccessTokenClaims {
   readonly sub: string;

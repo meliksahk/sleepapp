@@ -59,6 +59,32 @@ describe('Auth e2e (HTTP)', () => {
       .expect(400);
   });
 
+  describe('GET /v1/auth/sessions', () => {
+    it('token olmadan 401', async () => {
+      await request(app.getHttpServer()).get('/v1/auth/sessions').expect(401);
+    });
+
+    it('kayıt sonrası aktif oturumu listeler (token dışa verilmez)', async () => {
+      const reg = await request(app.getHttpServer())
+        .post('/v1/auth/device')
+        .send({
+          fingerprint: `sessions-e2e-${Date.now()}-${Math.round(process.hrtime()[1])}`,
+          platform: 'ios',
+        })
+        .expect(201);
+
+      const res = await request(app.getHttpServer())
+        .get('/v1/auth/sessions')
+        .set('Authorization', `Bearer ${reg.body.accessToken}`)
+        .expect(200);
+      expect(res.body.length).toBeGreaterThanOrEqual(1);
+      expect(res.body[0].familyId).toBeTruthy();
+      expect(res.body[0].createdAt).toBeTruthy();
+      // ham token/hash sızmaz
+      expect(JSON.stringify(res.body)).not.toContain(reg.body.refreshToken);
+    });
+  });
+
   describe('POST /v1/auth/sessions/revoke-others', () => {
     it('token olmadan 401', async () => {
       await request(app.getHttpServer())
