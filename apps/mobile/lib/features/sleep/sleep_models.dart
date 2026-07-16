@@ -123,6 +123,37 @@ class NightReport {
       );
 }
 
+/// Gece raporu paylaşım kartı (GET /v1/sharing/report?night=). Viral kanca #2.
+class NightReportShare {
+  const NightReportShare({
+    required this.nightDate,
+    required this.title,
+    required this.subtitle,
+    required this.durationText,
+    required this.calmScore,
+    required this.webUrl,
+    required this.deepLink,
+  });
+
+  final String nightDate;
+  final String title;
+  final String subtitle;
+  final String durationText;
+  final int calmScore;
+  final String webUrl;
+  final String deepLink;
+
+  factory NightReportShare.fromJson(Map<String, dynamic> json) => NightReportShare(
+    nightDate: json['nightDate'] as String,
+    title: json['title'] as String,
+    subtitle: json['subtitle'] as String,
+    durationText: json['durationText'] as String,
+    calmScore: json['calmScore'] as int,
+    webUrl: json['webUrl'] as String,
+    deepLink: json['deepLink'] as String,
+  );
+}
+
 class StreakStats {
   const StreakStats({
     required this.current,

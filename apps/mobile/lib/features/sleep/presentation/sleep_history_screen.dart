@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
 import '../sleep_models.dart';
 import '../sleep_providers.dart';
@@ -95,20 +96,24 @@ class SleepHistoryScreen extends ConsumerWidget {
       separatorBuilder: (context, index) => const SizedBox(height: NoctaSpace.s3),
       itemBuilder: (context, i) {
         final s = list[i];
-        return NCard(
+        // Tıklama → o gecenin raporu (viral kanca #2).
+        return GestureDetector(
           key: Key('sleep-session-${s.id}'),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                s.nightDate,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
-              ),
-              Text(
-                s.durationText,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
-              ),
-            ],
+          onTap: () => context.push('/report/${s.nightDate}'),
+          child: NCard(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  s.nightDate,
+                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                ),
+                Text(
+                  s.durationText,
+                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                ),
+              ],
+            ),
           ),
         );
       },
