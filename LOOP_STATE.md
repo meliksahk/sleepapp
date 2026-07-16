@@ -8,13 +8,13 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~81%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~82%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~15%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·81 + 0.40·49 + 0.15·15 + 0.15·45 ≈ **53%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·82 + 0.40·49 + 0.15·15 + 0.15·45 ≈ **53%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,7 +66,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **admin A0 kalanı:** davetli hesap akışı (argon2id parola + TOTP 2FA, identity modülünde) + panel Next.js middleware (`/admin/me`'ye sorup rolsüzü login'e atar). Sunucu rol kapısı (`@Roles`+`RolesGuard`+`GET /v1/admin/me`) ✓ iter #112. Boundary lint ✓ (zaten kurulu). packages/ui ✓ iter #15-16.
+1. **admin A0 kalanı:** (a) admin parola girişi — argon2id, `password_hash` kolonu HAZIR ama kullanılmıyor; `@node-rs/argon2` (prebuilt napi, node-gyp yok, MIT) düşünülüyor. (b) ilk admin'i kuran seed script'i. (c) TOTP 2FA. (d) davet akışı. (e) panel Next.js middleware. Sunucu rol kapısı ✓ #112, audience ayrımı ✓ #113. Boundary lint ✓ (zaten kurulu). packages/ui ✓ #15-16.
 2. **web SEO devam:** CWV lighthouse-ci CI eşiği + hreflang (EN/TR). sitemap/robots/llms.txt ✓ iter #17, OG image ✓ iter #24.
 3. **API sertleşme (B4 erken):** content feed cache (Redis 5dk TTL), rate-limit'i Redis storage'a taşı, request boyut limitleri.
 4. **notification modülü iskeleti** (docs/02 B3): token kaydı + BullMQ fan-out log-adaptörü (gerçek APNs/FCM → docs/10).
@@ -74,6 +74,44 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #113 — JWT audience ayrımı zorlanıyor (PR #114, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **🔴 KAPATILAN AÇIK (kendi #112'mdeki kapıyı delen yol):** `AccessTokenClaims.aud`
+  "mobil/admin token'ı karışmasını önler" diye belgelenmişti ama **ölü koddu** —
+  `SessionMinter` her zaman `aud: 'app'` basıyor, `verify` ikisini de kabul ediyor,
+  **hiçbir tüketici kontrol etmiyordu**. Etki: cihazda saklanan uzun ömürlü mobil
+  token, admin rolü taşıyorsa **panel anahtarı** oluyordu.
+- **Kanıt:** #112'nin kendi testleri ANONİM kullanıcıya rol verip 200 alıyordu.
+  aud zorlaması eklenince kırmızıya döndüler (`expected 200, got 403` ×4) → yani
+  **testlerim var olmaması gereken bir durumu doğru sanıyordu.** Testler gerçek
+  admin hesabı (`kind='admin'`) kuracak şekilde düzeltildi.
+- `aud` artık `audienceForKind(user.kind)` ile TÜREYİYOR — çağıranın seçimine
+  bırakılmadı. Cihaz akışı daima 'anonymous' üretir → mobil token asla 'admin' olamaz.
+- API **267 test** (265→267). turbo 18/18. **Migration gerekmedi** (kind zaten elde).
+
+📌 **Varsayımlar**
+
+- `@Roles` yalnızca `AdminRole` alır (tip zorlar) → böyle işaretli her handler tanım
+  gereği panel handler'ıdır ve `aud:'admin'` ister. Ayrı bir `@Audience` decorator'ı
+  eklemedim (bu ölçekte bürokrasi).
+- Admin hesabının cihaz akışıyla oluşmayacağını varsaydım (kind='admin' yalnızca
+  davet/seed ile gelir) — davet akışı henüz yok, bu varsayım A0 kalanında sabitlenmeli.
+
+🔥 **Riskler / açıklar**
+
+- **Ders:** #112'yi "kapı kapandı" diye raporladım; kapı kapandı ama duvarda pencere
+  vardı. Bir güvenlik iddiasını, onu delen yolu aramadan tamam saymamalıyım.
+- Admin hesabı oluşturma hâlâ YOK: rol+kind yalnızca DB'den elle veriliyor.
+- Rol/tür değişimi refresh'te yürürlüğe girer → access token ömrü (kısa) boyunca eski
+  yetki geçerli.
+
+❌ **Yapılmadı**
+
+- Admin parola girişi (argon2id, `password_hash` kolonu var ama kullanılmıyor) —
+  **sıradaki iş**. Sonra TOTP 2FA, davet akışı, panel middleware.
 
 ### #112 — admin rol kapısı sunucuda zorlanıyor + admin modülü A0 (PR #113, merged)
 
