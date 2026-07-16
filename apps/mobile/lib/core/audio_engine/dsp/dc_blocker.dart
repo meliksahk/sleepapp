@@ -12,6 +12,15 @@ import 'dart:typed_data';
 /// **birebir aynı** sonucu verir (testle sabitlendi) → native'e birebir taşınabilir.
 ///
 /// Fark denklemi: `y[n] = x[n] - x[n-1] + R·y[n-1]`
+///
+/// ⚠️ ÖLÇÜM UYARISI (#100'de bulundu): "DC" bir **pencere ortalamasıyla** ölçülür
+/// ve bu istatistik kısa pencerede gürültülüdür. Pembe+kahverengi mix ölçümü:
+/// 1sn → 0.0086, 2sn → 0.0030, 5sn → 0.00002, 10sn → 0.00019. Yani 5 sn'deki
+/// çok küçük değer **evrensel garanti değil**, o pencereye özgü bir örnektir.
+/// Filtre ≥3.8 Hz altını gerçekten söndürür (sabit-DC testi 0.00000 verir), ama
+/// kısa pencerede 1/f'in çok düşük frekans artığı ortalamaya sızar.
+/// Sonuç: DC iddiaları **ölçüldüğü pencerede** yapılmalı; kısa pencerede DC
+/// eşiği regresyon bekçisi olarak ANLAMSIZDIR (ham sinyalinki bazen daha küçük).
 class DcBlocker {
   /// [r] kutup yarıçapı; 1'e ne kadar yakınsa kesim frekansı o kadar düşük.
   /// Varsayılan 0.9995 → 48 kHz'de ≈ 3.8 Hz: DC gider, bas duyulur biçimde kalır.

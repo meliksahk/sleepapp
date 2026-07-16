@@ -1,3 +1,5 @@
+import '../../core/audio_engine/dsp/mix_render.dart';
+
 // İçerik modelleri (docs/04). Kimlik doğrulamalı /v1/content uçları.
 // engineParams/layerDefs (ses motoru) on-device motor gelince eklenecek; şimdilik
 // liste/kütüphane için gereken alanlar. Üretilen Dart client (B-3) gelince değişir.
@@ -46,14 +48,70 @@ String _humanizeSlug(String slug) => slug
     .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
     .join(' ');
 
+/// Preset'in tek katmanı — sunucu sözleşmesiyle birebir (docs/02 mixer_state).
+class MixerLayerState {
+  const MixerLayerState({required this.id, required this.type, required this.gain});
+
+  final String id;
+  final NoiseType type;
+  final double gain;
+}
+
+/// Preset mixer durumu → ses motorunun [MixSpec]'ine çevrilebilir.
+///
+/// Sunucu #99'dan beri şemayı doğruluyor; yine de [tryParse] **savunmacıdır**:
+/// istemci sunucudan eski/yeni olabilir ve bozuk JSON'la çökmek yerine preset'i
+/// yok saymak doğrusudur. Kural sunucuyla aynı: geçersizse **kısmi değil, null**.
+class MixerState {
+  const MixerState(this.layers);
+
+  final List<MixerLayerState> layers;
+
+  static const _types = <String, NoiseType>{
+    'white': NoiseType.white,
+    'pink': NoiseType.pink,
+    'brown': NoiseType.brown,
+  };
+
+  /// Geçersiz/tanınmayan yapı → null (çağıran preset'i yok sayar).
+  static MixerState? tryParse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    final rawLayers = json['layers'];
+    if (rawLayers is! List<dynamic> || rawLayers.isEmpty) return null;
+
+    final layers = <MixerLayerState>[];
+    final seen = <String>{};
+    for (final raw in rawLayers) {
+      if (raw is! Map<String, dynamic>) return null;
+      final id = raw['id'];
+      final type = _types[raw['type']];
+      final gain = raw['gain'];
+      if (id is! String || id.isEmpty || type == null) return null;
+      if (gain is! num || !gain.isFinite || gain < 0 || gain > 1) return null;
+      if (!seen.add(id)) return null; // tekrar eden id → belirsiz mix
+      layers.add(MixerLayerState(id: id, type: type, gain: gain.toDouble()));
+    }
+    return MixerState(layers);
+  }
+
+  /// Motorun render girdisi.
+  MixSpec toMixSpec() => MixSpec([
+    for (final l in layers) MixLayer(id: l.id, type: l.type, gain: l.gain),
+  ]);
+}
+
 class Preset {
   const Preset({required this.archetypeSlug, required this.mixerState});
 
   final String archetypeSlug;
-  final dynamic mixerState;
 
-  factory Preset.fromJson(Map<String, dynamic> json) =>
-      Preset(archetypeSlug: json['archetypeSlug'] as String, mixerState: json['mixerState']);
+  /// Sunucu sözleşmesi tanınmazsa null (CLAUDE.md §4: `dynamic` yasak).
+  final MixerState? mixerState;
+
+  factory Preset.fromJson(Map<String, dynamic> json) => Preset(
+    archetypeSlug: json['archetypeSlug'] as String,
+    mixerState: MixerState.tryParse(json['mixerState']),
+  );
 }
 
 class SoundscapeDetail {
