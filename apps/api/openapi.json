@@ -88,6 +88,39 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/admin/login": {
+      "post": {
+        "operationId": "AuthController_adminLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "E-posta veya parola hatalı"
+          }
+        },
+        "summary": "Admin panel girişi (e-posta + parola)",
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/me": {
       "get": {
         "operationId": "AuthController_me",
@@ -1147,6 +1180,21 @@
           }
         },
         "required": ["refreshToken"]
+      },
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Admin hesabının e-postası",
+            "example": "owner@nocta.app"
+          },
+          "password": {
+            "type": "string",
+            "description": "Parola"
+          }
+        },
+        "required": ["email", "password"]
       },
       "MeResponseDto": {
         "type": "object",

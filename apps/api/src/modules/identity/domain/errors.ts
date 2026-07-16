@@ -45,3 +45,13 @@ export class InvalidMagicLinkError extends IdentityError {
     super('invalid_magic_link', 'Magic link geçersiz, kullanılmış veya süresi dolmuş.');
   }
 }
+
+/**
+ * Admin girişi başarısız. E-posta yok / parola yanlış / hesap admin değil —
+ * HEPSİ aynı hata: hangisinin olduğunu söylemek kullanıcı sayımına davetiye olurdu.
+ */
+export class InvalidCredentialsError extends IdentityError {
+  constructor() {
+    super('invalid_credentials', 'E-posta veya parola hatalı.');
+  }
+}

@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { RegisterDeviceUseCase } from '../application/register-device.usecase';
 import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
+import { LoginAdminUseCase } from '../application/login-admin.usecase';
 import { DeleteAccountUseCase } from '../application/delete-account.usecase';
 import { RequestEmailUpgradeUseCase } from '../application/request-email-upgrade.usecase';
 import { VerifyEmailUpgradeUseCase } from '../application/verify-email-upgrade.usecase';
@@ -31,6 +32,7 @@ import { AuthGuard } from './auth.guard';
 import { CurrentUser } from './current-user.decorator';
 import { IS_PRODUCTION } from './tokens';
 import {
+  AdminLoginDto,
   EmailRequestResponseDto,
   EmailVerifyResponseDto,
   MeResponseDto,
@@ -49,6 +51,7 @@ export class AuthController {
   constructor(
     private readonly registerDevice: RegisterDeviceUseCase,
     private readonly refreshSession: RefreshSessionUseCase,
+    private readonly loginAdmin: LoginAdminUseCase,
     private readonly deleteAccount: DeleteAccountUseCase,
     private readonly requestEmailUpgrade: RequestEmailUpgradeUseCase,
     private readonly verifyEmailUpgrade: VerifyEmailUpgradeUseCase,
@@ -75,6 +78,27 @@ export class AuthController {
       return await this.refreshSession.execute(dto.refreshToken);
     } catch (e) {
       if (e instanceof IdentityError) {
+        throw new UnauthorizedException({ code: e.code, message: e.message });
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * Panel girişi. Burada (identity'de) yaşar: auth kodu YALNIZCA bu modülde
+   * (CLAUDE.md §6) — admin modülü kripto/parola görmez.
+   */
+  @Post('admin/login')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Admin panel girişi (e-posta + parola)' })
+  @ApiOkResponse({ type: SessionResponseDto })
+  @ApiUnauthorizedResponse({ description: 'E-posta veya parola hatalı' })
+  async adminLogin(@Body() dto: AdminLoginDto): Promise<SessionResponseDto> {
+    try {
+      return await this.loginAdmin.execute(dto.email, dto.password);
+    } catch (e) {
+      if (e instanceof IdentityError) {
+        // Hangi koşulun düştüğü SÖYLENMEZ (kullanıcı sayımı) — tek mesaj.
         throw new UnauthorizedException({ code: e.code, message: e.message });
       }
       throw e;

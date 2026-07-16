@@ -31,10 +31,31 @@ export interface TokenHasher {
   hash(raw: string): string;
 }
 
+/**
+ * Parola hash'leme — argon2id (CLAUDE.md §3.3). SHA-256'dan (TokenHasher) AYRI bir
+ * porttur ve karıştırılmamalıdır: refresh token 256-bit rastgeledir (kaba kuvvet
+ * anlamsız, deterministik lookup gerekir); parola düşük entropilidir → yavaş, salt'lı,
+ * bellek-zor hash şart. İkisini tek porta koymak, birini yanlış yerde kullanmayı
+ * kolaylaştırırdı.
+ */
+export interface PasswordHasher {
+  hash(plain: string): Promise<string>;
+  /** Geçersiz/bozuk hash'te ATMAZ, false döner (çağıran tek bir 401 yolu izler). */
+  verify(storedHash: string, plain: string): Promise<boolean>;
+}
+
 /** RS256 access JWT imzalama/doğrulama — kripto YALNIZCA burada (docs/02 §2.1). */
 export interface AccessTokenSigner {
   sign(claims: AccessTokenClaims, ttlSeconds: number): Promise<string>;
   verify(token: string): Promise<AccessTokenClaims>;
+}
+
+/** Admin girişi için gereken minimum kayıt. Parola hash'i domain User'a KOYULMAZ:
+ * User her yerde dolaşır (me, refresh, guard) — hash'in oraya sızma riski yaratmaz. */
+export interface AdminCredentials {
+  readonly userId: string;
+  readonly roles: readonly string[];
+  readonly passwordHash: string;
 }
 
 /** users + auth_devices erişimi. Repository userId scope'unu zorunlu kılar (docs/02 §2.1). */
@@ -43,6 +64,8 @@ export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByDeviceFingerprint(fingerprint: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  /** kind='admin' + parolası kurulu + silinmemiş kullanıcı; yoksa null. */
+  findAdminCredentialsByEmail(email: string): Promise<AdminCredentials | null>;
   /** Anonim kullanıcıyı e-posta ile 'registered'a yükseltir. */
   upgradeToEmail(userId: string, email: string, verifiedAt: Date): Promise<void>;
   /** Hesabı sil — FK kaskadı ile tüm ilişkili veri temizlenir (App Store zorunluluğu). */
@@ -78,6 +101,7 @@ export const CLOCK = Symbol('Clock');
 export const ID_GENERATOR = Symbol('IdGenerator');
 export const OPAQUE_TOKEN_GENERATOR = Symbol('OpaqueTokenGenerator');
 export const TOKEN_HASHER = Symbol('TokenHasher');
+export const PASSWORD_HASHER = Symbol('PasswordHasher');
 export const ACCESS_TOKEN_SIGNER = Symbol('AccessTokenSigner');
 export const USER_REPOSITORY = Symbol('UserRepository');
 export const REFRESH_TOKEN_REPOSITORY = Symbol('RefreshTokenRepository');

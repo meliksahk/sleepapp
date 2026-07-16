@@ -6,6 +6,7 @@ import type {
   User,
 } from '../domain/user.entity';
 import type {
+  AdminCredentials,
   OneTimeTokenRepository,
   RefreshTokenRepository,
   UserRepository,
@@ -20,6 +21,7 @@ export class InMemoryUserRepository implements UserRepository {
   private readonly usersById = new Map<string, User>();
   private readonly userIdByFingerprint = new Map<string, string>();
   private readonly emailByUserId = new Map<string, string>();
+  private readonly passwordHashByUserId = new Map<string, string>();
 
   async createWithDevice(user: User, device: DeviceRegistration): Promise<void> {
     this.usersById.set(user.id, user);
@@ -40,6 +42,19 @@ export class InMemoryUserRepository implements UserRepository {
       if (this.emailByUserId.get(user.id) === email) return user;
     }
     return null;
+  }
+
+  /** Test/dev sahtesi: parola hash'i `passwordHashByUserId` ile kurulur. */
+  async findAdminCredentialsByEmail(email: string): Promise<AdminCredentials | null> {
+    const user = await this.findByEmail(email);
+    if (!user || user.kind !== 'admin') return null;
+    const passwordHash = this.passwordHashByUserId.get(user.id);
+    if (!passwordHash) return null;
+    return { userId: user.id, roles: user.roles, passwordHash };
+  }
+
+  setPasswordHash(userId: string, hash: string): void {
+    this.passwordHashByUserId.set(userId, hash);
   }
 
   async upgradeToEmail(userId: string, email: string, _verifiedAt: Date): Promise<void> {

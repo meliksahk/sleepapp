@@ -70,6 +70,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/admin/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin panel girişi (e-posta + parola) */
+        post: operations["AuthController_adminLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/me": {
         parameters: {
             query?: never;
@@ -614,6 +631,15 @@ export interface components {
             /** @description Opak refresh token */
             refreshToken: string;
         };
+        AdminLoginDto: {
+            /**
+             * @description Admin hesabının e-postası
+             * @example owner@nocta.app
+             */
+            email: string;
+            /** @description Parola */
+            password: string;
+        };
         MeResponseDto: {
             /** Format: uuid */
             userId: string;
@@ -1102,6 +1128,36 @@ export interface operations {
                 };
             };
             /** @description Geçersiz veya yeniden kullanılmış refresh token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_adminLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminLoginDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponseDto"];
+                };
+            };
+            /** @description E-posta veya parola hatalı */
             401: {
                 headers: {
                     [name: string]: unknown;
