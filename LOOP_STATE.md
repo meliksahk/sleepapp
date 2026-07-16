@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈43% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈44% — F1–F5 (otonom kapsam)
 
 ```
-[█████████████████░░░░░░░░░░░░░░░░░░░░░░░] 43%
+[██████████████████░░░░░░░░░░░░░░░░░░░░░░] 44%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
 | ----------- | -------- | ------- | --------------------------------------------------------------------------- |
-| Backend/API | ~72%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
+| Backend/API | ~73%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
 | Mobil       | ~33%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
 | Web         | ~44%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·72 + 0.40·33 + 0.15·12 + 0.15·44 ≈ **43%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·73 + 0.40·33 + 0.15·12 + 0.15·44 ≈ **44%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#90 (analitik olay sözlüğü zorlaması):** docs/01 §7'nin **belgelenmiş ama uygulanmamış** gereksinimi kapatıldı — "sözlükte olmayan event gönderilemez". Olay adı şimdiye dek YALNIZCA regex ile doğrulanıyordu (herhangi bir `[a-z0-9_.]` adı kabul). Artık `KNOWN_EVENT_NAMES` (domain, tek kaynak) + eşlenik `docs/analytics-events.md` (docs/01'in adıyla istediği dosya: sözlük tablosu, ad kuralları, **PII yasağı**, "önce sözlük sonra gönderim" sırası). `unknown_event` hata kodu; biçim kontrolünden sonra sözlük kapısı. Sözlük yalnızca **gerçekten yayılan** olayları içerir (`archetype_completed`, `share_tapped`) — spekülatif olay eklenmedi. API 222 test (217→222): sözlük bilinir/bilinmez, biçim-geçerli-ama-tanımsız, set tutarlılığı, batch tümden red; e2e unknown_event 400 + satır yazılmaz. turbo 17/17. Mobilin iki olayı da sözlükte → kırılma yok. İlerleme barı backend 72→73% (toplam ≈44%, bar 18 blok). PR #91. **Tercih (dürüstçe):** tek tanımsız olay tüm batch'i düşürür (kısmi kabul yok); istemci sözlükten önce olay eklerse o batch kaybolur — bilinçli, dokümanda yazılı.
 - **#89 (mobil detayda "sana uygun sesler"):** Archetype detay ekranına o kimliğe affinity'si olan soundscape listesi (tıklayınca `/library/:slug`). #87'nin kapsam-dışı detay→içerik bağı tamamlandı; test→kimlik→içerik döngüsünün son halkası. `soundscapesForArchetypeProvider` (family: `feed(archetype)` + affinity filtresi) + `_SoundsSection` — **ikincil bölüm**: boş/yükleme/hata → gizli, detay bloklanmaz. `flutter analyze` temiz, `flutter test` 85 yeşil (82→85): liste gösterilir, boşsa gizli, hata detayı bloklamaz. İlerleme barı mobil 32→33% (toplam ≈43%). PR #90. **Not:** `soundscapeFeedProvider` zaten parametresiz → #88 ile sunucuda otomatik kişiselleşiyor, ek temizlik gerekmedi (planlanan "provider temizliği" no-op çıktı).
 - **#88 (API kişiselleştirilmiş içerik feed'i):** `GET /v1/content/feed` archetype paramı yoksa kullanıcının KENDİ en son sonucuna göre sıralanır (yoksa 'all'); açık `?archetype=` önceliklidir. Ürün döngüsü: test→içerik, sunucu tarafında. `UserArchetypeReader` portu + module-def adaptörü (archetype public `GetLatestResultUseCase`; content archetype tablosuna dokunmaz — boundary lint yeşil). `GetFeedUseCase.execute(userId, explicitArchetype?)`. openapi+shared-types regen. API 217 test (213→217): reader'a düşme, explicit override, sonuç yok→all, e2e paramsız 200. turbo 17/17. İlerleme barı backend 71→72% (toplam ≈43%). PR #89. Not: cache kullanıcıya özel değil (archetype başına) → PII sızmaz; mobil feed provider'ının parametreyi bırakması ayrı.
 - **#87 (mobil archetype detay ekranı):** Home kimlik kartı tıklanabilir → `/identity/:slug` detay ekranı (isim + tagline + özet, `archetypeContentProvider`'dan). #86'nın kapsam-dışı tıklaması tamamlandı. `content.when` dayanıklı: bilinen slug→içerik, bilinmeyen→"Unknown identity", hata→retry. Yeni route + `_IdentityCard` GestureDetector. `flutter analyze` temiz, `flutter test` 82 yeşil (79→82). Salt mobil, contract değişmedi. İlerleme barı mobil 31→32% (toplam ≈43%). PR #88. Not: detayda "sana uygun sesler" (affinity→soundscape) linki ayrı.
