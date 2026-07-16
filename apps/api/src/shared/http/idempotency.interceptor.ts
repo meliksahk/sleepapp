@@ -11,6 +11,13 @@ interface CacheEntry {
  * Idempotency-Key desteği (docs/02 §4). Aynı anahtarla tekrar edilen POST, ilk
  * yanıtı döndürür (yeni işlem yapılmaz) — mobil offline kuyruğunun retry güvenliği.
  * In-memory (tek instance); dağıtık Redis cache B4'te.
+ *
+ * ⚠️ ANAHTAR KAPSAMI (güvenlik): cache anahtarı ÇAĞIRANI içermek ZORUNDA.
+ * Eskiden yalnızca `url:key` idi → aynı Idempotency-Key'i kullanan İKİ FARKLI
+ * kullanıcıdan ikincisi, birincinin yanıtını alıyordu (başkasının userId'si +
+ * skorları) ve kendi işlemi hiç yapılmıyordu. Anahtarlar gizli değil ve naif bir
+ * istemci (sayaç/timestamp) çakışmayı olası kılar. CLAUDE.md §6'nın "her şey
+ * çağıranın kimliğiyle kapsamlanır" kuralı burada da geçerli.
  */
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
@@ -26,7 +33,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       return next.handle();
     }
 
-    const cacheKey = `${req.originalUrl}:${key}`;
+    const cacheKey = `${callerScope(req)}:${req.originalUrl}:${key}`;
     const now = Date.now();
     const cached = this.cache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
@@ -46,4 +53,21 @@ export class IdempotencyInterceptor implements NestInterceptor {
       if (v.expiresAt <= now) this.cache.delete(k);
     }
   }
+}
+
+/**
+ * Cache anahtarının çağıran-kapsamı: kimlik doğrulanmışsa kullanıcı, değilse IP.
+ *
+ * Neden IP fallback (kimliksizde cache'i tamamen kapatmak yerine): public uçlar
+ * (`/v1/archetype/web`, `/v1/waitlist`) da retry güvenliğinden yararlanıyor.
+ * IP mükemmel bir kimlik değil (NAT), ama rastgele anahtarlarla çakışma pratikte
+ * yok ve "herkes tek havuz"dan kat kat iyi.
+ *
+ * `req.user` yapısal olarak okunuyor — `identity`'den tip import etmek
+ * shared→modül sınırını ihlal ederdi (boundary lint).
+ */
+function callerScope(req: Request): string {
+  const user = (req as Request & { user?: { sub?: unknown } }).user;
+  const sub = user?.sub;
+  return typeof sub === 'string' && sub.length > 0 ? `u:${sub}` : `ip:${req.ip ?? 'unknown'}`;
 }
