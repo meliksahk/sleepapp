@@ -26,6 +26,10 @@ Sıra önemlidir: sözlük önce, gönderim sonra. Aksi halde batch 400 döner.
 | --------------------- | ---------------------------------------- | ------------------ | ----- |
 | `archetype_completed` | Archetype testi tamamlanıp sonuç görünce | `archetype` (slug) | mobil |
 | `share_tapped`        | Archetype kartı başarıyla paylaşılınca   | `archetype` (slug) | mobil |
+| `report_shared`       | Gece raporu başarıyla paylaşılınca       | — (yok)            | mobil |
+
+> `report_shared` neden props'suz: tek anlamlı aday **gece tarihi** olurdu; kişinin
+> hangi gece uyuduğu bilgisi PII'ye yakın ve viral huni ölçümü için gereksiz.
 
 > Tabloda yalnızca **gerçekten yayılan** olaylar bulunur (spekülatif olay eklenmez).
 > Ses motoru, uyku takibi ve mix-to-video olayları o özellikler geldiğinde eklenecek.
