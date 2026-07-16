@@ -41,6 +41,14 @@ export class ArchetypeResultResponseDto {
   @ApiProperty({ format: 'date-time' }) createdAt!: Date;
 }
 
+export class ArchetypeInfoDto {
+  @ApiProperty({ enum: ['deep-ocean', 'overthinker', 'delta-drifter', 'dawn-chaser'] })
+  slug!: string;
+  @ApiProperty({ example: 'Deep Ocean' }) name!: string;
+  @ApiProperty() tagline!: string;
+  @ApiProperty() summary!: string;
+}
+
 export class WebResultResponseDto {
   @ApiProperty({ description: 'Paylasim slug (/a/{...})' }) shareSlug!: string;
   @ApiProperty({ enum: ['deep-ocean', 'overthinker', 'delta-drifter', 'dawn-chaser'] })

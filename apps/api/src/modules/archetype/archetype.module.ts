@@ -18,6 +18,7 @@ import { ScoreWebUseCase } from './application/score-web.usecase';
 import { GetWebResultUseCase } from './application/get-web-result.usecase';
 import { ArchetypeController } from './presentation/archetype.controller';
 import { WebArchetypeController } from './presentation/web-archetype.controller';
+import { ArchetypeContentController } from './presentation/archetype-content.controller';
 
 const providers: Provider[] = [
   {
@@ -66,7 +67,7 @@ const providers: Provider[] = [
 
 @Module({
   imports: [IdentityModule],
-  controllers: [ArchetypeController, WebArchetypeController],
+  controllers: [ArchetypeController, WebArchetypeController, ArchetypeContentController],
   providers,
   // Modüller-arası okuma için dışa açılır (ör. sharing modülü sonuç okur).
   exports: [GetLatestResultUseCase],
