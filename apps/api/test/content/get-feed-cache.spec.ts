@@ -2,6 +2,7 @@ import { GetFeedUseCase } from '../../src/modules/content/application/get-feed.u
 import { InMemoryCache } from '../../src/shared/cache/in-memory-cache';
 import type { UserArchetypeReader } from '../../src/modules/content/domain/user-archetype-reader';
 import type {
+  AdminSoundscapeView,
   ContentRepository,
   Soundscape,
   SoundscapeSummary,
@@ -39,6 +40,12 @@ class CountingRepo implements ContentRepository {
     throw new Error('kullanılmaz');
   }
   createDraft(): Promise<SoundscapeSummary | null> {
+    throw new Error('kullanılmaz');
+  }
+  findAdminBySlug(): Promise<AdminSoundscapeView | null> {
+    throw new Error('kullanılmaz');
+  }
+  setStatus(): Promise<SoundscapeSummary | null> {
     throw new Error('kullanılmaz');
   }
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null> {

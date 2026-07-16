@@ -20,3 +20,27 @@ export class InvalidSlugError extends ContentError {
     super('invalid_slug', 'Slug küçük harf ve tire içermeli (ör. deep-ocean-drift).');
   }
 }
+
+/**
+ * Ses tarifi (engine_params) boş olan kayıt yayınlanamaz.
+ *
+ * NEDEN KURAL: feed DTO'su `engineParams`'ı uygulamaya taşır ve ses ON-DEVICE bu
+ * tariften üretilir. Boş tarifle yayınlamak, kütüphanede görünen ama SES ÇIKARMAYAN
+ * bir kayıt demektir — sessiz bozuk içerik. Taslak boş doğar (iskelet), ama boş
+ * KALDIĞI sürece kullanıcıya ulaşamaz.
+ */
+export class EmptyRecipeError extends ContentError {
+  constructor() {
+    super(
+      'empty_recipe',
+      'Ses tarifi boş olan kayıt yayınlanamaz. Önce engine_params doldurulmalı.',
+    );
+  }
+}
+
+/** İstenen soundscape yok. */
+export class SoundscapeNotFoundError extends ContentError {
+  constructor(slug: string) {
+    super('soundscape_not_found', `Soundscape bulunamadı: ${slug}`);
+  }
+}

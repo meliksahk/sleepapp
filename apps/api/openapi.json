@@ -734,6 +734,80 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/soundscapes/{slug}/publish": {
+      "post": {
+        "operationId": "AdminController_publish",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSoundscapeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yazma yetkisi yok"
+          },
+          "404": {
+            "description": "Soundscape yok"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soundscape yayinla (bos ses tarifi reddedilir)",
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/soundscapes/{slug}/unpublish": {
+      "post": {
+        "operationId": "AdminController_unpublish",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSoundscapeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soundscape yayindan kaldir (taslaga dondurur)",
+        "tags": ["admin"]
+      }
+    },
     "/v1/content/feed": {
       "get": {
         "operationId": "ContentController_feed",

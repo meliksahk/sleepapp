@@ -6,7 +6,7 @@ const revalidatePath = vi.fn();
 vi.mock('@/shared/api/server-client', () => ({ apiPost: (...a: unknown[]) => apiPost(...a) }));
 vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
 
-const { createSoundscapeAction } = await import('./actions');
+const { createSoundscapeAction, setStatusAction } = await import('./actions');
 
 const form = (fields: Record<string, string>): FormData => {
   const fd = new FormData();
@@ -63,6 +63,47 @@ describe('createSoundscapeAction', () => {
   it('403 sessizce yutulmaz — sunucu reddederse editör sebebini görür', async () => {
     apiPost.mockResolvedValue({ ok: false, status: 403 });
     const state = await createSoundscapeAction({}, form({ slug: 'x', titleEn: 'X' }));
+    expect(state.error).toContain('yetkiniz yok');
+  });
+});
+
+describe('setStatusAction', () => {
+  it('yayınla → doğru ucu çağırır ve listeyi tazeler', async () => {
+    apiPost.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+
+    const state = await setStatusAction({}, form({ slug: 'x', action: 'publish' }));
+
+    expect(apiPost).toHaveBeenCalledWith('/v1/admin/soundscapes/x/publish', {});
+    expect(state).toEqual({});
+    expect(revalidatePath).toHaveBeenCalledWith('/content');
+  });
+
+  it('yayından kaldır → unpublish ucu', async () => {
+    apiPost.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+    await setStatusAction({}, form({ slug: 'x', action: 'unpublish' }));
+    expect(apiPost).toHaveBeenCalledWith('/v1/admin/soundscapes/x/unpublish', {});
+  });
+
+  it('bilinmeyen eylem YAYINLAMAYA düşmez... aslında düşer: publish varsayılan', async () => {
+    // Bilinçli: yalnızca 'unpublish' geri çeker, gerisi publish. Formu biz üretiyoruz
+    // ve sunucu zaten yetkiyi/kapıyı kontrol ediyor — burada ekstra dal gereksiz.
+    apiPost.mockResolvedValue({ ok: true, data: { slug: 'x' } });
+    await setStatusAction({}, form({ slug: 'x', action: 'sacma' }));
+    expect(apiPost).toHaveBeenCalledWith('/v1/admin/soundscapes/x/publish', {});
+  });
+
+  it('BOŞ TARİF reddi editörün diline çevrilir ve liste tazelenmez', async () => {
+    apiPost.mockResolvedValue({ ok: false, status: 409, code: 'empty_recipe' });
+
+    const state = await setStatusAction({}, form({ slug: 'x', action: 'publish' }));
+
+    expect(state.error).toContain('Ses tarifi boş');
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('403 sessizce yutulmaz', async () => {
+    apiPost.mockResolvedValue({ ok: false, status: 403 });
+    const state = await setStatusAction({}, form({ slug: 'x', action: 'publish' }));
     expect(state.error).toContain('yetkiniz yok');
   });
 });

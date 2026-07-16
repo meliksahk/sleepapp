@@ -76,6 +76,16 @@ export interface SoundscapeSummary {
   readonly createdAt: Date;
 }
 
+/**
+ * Admin'in tek kayıt görünümü. `hasRecipe` bilerek bir BAYRAK: yayınlama kararı için
+ * tarifin VAR OLUP OLMADIĞI yeter; koca `engineParams` nesnesini domain'e taşımak
+ * gereksiz (ve listede taşımama kararıyla tutarsız) olurdu.
+ */
+export interface AdminSoundscapeView {
+  readonly summary: SoundscapeSummary;
+  readonly hasRecipe: boolean;
+}
+
 /** Yeni taslak girdisi (admin yazma yolu). Durum daima 'draft' — yayınlama ayrı adım. */
 export interface NewSoundscape {
   readonly slug: string;
@@ -91,6 +101,10 @@ export interface ContentRepository {
   findAllSummaries(): Promise<SoundscapeSummary[]>;
   /** Taslak oluşturur. Slug çakışırsa null (UNIQUE ihlalini hataya çevirmez). */
   createDraft(input: NewSoundscape): Promise<SoundscapeSummary | null>;
+  /** Admin görünümü: durum DAHİL herhangi bir kayıt (yayınlanmamış da) + tarif var mı. */
+  findAdminBySlug(slug: string): Promise<AdminSoundscapeView | null>;
+  /** Durumu değiştirir; kayıt yoksa null. */
+  setStatus(slug: string, status: ContentStatus): Promise<SoundscapeSummary | null>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
   /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;
