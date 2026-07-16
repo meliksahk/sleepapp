@@ -48,13 +48,31 @@ class SoundscapeLibraryScreen extends ConsumerWidget {
       separatorBuilder: (context, index) => const SizedBox(height: NoctaSpace.s3),
       itemBuilder: (context, i) {
         final s = list[i];
+        final affinity = s.affinityLabel();
         return GestureDetector(
           key: Key('soundscape-${s.slug}'),
           onTap: () => context.push('/library/${s.slug}'),
           child: NCard(
-            child: Text(
-              s.title('en'),
-              style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  s.title('en'),
+                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                ),
+                // Uygun uyku kimliği — archetype↔ses bağı (yalnızca affinity varsa).
+                if (affinity.isNotEmpty) ...[
+                  const SizedBox(height: NoctaSpace.s1),
+                  Text(
+                    'For $affinity',
+                    key: Key('soundscape-affinity-${s.slug}'),
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.caption,
+                      color: NoctaColors.inkSecondary,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         );
