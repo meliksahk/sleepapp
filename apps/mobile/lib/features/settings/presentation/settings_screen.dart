@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../auth/auth_providers.dart';
+import '../../profile/profile_providers.dart';
 
 /// Ayarlar (docs/06 hesap güvenliği). "Diğer cihazlardan çık" akışı.
 /// Not: metinler l10n'a M1'de taşınacak.
@@ -14,6 +15,25 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _busy = false;
+  bool _savingNotifications = false;
+
+  /// Bildirim toggle'ı: optimistic değil — PATCH sonucunu bekleyip provider'ı
+  /// tazeler; hata olursa switch eski değerinde kalır (kullanıcıya snackbar).
+  Future<void> _setNotifications(bool enabled) async {
+    if (_savingNotifications) return;
+    setState(() => _savingNotifications = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(profileControllerProvider).setNotificationsEnabled(enabled);
+      ref.invalidate(profileProvider); // switch güncel sunucu değerini yansıtır
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not update notification setting')),
+      );
+    } finally {
+      if (mounted) setState(() => _savingNotifications = false);
+    }
+  }
 
   Future<void> _revokeOthers() async {
     if (_busy) return;
@@ -35,6 +55,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final sessions = ref.watch(activeSessionsProvider);
+    final profile = ref.watch(profileProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
@@ -43,6 +64,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Text(
+                'Notifications',
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+              // Bildirim tercihi — profil gelince (yükleme/hata → gizli, dayanıklı).
+              profile.maybeWhen(
+                data: (p) => SwitchListTile(
+                  key: const Key('notifications-toggle'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'Push notifications',
+                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                  ),
+                  value: p.notificationsEnabled,
+                  onChanged: _savingNotifications ? null : _setNotifications,
+                ),
+                orElse: () => const SizedBox.shrink(),
+              ),
+              const SizedBox(height: NoctaSpace.s5),
               Text(
                 'Account security',
                 style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),

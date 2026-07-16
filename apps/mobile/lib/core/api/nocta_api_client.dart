@@ -55,6 +55,15 @@ class NoctaApiClient {
     );
   }
 
+  /// Kimlik doğrulamalı PATCH (JSON gövde) — ham yanıt döner (kısmi güncelleme).
+  Future<http.Response> patchAuthed(String path, String accessToken, Object body) {
+    return _client.patch(
+      Uri.parse('$baseUrl$path'),
+      headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+  }
+
   Map<String, String> _authHeaders(String accessToken) => {
         'Authorization': 'Bearer $accessToken',
       };
