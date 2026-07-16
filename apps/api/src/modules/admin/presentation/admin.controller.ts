@@ -42,12 +42,15 @@ import {
 import { Inject } from '@nestjs/common';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
+import { OverviewDto } from './overview.dto';
 import { CreateSoundscapeDto } from './create-soundscape.dto';
 import { SetRecipeDto } from './recipe.dto';
 import { UpdateSoundscapeDto } from './update-soundscape.dto';
 import {
+  OVERVIEW_SOURCE,
   SOUNDSCAPE_CATALOG,
   type CatalogEntry,
+  type OverviewSource,
   type SoundscapeCatalog,
 } from '../domain/soundscape-catalog';
 
@@ -64,7 +67,10 @@ import {
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(...ADMIN_ROLES)
 export class AdminController {
-  constructor(@Inject(SOUNDSCAPE_CATALOG) private readonly catalog: SoundscapeCatalog) {}
+  constructor(
+    @Inject(SOUNDSCAPE_CATALOG) private readonly catalog: SoundscapeCatalog,
+    @Inject(OVERVIEW_SOURCE) private readonly overviewSource: OverviewSource,
+  ) {}
 
   @Get('me')
   @ApiOperation({ summary: "Admin oturumunu ve rolleri doğrular (panel auth guard'ı)" })
@@ -74,6 +80,18 @@ export class AdminController {
     // Yalnızca TANINAN roller döner: DB'ye elle yazılmış çöp bir rol adı panelin
     // yetki mantığına sızmasın (panel bu listeye göre menü/aksiyon gösterecek).
     return { userId: user.sub, roles: user.roles.filter(isAdminRole) };
+  }
+
+  /**
+   * Panel panosu rakamları. Yalnızca bugün DOĞRU hesaplanabilenler — D7 retention
+   * ve deneme→ücretli için sahte sayı üretmektense panelde dürüst yer tutucu kalır.
+   * Okuma: her panel rolü (analyst dahil) görebilir.
+   */
+  @Get('overview')
+  @ApiOperation({ summary: 'Panel panosu sayilari' })
+  @ApiOkResponse({ type: OverviewDto })
+  async overview(): Promise<OverviewDto> {
+    return this.overviewSource.read();
   }
 
   /**

@@ -119,6 +119,17 @@ export class PrismaContentRepository implements ContentRepository {
     return row ? toSummary(row) : null;
   }
 
+  async countByStatus(): Promise<Record<ContentStatus, number>> {
+    const rows = await this.prisma.soundscapes.groupBy({ by: ['status'], _count: { _all: true } });
+    // Sıfırlar açıkça yazılır: groupBy yalnızca VAR OLAN durumları döndürür; eksik
+    // anahtar panelde "undefined" olurdu.
+    const out: Record<ContentStatus, number> = { draft: 0, scheduled: 0, published: 0 };
+    for (const r of rows) {
+      out[r.status as ContentStatus] = r._count._all;
+    }
+    return out;
+  }
+
   async findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null> {
     const row = await this.prisma.soundscapes.findFirst({
       where: { slug, status: 'published' },

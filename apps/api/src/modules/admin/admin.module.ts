@@ -1,8 +1,10 @@
 import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
 import type { SoundscapeSummary } from '../content';
+import { WaitlistModule, CountWaitlistUseCase } from '../waitlist';
 import {
   ContentModule,
+  CountSoundscapesUseCase,
   CreateSoundscapeUseCase,
   GetAdminSoundscapeUseCase,
   UpdateSoundscapeUseCase,
@@ -12,8 +14,10 @@ import {
 } from '../content';
 import { AdminController } from './presentation/admin.controller';
 import {
+  OVERVIEW_SOURCE,
   SOUNDSCAPE_CATALOG,
   type CatalogEntry,
+  type OverviewSource,
   type SoundscapeCatalog,
 } from './domain/soundscape-catalog';
 
@@ -69,6 +73,27 @@ const providers: Provider[] = [
       update: async (slug, patch) => toEntry(await updateOne.execute(slug, patch)),
     }),
   },
+  {
+    /**
+     * Pano kaynağı: İKİ modülün PUBLIC use case'ini birleştirir (content + waitlist);
+     * ikisinin de repo'suna dokunmaz. Sorgular PARALEL — bağımsız sayımlar, biri
+     * diğerini beklemesin.
+     */
+    provide: OVERVIEW_SOURCE,
+    inject: [CountSoundscapesUseCase, CountWaitlistUseCase],
+    useFactory: (
+      countSoundscapes: CountSoundscapesUseCase,
+      countWaitlist: CountWaitlistUseCase,
+    ): OverviewSource => ({
+      read: async () => {
+        const [soundscapes, waitlist] = await Promise.all([
+          countSoundscapes.execute(),
+          countWaitlist.execute(),
+        ]);
+        return { soundscapes, waitlist };
+      },
+    }),
+  },
 ];
 
 /**
@@ -77,7 +102,7 @@ const providers: Provider[] = [
  * application servislerinden tüketilir (repo/Prisma modeline dokunulmaz).
  */
 @Module({
-  imports: [IdentityModule, ContentModule],
+  imports: [IdentityModule, ContentModule, WaitlistModule],
   controllers: [AdminController],
   providers,
 })
