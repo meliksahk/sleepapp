@@ -105,6 +105,8 @@ export interface ContentRepository {
   findAdminBySlug(slug: string): Promise<AdminSoundscapeView | null>;
   /** Durumu değiştirir; kayıt yoksa null. */
   setStatus(slug: string, status: ContentStatus): Promise<SoundscapeSummary | null>;
+  /** Ses tarifini yazar; kayıt yoksa null. */
+  setEngineParams(slug: string, params: unknown): Promise<SoundscapeSummary | null>;
   findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null>;
   /** En güncel haftalık yayın (yayınlanmış soundscape'lerle çözülür), yoksa null. */
   findLatestWeeklyRelease(): Promise<WeeklyRelease | null>;

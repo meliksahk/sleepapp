@@ -44,3 +44,14 @@ export class SoundscapeNotFoundError extends ContentError {
     super('soundscape_not_found', `Soundscape bulunamadı: ${slug}`);
   }
 }
+
+/** Ses tarifi sözleşmeye uymuyor (bkz. engine-params.ts). */
+export class InvalidRecipeError extends ContentError {
+  constructor() {
+    super(
+      'invalid_recipe',
+      'Ses tarifi geçersiz: schemaVersion=1 ve 1–8 arası benzersiz katman ' +
+        '({id, type: white|pink|brown, gain: 0–1}) gerekir.',
+    );
+  }
+}

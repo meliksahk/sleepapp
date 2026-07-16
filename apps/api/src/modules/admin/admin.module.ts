@@ -5,6 +5,7 @@ import {
   ContentModule,
   CreateSoundscapeUseCase,
   ListAllSoundscapesUseCase,
+  SetSoundscapeRecipeUseCase,
   SetSoundscapeStatusUseCase,
 } from '../content';
 import { AdminController } from './presentation/admin.controller';
@@ -35,11 +36,17 @@ const providers: Provider[] = [
     // Adaptasyon module-def'te: admin, content'in PUBLIC use case'ini kendi portuna
     // bağlar; content'in repo'suna/Prisma modeline dokunmaz (docs/02 §2 boundary).
     provide: SOUNDSCAPE_CATALOG,
-    inject: [ListAllSoundscapesUseCase, CreateSoundscapeUseCase, SetSoundscapeStatusUseCase],
+    inject: [
+      ListAllSoundscapesUseCase,
+      CreateSoundscapeUseCase,
+      SetSoundscapeStatusUseCase,
+      SetSoundscapeRecipeUseCase,
+    ],
     useFactory: (
       listAll: ListAllSoundscapesUseCase,
       create: CreateSoundscapeUseCase,
       setStatus: SetSoundscapeStatusUseCase,
+      setRecipe: SetSoundscapeRecipeUseCase,
     ): SoundscapeCatalog => ({
       list: async () => {
         const all = await listAll.execute();
@@ -48,6 +55,7 @@ const providers: Provider[] = [
       create: async (input) => toEntry(await create.execute(input)),
       publish: async (slug) => toEntry(await setStatus.publish(slug)),
       unpublish: async (slug) => toEntry(await setStatus.unpublish(slug)),
+      setRecipe: async (slug, recipe) => toEntry(await setRecipe.execute(slug, recipe)),
     }),
   },
 ];

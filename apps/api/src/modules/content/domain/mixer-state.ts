@@ -36,7 +36,7 @@ function isNoiseType(v: unknown): v is NoiseType {
   return typeof v === 'string' && (NOISE_TYPES as readonly string[]).includes(v);
 }
 
-function parseLayer(input: unknown): MixerLayer | null {
+export function parseLayer(input: unknown): MixerLayer | null {
   if (typeof input !== 'object' || input === null) return null;
   const { id, type, gain } = input as Record<string, unknown>;
 
@@ -56,17 +56,26 @@ function parseLayer(input: unknown): MixerLayer | null {
 export function parseMixerState(input: unknown): MixerState | null {
   if (typeof input !== 'object' || input === null) return null;
   const { layers } = input as Record<string, unknown>;
-  if (!Array.isArray(layers)) return null;
-  if (layers.length === 0 || layers.length > MAX_MIXER_LAYERS) return null;
+  const parsed = parseLayers(layers);
+  return parsed === null ? null : { layers: parsed };
+}
+
+/**
+ * Katman listesini doğrular. `parseMixerState` ve `parseEngineParams` ortak kullanır —
+ * kural iki yerde yaşasaydı biri sessizce eskirdi (ör. MAX değişimi tek yerde kalırdı).
+ */
+export function parseLayers(input: unknown): MixerLayer[] | null {
+  if (!Array.isArray(input)) return null;
+  if (input.length === 0 || input.length > MAX_MIXER_LAYERS) return null;
 
   const parsed: MixerLayer[] = [];
   const seen = new Set<string>();
-  for (const raw of layers) {
+  for (const raw of input) {
     const layer = parseLayer(raw);
     if (!layer) return null;
     if (seen.has(layer.id)) return null; // aynı id iki kez → belirsiz mix
     seen.add(layer.id);
     parsed.push(layer);
   }
-  return { layers: parsed };
+  return parsed;
 }

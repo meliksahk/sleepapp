@@ -91,6 +91,16 @@ export class PrismaContentRepository implements ContentRepository {
     return row ? toSummary(row) : null;
   }
 
+  async setEngineParams(slug: string, params: unknown): Promise<SoundscapeSummary | null> {
+    const updated = await this.prisma.soundscapes.updateMany({
+      where: { slug },
+      data: { engine_params: params as object },
+    });
+    if (updated.count === 0) return null;
+    const row = await this.prisma.soundscapes.findUnique({ where: { slug } });
+    return row ? toSummary(row) : null;
+  }
+
   async findPublishedBySlug(slug: string): Promise<SoundscapeDetail | null> {
     const row = await this.prisma.soundscapes.findFirst({
       where: { slug, status: 'published' },
