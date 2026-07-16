@@ -88,6 +88,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanıcının aktif oturumları (cihaz listesi, token'sız) */
+        get: operations["AuthController_sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sessions/revoke-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Diğer cihazlardan çık — mevcut oturum hariç tümünü iptal et */
+        post: operations["AuthController_revokeOthers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/email/request": {
         parameters: {
             query?: never;
@@ -242,6 +276,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/archetype/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tüm archetype tanıtım içeriği (isim/tagline/özet) */
+        get: operations["ArchetypeContentController_content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/flags": {
         parameters: {
             query?: never;
@@ -249,7 +300,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Kullanıcı için değerlendirilmiş feature flag haritası */
+        /** Kullanıcı + context için değerlendirilmiş feature flag haritası */
         get: operations["FlagsController_flags"];
         put?: never;
         post?: never;
@@ -344,6 +395,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/notifications/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Kendi cihazlarına test push (fan-out doğrulama) */
+        post: operations["NotificationController_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sharing/archetype": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanıcının archetype sonucundan paylaşım kartı + deep link */
+        get: operations["SharingController_archetype"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sharing/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bir gecenin raporundan paylaşım kartı (gece raporu, viral kanca #2) */
+        get: operations["SharingController_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sleep/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Uyku oturumları — en yeni N veya gece aralığı (from+to) */
+        get: operations["SleepController_recent"];
+        put?: never;
+        /** Uyku oturumu kaydı (on-device türetilmiş metrikler) */
+        post: operations["SleepController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sleep/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Bir gecenin uyku raporu (özet + paylaşılabilir kart verisi) */
+        get: operations["SleepController_nightReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sleep/streak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanıcının uyku serisi (current/longest/totalNights) */
+        get: operations["SleepController_streakStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/analytics/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ürün analitik olaylarını yut (batch) */
+        post: operations["AnalyticsController_events"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -379,6 +550,24 @@ export interface components {
             /** Format: uuid */
             userId: string;
             roles: string[];
+        };
+        SessionInfoDto: {
+            /**
+             * Format: uuid
+             * @description Oturum (cihaz zinciri) kimliği
+             */
+            familyId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        RevokedSessionsDto: {
+            /**
+             * @description İptal edilen diğer oturum sayısı
+             * @example 2
+             */
+            revoked: number;
         };
         RequestEmailDto: {
             /**
@@ -481,6 +670,14 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        ArchetypeInfoDto: {
+            /** @enum {string} */
+            slug: "deep-ocean" | "overthinker" | "delta-drifter" | "dawn-chaser";
+            /** @example Deep Ocean */
+            name: string;
+            tagline: string;
+            summary: string;
+        };
         SoundscapeDto: {
             /** Format: uuid */
             id: string;
@@ -536,6 +733,151 @@ export interface components {
             token: string;
             /** @enum {string} */
             platform: "ios" | "android";
+        };
+        TestNotificationDto: {
+            /** @example Test */
+            title: string;
+            /** @example Bu bir test bildirimidir. */
+            body: string;
+        };
+        FanOutResultDto: {
+            /**
+             * @description Başarılı gönderim sayısı
+             * @example 2
+             */
+            sent: number;
+            /**
+             * @description Başarısız gönderim sayısı
+             * @example 0
+             */
+            failed: number;
+        };
+        ArchetypeShareDto: {
+            /** @enum {string} */
+            archetypeSlug: "deep-ocean" | "overthinker" | "delta-drifter" | "dawn-chaser";
+            /** @example My sleep identity is Deep Ocean */
+            title: string;
+            description: string;
+            /** @example https://nocta.app/a/deep-ocean */
+            webUrl: string;
+            /** @example nocta://a/deep-ocean */
+            deepLink: string;
+        };
+        NightReportShareDto: {
+            /** @example 2026-07-15 */
+            nightDate: string;
+            /** @example My night: 7h 42m */
+            title: string;
+            /** @example Calm 85/100 · NOCTA sleep ritual */
+            subtitle: string;
+            /** @example 7h 42m */
+            durationText: string;
+            /** @example 85 */
+            calmScore: number;
+            /** @example https://nocta.app */
+            webUrl: string;
+            /** @example nocta://report/2026-07-15 */
+            deepLink: string;
+        };
+        RecordSleepSessionDto: {
+            /**
+             * Format: date-time
+             * @description Uyku başlangıcı (ISO 8601, UTC)
+             */
+            startedAt: string;
+            /**
+             * Format: date-time
+             * @description Uyku bitişi (ISO 8601, UTC)
+             */
+            endedAt: string;
+            /**
+             * @description On-device hareket olayı sayısı (türetilmiş)
+             * @example 12
+             */
+            movementEvents: number;
+            /**
+             * @description On-device ses olayı sayısı (türetilmiş)
+             * @example 3
+             */
+            soundEvents: number;
+        };
+        SleepSessionDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            endedAt: string;
+            /**
+             * @description Gece etiketi (yerel gün, 06:00 sınırı)
+             * @example 2026-07-15
+             */
+            nightDate: string;
+            /** @example 462 */
+            durationMinutes: number;
+            /** @example 12 */
+            movementEvents: number;
+            /** @example 3 */
+            soundEvents: number;
+        };
+        NightReportDto: {
+            /** @example 2026-07-15 */
+            nightDate: string;
+            /** @example 1 */
+            sessionCount: number;
+            /** @example 462 */
+            totalDurationMinutes: number;
+            /** @example 12 */
+            movementEvents: number;
+            /** @example 3 */
+            soundEvents: number;
+            /**
+             * @description Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil
+             * @example 85
+             */
+            calmScore: number;
+        };
+        StreakDto: {
+            /**
+             * @description Şu anki ardışık gece serisi
+             * @example 5
+             */
+            current: number;
+            /**
+             * @description En uzun ardışık seri
+             * @example 12
+             */
+            longest: number;
+            /**
+             * @description Kayıtlı toplam gece
+             * @example 40
+             */
+            totalNights: number;
+        };
+        AnalyticsEventDto: {
+            /**
+             * @description küçük harf/rakam/_/. (1-64)
+             * @example archetype_completed
+             */
+            name: string;
+            /**
+             * Format: date-time
+             * @description Olay zamanı (ISO 8601, UTC)
+             */
+            occurredAt: string;
+            /** @description Serbest anahtar-değer (PII konmaz) */
+            props?: Record<string, never>;
+        };
+        IngestEventsDto: {
+            /** @description 1-100 olay */
+            events: components["schemas"]["AnalyticsEventDto"][];
+        };
+        IngestAcceptedDto: {
+            /**
+             * @description Kabul edilen olay sayısı
+             * @example 3
+             */
+            accepted: number;
         };
     };
     responses: never;
@@ -662,6 +1004,55 @@ export interface operations {
         requestBody?: never;
         responses: {
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionInfoDto"][];
+                };
+            };
+        };
+    };
+    AuthController_revokeOthers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefreshDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokedSessionsDto"];
+                };
+            };
+            /** @description Geçersiz refresh token */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -881,9 +1272,31 @@ export interface operations {
             };
         };
     };
-    FlagsController_flags: {
+    ArchetypeContentController_content: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchetypeInfoDto"][];
+                };
+            };
+        };
+    };
+    FlagsController_flags: {
+        parameters: {
+            query?: {
+                platform?: string;
+                appVersion?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1002,6 +1415,178 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    NotificationController_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestNotificationDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FanOutResultDto"];
+                };
+            };
+        };
+    };
+    SharingController_archetype: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchetypeShareDto"];
+                };
+            };
+        };
+    };
+    SharingController_report: {
+        parameters: {
+            query: {
+                night: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NightReportShareDto"];
+                };
+            };
+        };
+    };
+    SleepController_recent: {
+        parameters: {
+            query?: {
+                limit?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleepSessionDto"][];
+                };
+            };
+        };
+    };
+    SleepController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordSleepSessionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SleepSessionDto"];
+                };
+            };
+        };
+    };
+    SleepController_nightReport: {
+        parameters: {
+            query: {
+                night: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NightReportDto"];
+                };
+            };
+        };
+    };
+    SleepController_streakStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StreakDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IngestEventsDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestAcceptedDto"];
+                };
             };
         };
     };
