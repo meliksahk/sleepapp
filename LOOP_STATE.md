@@ -9,12 +9,12 @@
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                        |
 | ----------- | -------- | ------- | --------------------------------------------------------------------------- |
 | Backend/API | ~72%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
-| Mobil       | ~32%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
+| Mobil       | ~33%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
 | Web         | ~44%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·72 + 0.40·32 + 0.15·12 + 0.15·44 ≈ **43%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·72 + 0.40·33 + 0.15·12 + 0.15·44 ≈ **43%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#89 (mobil detayda "sana uygun sesler"):** Archetype detay ekranına o kimliğe affinity'si olan soundscape listesi (tıklayınca `/library/:slug`). #87'nin kapsam-dışı detay→içerik bağı tamamlandı; test→kimlik→içerik döngüsünün son halkası. `soundscapesForArchetypeProvider` (family: `feed(archetype)` + affinity filtresi) + `_SoundsSection` — **ikincil bölüm**: boş/yükleme/hata → gizli, detay bloklanmaz. `flutter analyze` temiz, `flutter test` 85 yeşil (82→85): liste gösterilir, boşsa gizli, hata detayı bloklamaz. İlerleme barı mobil 32→33% (toplam ≈43%). PR #90. **Not:** `soundscapeFeedProvider` zaten parametresiz → #88 ile sunucuda otomatik kişiselleşiyor, ek temizlik gerekmedi (planlanan "provider temizliği" no-op çıktı).
 - **#88 (API kişiselleştirilmiş içerik feed'i):** `GET /v1/content/feed` archetype paramı yoksa kullanıcının KENDİ en son sonucuna göre sıralanır (yoksa 'all'); açık `?archetype=` önceliklidir. Ürün döngüsü: test→içerik, sunucu tarafında. `UserArchetypeReader` portu + module-def adaptörü (archetype public `GetLatestResultUseCase`; content archetype tablosuna dokunmaz — boundary lint yeşil). `GetFeedUseCase.execute(userId, explicitArchetype?)`. openapi+shared-types regen. API 217 test (213→217): reader'a düşme, explicit override, sonuç yok→all, e2e paramsız 200. turbo 17/17. İlerleme barı backend 71→72% (toplam ≈43%). PR #89. Not: cache kullanıcıya özel değil (archetype başına) → PII sızmaz; mobil feed provider'ının parametreyi bırakması ayrı.
 - **#87 (mobil archetype detay ekranı):** Home kimlik kartı tıklanabilir → `/identity/:slug` detay ekranı (isim + tagline + özet, `archetypeContentProvider`'dan). #86'nın kapsam-dışı tıklaması tamamlandı. `content.when` dayanıklı: bilinen slug→içerik, bilinmeyen→"Unknown identity", hata→retry. Yeni route + `_IdentityCard` GestureDetector. `flutter analyze` temiz, `flutter test` 82 yeşil (79→82). Salt mobil, contract değişmedi. İlerleme barı mobil 31→32% (toplam ≈43%). PR #88. Not: detayda "sana uygun sesler" (affinity→soundscape) linki ayrı.
 - **#86 (mobil home uyku kimliği):** Kullanıcı testi yaptıysa home'da uyku kimliği kartı (isim + tagline, `archetypeContentProvider`'dan çözülür; içerik yoksa slug fallback) + CTA "Find your sleep identity"→"Retake the test". Gerçek ürün döngüsü: `GET /v1/archetype/result` + `latestResult()` ilk kez UI'da tüketiliyor. Yeni `latestArchetypeResultProvider`, `_IdentityCard` (yükleme/hata/yok → gizli). `flutter analyze` temiz, `flutter test` 79 yeşil (76→79): kimlik kartı+Retake; sonuç yok→gizli+Find; slug fallback. Salt mobil, contract değişmedi. İlerleme barı mobil 30→31% (toplam ≈42%, bar 17 blok). PR #87. Not: kimlik kartına tıklama→detay ayrı.
