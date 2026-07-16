@@ -62,6 +62,21 @@ export function buildArchetypeListJsonLd(
   };
 }
 
+/** SSS sayfası — FAQPage (GEO/AI-özet + arama sonucu zenginleştirme, docs/05 §4). */
+export function buildFaqJsonLd(
+  items: ReadonlyArray<{ question: string; answer: string }>,
+): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  };
+}
+
 /** Site geneli Organization — her sayfada (root layout). */
 export function buildOrganizationJsonLd(): Record<string, unknown> {
   return {
