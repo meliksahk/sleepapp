@@ -1,11 +1,12 @@
 import '../../core/api/nocta_api_client.dart';
 import '../auth/auth_controller.dart';
+import 'analytics.dart';
 
 /// Ürün analitiği (docs/02 analytics-ingest). Olayları tamponlar ve batch olarak
 /// `/v1/analytics/events`'e gönderir (AuthController.authorizedRequest → 401 refresh).
 /// PII gönderilmez — yalnızca olay adı + zaman + props. Gönderim başarısızsa tampon
 /// korunur (sonra tekrar denenir); analitik uygulamayı bloklamaz/çökertmez.
-class ProductAnalytics {
+class ProductAnalytics implements Analytics {
   ProductAnalytics(this._auth, this._client, {DateTime Function()? now})
       : _now = now ?? DateTime.now;
 
@@ -19,6 +20,7 @@ class ProductAnalytics {
   int get pending => _buffer.length;
 
   /// Olayı tampona ekler. Tampon dolduysa en eskiyi düşürür (sınırlı bellek).
+  @override
   void track(String name, {Map<String, dynamic>? props}) {
     _buffer.add(<String, dynamic>{
       'name': name,
@@ -32,6 +34,7 @@ class ProductAnalytics {
 
   /// Tamponu batch gönderir. 202 → gönderilenler temizlenir; aksi halde tampon
   /// korunur (0 döner). Gönderilen olay sayısını döner.
+  @override
   Future<int> flush() async {
     if (_buffer.isEmpty) return 0;
     final batch = List<Map<String, dynamic>>.from(_buffer);
