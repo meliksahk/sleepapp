@@ -22,3 +22,8 @@ final recentSleepSessionsProvider = FutureProvider<List<SleepSession>>((ref) {
 final sleepStatsProvider = FutureProvider<SleepStats>((ref) {
   return ref.read(sleepControllerProvider).stats();
 });
+
+/// Son 7 gecenin trendi — geçmiş ekranı mini grafiği bunu izler.
+final sleepTrendProvider = FutureProvider<WeeklyTrend>((ref) {
+  return ref.read(sleepControllerProvider).weeklyTrend();
+});
