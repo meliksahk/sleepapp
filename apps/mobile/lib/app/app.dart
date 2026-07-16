@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design_system/nocta_theme.dart';
+import '../features/analytics/analytics_flusher.dart';
+import '../features/analytics/analytics_providers.dart';
 import '../features/auth/auth_providers.dart';
 import 'router.dart';
 
@@ -16,17 +18,49 @@ class NoctaApp extends ConsumerWidget {
     final theme = buildNoctaDarkTheme();
 
     return bootstrap.when(
-      data: (_) => MaterialApp.router(
-        title: 'NOCTA',
-        debugShowCheckedModeBanner: false,
-        theme: theme,
-        routerConfig: appRouter,
-      ),
+      data: (_) => _AppRoot(theme: theme),
       loading: () => _SplashApp(theme: theme),
       error: (error, stack) => _SplashApp(
         theme: theme,
         onRetry: () => ref.invalidate(sessionBootstrapProvider),
       ),
+    );
+  }
+}
+
+/// Oturum kurulduktan sonraki kök — router + analitik lifecycle flush observer'ı.
+class _AppRoot extends ConsumerStatefulWidget {
+  const _AppRoot({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  ConsumerState<_AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends ConsumerState<_AppRoot> {
+  late final AnalyticsFlusher _flusher;
+
+  @override
+  void initState() {
+    super.initState();
+    _flusher = AnalyticsFlusher(ref.read(analyticsProvider));
+    WidgetsBinding.instance.addObserver(_flusher);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_flusher);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'NOCTA',
+      debugShowCheckedModeBanner: false,
+      theme: widget.theme,
+      routerConfig: appRouter,
     );
   }
 }
