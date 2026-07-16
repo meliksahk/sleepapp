@@ -42,6 +42,7 @@ import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
 import { LoginAdminUseCase } from './application/login-admin.usecase';
+import { LogoutUseCase } from './application/logout.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
 import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
 import { GetActiveSessionsUseCase } from './application/get-active-sessions.usecase';
@@ -138,6 +139,15 @@ const providers: Provider[] = [
       ids: IdGenerator,
       sessions: SessionMinter,
     ): LoginAdminUseCase => new LoginAdminUseCase(users, passwords, ids, sessions),
+  },
+  {
+    provide: LogoutUseCase,
+    inject: [REFRESH_TOKEN_REPOSITORY, TOKEN_HASHER, CLOCK],
+    useFactory: (
+      refreshTokens: RefreshTokenRepository,
+      hasher: TokenHasher,
+      clock: Clock,
+    ): LogoutUseCase => new LogoutUseCase(refreshTokens, hasher, clock),
   },
   {
     provide: DeleteAccountUseCase,

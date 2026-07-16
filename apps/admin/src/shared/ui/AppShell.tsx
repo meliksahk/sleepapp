@@ -2,8 +2,14 @@ import type { ReactNode } from 'react';
 
 const NAV = ['Dashboard', 'Content', 'Users', 'Analytics', 'Flags', 'Campaigns'];
 
-/** Panel iskeleti: sidebar + topbar + içerik (docs/03 A0). Rol-guard'lı navigasyon B3'te. */
-export function AppShell({ children }: { children: ReactNode }) {
+/**
+ * Panel iskeleti: sidebar + topbar + içerik (docs/03 A0). Rol-guard'lı navigasyon B3'te.
+ *
+ * `actions`: topbar'a konacak eylemler (ör. çıkış). SLOT olarak alınır çünkü AppShell
+ * `shared` katmanındadır ve `features`'ı import EDEMEZ (boundary lint). Bileşeni
+ * kimin geçireceğine app katmanı karar verir — bağımlılık yönü korunur.
+ */
+export function AppShell({ children, actions }: { children: ReactNode; actions?: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-bg-base text-ink-primary">
       <aside className="w-56 shrink-0 border-r border-ink-faint/20 p-4">
@@ -17,8 +23,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
       </aside>
       <div className="flex-1">
-        <header className="border-b border-ink-faint/20 px-6 py-4">
+        <header className="flex items-center justify-between border-b border-ink-faint/20 px-6 py-4">
           <h1 className="text-h2 font-display">Admin</h1>
+          {actions}
         </header>
         <main className="p-6">{children}</main>
       </div>

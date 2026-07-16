@@ -1,5 +1,6 @@
 import { StatCard, EmptyState, Button, DataTable, type Column } from '@nocta/ui';
 import { AppShell } from '@/shared/ui/AppShell';
+import { LogoutButton } from '@/features/auth/LogoutButton';
 
 interface ActivityRow {
   id: string;
@@ -18,7 +19,7 @@ const activityRows: ActivityRow[] = [];
 /** Dashboard dikey dilimi (feature-sliced, docs/03). Metrikler A3'te canlı veriye bağlanır. */
 export function DashboardPage() {
   return (
-    <AppShell>
+    <AppShell actions={<LogoutButton />}>
       <h2 className="text-h2 font-display">Overview</h2>
       <p className="mt-1 mb-5 text-body text-ink-secondary">
         Metrik panosu A3&apos;te canlı veriye bağlanacak (şimdilik yer tutucu).

@@ -74,10 +74,57 @@ describe('POST /api/session', () => {
   });
 });
 
+const logoutRequest = (cookie?: string): Request =>
+  new Request('http://localhost:3002/api/session', {
+    method: 'DELETE',
+    headers: cookie === undefined ? {} : { cookie },
+  });
+
 describe('DELETE /api/session', () => {
+  it('SUNUCUDAKİ oturumu iptal eder — çerezi silmek tek başına yalan olurdu', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await DELETE(logoutRequest(`${REFRESH_COOKIE}=RT-DEGERI`));
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const call = fetchMock.mock.calls[0];
+    expect(String(call?.[0])).toContain('/v1/auth/logout');
+    expect(JSON.parse(String(call?.[1]?.body))).toEqual({ refreshToken: 'RT-DEGERI' });
+  });
+
   it('çıkışta iki çerez de boşaltılır', async () => {
-    const res = await DELETE();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+
+    const res = await DELETE(logoutRequest(`${REFRESH_COOKIE}=RT-DEGERI`));
     expect(res.cookies.get(ACCESS_COOKIE)?.value).toBe('');
     expect(res.cookies.get(REFRESH_COOKIE)?.value).toBe('');
+  });
+
+  it('API ulaşılamasa BİLE çerezler silinir — "çık" diyen kullanıcı açık oturumla kalmasın', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('ECONNREFUSED')));
+
+    const res = await DELETE(logoutRequest(`${REFRESH_COOKIE}=RT-DEGERI`));
+    expect(res.status).toBe(200);
+    expect(res.cookies.get(REFRESH_COOKIE)?.value).toBe('');
+  });
+
+  it('refresh çerezi yoksa API çağrılmaz ama çerezler yine temizlenir', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const res = await DELETE(logoutRequest());
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(res.cookies.get(ACCESS_COOKIE)?.value).toBe('');
+  });
+
+  it('birden çok çerez arasından doğru olanı ayıklar', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await DELETE(logoutRequest(`other=x; ${REFRESH_COOKIE}=DOGRU-RT; ${ACCESS_COOKIE}=AT`));
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      refreshToken: 'DOGRU-RT',
+    });
   });
 });
