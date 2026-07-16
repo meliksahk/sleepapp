@@ -111,6 +111,27 @@ void main() {
     expect(await store.read(), isNull);
   });
 
+  test('revokeOtherSessions: refresh token gönderir, revoked sayısını döner', () async {
+    final store = InMemorySessionStore();
+    late Map<String, dynamic> body;
+    final client = MockClient((req) async {
+      if (req.url.path == '/v1/auth/device') {
+        return http.Response(_session('access', 'my-refresh'), 201);
+      }
+      if (req.url.path == '/v1/auth/sessions/revoke-others') {
+        body = jsonDecode(req.body) as Map<String, dynamic>;
+        return http.Response(jsonEncode(<String, dynamic>{'revoked': 2}), 200);
+      }
+      return http.Response('not found', 404);
+    });
+    final controller = AuthController(NoctaApiClient(baseUrl: 'http://x', client: client), store);
+    await controller.registerAnonymously('fp');
+
+    final revoked = await controller.revokeOtherSessions();
+    expect(revoked, 2);
+    expect(body['refreshToken'], 'my-refresh'); // güncel oturum token'ı
+  });
+
   test('authorizedRequest: 200 → refresh çağrılmaz, yanıt aynen döner', () async {
     final store = InMemorySessionStore();
     var refreshCalls = 0;

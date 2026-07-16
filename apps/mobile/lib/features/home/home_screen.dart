@@ -69,6 +69,12 @@ class HomeScreen extends ConsumerWidget {
                 variant: NButtonVariant.ghost,
                 onPressed: () => context.push('/sleep'),
               ),
+              const SizedBox(height: NoctaSpace.s2),
+              NButton(
+                label: 'Settings',
+                variant: NButtonVariant.ghost,
+                onPressed: () => context.push('/settings'),
+              ),
             ],
           ),
         ),
