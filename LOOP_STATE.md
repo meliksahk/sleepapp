@@ -11,10 +11,10 @@
 | Backend/API | ~71%     | 0.30    | F5 sertleşme (Redis cache/rate-limit), admin API yüzeyi, billing (F6)       |
 | Mobil       | ~30%     | 0.40    | **ses motoru + mikser**, mic uyku takibi + akıllı alarm, mix-to-video (YOK) |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI                  |
-| Web         | ~43%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
+| Web         | ~44%     | 0.15    | CWV lighthouse bütçesi, hreflang, programatik long-tail, blog               |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·71 + 0.40·30 + 0.15·12 + 0.15·43 ≈ **41%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·71 + 0.40·30 + 0.15·12 + 0.15·44 ≈ **41%**.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -72,6 +72,7 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+- **#85 (web site geneli footer):** Ortak `SiteFooter` (root layout) — her SSG sayfasına iç bağlantı (Sleep identities / Take the test / FAQ) → SEO iç-link sinyali + keşfedilebilirlik. Semantik `<footer>` + erişilebilir `<nav aria-label="Footer">`, "relaxation & sleep ritual" dili. web 27 test (24→27: href'ler, aria-label, sağlık taraması). turbo 17/17, build tüm sayfalarda footer. İlerleme barı web 43→44% (toplam ≈41%). PR #86.
 - **#84 (mobil soundscape affinity etiketi):** Kütüphane kartında `archetypeAffinity` okunur etiketle gösterilir ("For Deep Ocean · Delta Drifter") — archetype↔ses bağı (çekirdek ürün döngüsü), modeldeki alan ilk kez UI'da. `Soundscape.affinityLabel({max=2})` + `_humanizeSlug`. Kartta affinity varsa caption altyazı (yoksa gizli). `flutter analyze` temiz, `flutter test` 76 yeşil (75→76): affinityLabel ilk-2/boş + kartta var/yok. Salt mobil, contract değişmedi. İlerleme barı mobil 29→30% (toplam ≈41%). PR #85. Not: tam archetype adları (ör. "3AM Overthinker") için içerik eşlemesi ayrı.
 - **#83 (API güvenlik başlıkları — B4 sertleşme):** Zero-dependency `SecurityHeadersMiddleware` (helmet YOK) — tüm rotalara, guard'lardan önce: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Cross-Origin-Resource-Policy: same-origin`. main.ts'te `X-Powered-By` kapatıldı (framework parmak izi). 213 test (211→213): e2e başarılı+401 yanıtta başlıklar. turbo 17/17. Contract değişmedi. **CI:** düzeltilmiş bekleme kalıbıyla (≥2 check VAR + hepsi pass) yeşil doğrulandı, sonra merge. İlerleme barı backend 70→71% (toplam ≈41%). PR #84. Not: X-Powered-By kapatma main.ts bootstrap'ında → e2e (createNestApplication) kapsamı dışında (dürüstçe). CSP/HSTS → VPS/deploy fazı.
 - **#82 (mobil home streak kişisel rekor):** Streak kartı iyileştirmesi — (1) hiç kayıt yokken (totalNights=0) kart gizli (yeni kullanıcıya "0 nights streak" yerine), (2) `longest > current` ise "Best N" kişisel rekor satırı (streak/alışkanlık döngüsü). Seri kopmuş ama geçmiş varsa 0 + Best (yeniden başlamaya teşvik). `_StreakCard(current, longest)`. `flutter analyze` temiz, `flutter test` 75 yeşil (73→75): Best görünür/gizli, totalNights=0 gizli, kopmuş seri+best. İlerleme barı mobil 28→29% (toplam ≈41%). PR #83. **⚠️ SÜREÇ HATASI (dürüstçe):** merge, PR CI _pending_ iken gerçekleşti — bekleme döngüsü `gh pr checks` boş liste döndürünce (checks henüz kaydolmamış) pending=0 sanıp erken "ALL DONE" verdi. Zarar yok: merge sonrası main push CI'ı **success** doğrulandı (`gh run watch --exit-status` EXIT=0). Düzeltme: bundan sonra bekleme döngüsü "en az 1 check VAR ve hepsi pass" koşulu arayacak (boş liste ≠ yeşil).
