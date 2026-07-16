@@ -83,6 +83,19 @@ describe('Content e2e (HTTP)', () => {
     expect(mineSlugs.indexOf(slugs.over)).toBeLessThan(mineSlugs.indexOf(slugs.deep));
   });
 
+  it('archetype paramsız → 200 (test yapmamış kullanıcı: kişiselleştirme yolu çökmez)', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/content/feed')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const mineSlugs = res.body
+      .filter((x: { slug: string }) => x.slug.startsWith(prefix))
+      .map((x: { slug: string }) => x.slug);
+    expect(mineSlugs).toContain(slugs.over);
+    expect(mineSlugs).not.toContain(slugs.draft);
+  });
+
   it('yayınlanmış soundscape detay + preset', async () => {
     const t = await token();
     const res = await request(app.getHttpServer())

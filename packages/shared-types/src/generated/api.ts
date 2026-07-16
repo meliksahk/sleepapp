@@ -317,7 +317,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Yayınlanmış soundscape feed (archetype affinity sıralı) */
+        /** Soundscape feed — archetype verilmezse kullanıcının kendi kimliğine göre sıralı */
         get: operations["ContentController_feed"];
         put?: never;
         post?: never;

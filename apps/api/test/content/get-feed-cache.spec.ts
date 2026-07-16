@@ -1,11 +1,17 @@
 import { GetFeedUseCase } from '../../src/modules/content/application/get-feed.usecase';
 import { InMemoryCache } from '../../src/shared/cache/in-memory-cache';
+import type { UserArchetypeReader } from '../../src/modules/content/domain/user-archetype-reader';
 import type {
   ContentRepository,
   Soundscape,
   SoundscapeDetail,
   WeeklyRelease,
 } from '../../src/modules/content/domain/soundscape';
+
+/** Kullanıcının archetype'ını sabitleyen sahte reader. */
+const reader = (archetype: string | undefined): UserArchetypeReader => ({
+  archetypeFor: async () => archetype,
+});
 
 const s = (slug: string, affinity: string[]): Soundscape => ({
   id: slug,
@@ -38,10 +44,10 @@ describe('GetFeedUseCase cache', () => {
 
   it('aynı archetype ikinci çağrıda cache’ten döner (repo tek kez)', async () => {
     const repo = new CountingRepo(data);
-    const feed = new GetFeedUseCase(repo, new InMemoryCache());
+    const feed = new GetFeedUseCase(repo, new InMemoryCache(), reader(undefined));
 
-    const first = await feed.execute('overthinker');
-    const second = await feed.execute('overthinker');
+    const first = await feed.execute('u-1', 'overthinker');
+    const second = await feed.execute('u-1', 'overthinker');
 
     expect(first.map((x) => x.slug)).toEqual(['b', 'a']); // affinity sıralı
     expect(second).toEqual(first);
@@ -50,10 +56,10 @@ describe('GetFeedUseCase cache', () => {
 
   it('farklı archetype ayrı anahtar → repo yeniden çağrılır', async () => {
     const repo = new CountingRepo(data);
-    const feed = new GetFeedUseCase(repo, new InMemoryCache());
+    const feed = new GetFeedUseCase(repo, new InMemoryCache(), reader(undefined));
 
-    await feed.execute('overthinker');
-    await feed.execute('deep-ocean');
+    await feed.execute('u-1', 'overthinker');
+    await feed.execute('u-1', 'deep-ocean');
 
     expect(repo.calls).toBe(2);
   });
@@ -61,12 +67,36 @@ describe('GetFeedUseCase cache', () => {
   it('TTL (5dk) geçince yeniden sorgulanır', async () => {
     let now = 0;
     const repo = new CountingRepo(data);
-    const feed = new GetFeedUseCase(repo, new InMemoryCache(() => now));
+    const feed = new GetFeedUseCase(repo, new InMemoryCache(() => now), reader(undefined));
 
-    await feed.execute(undefined);
+    await feed.execute('u-1');
     now = 300_000; // tam 5dk → süre doldu (<=)
-    await feed.execute(undefined);
+    await feed.execute('u-1');
 
     expect(repo.calls).toBe(2);
+  });
+
+  it('archetype verilmezse kullanıcının kendi sonucuna göre sıralar', async () => {
+    const repo = new CountingRepo(data);
+    const feed = new GetFeedUseCase(repo, new InMemoryCache(), reader('overthinker'));
+
+    const res = await feed.execute('u-1'); // explicit yok → reader 'overthinker'
+    expect(res.map((x) => x.slug)).toEqual(['b', 'a']); // overthinker öne
+  });
+
+  it('açık archetype kullanıcının sonucunu geçersiz kılar (göz atma)', async () => {
+    const repo = new CountingRepo(data);
+    const feed = new GetFeedUseCase(repo, new InMemoryCache(), reader('overthinker'));
+
+    const res = await feed.execute('u-1', 'deep-ocean'); // explicit öncelikli
+    expect(res.map((x) => x.slug)).toEqual(['a', 'b']); // deep-ocean öne
+  });
+
+  it('kullanıcının sonucu yoksa (undefined) → all (giriş sırası korunur)', async () => {
+    const repo = new CountingRepo(data);
+    const feed = new GetFeedUseCase(repo, new InMemoryCache(), reader(undefined));
+
+    const res = await feed.execute('u-1');
+    expect(res.map((x) => x.slug)).toEqual(['a', 'b']); // sıralama yok → giriş sırası
   });
 });

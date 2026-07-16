@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '../../identity';
+import { AuthGuard, CurrentUser, type AccessTokenClaims } from '../../identity';
 import { GetFeedUseCase } from '../application/get-feed.usecase';
 import {
   GetSoundscapeUseCase,
@@ -22,11 +22,16 @@ export class ContentController {
   ) {}
 
   @Get('feed')
-  @ApiOperation({ summary: 'Yayınlanmış soundscape feed (archetype affinity sıralı)' })
+  @ApiOperation({
+    summary: 'Soundscape feed — archetype verilmezse kullanıcının kendi kimliğine göre sıralı',
+  })
   @ApiQuery({ name: 'archetype', required: false })
   @ApiOkResponse({ type: [SoundscapeDto] })
-  feed(@Query('archetype') archetype?: string): Promise<Soundscape[]> {
-    return this.getFeed.execute(archetype);
+  feed(
+    @CurrentUser() user: AccessTokenClaims,
+    @Query('archetype') archetype?: string,
+  ): Promise<Soundscape[]> {
+    return this.getFeed.execute(user.sub, archetype);
   }
 
   @Get('weekly')
