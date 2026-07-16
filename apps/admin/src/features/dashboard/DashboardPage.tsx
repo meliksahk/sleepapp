@@ -3,10 +3,12 @@ import { StatCard, Button } from '@nocta/ui';
 import { AppShell } from '@/shared/ui/AppShell';
 import { apiGet } from '@/shared/api/server-client';
 import { LogoutButton } from '@/features/auth/LogoutButton';
+import { shareRateLabel, shareRateHint } from './share-rate';
 
 interface Overview {
   soundscapes: { draft: number; scheduled: number; published: number };
   waitlist: number;
+  shareFunnel: { completed: number; shared: number; rate: number | null };
 }
 
 /**
@@ -38,6 +40,13 @@ export async function DashboardPage() {
         />
         <StatCard label="Taslak" value={String(o.soundscapes.draft)} hint="yayınlanmamış" />
         <StatCard label="Bekleme listesi" value={String(o.waitlist)} hint="ön-lansman kaydı" />
+        {/* Viral kancanın sağlığı (CLAUDE.md §1.1: "viral kancalar süs değil
+            çekirdek özelliktir"). Ürünün bahsi buysa ölçülmeli. */}
+        <StatCard
+          label="Kart paylaşım oranı"
+          value={shareRateLabel(o.shareFunnel.rate)}
+          hint={shareRateHint(o.shareFunnel.completed, o.shareFunnel.shared)}
+        />
         {/* Sahte sayı YOK: ölçülemeyeni ölçülüyormuş gibi göstermek, insanın ona
             güvenip yanlış karar vermesi demektir. */}
         <StatCard label="Deneme→ücretli" value="—" hint="ödeme F6'da" />
@@ -56,8 +65,8 @@ export async function DashboardPage() {
       <section className="mt-8">
         <h3 className="text-body font-display">Henüz ölçülmeyenler</h3>
         <p className="mt-1 text-body text-ink-secondary">
-          D7 retention ve kart paylaşım oranı analitik olaylardan hesaplanacak (A3). Deneme→ücretli
-          ödeme entegrasyonuna bağlı (F6). Son etkinlik akışı için audit_log gerekiyor.
+          D7 retention kohort analizi gerektiriyor (A3). Deneme→ücretli ödeme entegrasyonuna bağlı
+          (F6). Son etkinlik akışı için audit_log gerekiyor.
         </p>
       </section>
     </AppShell>

@@ -64,6 +64,16 @@ export interface Overview {
     readonly published: number;
   };
   readonly waitlist: number;
+  /**
+   * Viral kancanın sağlığı: kartını paylaşan / testi tamamlayan BENZERSİZ kullanıcı.
+   * `rate` null olabilir — kimse testi tamamlamadıysa oran TANIMSIZDIR; 0 göstermek
+   * "kimse paylaşmıyor" demek olurdu ve bu yanlış bir ifadedir.
+   */
+  readonly shareFunnel: {
+    readonly completed: number;
+    readonly shared: number;
+    readonly rate: number | null;
+  };
 }
 
 export interface OverviewSource {

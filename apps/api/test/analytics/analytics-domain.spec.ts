@@ -6,10 +6,17 @@ import {
 } from '../../src/modules/analytics/domain/analytics-event';
 import { IngestEventsUseCase } from '../../src/modules/analytics/application/ingest-events.usecase';
 import { AnalyticsError } from '../../src/modules/analytics/domain/errors';
-import type { AnalyticsEventRepository } from '../../src/modules/analytics/domain/ports';
+import type {
+  AnalyticsEventRepository,
+  ShareFunnelCounts,
+} from '../../src/modules/analytics/domain/ports';
 import type { NewAnalyticsEvent } from '../../src/modules/analytics/domain/analytics-event';
 
 class FakeRepo implements AnalyticsEventRepository {
+  shareFunnel(): Promise<ShareFunnelCounts> {
+    throw new Error('kullanılmaz');
+  }
+
   saved: NewAnalyticsEvent[] = [];
   async saveBatch(_userId: string, events: readonly NewAnalyticsEvent[]): Promise<number> {
     this.saved.push(...events);

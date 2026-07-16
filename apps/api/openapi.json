@@ -1087,6 +1087,41 @@
         "tags": ["waitlist"]
       }
     },
+    "/v1/analytics/events": {
+      "post": {
+        "operationId": "AnalyticsController_events",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestEventsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestAcceptedDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ürün analitik olaylarını yut (batch)",
+        "tags": ["analytics"]
+      }
+    },
     "/v1/notifications/token": {
       "post": {
         "operationId": "NotificationController_register",
@@ -1406,41 +1441,6 @@
         ],
         "summary": "Son 7 gecenin uyku trendi (gece-başına süre, grafik için)",
         "tags": ["sleep"]
-      }
-    },
-    "/v1/analytics/events": {
-      "post": {
-        "operationId": "AnalyticsController_events",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IngestEventsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IngestAcceptedDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Ürün analitik olaylarını yut (batch)",
-        "tags": ["analytics"]
       }
     }
   },
@@ -1866,6 +1866,25 @@
         },
         "required": ["draft", "scheduled", "published"]
       },
+      "ShareFunnelDto": {
+        "type": "object",
+        "properties": {
+          "completed": {
+            "type": "number",
+            "description": "Archetype testini tamamlayan BENZERSİZ kullanıcı"
+          },
+          "shared": {
+            "type": "number",
+            "description": "Kartını paylaşan benzersiz kullanıcı"
+          },
+          "rate": {
+            "type": "object",
+            "nullable": true,
+            "description": "shared/completed. Kimse testi tamamlamadıysa NULL — oran tanımsızdır; 0 göstermek \"kimse paylaşmıyor\" demek olurdu ve bu yanlış olurdu."
+          }
+        },
+        "required": ["completed", "shared", "rate"]
+      },
       "OverviewDto": {
         "type": "object",
         "properties": {
@@ -1875,9 +1894,17 @@
           "waitlist": {
             "type": "number",
             "description": "Bekleme listesi kayıt sayısı"
+          },
+          "shareFunnel": {
+            "description": "Viral kanca sağlığı",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ShareFunnelDto"
+              }
+            ]
           }
         },
-        "required": ["soundscapes", "waitlist"]
+        "required": ["soundscapes", "waitlist", "shareFunnel"]
       },
       "AdminSoundscapeDto": {
         "type": "object",
@@ -2183,6 +2210,50 @@
         },
         "required": ["email"]
       },
+      "AnalyticsEventDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "archetype_completed",
+            "description": "küçük harf/rakam/_/. (1-64)"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Olay zamanı (ISO 8601, UTC)"
+          },
+          "props": {
+            "type": "object",
+            "description": "Serbest anahtar-değer (PII konmaz)"
+          }
+        },
+        "required": ["name", "occurredAt"]
+      },
+      "IngestEventsDto": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "description": "1-100 olay",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEventDto"
+            }
+          }
+        },
+        "required": ["events"]
+      },
+      "IngestAcceptedDto": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "number",
+            "example": 3,
+            "description": "Kabul edilen olay sayısı"
+          }
+        },
+        "required": ["accepted"]
+      },
       "RegisterTokenDto": {
         "type": "object",
         "properties": {
@@ -2481,50 +2552,6 @@
           }
         },
         "required": ["nights", "averageDurationMinutes", "nightsWithData"]
-      },
-      "AnalyticsEventDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "archetype_completed",
-            "description": "küçük harf/rakam/_/. (1-64)"
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Olay zamanı (ISO 8601, UTC)"
-          },
-          "props": {
-            "type": "object",
-            "description": "Serbest anahtar-değer (PII konmaz)"
-          }
-        },
-        "required": ["name", "occurredAt"]
-      },
-      "IngestEventsDto": {
-        "type": "object",
-        "properties": {
-          "events": {
-            "description": "1-100 olay",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AnalyticsEventDto"
-            }
-          }
-        },
-        "required": ["events"]
-      },
-      "IngestAcceptedDto": {
-        "type": "object",
-        "properties": {
-          "accepted": {
-            "type": "number",
-            "example": 3,
-            "description": "Kabul edilen olay sayısı"
-          }
-        },
-        "required": ["accepted"]
       }
     }
   }
