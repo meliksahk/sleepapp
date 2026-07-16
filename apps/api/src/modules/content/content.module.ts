@@ -1,5 +1,6 @@
 import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
+import { ArchetypeModule, GetLatestResultUseCase } from '../archetype';
 import { PrismaService } from '../../shared/infra/prisma.service';
 import { ENV, loadEnv, type Env } from '../../shared/config/env';
 import { CACHE, type Cache } from '../../shared/cache/cache.port';
@@ -9,6 +10,7 @@ import {
   type AssetUrlSigner,
   type ContentRepository,
 } from './domain/soundscape';
+import { USER_ARCHETYPE_READER, type UserArchetypeReader } from './domain/user-archetype-reader';
 import { PrismaContentRepository } from './infrastructure/prisma-content.repository';
 import { S3AssetSigner } from './infrastructure/s3-asset.signer';
 import { GetFeedUseCase } from './application/get-feed.usecase';
@@ -34,11 +36,23 @@ const providers: Provider[] = [
         secretKey: env.MINIO_ROOT_PASSWORD,
       }),
   },
+  // Cross-module adapter (module-def): archetype public servisinden kullanıcının
+  // en son sonucunu okur. Content, archetype tablosuna DOKUNMAZ (port üzerinden).
+  {
+    provide: USER_ARCHETYPE_READER,
+    inject: [GetLatestResultUseCase],
+    useFactory: (getLatest: GetLatestResultUseCase): UserArchetypeReader => ({
+      archetypeFor: async (userId) => (await getLatest.execute(userId))?.archetypeSlug,
+    }),
+  },
   {
     provide: GetFeedUseCase,
-    inject: [CONTENT_REPOSITORY, CACHE],
-    useFactory: (repo: ContentRepository, cache: Cache): GetFeedUseCase =>
-      new GetFeedUseCase(repo, cache),
+    inject: [CONTENT_REPOSITORY, CACHE, USER_ARCHETYPE_READER],
+    useFactory: (
+      repo: ContentRepository,
+      cache: Cache,
+      archetypes: UserArchetypeReader,
+    ): GetFeedUseCase => new GetFeedUseCase(repo, cache, archetypes),
   },
   {
     provide: GetSoundscapeUseCase,
@@ -55,7 +69,7 @@ const providers: Provider[] = [
 ];
 
 @Module({
-  imports: [IdentityModule],
+  imports: [IdentityModule, ArchetypeModule],
   controllers: [ContentController],
   providers,
 })

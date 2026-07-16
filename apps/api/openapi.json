@@ -585,7 +585,7 @@
             "bearer": []
           }
         ],
-        "summary": "Yayınlanmış soundscape feed (archetype affinity sıralı)",
+        "summary": "Soundscape feed — archetype verilmezse kullanıcının kendi kimliğine göre sıralı",
         "tags": ["content"]
       }
     },
