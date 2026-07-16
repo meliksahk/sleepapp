@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈72% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈73% — F1–F5 (otonom kapsam)
 
 ```
-[█████████████████████████████░░░░░░░░░░░] 72%
+[█████████████████████████████░░░░░░░░░░░] 73%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
-| Mobil       | ~59%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Mobil       | ~61%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·59 + 0.15·80 + 0.15·45 ≈ **72%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·61 + 0.15·80 + 0.15·45 ≈ **73%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -66,8 +66,9 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 Öncelik sırası (bir yüzey blokeyse diğerine geç):
 
-1. **Mobil devam (%59, ağırlık 0.40 — en yüksek):** cihazsız kalan işler: (a) **oturumu API'ye gönderen controller** — taslak hazır (#130), `POST /v1/sleep/sessions` boşta duruyor; idempotency + hata yolu test edilebilir. (b) mix-to-video offline render yolu (renderMix hazır). (c) uyku modu ekranı iskeleti.
-   **Zincir durumu:** DSP ✓ #96-98 · tarif ayrıştırıcı ✓ #127 · olay tespiti ✓ #128 · alarm ✓ #129 · oturum taslağı ✓ #130. Eksik halka: **mikrofon yakalama (platform, insan-kapılı)** ve **native ses grafiği (insan-kapılı)**.
+1. **Mobil devam (%61, ağırlık 0.40 — en yüksek):** cihazsız kalan işler: (a) **uyku modu ekranı iskeleti** — zincir hazır ama onu çağıran UI yok; mikrofon yakalama olmadan da "başlat/bitir + süre" akışı kurulabilir (sahte besleme ile testlenir). (b) mix-to-video offline render yolu (renderMix hazır).
+   **Zincir durumu:** DSP ✓ #96-98 · tarif ayrıştırıcı ✓ #127 · olay tespiti ✓ #128 · alarm ✓ #129 · oturum taslağı ✓ #130 · API'ye bağlandı + uçtan uca test ✓ #131.
+   **Eksik halkalar İNSAN-KAPILI:** mikrofon yakalama (platform izni) ve native ses grafiği (kulaklıkla doğrulama, CLAUDE.md §1.1).
 2. **İnsan-kapılı (otonom YAPILAMAZ):** native ses grafiği + gerçek cihaz doğrulaması (CLAUDE.md §1.1 kulaklıkla), mikrofon yakalama (platform izni), olay sınıflandırma eşiklerinin gerçek gece kayıtlarıyla ayarlanması (docs/04 §120 fixture'ları).
 3. **A1/A3 artıkları:** D7 + paylaşım oranı hesabı (analitik olaylar var), audit_log, zamanlanmış yayın, sayfalama.
 4. **admin A0 artıkları (ertelendi, engelleyici değil):** TOTP 2FA, davet akışı + parola sıfırlama, hesap-başına kilitleme. Rol kapısı ✓ #112, audience ✓ #113, parola girişi ✓ #114, giriş limiti ✓ #115, panel girişi + vitest ✓ #116, yenileme + çıkış ✓ #117, yarış toleransı ✓ #118.
@@ -79,6 +80,33 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #131 — tek serileştirme kaynağı + uçtan uca zincir testi (PR #132, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `recordSession` artık `SleepSessionDraft` alıyor; gövdeyi taslak üretiyor.
+- **Uçtan uca test:** sentetik mikrofon PCM → dB zarfı → olay tespiti → taslak →
+  HTTP gövdesi. Parçalar tek tek testliydi ama **birleşince hiç koşmamıştı**.
+- flutter analyze temiz; **238 test** (235→238). turbo 19/19.
+
+🔥 **Riskler / açıklar — KENDİ HATALARIM**
+
+- **🔴 BİR İTERASYON ÖNCE ÜRETTİĞİM HATA:** #130'da `toJson()` eklerken
+  `recordSession`'ın AYNI dört alanı zaten serileştirdiğini kontrol etmedim → iki
+  doğruluk kaynağı. **Her PR'da uyardığım hatanın ta kendisi.** Somut riski: UTC
+  kuralı (CLAUDE.md §4) yalnızca birinde düzeltilseydi "gece" gruplaması (06:00)
+  SESSİZCE kayardı. Tek kaynağa indirildi.
+- **İkinci bulgu:** `recordSession`'ın `lib/` içinde HİÇ ÇAĞIRANI YOKTU — #128-#130
+  zinciri API katmanıyla hiç buluşmamıştı.
+- **Testin yakaladığı üçüncü hatam:** sahte API yanıtımda alanlar eksikti ("Null is
+  not int"). Sahte yanıt gerçeğe uymazsa test gerçeği değil kurgumu doğrular.
+- Mikrofon YAKALAMA yok → zincir sentetik beslemeyle koşuyor. Uyku modu ekranı yok.
+
+❌ **Yapılmadı**
+
+- Mikrofon yakalama (platform, insan-kapılı), uyku modu ekranı, native ses grafiği
+  (insan-kapılı), mix-to-video.
 
 ### #130 — uyku oturumu birleştirici + olay sınıflandırma (PR #131, merged)
 
