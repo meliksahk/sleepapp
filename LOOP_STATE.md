@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈73% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈74% — F1–F5 (otonom kapsam)
 
 ```
-[█████████████████████████████░░░░░░░░░░░] 73%
+[██████████████████████████████░░░░░░░░░░] 74%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~61%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~80%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~85%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·61 + 0.15·80 + 0.15·45 ≈ **73%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·61 + 0.15·85 + 0.15·45 ≈ **74%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -81,6 +81,38 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #133 — paylaşım hunisi: viral kancanın sağlığı (PR #134, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `GET /v1/admin/overview` paylaşım hunisini döndürüyor; panoda "Kart paylaşım
+  oranı" CANLI. CLAUDE.md §1.1 "viral kancalar ÇEKİRDEK özellik" diyor ama ölçülmüyordu
+  (olaylar #90'dan beri toplanıyordu, hesap yoktu).
+- **GERÇEK SUNUCUDA:** olay yokken `{completed:0, shared:0, rate:null}` → 3 kullanıcı
+  (biri **5 KEZ** paylaştı) → `{completed:3, shared:1, rate:0.333}`. Kanıt silindi.
+- API **370 test** (360→370), admin **76 test** (71→76), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **BENZERSİZ KULLANICI, olay DEĞİL:** tek kullanıcı 5 kez paylaşırsa huni "%500"
+  gösterirdi. Soru "kaç KİŞİ paylaştı?"dır. Canlı doğrulandı.
+- **`rate` null olabilir, 0 DEĞİL:** kimse test yapmadıysa oran TANIMSIZDIR; "%0"
+  demek "kimse paylaşmıyor" demektir ve insan ona bakıp "kanca çalışmıyor" der.
+  Sıfıra bölme dalı **e2e'de test EDİLEMEZ** (paylaşılan DB'de completed asla 0
+  olmaz) → birim testte sabitlendi.
+- **Oran DOMAIN'de, SQL'de değil:** sıfıra bölme bir ÜRÜN kararı.
+- Ham sayılar da dönüyor (1/1 de "%100" görünür → panel "1/1 kişi" yazıyor).
+- Sayım DB'de (groupBy user_id); oran yuvarlanmaz (sunum panelin işi).
+
+🔥 **Riskler / açıklar**
+
+- D7 retention kohort analizi ister (A3); deneme→ücretli billing'e bağlı (F6);
+  son etkinlik için audit_log gerekli — üçü de panoda AÇIKÇA yazılı.
+
+❌ **Yapılmadı**
+
+- D7 retention, audit_log, zamanlanmış yayın, sayfalama, TOTP 2FA, davet akışı.
 
 ### #132 — `.env.example` bayatlığı + sürüklenme kapısı (PR #133, merged)
 
