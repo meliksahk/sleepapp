@@ -137,3 +137,35 @@ ediyor. **Sonuç: `layer_defs` şu an KULLANILMIYOR** (boş dizi olarak yazılı
 **Önerim: (3) muhtemelen asıl niyet** — docs/04 hem jeneratif hem örnek-tabanlı
 kaynaktan söz ediyor. Ama emin değilim ve **uydurup şemayı kilitlemek istemedim**.
 Cevap gelene kadar (1) gibi davranıyorum; (2) çıkarsa #122'nin kapısı düzeltilmeli.
+
+## D-10 · Doğrulanmamış "hareket/ses" ayrımı kullanıcıya nasıl sunulmalı?
+
+**Bağlam:** API oturumda iki sayı bekliyor: `movementEvents` ve `soundEvents`
+(docs/02 B3, docs/04 §85 "basit olay sınıflandırması"). Gece raporu ekranı bunları
+"Movement events" / "Sound events" etiketleriyle GÖSTERİYOR (#109'da i18n'e taşındı).
+
+**Ne yaptım (#130):** ayrımı SÜREYE dayadım — kısa olay (≤20 çerçeve ≈ 1 sn) hareket,
+uzun olay ses. Gerekçe: dönmek/hışırdamak kısadır; horlama/köpek/trafik uzun.
+docs/04 §85'in kastettiği "basit sınıflandırma"nın en savunulabilir hâli.
+
+**Sorun:** bu bir ÖLÇÜM DEĞİL, VARSAYIM. Gerçek gece kayıtlarıyla (docs/04 §120
+fixture'ları — henüz YOK) ayarlanmadı. Yani rapor "12 hareket" derken aslında
+"12 kısa akustik olay" diyor. Kullanıcı bunu "12 kez döndüm" diye okur.
+
+**CLAUDE.md §1.1 açısından:** sağlık iddiası değil ama YANLIŞ KESİNLİK. "Relaxation
+& sleep ritual" konumlandırmasıyla "kaç kez döndüğünüzü ölçüyoruz" farklı şeyler.
+
+**Seçenekler:**
+
+1. **Etiketleri yumuşat:** "Movement events" → "Quiet stirs" / "Kısa hareketlenmeler",
+   "Sound events" → "Louder moments" / "Yüksek anlar". İddia edilen şey ölçtüğümüz
+   şeye eşitlenir. Kod değişmez, yalnızca i18n metni.
+2. **Tek sayı göster:** rapor "18 gece olayı" der; ayrım fixture'larla doğrulanana
+   kadar UI'da gizlenir (API iki alanı almaya devam eder). En dürüst, en az bilgi.
+3. **Şimdiki gibi kalsın**, fixture'lar gelince ayarlanır. En riskli: kullanıcı
+   sayıya bugünden güvenmeye başlar.
+
+**Önerim: (1)** — bugün ölçebildiğimiz şey tam olarak "kısa/uzun akustik olay";
+etiketi ona eşitlemek hem dürüst hem de fixture'lar gelince (2)'ye düşmeden
+iyileştirilebilir. Karar gelene kadar mevcut etiketler duruyor — bu bilinçli bir
+borçtur, gece raporu ekranı henüz gerçek veriyle beslenmiyor (mikrofon yakalama yok).
