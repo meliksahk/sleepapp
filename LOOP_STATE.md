@@ -1,20 +1,20 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈74% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈76% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████████████████░░░░░░░░░░] 74%
+[██████████████████████████████░░░░░░░░░░] 76%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
-| Backend/API | ~96%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
+| Backend/API | ~97%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
 | Mobil       | ~61%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
-| Admin       | ~85%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
+| Admin       | ~92%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·96 + 0.40·61 + 0.15·85 + 0.15·45 ≈ **74%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·97 + 0.40·61 + 0.15·92 + 0.15·45 ≈ **76%**.
 >
 > **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
 > kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
@@ -81,6 +81,41 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #134 — panel denetim izi: kim ne yaptı (PR #135, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `admin_audit_log` + BEŞ yazma işleminde iz + `GET /v1/admin/audit` + panoda
+  "Son etkinlik" CANLI. İçerik yayınlanıyor/geri çekiliyor/tarifi değişiyordu ama
+  **kimin yaptığının izi YOKTU** — ve bu sonradan eklenemez, GEÇMİŞ GERİ GELMEZ.
+- **Migration** (additive, PR+CI üzerinden): down/up TERSİNİRLİĞİ doğrulandı,
+  `db/schema.sql` + `prisma db pull` senkron. CI sıfırdan temiz DB'ye uyguladı ✓.
+- **GERÇEK SUNUCUDA:** create → publish(**409, iz YOK**) → recipe → publish(200) →
+  iz: publish / recipe {layers:1} / create {title}. Kanıt silindi.
+- API **380 test** (370→380), admin **78 test** (76→78), turbo 19/19.
+
+📌 **Varsayımlar / kararlar**
+
+- **FK ON DELETE SET NULL, CASCADE DEĞİL** + `actor_email` DONDURULUR: hesap silinince
+  geçmiş eylemleri kaybolmamalı — denetim izinin bütün anlamı bu (e2e doğruladı).
+- **İz YALNIZCA BAŞARIDA:** reddedilen denemeyi "yayınladı" diye yazmak izi
+  YALANDAN BETER yapardı. Yetkisiz işlem de yazılmaz.
+- **`record()` ASLA ATMAZ** ama SESSİZ de kalmaz (logger.error) — iz yazılamadı diye
+  editörün işi başarısız olmamalı; boş catch de yasak.
+- **Detaylarda NE değişti, DEĞERLER değil** (`{changed:['title']}` — başlık izde yok).
+- Eylemler sabit birlik tipi (yazım hatası izi sessizce kaybederdi). Pano 20 kayıt:
+  akış özeti, arşiv değil.
+- #126'da SAHTE diye kaldırdığım "Son etkinlik" tablosu geri geldi — gerçek veriyle.
+
+🔥 **Riskler / açıklar**
+
+- Tam denetim geçmişi (filtreli/sayfalı uç) yok — pano yalnızca son 20.
+- D7 retention (kohort, A3) ve deneme→ücretli (F6) hâlâ yok; panoda açıkça yazılı.
+
+❌ **Yapılmadı**
+
+- D7 retention, zamanlanmış yayın, içerik sayfalama, TOTP 2FA, davet akışı.
 
 ### #133 — paylaşım hunisi: viral kancanın sağlığı (PR #134, merged)
 
