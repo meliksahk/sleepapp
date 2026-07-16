@@ -53,6 +53,20 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: analytics_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.analytics_events (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    name text NOT NULL,
+    occurred_at timestamp with time zone NOT NULL,
+    props jsonb DEFAULT '{}'::jsonb NOT NULL,
+    received_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: archetype_results; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -265,6 +279,14 @@ CREATE TABLE public.weekly_releases (
 
 
 --
+-- Name: analytics_events analytics_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.analytics_events
+    ADD CONSTRAINT analytics_events_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: archetype_results archetype_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -457,6 +479,20 @@ ALTER TABLE ONLY public.weekly_releases
 
 
 --
+-- Name: analytics_events_name_time_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX analytics_events_name_time_idx ON public.analytics_events USING btree (name, occurred_at DESC);
+
+
+--
+-- Name: analytics_events_user_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX analytics_events_user_idx ON public.analytics_events USING btree (user_id);
+
+
+--
 -- Name: idx_archetype_results_user; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -517,6 +553,14 @@ CREATE INDEX idx_soundscapes_status ON public.soundscapes USING btree (status);
 --
 
 CREATE INDEX sleep_sessions_user_night_idx ON public.sleep_sessions USING btree (user_id, night_date DESC);
+
+
+--
+-- Name: analytics_events analytics_events_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.analytics_events
+    ADD CONSTRAINT analytics_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -605,4 +649,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120008'),
     ('20260715120009'),
     ('20260715120010'),
-    ('20260715120011');
+    ('20260715120011'),
+    ('20260715120012');
