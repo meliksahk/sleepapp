@@ -11,6 +11,7 @@ import {
   type ContentRepository,
 } from './domain/soundscape';
 import { USER_ARCHETYPE_READER, type UserArchetypeReader } from './domain/user-archetype-reader';
+import { ListAllSoundscapesUseCase } from './application/list-all-soundscapes.usecase';
 import { PrismaContentRepository } from './infrastructure/prisma-content.repository';
 import { S3AssetSigner } from './infrastructure/s3-asset.signer';
 import { GetFeedUseCase } from './application/get-feed.usecase';
@@ -66,11 +67,19 @@ const providers: Provider[] = [
     useFactory: (repo: ContentRepository): GetWeeklyReleaseUseCase =>
       new GetWeeklyReleaseUseCase(repo),
   },
+  {
+    provide: ListAllSoundscapesUseCase,
+    inject: [CONTENT_REPOSITORY],
+    useFactory: (repo: ContentRepository): ListAllSoundscapesUseCase =>
+      new ListAllSoundscapesUseCase(repo),
+  },
 ];
 
 @Module({
   imports: [IdentityModule, ArchetypeModule],
   controllers: [ContentController],
   providers,
+  // Yalnızca admin listesi dışa açılır; feed/detay uygulamaya özeldir.
+  exports: [ListAllSoundscapesUseCase],
 })
 export class ContentModule {}

@@ -378,6 +378,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/soundscapes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tum soundscape kayitlari (taslak/planli/yayinlanmis) */
+        get: operations["AdminController_soundscapes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/content/feed": {
         parameters: {
             query?: never;
@@ -801,6 +818,19 @@ export interface components {
             userId: string;
             /** @description Bu hesabın sahip olduğu admin rolleri */
             roles: ("owner" | "editor" | "analyst" | "support")[];
+        };
+        AdminSoundscapeDto: {
+            id: string;
+            slug: string;
+            /** @description Görünen başlık (EN; yoksa slug) */
+            title: string;
+            /** @enum {string} */
+            status: "draft" | "scheduled" | "published";
+            /** @description Uygun uyku kimlikleri */
+            archetypeAffinity: string[];
+            version: number;
+            /** @description ISO 8601 UTC (CLAUDE.md §4) */
+            createdAt: string;
         };
         SoundscapeDto: {
             /** Format: uuid */
@@ -1594,6 +1624,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AdminController_soundscapes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSoundscapeDto"][];
+                };
             };
         };
     };

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { middleware, config } from './middleware';
-import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/features/auth/session';
+import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/shared/auth/session';
 
 type Cookies = { access?: string; refresh?: string };
 

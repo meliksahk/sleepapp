@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { API_BASE } from '@/shared/api/config';
-import { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions } from '@/features/auth/session';
+import { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions } from '@/shared/auth/session';
 
 /** Refresh token ömrü (API'nin REFRESH_TOKEN_TTL varsayılanıyla hizalı: 30 gün). */
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
