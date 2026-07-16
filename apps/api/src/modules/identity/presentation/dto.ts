@@ -21,6 +21,20 @@ export class RefreshDto {
   refreshToken!: string;
 }
 
+export class AdminLoginDto {
+  @ApiProperty({ description: 'Admin hesabının e-postası', example: 'owner@nocta.app' })
+  @IsEmail()
+  email!: string;
+
+  @ApiProperty({ description: 'Parola' })
+  @IsString()
+  // Alt sınır 12: admin hesabı en değerli hedeftir. Üst sınır 200: argon2 girdisini
+  // sınırsız bırakmak, uzun parolayla CPU yakma (DoS) yolu açar.
+  @MinLength(12)
+  @MaxLength(200)
+  password!: string;
+}
+
 export class RevokedSessionsDto {
   @ApiProperty({ example: 2, description: 'İptal edilen diğer oturum sayısı' })
   revoked!: number;

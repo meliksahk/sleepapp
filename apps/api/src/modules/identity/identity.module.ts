@@ -10,6 +10,7 @@ import {
   REFRESH_TOKEN_REPOSITORY,
   TOKEN_HASHER,
   USER_REPOSITORY,
+  PASSWORD_HASHER,
   type AccessTokenSigner,
   type Clock,
   type IdGenerator,
@@ -19,6 +20,7 @@ import {
   type RefreshTokenRepository,
   type TokenHasher,
   type UserRepository,
+  type PasswordHasher,
 } from './domain/ports';
 import {
   RandomOpaqueTokenGenerator,
@@ -26,6 +28,7 @@ import {
   SystemClock,
   UuidIdGenerator,
 } from './infrastructure/crypto-adapters';
+import { Argon2idPasswordHasher } from './infrastructure/argon2-password-hasher';
 import { JoseAccessTokenSigner } from './infrastructure/jose-access-token-signer';
 import { PrismaService } from '../../shared/infra/prisma.service';
 import { PrismaUserRepository } from './infrastructure/prisma/prisma-user.repository';
@@ -38,6 +41,7 @@ import { IS_PRODUCTION } from './presentation/tokens';
 import { SessionMinter } from './application/session-minter';
 import { RegisterDeviceUseCase } from './application/register-device.usecase';
 import { RefreshSessionUseCase } from './application/refresh-session.usecase';
+import { LoginAdminUseCase } from './application/login-admin.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
 import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
 import { GetActiveSessionsUseCase } from './application/get-active-sessions.usecase';
@@ -120,6 +124,20 @@ const providers: Provider[] = [
       sessions: SessionMinter,
     ): RefreshSessionUseCase =>
       new RefreshSessionUseCase(refreshTokens, users, hasher, clock, sessions),
+  },
+  {
+    provide: PASSWORD_HASHER,
+    useClass: Argon2idPasswordHasher,
+  },
+  {
+    provide: LoginAdminUseCase,
+    inject: [USER_REPOSITORY, PASSWORD_HASHER, ID_GENERATOR, SessionMinter],
+    useFactory: (
+      users: UserRepository,
+      passwords: PasswordHasher,
+      ids: IdGenerator,
+      sessions: SessionMinter,
+    ): LoginAdminUseCase => new LoginAdminUseCase(users, passwords, ids, sessions),
   },
   {
     provide: DeleteAccountUseCase,

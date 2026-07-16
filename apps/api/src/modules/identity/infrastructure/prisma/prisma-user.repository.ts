@@ -1,5 +1,5 @@
 import type { DeviceRegistration, User } from '../../domain/user.entity';
-import type { UserRepository } from '../../domain/ports';
+import type { AdminCredentials, UserRepository } from '../../domain/ports';
 import type { PrismaService } from '../../../../shared/infra/prisma.service';
 
 /** users + auth_devices erişimi (Prisma). userId scope'u domain akışında zorunlu. */
@@ -39,6 +39,16 @@ export class PrismaUserRepository implements UserRepository {
   async findByEmail(email: string): Promise<User | null> {
     const row = await this.prisma.users.findUnique({ where: { email } });
     return row ? toUser(row) : null;
+  }
+
+  async findAdminCredentialsByEmail(email: string): Promise<AdminCredentials | null> {
+    const row = await this.prisma.users.findUnique({ where: { email } });
+    // Üç koşul da şart: admin türü, parolası kurulu, silinmemiş. Silinen hesabın
+    // satırı bir süre durabilir — kaskad silme öncesi giriş yapabilmesi olmaz.
+    if (!row || row.kind !== 'admin' || !row.password_hash || row.deleted_at !== null) {
+      return null;
+    }
+    return { userId: row.id, roles: row.roles, passwordHash: row.password_hash };
   }
 
   async upgradeToEmail(userId: string, email: string, verifiedAt: Date): Promise<void> {
