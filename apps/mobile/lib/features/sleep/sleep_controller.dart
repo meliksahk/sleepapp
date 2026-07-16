@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../../core/api/nocta_api_client.dart';
 import '../../core/api/session.dart';
+import '../../core/sleep_tracking/sleep_session_builder.dart';
 import '../auth/auth_controller.dart';
 import 'sleep_models.dart';
 
@@ -13,19 +14,16 @@ class SleepController {
   final AuthController _auth;
   final NoctaApiClient _client;
 
-  Future<SleepSession> recordSession({
-    required DateTime startedAt,
-    required DateTime endedAt,
-    required int movementEvents,
-    required int soundEvents,
-  }) async {
+  /// Oturumu kaydeder. Gövdeyi [SleepSessionDraft] üretir — burada TEKRAR
+  /// serileştirilmez.
+  ///
+  /// Sebep bir hata: gövde hem burada hem `SleepSessionDraft.toJson`'da
+  /// kuruluyordu (#130'da kopyayı ben ekledim). İki doğruluk kaynağı demek, biri
+  /// sessizce eskir demek — ör. UTC'ye çevirme kuralı (CLAUDE.md §4) yalnızca
+  /// birinde düzeltilirse "gece" gruplaması sessizce kayardı.
+  Future<SleepSession> recordSession(SleepSessionDraft draft) async {
     final res = await _auth.authorizedRequest(
-      (token) => _client.postAuthed('/v1/sleep/sessions', token, {
-        'startedAt': startedAt.toUtc().toIso8601String(),
-        'endedAt': endedAt.toUtc().toIso8601String(),
-        'movementEvents': movementEvents,
-        'soundEvents': soundEvents,
-      }),
+      (token) => _client.postAuthed('/v1/sleep/sessions', token, draft.toJson()),
     );
     if (res.statusCode != 201) throw ApiException(res.statusCode, res.body);
     return SleepSession.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
