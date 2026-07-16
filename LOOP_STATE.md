@@ -1,20 +1,24 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈53% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈52% — F1–F5 (otonom kapsam)
 
 ```
-[█████████████████████░░░░░░░░░░░░░░░░░░░] 53%
+[████████████████████░░░░░░░░░░░░░░░░░░░░] 52%
 ```
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                   |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------- |
 | Backend/API | ~79%     | 0.30    | F5 sertleşme (Redis), admin API, veri export (D-7), billing (F6)       |
-| Mobil       | ~39%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
+| Mobil       | ~49%     | 0.40    | **ses motoru: native graf + mikser**, mic takibi + alarm, mix-to-video |
 | Admin       | ~12%     | 0.15    | auth/RBAC, içerik CMS'i, metrik panoları, kampanya/flag UI             |
 | Web         | ~45%     | 0.15    | LCP/CLS (lighthouse-ci), hreflang, programatik long-tail, blog         |
 
 > **Tahmindir** (Dürüstlük Protokolü — kesin ölçüm değil): yüzey-başına kaba tamamlanma
-> yüzdelerinin ağırlıklı ortalaması = 0.30·79 + 0.40·48 + 0.15·12 + 0.15·45 ≈ **53%**.
+> yüzdelerinin ağırlıklı ortalaması = 0.30·79 + 0.40·49 + 0.15·12 + 0.15·45 ≈ **52%**.
+>
+> **Düzeltme (#111):** önceki iki değer yanlıştı — tablo mobili %39 yazarken formül 48
+> kullanıyordu (tablo güncellenmemiş), ve 48 ile sonuç 51.45'tir, yazılan 53 değil. Bar
+> gerçekte olduğundan ~2 puan iyimserdi. İkisi de düzeltildi.
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında. Bar her
 > iterasyonda LOOP.md "İlerleme göstergesi" kuralına göre yeniden hesaplanır.
 
@@ -71,6 +75,41 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #111 — i18n migrasyonu bitti + kural CI'da zorlanıyor (PR #112, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Kalan 6 ekranın tüm kullanıcı metni `app_en.arb`'ye taşındı (57 anahtar):
+  archetype test/detay/geçmiş, soundscape kütüphane/detay, uyku geçmişi.
+  → `flutter analyze` temiz, `flutter test` **159/159** (sayı değişmedi = saf refactor).
+- **`pnpm check:i18n` kapısı** (`tooling/check-hardcoded-strings.mjs`) CI'a eklendi.
+  Kapının gerçekten yakaladığı kanıtlandı: sahte `Text('Cures insomnia fast')`
+  enjekte → exit=1 (health-claims kapısı da yakaladı) → geri alındı.
+- `sleep_history`'deki `'${nights} nights'` İngilizce çoğul mantığı koda gömülüydü
+  (TR'de yanlış olurdu) → ICU plural'a çevrildi.
+- `pnpm turbo run lint typecheck test build size`: 18/18.
+
+📌 **Varsayımlar**
+
+- Kapı bilinçli DAR: yalnızca `Text('...')` ve `label: '...'`. Yanlış pozitif üreten
+  kapı, kapatılan kapıdır. Yeni metin taşıyıcı (`tooltip:`, `hintText:`) çıkarsa eklenir.
+
+🔥 **Riskler / açıklar**
+
+- **Kendi hatam:** `dart format --line-length 100` çalıştırdım; depo ne 100 ne de 80
+  ile format-clean, sonuç 65 ilgisiz dosyada gürültü oldu. Amaçlamadığım dosyaları
+  geri aldım (PR 15 dosyaya indi) ama **depoda format kapısı yok** — bu er ya da geç
+  yine olur. Ayrı iş: `dart format --set-exit-if-changed` kapısı + tek seferlik
+  formatlama commit'i.
+- `app_tr.arb` hâlâ yok: altyapı hazır, TR çeviri içerik kararı bekliyor (kod değişmez).
+- Kapı `.arb` içeriğini değil yalnızca Dart literal'lerini tarar; arb'ye yanlış dilde
+  metin girmesini engellemez.
+
+❌ **Yapılmadı**
+
+- `flutter gen-l10n && git diff --exit-code` drift guard (üretilen dosya elle
+  düzenlenirse fark edilmez). Ayrı iş.
 
 - **#110 (l10n: home + settings — 🔑 çoğul mantığı düzeltildi):** #109'un devamı; en büyük iki ekran daha arb'ye (~20 metin), **kalan 7 ekran**. **Bu sadece metin taşıma DEĞİL:** İngilizce çoğul mantığı **koda gömülüydü** ve çeviride ÇALIŞMAZDI — `'$revoked other device${revoked==1?'':'s'} signed out'`, `current==1?'night streak':'nights streak'`, `'$count soundscape${...}'`. Türkçe böyle çoğullanmaz; metni arb'ye taşımak **tek başına yetmezdi**, koddaki "-s ekle" mantığı yanlış kalırdı. Hepsi **ICU plural**'a çevrildi → çoğul kuralı artık dilin kendi dosyasında, TR arb gelince kod değişmeyecek. arb **12→34 anahtar** (ICU plural + placeholder). Stale "M1'de taşınacak" notları silindi. settings'te iki async metodda l10n await'ten ÖNCE yakalanıyor (#109'daki analyzer dersi). `'NOCTA'` bilinçli çevrilmiyor (marka). **DAVRANIŞ DEĞİŞMEDİ:** testler değişmeden geçti, yalnızca delegate eklendi; analyze temiz, 159 test, health scan ✓ (240 dosya), turbo 18/18. Bar mobil 47→48% (toplam ≈53%). PR #111.
 - **#109 (mobil i18n altyapısı + ilk ekran — 🔴 DÜRÜST İTİRAF):** CLAUDE.md §4 "tüm kullanıcı metinleri **baştan itibaren** arb'de … hard-code string PR'da **reddedilir**" diyor. Gerçek: mobilde l10n altyapısı **HİÇ YOKTU**, ~63 metin hard-coded, 9 dosyada "M1'de taşınacak" notu. **Son ~20 iterasyonda BEN DE bu borcu büyüttüm** (aynı notu düşerek) — #90/#91/#107/#108 ile aynı sınıf ama farkı: **ihlale ben de katıldım**. ~63 metin/10 ekran → iş **hiç olmayacağı kadar ucuz şu an**. Tek PR 400 satırı aşardı → **bölündü**: bu PR altyapı + en büyük ekran (night_report, 11 metin), diff 348 satır; kalan 9 ekran (~50 metin) sonraki turlarda. `flutter_localizations`+`intl`+`generate:true`, `l10n.yaml` (kaynak EN), `app_en.arb` (12 açıklamalı anahtar; **TR arb eklenince KOD DEĞİŞMEZ**), MaterialApp delegate'leri. **gen-l10n kaynak ağacına üretiyor → CI'da ayrı üretim adımı gerekmiyor** (doğrulandı). **DAVRANIŞ DEĞİŞMEDİ:** testler tek satır değişmeden geçti (EN değerleri birebir aynı), teste yalnızca delegate eklendi; 159 test yeşil, analyze temiz, turbo 18/18. **Analyzer gerçek hata yakaladı:** `AppL10n.of(context)` await'ten SONRA kullanılıyordu (`use_build_context_synchronously`) → messenger gibi await'ten ÖNCE yakalanıyor. **🟡 KENDİ KAPIMIN KÖR NOKTASI:** metni .arb'ye taşıyınca #108'deki tarayıcı onu **görmüyordu** (.arb kapsam dışı) — metni tam da kapının kör noktasına taşıyordum; .arb kapsama eklendi + sahte iddiayla doğrulandı (240 dosya). Bar mobil 46→47% (toplam ≈52%). PR #110. **Takip:** 9 ekran + sonunda "hard-coded string yok" kapısı; üretilen dosya commit ediliyor → `gen-l10n && git diff --exit-code` drift guard'ı.
