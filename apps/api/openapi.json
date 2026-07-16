@@ -580,6 +580,34 @@
         "tags": ["flags"]
       }
     },
+    "/v1/admin/me": {
+      "get": {
+        "operationId": "AdminController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Çağıranın admin rolü yok"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Admin oturumunu ve rolleri doğrular (panel auth guard'ı)",
+        "tags": ["admin"]
+      }
+    },
     "/v1/content/feed": {
       "get": {
         "operationId": "ContentController_feed",
@@ -1429,6 +1457,24 @@
           }
         },
         "required": ["slug", "name", "tagline", "summary"]
+      },
+      "AdminMeDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Admin kullanıcının id'si"
+          },
+          "roles": {
+            "type": "array",
+            "description": "Bu hesabın sahip olduğu admin rolleri",
+            "items": {
+              "type": "string",
+              "enum": ["owner", "editor", "analyst", "support"]
+            }
+          }
+        },
+        "required": ["userId", "roles"]
       },
       "SoundscapeDto": {
         "type": "object",

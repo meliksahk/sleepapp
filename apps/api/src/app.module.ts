@@ -11,6 +11,7 @@ import { IdentityModule } from './modules/identity/identity.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { ArchetypeModule } from './modules/archetype/archetype.module';
 import { FlagsModule } from './modules/flags/flags.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { ContentModule } from './modules/content/content.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -36,6 +37,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     ProfileModule,
     ArchetypeModule,
     FlagsModule,
+    AdminModule,
     ContentModule,
     WaitlistModule,
     NotificationModule,
