@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
 import '../content_models.dart';
 import '../content_providers.dart';
@@ -47,11 +48,14 @@ class SoundscapeLibraryScreen extends ConsumerWidget {
       separatorBuilder: (context, index) => const SizedBox(height: NoctaSpace.s3),
       itemBuilder: (context, i) {
         final s = list[i];
-        return NCard(
+        return GestureDetector(
           key: Key('soundscape-${s.slug}'),
-          child: Text(
-            s.title('en'),
-            style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+          onTap: () => context.push('/library/${s.slug}'),
+          child: NCard(
+            child: Text(
+              s.title('en'),
+              style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+            ),
           ),
         );
       },
