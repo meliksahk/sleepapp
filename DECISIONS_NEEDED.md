@@ -69,6 +69,40 @@
   3. **GitHub Pro:** ~4$/ay; kickoff "ücretli servis açma" kuralına takılır.
 - **Varsayım (şimdilik):** Seçenek 1. Değiştirmek istersen söyle.
 
+### D-13 · macOS erişimi (MacinCloud) + iOS/fastlane — **kullanıcı teklif etti, ZAMANI GELİNCE istenecek**
+
+- **Durum:** Kullanıcı MacinCloud hesabı vermeyi teklif etti (2026-07-17). **Kabul —
+  ama HENÜZ DEĞİL.** Loop, zamanı gelince açıkça isteyecek.
+
+- **Mac'in gerçekten açtığı:** iOS derlemesi (bu makine win32 → AVAudioEngine
+  derlenemiyor bile), iOS simülatörü, native ses grafının iOS tarafı, mix-to-video'nun
+  iOS encoder'ı. Bunlar bugün TAMAMEN kapalı.
+
+- **Mac'in AÇMADIĞI (saklamamak için):**
+  - **Apple Developer hesabı ($99/yıl) ayrıca şart.** Fastlane'in asıl değeri
+    TestFlight/App Store yüklemesi; o hesap olmadan büyük ölçüde işlevsiz.
+    **Asıl kapı Mac değil, bu hesap.**
+  - **Apple ID 2FA girişi loop'ta DEĞİL** (parola girmek yasak, doğrusu da bu).
+    Doğru yol: **App Store Connect API key (.p8)** — fastlane zaten bunu ister.
+  - **Mağazaya yükleme/yayın** her seferinde kullanıcının açık onayıyla.
+  - **Kulaklıkla ses kalitesi yargısı** — Mac bunu ÇÖZMEZ (CLAUDE.md §1.1).
+
+- **NEDEN ŞİMDİ DEĞİL:** uygulamanın HİÇBİR platformda native ses grafı yok —
+  Android'de bile geçici buffer döngüsü çalışıyor (#138). Doğru sıra: native grafı
+  önce **Android'de (Oboe)** çalıştırmak (emülatör var, hızlı iterasyon), sonra iOS'a
+  port. Şimdi MacinCloud açmak, verimli kullanılamayacak bir şeye para yakmak olur
+  (CLAUDE.md §1.1 maliyet disiplini).
+
+- **TETİK — loop şunlardan biri olunca isteyecek:**
+  1. Android native ses grafı (Oboe) çalışıyor ve iOS'a port sırası geldi, **veya**
+  2. TestFlight'a ilk build gerekiyor (o zaman ÖNCE Apple Developer hesabı), **veya**
+  3. iOS'a özgü bir hata/derleme sorunu başka türlü doğrulanamıyor.
+
+- **KİMLİK BİLGİSİ BİÇİMİ (önemli):** parola sohbete YAZILMAZ. MacinCloud → **SSH
+  anahtarı**; Apple → **App Store Connect API key (.p8)**. İkisi de `.env`'e girer,
+  repoya asla (CLAUDE.md §6). Parola tabanlı erişim şartsa oturumu kullanıcı açar,
+  loop devralır.
+
 ### D-2 · Sentry DSN
 
 - **Durum:** API'de Sentry env-opsiyonel bırakıldı (`SENTRY_DSN` boşsa devre dışı). Kod entegrasyonu F1'de eklenecek.
