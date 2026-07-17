@@ -261,6 +261,6 @@ const providers: Provider[] = [
 @Module({
   controllers: [AuthController],
   providers,
-  exports: [AuthGuard, AuthorizeUseCase],
+  exports: [AuthGuard, AuthorizeUseCase, GetActiveSessionsUseCase],
 })
 export class IdentityModule {}
