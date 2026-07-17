@@ -82,12 +82,12 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                |
-| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                                                                                                                    |
-| Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik, TR arb dosyası yok |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                  |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                         |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                       |
+| ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                                                                                                                                           |
+| Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik. ~~TR arb~~ ✓ #149 (EN+TR + parity kapısı) |
+| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                         |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                |
 
 > **Hesap:** `0.40·71 + 0.30·70 + 0.15·32 + 0.15·33 = 59.15` → **≈60%**
 >
@@ -189,6 +189,25 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #149 — TR dili eklendi: §4 "EN + TR" borcu kapandı (PR #149)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **app_tr.arb** eklendi: ~90 metnin tamamı Türkçeye çevrildi; `supportedLocales`
+  artık [en, tr]. Kod değişmedi (l10n.yaml "yeni dil = yeni arb" için kuruluydu).
+- **GERÇEK CİHAZDA doğrulandı** (Android 13+ per-app locale = tr): home ve mikser
+  ekranları tamamen Türkçe render etti — "Gecenin bir kimliği var", "Uyku modu",
+  "Mikseri aç", "Soundscape'lere göz at", "Çal", "Kahverengi/Pembe/Beyaz gürültü".
+  Türkçe karakterler (ç,ğ,ş,ı,İ) ve apostrof doğru.
+- **Gelecek borcu kapısı:** `l10n_parity_test.dart` EN↔TR anahtar paritesini kilitler
+  (EN'e ekleyip TR'yi unutmak artık KIRMIZI), §1.1 feragatlerinin TR'de durduğunu ve
+  yasak sağlık iddialarının sızmadığını doğrular. 381 test yeşil, analyze temiz.
+- Sağlık feragatleri (§1.1) korundu; `mixerGainPercent` TR'de `%{percent}`; çoğullar
+  ICU + Türkçe kurala göre; "soundscape" ürün terimi bırakıldı.
+
+🔥 **Sınır (dürüstlük):** parity anahtar VARLIĞINI kilitler, çeviri KALİTESİNİ değil —
+metin bir anadili konuşuru tarafından gözden geçirilmedi.
 
 ### #146 — akıllı alarm bağlandı: 4 iterasyonluk ölü kod yeteneğe döndü (PR #146)
 
