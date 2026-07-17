@@ -5,11 +5,19 @@
 
 ## Aktif blocker'lar
 
-### B-3 · Java yok → Dart API client üretilemiyor
+### ~~B-3 · Java yok → Dart API client üretilemiyor~~ → ⛔ **BU BLOCKER YANLIŞTI (#137)**
 
-- **Ne:** `openapi-generator` (dart-dio) Java 11+ gerektirir; ortamda Java kurulu değil.
-- **Etki:** `apps/mobile/packages/api_client` üretilemedi (README'de komut hazır). TS tarafı (`@nocta/shared-types`) sorunsuz üretiliyor.
-- **Çözüm:** Java kur + `npx @openapitools/openapi-generator-cli generate ...` (README), ya da saf-Dart alternatifi `swagger_parser` değerlendir (M0).
+- **Yazdığım iddia:** "ortamda Java kurulu değil."
+- **Gerçek:** **Java KURULU.** `C:/Program Files/Android/Android Studio/jbr/bin/java.exe`
+  → `openjdk version "17.0.9"`. Flutter'ın Android build'inin **zaten kullandığı** JBR.
+  `apps/api/openapi.json` da yerinde (71.550 bayt). Yani ön koşulların ikisi de vardı.
+- **Neden önemli:** bu tek yanlış cümle bir blocker dosyasında durdu ve **her planlama
+  kararını zehirledi** — Dart client "üretilemez" sayıldığı için mobil API katmanı
+  hiç başlamadı. Kimse doğrulamadı; ben de doğrulamadan yazmıştım.
+- **Ders:** blocker yazmak ucuz, blocker DOĞRULAMAK zorunlu. Bir "yapılamaz" iddiası,
+  bir "yapıldı" iddiası kadar kanıt ister (CLAUDE.md §0.4).
+- **Durum:** blocker DEĞİL — sıradan iş. `JAVA_HOME` JBR'ye ayarlanıp
+  `npx @openapitools/openapi-generator-cli generate ...` koşulacak (M0).
 
 ### B-4 · Branch protection / CI-zorunlu kilit (GitHub free plan)
 
