@@ -240,10 +240,10 @@ class _ResultViewState extends ConsumerState<_ResultView> {
 
       // Viral kanca #1: link DEĞİL, GÖRSEL paylaşılır (docs/04 §103).
       // Kart render edilemezse paylaşım TÜMDEN düşmez — link'le devam eder.
-      ShareImage? image;
+      ShareFile? card;
       try {
         // Kart ağaçta DEĞİL: kendi render hattında çizilir (bkz. card_renderer.dart).
-        final card = await renderWidgetToPng(
+        final rendered = await renderWidgetToPng(
           IdentityShareCard(
             name: _info?.name ?? _display,
             tagline: _info?.tagline,
@@ -253,12 +253,12 @@ class _ResultViewState extends ConsumerState<_ResultView> {
           ),
         );
         debugPrint(
-          'Kimlik kartı render: ${card.elapsed.inMilliseconds}ms '
+          'Kimlik kartı render: ${rendered.elapsed.inMilliseconds}ms '
           '(bütçe ${shareCardRenderBudget.inMilliseconds}ms — docs/04 §105) '
-          '${card.withinBudget ? "İÇİNDE" : "AŞILDI"}',
+          '${rendered.withinBudget ? "İÇİNDE" : "AŞILDI"}',
         );
-        image = ShareImage(
-          bytes: card.pngBytes,
+        card = ShareFile.png(
+          bytes: rendered.pngBytes,
           filename: 'nocta-${widget.result.archetypeSlug}.png',
         );
       } catch (e) {
@@ -269,7 +269,7 @@ class _ResultViewState extends ConsumerState<_ResultView> {
       await ref
           .read(sharerProvider)
           .share(
-            ShareContent(text: share.title, url: share.webUrl, image: image),
+            ShareContent(text: share.title, url: share.webUrl, file: card),
           );
       // Viral huni ölçümü: tamamlama → paylaşım (analitik, bloklamaz).
       ref

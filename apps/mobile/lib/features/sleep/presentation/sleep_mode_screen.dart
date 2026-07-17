@@ -133,6 +133,29 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                     color: NoctaColors.inkPrimary,
                   ),
                 ),
+                // Gece zarfı varsa paylaşılabilir (docs/04 §120 fixture'ı).
+                // Otomatik gönderim YOK: veri kullanıcının cihazında üretildi.
+                if (widget.controller.envelope != null) ...[
+                  const SizedBox(height: NoctaSpace.s3),
+                  Text(
+                    l10n.sleepModeExportHint,
+                    key: const Key('sleep-export-hint'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.caption,
+                      color: NoctaColors.inkFaint,
+                    ),
+                  ),
+                  const SizedBox(height: NoctaSpace.s2),
+                  NButton(
+                    key: const Key('sleep-export'),
+                    label: l10n.sleepModeExportEnvelope,
+                    variant: NButtonVariant.ghost,
+                    onPressed: () => widget.controller.shareEnvelope(
+                      text: l10n.sleepModeExportHint,
+                    ),
+                  ),
+                ],
                 if (s.error != null) ...[
                   const SizedBox(height: NoctaSpace.s2),
                   // Gece YOK SAYILMAZ: veri cihazda üretildi, yalnızca sunucuya

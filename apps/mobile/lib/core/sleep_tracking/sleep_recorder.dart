@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'db_envelope.dart';
+import 'envelope_log.dart';
 import 'event_detector.dart';
 import 'mic_source.dart';
 import 'sleep_session_builder.dart';
@@ -28,6 +29,8 @@ class SleepRecorder {
     AcousticEventDetector Function(double initialFloorDb)? detectorFactory,
     this.sampleRate = 16000,
     this.warmupFrames = 16,
+    this.frameSamples = 256,
+    this.logEnvelope = false,
     DateTime Function()? now,
   })  : _detectorFactory = detectorFactory ??
             ((floor) => AcousticEventDetector(initialFloorDb: floor)),
@@ -55,6 +58,17 @@ class SleepRecorder {
   /// 16 kHz: konuşma/horlama bandı için fazlasıyla yeterli ve 48 kHz'in üçte biri
   /// kadar CPU/pil harcar. Gece boyunca çalışacak bir işte bu fark önemli.
   final int sampleRate;
+
+  /// Çerçeve başına örnek — zarf günlüğünün saniye hesabı için.
+  final int frameSamples;
+
+  /// dB zarfını kaydet (docs/04 §120 fixture'ı). **Varsayılan KAPALI:** kullanıcının
+  /// ihtiyacı olmayan bir veriyi varsayılan olarak toplamak, gerekmediği hâlde veri
+  /// biriktirmek olurdu. Eşik ayarı için açılır.
+  final bool logEnvelope;
+
+  /// Gece zarfı — [logEnvelope] açıksa dolar.
+  EnvelopeLog? envelope;
 
   StreamSubscription<Float32List>? _sub;
   DateTime? _startedAt;
@@ -84,6 +98,9 @@ class SleepRecorder {
     _stopped = false;
     _warmup.clear();
     _detector = null;
+    envelope = logEnvelope
+        ? EnvelopeLog(sampleRate: sampleRate, frameSamples: frameSamples)
+        : null;
     _sub = mic.start(sampleRate: sampleRate).listen(
       (frame) {
         // Durdurulduktan sonra yolda kalan çerçeveler SAYILMAZ: kullanıcı "bitir"e
@@ -91,6 +108,8 @@ class SleepRecorder {
         if (_stopped) return;
         // TEK SATIRLIK GİZLİLİK GARANTİSİ: çerçeve burada bir sayıya iner ve düşer.
         final db = frameDbfs(frame);
+        // Zarf günlüğü de yalnızca bu SAYIYI görür — ham çerçeveye erişmez.
+        envelope?.addFrame(db);
         _feed(db);
         onProgress?.call();
       },
@@ -143,6 +162,8 @@ class SleepRecorder {
     // dedektör onu kapatmalı, yoksa o olay sessizce kaybolurdu.
     final detector = _detector;
     detector?.finish();
+    // Açık kalan saniye kapatılır: kayıt saniye ortasında bittiyse o veri kaybolmasın.
+    envelope?.finish();
     _startedAt = null;
 
     // Isınma bile bitmediyse (çok kısa kayıt) dedektör hiç kurulmadı → sıfır olay.

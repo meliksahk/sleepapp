@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nocta/core/sleep_tracking/mic_source.dart';
+import 'package:nocta/core/share/sharer.dart';
 import 'package:nocta/core/sleep_tracking/night_service.dart';
 import 'package:nocta/core/sleep_tracking/sleep_recorder.dart';
 import 'package:nocta/core/sleep_tracking/sleep_session_builder.dart';
@@ -17,6 +19,12 @@ import 'package:nocta/l10n/app_localizations.dart';
 /// #128–#132'de uyku takibi mantığı yazıldı, test edildi, yeşil geçti — ve kullanıcı
 /// ona hiç ulaşamadı. Bu ekran o kapı; testler de kapının gerçekten açıldığını
 /// kanıtlıyor.
+class _RecordingSharer implements Sharer {
+  ShareContent? last;
+  @override
+  Future<void> share(ShareContent content) async => last = content;
+}
+
 class _FakeSleep implements SleepController {
   final List<SleepSessionDraft> saved = [];
   Object? throwOnSave;
@@ -70,23 +78,28 @@ void main() {
   }
 
   late FakeNightService service;
+  late _RecordingSharer sharer;
 
   Future<SleepModeController> pump(
     WidgetTester t, {
     bool permission = true,
     bool serviceCanStart = true,
+    bool logEnvelope = false,
     _FakeSleep? sleep,
     List<Float32List>? frames,
     FakeMicSource? mic,
   }) async {
     service = FakeNightService(canStart: serviceCanStart);
+    sharer = _RecordingSharer();
     final controller = SleepModeController(
       recorder: SleepRecorder(
         mic: mic ?? FakeMicSource(frames ?? night(), permission: permission),
+        logEnvelope: logEnvelope,
         now: () => DateTime.utc(2026, 7, 17, 23),
       ),
       sleep: sleep ?? _FakeSleep(),
       nightService: service,
+      sharer: sharer,
     );
     await t.pumpWidget(
       MaterialApp(
@@ -237,6 +250,66 @@ void main() {
 
     expect(service.started, isFalse);
     expect(service.stopCalls, greaterThanOrEqualTo(1));
+  });
+
+  testWidgets('zarf KAPALIYKEN paylaş düğmesi görünmez (gereksiz veri toplanmaz)', (t) async {
+    await pump(t); // logEnvelope: false
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    expect(find.byKey(const Key('sleep-export')), findsNothing);
+  });
+
+  testWidgets('ÇEKİRDEK: zarf açıkken gece bitince FIXTURE paylaşılabilir', (t) async {
+    await pump(t, logEnvelope: true);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    // docs/04 §120 fixture'ı: eşikler ancak bu veriyle ayarlanabilir.
+    expect(find.byKey(const Key('sleep-export')), findsOneWidget);
+    expect(find.byKey(const Key('sleep-export-hint')), findsOneWidget);
+  });
+
+  testWidgets('ÇEKİRDEK: paylaşılan fixture CSV — PNG değil, ham ses hiç değil', (t) async {
+    await pump(t, logEnvelope: true);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-export')));
+    await settle(t);
+
+    final f = sharer.last?.file;
+    expect(f, isNotNull);
+    // MIME tipi veriyle GELMELİ: başta sabit 'image/png' yazıyordu ve CSV bozuk
+    // görsel olarak açılırdı.
+    expect(f!.mimeType, 'text/csv');
+    expect(f.filename, endsWith('.csv'));
+    // `utf8.decode` — `String.fromCharCodes` UTF-8 baytlarını tek tek karakter sanar
+    // ve Türkçe'yi bozar. Dosya UTF-8 kodlanmış olmalı (ShareFile.csv öyle yapıyor);
+    // `codeUnits` ile kodlasaydık başlıklar alıcı tarafta bozuk çıkardı.
+    final csv = utf8.decode(f.bytes);
+    expect(csv, contains('second,minDb,meanDb,maxDb,frames'));
+    expect(csv, contains('HAM SES DEĞİL'));
+  });
+
+  testWidgets('paylaşım OTOMATİK değil — kullanıcı basmadan hiçbir şey gitmez', (t) async {
+    await pump(t, logEnvelope: true);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    // Gece bitti, zarf var — ama kullanıcı paylaş demedi.
+    expect(sharer.last, isNull);
   });
 
   testWidgets('sessiz gecede SIFIR olay raporlanır (hayalet olay yok)', (t) async {

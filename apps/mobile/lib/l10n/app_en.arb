@@ -22,6 +22,12 @@
   "sleepModeServiceFailed": "Could not keep listening in the background. Your night would not be recorded.",
   "@sleepModeServiceFailed": { "description": "Foreground servis başlatılamadı — kayıt başlatılmadı" },
 
+  "sleepModeExportEnvelope": "Share night diagnostics",
+  "@sleepModeExportEnvelope": { "description": "dB zarfını paylaş — eşik ayarı fixture'ı (docs/04 §120)" },
+
+  "sleepModeExportHint": "A per-second loudness summary — not a recording. Helps us tune detection.",
+  "@sleepModeExportHint": { "description": "Zarfın ne olduğu — kullanıcı paylaşmadan önce bilmeli" },
+
   "sleepModeTitle": "Sleep mode",
   "@sleepModeTitle": { "description": "Uyku modu ekranı başlığı" },
 

@@ -31,6 +31,13 @@ class AppL10nEn extends AppL10n {
       'Could not keep listening in the background. Your night would not be recorded.';
 
   @override
+  String get sleepModeExportEnvelope => 'Share night diagnostics';
+
+  @override
+  String get sleepModeExportHint =>
+      'A per-second loudness summary — not a recording. Helps us tune detection.';
+
+  @override
   String get sleepModeTitle => 'Sleep mode';
 
   @override

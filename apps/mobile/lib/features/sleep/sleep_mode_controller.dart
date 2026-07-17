@@ -1,3 +1,5 @@
+import '../../core/share/sharer.dart';
+import '../../core/sleep_tracking/envelope_log.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import '../../core/sleep_tracking/sleep_session_builder.dart';
@@ -65,6 +67,7 @@ class SleepModeController {
     required this.recorder,
     required this.sleep,
     required this.nightService,
+    this.sharer,
   }) {
     recorder.onProgress = () {
       // Canlı sayaç: kullanıcı gece kalkarsa "çalışıyor mu?" sorusuna cevap görür.
@@ -80,6 +83,13 @@ class SleepModeController {
 
   /// Gece boyu süreci hayatta tutan foreground servis (Android 14+ ZORUNLU).
   final NightService nightService;
+
+  /// Fixture paylaşımı için (docs/04 §120). Test sahte enjekte eder.
+  final Sharer? sharer;
+
+  /// Bitmiş gecenin dB zarfı — varsa "paylaş" düğmesi görünür.
+  EnvelopeLog? _envelope;
+  EnvelopeLog? get envelope => _envelope;
 
   SleepModeState _state = const SleepModeState();
   SleepModeState get state => _state;
@@ -152,6 +162,8 @@ class SleepModeController {
       return;
     }
 
+    // Zarf kaydedilir: kullanıcı isterse paylaşabilsin (otomatik gönderim YOK).
+    _envelope = recorder.envelope;
     _emit(_state.copyWith(isRecording: false, savedDraft: draft));
 
     try {
@@ -162,5 +174,25 @@ class SleepModeController {
       // (Çevrimdışı kuyruk ayrı bir iş — defterde.)
       _emit(_state.copyWith(error: e.toString()));
     }
+  }
+
+  /// Gece zarfını CSV olarak paylaşır (docs/04 §120 fixture'ı).
+  ///
+  /// **YALNIZCA kullanıcı isterse.** Otomatik gönderim yok: bu veri onun cihazında
+  /// üretildi ve orada kalır. Ham ses değil (saniyede 3 sayı) ama yine de onun.
+  Future<void> shareEnvelope({required String text}) async {
+    final env = _envelope;
+    final s = sharer;
+    if (env == null || s == null) return;
+
+    await s.share(
+      ShareContent(
+        text: text,
+        url: '',
+        // CSV olarak paylaşılır: `codeUnits` yerine `ShareFile.csv` UTF-8 kodlar —
+        // Türkçe karakter içeren başlık satırları bozulmasın.
+        file: ShareFile.csv(text: env.toCsv(), filename: 'nocta-night-envelope.csv'),
+      ),
+    );
   }
 }
