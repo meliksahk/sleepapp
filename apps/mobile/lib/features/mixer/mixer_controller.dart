@@ -1,5 +1,17 @@
+import 'package:flutter/material.dart';
+
 import '../../core/audio_engine/dsp/mix_render.dart';
 import '../../core/audio_engine/mix_player.dart';
+import '../../core/media/mix_video_channel.dart';
+import 'mix_video_exporter.dart';
+
+/// Hatanın hangi işten geldiği.
+///
+/// **Neden ayrı bir alan:** UI önce `isExporting`e bakıp karar veriyordu ve bu
+/// SESSİZCE yanlıştı — export patladığında ilerleme temizlendiği için `isExporting`
+/// zaten `false` oluyor, kullanıcı video hatası için "ses başlatılamadı" görürdü
+/// (ve çalan sesi kurcalamaya giderdi). Hatanın türü, hatayla birlikte taşınmalı.
+enum MixerErrorKind { sound, export }
 
 /// Mikser durumu — UI'ın gördüğü tek şey.
 class MixerState {
@@ -8,7 +20,9 @@ class MixerState {
     required this.gains,
     this.isPlaying = false,
     this.isPreparing = false,
+    this.exportProgress,
     this.error,
+    this.errorKind,
   });
 
   final List<MixLayer> layers;
@@ -19,14 +33,29 @@ class MixerState {
 
   final bool isPlaying;
   final bool isPreparing;
+
+  /// Video export'u sürerken 0..1, aksi hâlde null.
+  ///
+  /// Ayrı bir `isExporting` bayrağı YOK: iki alan birbirine yalan söyleyebilirdi
+  /// (`isExporting: false, progress: 0.4`). Null = sürmüyor.
+  final double? exportProgress;
+
+  bool get isExporting => exportProgress != null;
+
   final String? error;
+
+  /// [error] non-null ise dolu.
+  final MixerErrorKind? errorKind;
 
   MixerState copyWith({
     List<MixLayer>? layers,
     Map<String, double>? gains,
     bool? isPlaying,
     bool? isPreparing,
+    double? exportProgress,
+    bool clearExport = false,
     String? error,
+    MixerErrorKind? errorKind,
     bool clearError = false,
   }) {
     return MixerState(
@@ -34,7 +63,10 @@ class MixerState {
       gains: gains ?? this.gains,
       isPlaying: isPlaying ?? this.isPlaying,
       isPreparing: isPreparing ?? this.isPreparing,
+      exportProgress:
+          clearExport ? null : (exportProgress ?? this.exportProgress),
       error: clearError ? null : (error ?? this.error),
+      errorKind: clearError ? null : (errorKind ?? this.errorKind),
     );
   }
 }
@@ -55,8 +87,10 @@ MixSpec defaultMixSpec() => const MixSpec([
 /// **Render PAHALI** (katman başına 30 sn @48kHz) ve yalnızca [prepare]'de bir kez
 /// yapılır; slider `setLayerGain`'e gider → yeniden render YOK, ses kesilmez.
 class MixerController {
-  MixerController({MixPlayer? player, MixSpec? spec})
+  MixerController({MixPlayer? player, MixSpec? spec, MixVideoExporter? exporter})
       : _player = player ?? MixPlayer(),
+        _exporter = exporter ??
+            const MixVideoExporter(encoder: PlatformMixVideoEncoder()),
         _spec = spec ?? defaultMixSpec() {
     _state = MixerState(
       layers: _spec.layers,
@@ -65,6 +99,7 @@ class MixerController {
   }
 
   final MixPlayer _player;
+  final MixVideoExporter _exporter;
   final MixSpec _spec;
 
   late MixerState _state;
@@ -86,7 +121,11 @@ class MixerController {
       _emit(_state.copyWith(isPreparing: false));
     } catch (e) {
       // Hata YUTULMAZ (CLAUDE.md §4): kullanıcı sessiz bir ekranla kalmamalı.
-      _emit(_state.copyWith(isPreparing: false, error: e.toString()));
+      _emit(_state.copyWith(
+        isPreparing: false,
+        error: e.toString(),
+        errorKind: MixerErrorKind.sound,
+      ));
     }
   }
 
@@ -109,6 +148,50 @@ class MixerController {
     final next = Map<String, double>.from(_state.gains)..[id] = gain;
     _emit(_state.copyWith(gains: next));
     await _player.setLayerGain(id, gain);
+  }
+
+  /// Kullanıcının ŞU AN duyduğu mix.
+  ///
+  /// `_spec` DEĞİL: `_spec` katmanların ilk kazançlarını taşır. Slider'ları oynatıp
+  /// video export eden kullanıcı, duymadığı bir mix'i paylaşırdı.
+  MixSpec currentSpec() => MixSpec([
+        for (final l in _state.layers)
+          MixLayer(id: l.id, type: l.type, gain: _state.gains[l.id] ?? l.gain),
+      ]);
+
+  /// Mix'i paylaşılabilir 9:16 videoya çevirir — **viral kanca #3**.
+  ///
+  /// Dosya yolunu döndürür; export patlarsa **null** döner ve hata state'e yazılır
+  /// (çağıran UI, atmayı beklemek zorunda kalmasın).
+  ///
+  /// [seconds] kısa tutulur: kare başına bir render var, 15 sn @24fps = 360 render.
+  /// Daha uzunu export'u dakikalara çıkarır ve sosyal platformlar zaten kırpar.
+  Future<String?> exportVideo({
+    required String title,
+    required LinearGradient gradient,
+    int seconds = 15,
+  }) async {
+    if (_state.isExporting) return null; // çift basış ikinci oturum açmasın
+    _emit(_state.copyWith(exportProgress: 0, clearError: true));
+    try {
+      final path = await _exporter.export(
+        spec: currentSpec(),
+        title: title,
+        gradient: gradient,
+        seconds: seconds,
+        onProgress: (p) => _emit(_state.copyWith(exportProgress: p)),
+      );
+      _emit(_state.copyWith(clearExport: true));
+      return path;
+    } catch (e) {
+      // Hata YUTULMAZ (CLAUDE.md §4): teknik detay state'e, kullanıcıya sade metin.
+      _emit(_state.copyWith(
+        clearExport: true,
+        error: e.toString(),
+        errorKind: MixerErrorKind.export,
+      ));
+      return null;
+    }
   }
 
   Future<void> dispose() => _player.dispose();

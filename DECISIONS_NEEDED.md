@@ -291,6 +291,23 @@ ne yapabiliyor?"** — barın aksine bu satır yalan söyleyemez.
 > Bunları vermek zaten benim işimdi. Her biri gerekçesiyle burada; itiraz eden
 > düzeltir. Artık "bekliyor" değiller.
 
+## ✅ D-14 — mix-to-video mux → **NATIVE** (ffmpeg-kit öldü, fork'u GPL)
+
+docs/04 §134 bu kararı öngörmüştü: _"ffmpeg_kit lisansı (LGPL yapılandırması) ve iOS
+binary boyutu bu fazda doğrulanacak — alternatif AVAssetWriter/MediaMuxer. Native yol
+daha çok iş ama sıfır lisans riski; faz başında spike yapılır."_ Spike yapıldı:
+
+- **`arthenica/ffmpeg-kit` GitHub'da ARŞİVLENMİŞ** (retired). `ffmpeg_kit_flutter`'ın
+  pub'daki son sürümü **2023-09-18**. Bakımı yok, binary'leri çekilmiş.
+- Tek canlı fork **`ffmpeg_kit_flutter_new` "Full GPL"** — GPL, kapalı kaynak ticari
+  bir uygulamayı kirletir. Ödeme alan bir üründe bu lisans riski **kabul edilemez**.
+
+**Karar: native mux.** Android `MediaCodec` + `MediaMuxer`, iOS `AVAssetWriter`.
+Daha çok iş ama sıfır lisans riski ve sıfır terk edilmiş bağımlılık.
+
+**Sonuç:** iOS tarafı Mac olmadan yazılamaz → **kanca #3 yalnızca Android'de tamamlanır**;
+iOS D-13'ün tetiğine bağlanır (Mac erişimi). Bu, D-13'ün üçüncü tetiğini AKTİF eder.
+
 ## ✅ D-4 — Marka/ton → NOCTA kalıyor
 
 `NOCTA` çalışma kod adı olarak **kalıyor**; slug'lar (deep-ocean/overthinker/

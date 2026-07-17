@@ -180,7 +180,7 @@ void main() {
     // ÇEKİRDEK: link DEĞİL, GÖRSEL paylaşılıyor (docs/04 §119).
     expect(sharer.shared.first.file, isNotNull, reason: 'gece kartı PNG olarak gitmeli');
     expect(sharer.shared.first.file!.mimeType, 'image/png');
-    expect(sharer.shared.first.file!.bytes.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
+    expect(sharer.shared.first.file!.bytes!.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
     expect(find.text('Link copied'), findsOneWidget);
     // Viral huni: paylaşım başarılıysa olay (sözlükte tanımlı).
     expect(analytics.events, contains('report_shared'));

@@ -279,6 +279,36 @@ abstract class AppL10n {
   /// **'Sound could not start.'**
   String get mixerFailed;
 
+  /// Mix-to-video export butonu — viral kanca #3
+  ///
+  /// In en, this message translates to:
+  /// **'Share as video'**
+  String get mixerExportVideo;
+
+  /// Export sürerken buton metni; export saniyeler sürer, kullanıcı beklediğini bilmeli
+  ///
+  /// In en, this message translates to:
+  /// **'Making video… {percent}%'**
+  String mixerExporting(int percent);
+
+  /// Export patladığında gösterilen sade metin — teknik detay loglanır, kullanıcıya gitmez
+  ///
+  /// In en, this message translates to:
+  /// **'Video could not be created.'**
+  String get mixerExportFailed;
+
+  /// Videoyla birlikte paylaşılan metin; viral döngüyü kapatır
+  ///
+  /// In en, this message translates to:
+  /// **'My sleep mix — made with NOCTA'**
+  String get mixerExportShareText;
+
+  /// Videonun üstünde görünen başlık
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight\'s mix'**
+  String get mixerVideoTitle;
+
   /// Gece raporu kartı başlığı — 'makbuz' metaforu: iddia taşımaz, kayıt tutar
   ///
   /// In en, this message translates to:

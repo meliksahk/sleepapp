@@ -106,6 +106,24 @@
   "mixerFailed": "Sound could not start.",
   "@mixerFailed": { "description": "Ses başlatılamadığında" },
 
+  "mixerExportVideo": "Share as video",
+  "@mixerExportVideo": { "description": "Mix-to-video export butonu — viral kanca #3" },
+
+  "mixerExporting": "Making video… {percent}%",
+  "@mixerExporting": {
+    "description": "Export sürerken buton metni; export saniyeler sürer, kullanıcı beklediğini bilmeli",
+    "placeholders": { "percent": { "type": "int" } }
+  },
+
+  "mixerExportFailed": "Video could not be created.",
+  "@mixerExportFailed": { "description": "Export patladığında gösterilen sade metin — teknik detay loglanır, kullanıcıya gitmez" },
+
+  "mixerExportShareText": "My sleep mix — made with NOCTA",
+  "@mixerExportShareText": { "description": "Videoyla birlikte paylaşılan metin; viral döngüyü kapatır" },
+
+  "mixerVideoTitle": "Tonight's mix",
+  "@mixerVideoTitle": { "description": "Videonun üstünde görünen başlık" },
+
   "reportCardHeader": "Night receipt",
   "@reportCardHeader": { "description": "Gece raporu kartı başlığı — 'makbuz' metaforu: iddia taşımaz, kayıt tutar" },
 

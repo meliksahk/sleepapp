@@ -73,11 +73,23 @@ Uint8List encodeWav(
   writeAscii('data');
   writeUint32(dataBytes);
 
-  for (var i = 0; i < samples.length; i++) {
-    out.setInt16(pos, _toInt16(samples[i]), Endian.little);
-    pos += 2;
-  }
+  final pcm = encodePcm16(samples);
+  final bytes = out.buffer.asUint8List();
+  bytes.setRange(pos, pos + pcm.length, pcm);
+  return bytes;
+}
 
+/// [samples] (Float32, [-1, 1]) → **başlıksız** 16-bit LE PCM.
+///
+/// **NEDEN AYRI:** mix-to-video'nun AAC kodlayıcısı (viral kanca #3) ham PCM ister,
+/// RIFF başlığı değil. WAV'dan 44 baytı kırpmak da işe yarardı ama o, başlık boyutunu
+/// iki yere yazmak demekti. Float→int16 dönüşümü artık **tek yerde** yaşıyor: iki
+/// tüketici de aynı kırpma ve simetri kurallarını alır.
+Uint8List encodePcm16(Float32List samples) {
+  final out = ByteData(samples.length * 2);
+  for (var i = 0; i < samples.length; i++) {
+    out.setInt16(i * 2, _toInt16(samples[i]), Endian.little);
+  }
   return out.buffer.asUint8List();
 }
 
