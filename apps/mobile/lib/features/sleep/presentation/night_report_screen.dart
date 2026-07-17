@@ -29,14 +29,18 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
     // l10n await'ten ÖNCE yakalanır (context async gap'te kullanılmaz — analyzer kuralı).
     final l10n = AppL10n.of(context);
     try {
-      final share = await ref.read(sleepControllerProvider).reportShare(widget.nightDate);
+      final share = await ref
+          .read(sleepControllerProvider)
+          .reportShare(widget.nightDate);
       if (share == null) {
         messenger.showSnackBar(
           SnackBar(content: Text(l10n.nightReportNoShareCard)),
         );
         return;
       }
-      await ref.read(sharerProvider).share(ShareContent(text: share.title, url: share.webUrl));
+      await ref
+          .read(sharerProvider)
+          .share(ShareContent(text: share.title, url: share.webUrl));
       // Viral huni ölçümü (analitik bloklamaz). props YOK: gece tarihi PII'ye yakın
       // ve huni için gereksiz (docs/analytics-events.md).
       ref.read(analyticsProvider).track('report_shared');
@@ -62,7 +66,8 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
               key: const Key('report-retry'),
               icon: const Icon(Icons.refresh),
               iconSize: 40,
-              onPressed: () => ref.invalidate(nightReportProvider(widget.nightDate)),
+              onPressed: () =>
+                  ref.invalidate(nightReportProvider(widget.nightDate)),
             ),
           ),
         ),
@@ -74,7 +79,10 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
     child: Text(
       AppL10n.of(context).nightReportEmpty,
       key: const Key('report-empty'),
-      style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+      style: TextStyle(
+        fontSize: NoctaFontSize.body,
+        color: NoctaColors.inkSecondary,
+      ),
     ),
   );
 
@@ -87,13 +95,19 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
         children: [
           Text(
             r.nightDate,
-            style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+            style: TextStyle(
+              fontSize: NoctaFontSize.body,
+              color: NoctaColors.inkSecondary,
+            ),
           ),
           const SizedBox(height: NoctaSpace.s2),
           Text(
             formatMinutes(r.totalDurationMinutes),
             key: const Key('report-duration'),
-            style: TextStyle(fontSize: NoctaFontSize.display, color: NoctaColors.inkPrimary),
+            style: TextStyle(
+              fontSize: NoctaFontSize.display,
+              color: NoctaColors.inkPrimary,
+            ),
           ),
           const SizedBox(height: NoctaSpace.s5),
           NCard(
@@ -103,20 +117,29 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
                 Text(
                   l10n.nightReportCalm(r.calmScore),
                   key: const Key('report-calm'),
-                  style: TextStyle(fontSize: NoctaFontSize.h2, color: NoctaColors.accentAurora),
+                  style: TextStyle(
+                    fontSize: NoctaFontSize.h2,
+                    color: NoctaColors.accentAurora,
+                  ),
                 ),
                 const SizedBox(height: NoctaSpace.s1),
                 // Sağlık iddiası YOK: uygulama-içi göreli dinginlik ölçüsü.
                 Text(
                   l10n.nightReportCalmDisclaimer,
-                  style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkFaint),
+                  style: TextStyle(
+                    fontSize: NoctaFontSize.caption,
+                    color: NoctaColors.inkFaint,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: NoctaSpace.s3),
           _Row(label: l10n.nightReportSessions, value: '${r.sessionCount}'),
-          _Row(label: l10n.nightReportMovementEvents, value: '${r.movementEvents}'),
+          _Row(
+            label: l10n.nightReportMovementEvents,
+            value: '${r.movementEvents}',
+          ),
           _Row(label: l10n.nightReportSoundEvents, value: '${r.soundEvents}'),
           const SizedBox(height: NoctaSpace.s5),
           NButton(
@@ -145,11 +168,17 @@ class _Row extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+            style: TextStyle(
+              fontSize: NoctaFontSize.body,
+              color: NoctaColors.inkSecondary,
+            ),
           ),
           Text(
             value,
-            style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+            style: TextStyle(
+              fontSize: NoctaFontSize.body,
+              color: NoctaColors.inkPrimary,
+            ),
           ),
         ],
       ),

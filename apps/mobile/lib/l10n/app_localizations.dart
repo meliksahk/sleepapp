@@ -111,6 +111,66 @@ abstract class AppL10n {
   /// **'My sleep identity is {name}.'**
   String shareIdentityText(String name);
 
+  /// Uyku modu ekranı başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep mode'**
+  String get sleepModeTitle;
+
+  /// Kaydı başlat
+  ///
+  /// In en, this message translates to:
+  /// **'Start the night'**
+  String get sleepModeStart;
+
+  /// Kaydı bitir ve kaydet
+  ///
+  /// In en, this message translates to:
+  /// **'End the night'**
+  String get sleepModeStop;
+
+  /// Kayıt sürerken durum
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get sleepModeRecording;
+
+  /// Canlı olay sayacı. ICU plural — Türkçe İngilizce -s mantığını izlemez.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No sounds yet} =1{1 sound so far} other{{count} sounds so far}}'**
+  String sleepModeEvents(int count);
+
+  /// Gizlilik notu — CLAUDE.md §6'nın kullanıcıya söylenmiş hali
+  ///
+  /// In en, this message translates to:
+  /// **'Audio is analysed on your phone and never leaves it. Only the time and a count are saved.'**
+  String get sleepModePrivacy;
+
+  /// İzin reddedildiğinde
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is needed to listen to your night.'**
+  String get sleepModePermissionDenied;
+
+  /// Kayıt bittiğinde özet
+  ///
+  /// In en, this message translates to:
+  /// **'Night saved: {hours}h {minutes}m'**
+  String sleepModeSaved(int hours, int minutes);
+
+  /// Sunucuya yazılamadı ama gece yok sayılmadı
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on your phone, but could not reach the server.'**
+  String get sleepModeSaveFailed;
+
+  /// Ana ekrandan uyku moduna giden buton
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep mode'**
+  String get homeSleepMode;
+
   /// Oturum kurulamadığında üstte görünen çubuk
   ///
   /// In en, this message translates to:

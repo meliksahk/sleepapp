@@ -133,6 +133,13 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: NoctaSpace.s2),
                     NButton(
+                      key: const Key('sleep-mode-cta'),
+                      label: l10n.homeSleepMode,
+                      variant: NButtonVariant.ghost,
+                      onPressed: () => context.push('/sleep-mode'),
+                    ),
+                    const SizedBox(height: NoctaSpace.s2),
+                    NButton(
                       key: const Key('mixer-cta'),
                       label: l10n.homeOpenMixer,
                       variant: NButtonVariant.ghost,

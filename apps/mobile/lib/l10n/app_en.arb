@@ -13,6 +13,42 @@
     "placeholders": { "name": { "type": "String" } }
   },
 
+  "sleepModeTitle": "Sleep mode",
+  "@sleepModeTitle": { "description": "Uyku modu ekranı başlığı" },
+
+  "sleepModeStart": "Start the night",
+  "@sleepModeStart": { "description": "Kaydı başlat" },
+
+  "sleepModeStop": "End the night",
+  "@sleepModeStop": { "description": "Kaydı bitir ve kaydet" },
+
+  "sleepModeRecording": "Listening…",
+  "@sleepModeRecording": { "description": "Kayıt sürerken durum" },
+
+  "sleepModeEvents": "{count, plural, =0{No sounds yet} =1{1 sound so far} other{{count} sounds so far}}",
+  "@sleepModeEvents": {
+    "description": "Canlı olay sayacı. ICU plural — Türkçe İngilizce -s mantığını izlemez.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "sleepModePrivacy": "Audio is analysed on your phone and never leaves it. Only the time and a count are saved.",
+  "@sleepModePrivacy": { "description": "Gizlilik notu — CLAUDE.md §6'nın kullanıcıya söylenmiş hali" },
+
+  "sleepModePermissionDenied": "Microphone access is needed to listen to your night.",
+  "@sleepModePermissionDenied": { "description": "İzin reddedildiğinde" },
+
+  "sleepModeSaved": "Night saved: {hours}h {minutes}m",
+  "@sleepModeSaved": {
+    "description": "Kayıt bittiğinde özet",
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+
+  "sleepModeSaveFailed": "Saved on your phone, but could not reach the server.",
+  "@sleepModeSaveFailed": { "description": "Sunucuya yazılamadı ama gece yok sayılmadı" },
+
+  "homeSleepMode": "Sleep mode",
+  "@homeSleepMode": { "description": "Ana ekrandan uyku moduna giden buton" },
+
   "offlineBanner": "Offline — some features need a connection",
   "@offlineBanner": { "description": "Oturum kurulamadığında üstte görünen çubuk" },
 

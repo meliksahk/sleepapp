@@ -23,10 +23,10 @@ class SleepStats {
   final int averageDurationMinutes;
 
   factory SleepStats.fromJson(Map<String, dynamic> json) => SleepStats(
-        nights: json['nights'] as int,
-        totalDurationMinutes: json['totalDurationMinutes'] as int,
-        averageDurationMinutes: json['averageDurationMinutes'] as int,
-      );
+    nights: json['nights'] as int,
+    totalDurationMinutes: json['totalDurationMinutes'] as int,
+    averageDurationMinutes: json['averageDurationMinutes'] as int,
+  );
 }
 
 /// Bir gecenin trend kovası (GET /v1/sleep/trend içindeki bir öğe).
@@ -37,9 +37,9 @@ class TrendNight {
   final int durationMinutes;
 
   factory TrendNight.fromJson(Map<String, dynamic> json) => TrendNight(
-        nightDate: json['nightDate'] as String,
-        durationMinutes: json['durationMinutes'] as int,
-      );
+    nightDate: json['nightDate'] as String,
+    durationMinutes: json['durationMinutes'] as int,
+  );
 }
 
 /// Son 7 gecenin uyku trendi (GET /v1/sleep/trend). Geceler eskiden yeniye.
@@ -55,12 +55,12 @@ class WeeklyTrend {
   final int nightsWithData;
 
   factory WeeklyTrend.fromJson(Map<String, dynamic> json) => WeeklyTrend(
-        nights: (json['nights'] as List<dynamic>)
-            .map((e) => TrendNight.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        averageDurationMinutes: json['averageDurationMinutes'] as int,
-        nightsWithData: json['nightsWithData'] as int,
-      );
+    nights: (json['nights'] as List<dynamic>)
+        .map((e) => TrendNight.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    averageDurationMinutes: json['averageDurationMinutes'] as int,
+    nightsWithData: json['nightsWithData'] as int,
+  );
 }
 
 class SleepSession {
@@ -86,14 +86,14 @@ class SleepSession {
   String get durationText => formatMinutes(durationMinutes);
 
   factory SleepSession.fromJson(Map<String, dynamic> json) => SleepSession(
-        id: json['id'] as String,
-        startedAt: json['startedAt'] as String,
-        endedAt: json['endedAt'] as String,
-        nightDate: json['nightDate'] as String,
-        durationMinutes: json['durationMinutes'] as int,
-        movementEvents: json['movementEvents'] as int,
-        soundEvents: json['soundEvents'] as int,
-      );
+    id: json['id'] as String,
+    startedAt: json['startedAt'] as String,
+    endedAt: json['endedAt'] as String,
+    nightDate: json['nightDate'] as String,
+    durationMinutes: json['durationMinutes'] as int,
+    movementEvents: json['movementEvents'] as int,
+    soundEvents: json['soundEvents'] as int,
+  );
 }
 
 class NightReport {
@@ -114,13 +114,13 @@ class NightReport {
   final int calmScore;
 
   factory NightReport.fromJson(Map<String, dynamic> json) => NightReport(
-        nightDate: json['nightDate'] as String,
-        sessionCount: json['sessionCount'] as int,
-        totalDurationMinutes: json['totalDurationMinutes'] as int,
-        movementEvents: json['movementEvents'] as int,
-        soundEvents: json['soundEvents'] as int,
-        calmScore: json['calmScore'] as int,
-      );
+    nightDate: json['nightDate'] as String,
+    sessionCount: json['sessionCount'] as int,
+    totalDurationMinutes: json['totalDurationMinutes'] as int,
+    movementEvents: json['movementEvents'] as int,
+    soundEvents: json['soundEvents'] as int,
+    calmScore: json['calmScore'] as int,
+  );
 }
 
 /// Gece raporu paylaşım kartı (GET /v1/sharing/report?night=). Viral kanca #2.
@@ -143,15 +143,16 @@ class NightReportShare {
   final String webUrl;
   final String deepLink;
 
-  factory NightReportShare.fromJson(Map<String, dynamic> json) => NightReportShare(
-    nightDate: json['nightDate'] as String,
-    title: json['title'] as String,
-    subtitle: json['subtitle'] as String,
-    durationText: json['durationText'] as String,
-    calmScore: json['calmScore'] as int,
-    webUrl: json['webUrl'] as String,
-    deepLink: json['deepLink'] as String,
-  );
+  factory NightReportShare.fromJson(Map<String, dynamic> json) =>
+      NightReportShare(
+        nightDate: json['nightDate'] as String,
+        title: json['title'] as String,
+        subtitle: json['subtitle'] as String,
+        durationText: json['durationText'] as String,
+        calmScore: json['calmScore'] as int,
+        webUrl: json['webUrl'] as String,
+        deepLink: json['deepLink'] as String,
+      );
 }
 
 class StreakStats {
@@ -166,8 +167,8 @@ class StreakStats {
   final int totalNights;
 
   factory StreakStats.fromJson(Map<String, dynamic> json) => StreakStats(
-        current: json['current'] as int,
-        longest: json['longest'] as int,
-        totalNights: json['totalNights'] as int,
-      );
+    current: json['current'] as int,
+    longest: json['longest'] as int,
+    totalNights: json['totalNights'] as int,
+  );
 }

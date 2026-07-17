@@ -20,6 +20,50 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
+  String get sleepModeTitle => 'Sleep mode';
+
+  @override
+  String get sleepModeStart => 'Start the night';
+
+  @override
+  String get sleepModeStop => 'End the night';
+
+  @override
+  String get sleepModeRecording => 'Listening…';
+
+  @override
+  String sleepModeEvents(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sounds so far',
+      one: '1 sound so far',
+      zero: 'No sounds yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sleepModePrivacy =>
+      'Audio is analysed on your phone and never leaves it. Only the time and a count are saved.';
+
+  @override
+  String get sleepModePermissionDenied =>
+      'Microphone access is needed to listen to your night.';
+
+  @override
+  String sleepModeSaved(int hours, int minutes) {
+    return 'Night saved: ${hours}h ${minutes}m';
+  }
+
+  @override
+  String get sleepModeSaveFailed =>
+      'Saved on your phone, but could not reach the server.';
+
+  @override
+  String get homeSleepMode => 'Sleep mode';
+
+  @override
   String get offlineBanner => 'Offline — some features need a connection';
 
   @override

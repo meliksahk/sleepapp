@@ -23,7 +23,8 @@ class SleepController {
   /// birinde düzeltilirse "gece" gruplaması sessizce kayardı.
   Future<SleepSession> recordSession(SleepSessionDraft draft) async {
     final res = await _auth.authorizedRequest(
-      (token) => _client.postAuthed('/v1/sleep/sessions', token, draft.toJson()),
+      (token) =>
+          _client.postAuthed('/v1/sleep/sessions', token, draft.toJson()),
     );
     if (res.statusCode != 201) throw ApiException(res.statusCode, res.body);
     return SleepSession.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
@@ -35,7 +36,9 @@ class SleepController {
     );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     final list = jsonDecode(res.body) as List<dynamic>;
-    return list.map((e) => SleepSession.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => SleepSession.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Bir gecenin raporu; o gecede oturum yoksa (404) null döner.
@@ -58,7 +61,9 @@ class SleepController {
     );
     if (res.statusCode == 404) return null;
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
-    return NightReportShare.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+    return NightReportShare.fromJson(
+      jsonDecode(res.body) as Map<String, dynamic>,
+    );
   }
 
   /// Uyku istatistikleri (gece sayısı, toplam/ortalama süre).
