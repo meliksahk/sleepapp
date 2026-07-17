@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import '../../core/share/sharer.dart';
+import '../../core/sleep_tracking/alarm_sound.dart';
 import '../../core/sleep_tracking/envelope_log.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import '../../core/sleep_tracking/sleep_session_builder.dart';
+import '../../core/sleep_tracking/smart_alarm.dart';
 import 'sleep_controller.dart';
 
 /// Uyku modunun durumu — UI'ın gördüğü tek şey.
@@ -15,6 +19,9 @@ class SleepModeState {
     this.error,
     this.permissionDenied = false,
     this.serviceFailed = false,
+    this.alarmAt,
+    this.alarmRinging = false,
+    this.alarmTrigger,
   });
 
   final bool isRecording;
@@ -33,6 +40,18 @@ class SleepModeState {
   /// bu bir sistem sorunu, kullanıcının seçimi değil.
   final bool serviceFailed;
 
+  /// Kullanıcının "beni en geç şu saatte uyandır" dediği an. Null = alarm YOK.
+  ///
+  /// Alarm **opt-in**: varsayılan bir saat uydurmak, kullanıcıyı beklemediği bir anda
+  /// uyandırmak olurdu — bir uyku uygulamasının yapabileceği en kötü şey.
+  final DateTime? alarmAt;
+
+  /// Alarm ŞU AN çalıyor.
+  final bool alarmRinging;
+
+  /// Alarm neden çaldı — kullanıcıya gösterilir (hafif uykuda mı, son tarihte mi).
+  final AlarmTrigger? alarmTrigger;
+
   SleepModeState copyWith({
     bool? isRecording,
     DateTime? startedAt,
@@ -41,6 +60,10 @@ class SleepModeState {
     String? error,
     bool? permissionDenied,
     bool? serviceFailed,
+    DateTime? alarmAt,
+    bool clearAlarm = false,
+    bool? alarmRinging,
+    AlarmTrigger? alarmTrigger,
     bool clearError = false,
     bool clearDraft = false,
   }) {
@@ -52,6 +75,9 @@ class SleepModeState {
       error: clearError ? null : (error ?? this.error),
       permissionDenied: permissionDenied ?? this.permissionDenied,
       serviceFailed: serviceFailed ?? this.serviceFailed,
+      alarmAt: clearAlarm ? null : (alarmAt ?? this.alarmAt),
+      alarmRinging: alarmRinging ?? this.alarmRinging,
+      alarmTrigger: clearAlarm ? null : (alarmTrigger ?? this.alarmTrigger),
     );
   }
 }
@@ -68,7 +94,12 @@ class SleepModeController {
     required this.sleep,
     required this.nightService,
     this.sharer,
-  }) {
+    this.alarmSound,
+    this.alarmWindow = const Duration(minutes: 30),
+    this.alarmLookback = const Duration(minutes: 5),
+    this.alarmTick = const Duration(seconds: 10),
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now {
     recorder.onProgress = () {
       // Canlı sayaç: kullanıcı gece kalkarsa "çalışıyor mu?" sorusuna cevap görür.
       _emit(_state.copyWith(eventCount: recorder.eventCount));
@@ -87,6 +118,30 @@ class SleepModeController {
   /// Fixture paylaşımı için (docs/04 §120). Test sahte enjekte eder.
   final Sharer? sharer;
 
+  /// Alarmı duyulur yapan port. Null → alarm sessiz çalar (yalnızca UI değişir);
+  /// testlerin çoğu bunu vermez.
+  final AlarmSound? alarmSound;
+
+  /// Hedef saatten NE KADAR ÖNCE hafif uyku aranmaya başlanır.
+  ///
+  /// 30 dk kategori standardı: uyku döngüsü ~90 dk, hafif uyku evresi o döngünün
+  /// sonunda. 30 dk'lık pencere en az bir hafif uyku fırsatı yakalamaya yeter ama
+  /// kullanıcıyı "istediğimden yarım saat erken kalktım"dan fazla erken uyandırmaz.
+  final Duration alarmWindow;
+
+  /// "Son N dakikada ses" = hafif uyku sezgiseli. 5 dk: tek bir öksürük değil,
+  /// süregelen bir hareketlenme aransın.
+  final Duration alarmLookback;
+
+  /// Alarm ne sıklıkla değerlendirilir. 10 sn: son tarih en fazla 10 sn gecikir
+  /// (kullanıcı fark etmez), pil maliyeti ihmal edilebilir.
+  final Duration alarmTick;
+
+  final DateTime Function() _now;
+
+  SmartAlarm? _alarm;
+  Timer? _alarmTimer;
+
   /// Bitmiş gecenin dB zarfı — varsa "paylaş" düğmesi görünür.
   EnvelopeLog? _envelope;
   EnvelopeLog? get envelope => _envelope;
@@ -100,6 +155,78 @@ class SleepModeController {
     _state = next;
     onChanged?.call();
   }
+
+  /// Kullanıcının "beni en geç şu saatte uyandır" seçimi. Null → alarm kapalı.
+  ///
+  /// Kayıt SIRASINDA da çağrılabilir (kullanıcı yatakta fikir değiştirebilir).
+  void setAlarm(DateTime? at) {
+    _emit(at == null
+        ? _state.copyWith(clearAlarm: true)
+        : _state.copyWith(alarmAt: at));
+    if (_state.isRecording) _armAlarm();
+  }
+
+  /// Alarmı SUSTURUR. Kayıt devam eder — kullanıcı alarmı kapatıp uyumaya
+  /// dönebilir; geceyi bitirmek ayrı bir eylemdir (`stopAndSave`).
+  Future<void> dismissAlarm() async {
+    await alarmSound?.stop();
+    _emit(_state.copyWith(alarmRinging: false));
+  }
+
+  /// Pencereyi kurar ve tick'i başlatır. Alarm yoksa var olanı söker.
+  void _armAlarm() {
+    _alarmTimer?.cancel();
+    _alarmTimer = null;
+
+    final at = _state.alarmAt;
+    if (at == null) {
+      _alarm = null;
+      return;
+    }
+
+    _alarm = SmartAlarm(
+      // Pencere geceden önce başlamaz — geçmişe uzanan bir pencere anlamsız olurdu.
+      //
+      // **KABUL EDİLEN SINIR:** kullanıcı `alarmWindow`dan (30 dk) KISA bir alarm
+      // kurarsa pencere sadece kısalır ve baştan açık olur; kullanıcı henüz
+      // uyumadan kıpırdarsa alarm erken çalabilir. Kabul ediyoruz çünkü hata payı
+      // tanım gereği 30 dk'dan küçük ve kullanıcı zaten "beni birazdan uyandır"
+      // demiş. Gerçek gecede (8 saat) pencere sabaha kadar açılmaz, sorun oluşmaz.
+      windowStart: _laterOf(at.subtract(alarmWindow), _now()),
+      windowEnd: at,
+    );
+
+    // **TIMER, mikrofonun onProgress'i DEĞİL — bilinçli.** Alarmı çerçeve akışına
+    // bağlasaydık mikrofon ölünce (izin çekilir, OS akışı keser, cihaz kısılır)
+    // alarm da SESSİZCE ölürdü: kullanıcı işe geç kalır ve nedenini asla bilmez.
+    // `SmartAlarm`'ın son tarih garantisi, onu tick'leyen şey kadar sağlamdır.
+    _alarmTimer = Timer.periodic(alarmTick, (_) => _tickAlarm());
+  }
+
+  void _tickAlarm() {
+    final alarm = _alarm;
+    if (alarm == null || _state.alarmRinging) return;
+
+    final decision = alarm.evaluate(
+      now: _now(),
+      hasRecentActivity: recorder.hasRecentActivityIn(alarmLookback),
+    );
+    if (!decision.shouldFire) return;
+
+    _alarmTimer?.cancel();
+    _alarmTimer = null;
+    _emit(_state.copyWith(
+      alarmRinging: true,
+      alarmTrigger: decision.trigger,
+    ));
+    // Ses hatası alarmı "çalmadı" saymaz: UI zaten çalıyor gösteriyor ve kullanıcı
+    // ekranı görürse uyanır. Yutulmaz ama akışı da kesmez.
+    unawaited(alarmSound?.play().catchError((Object e) {
+      _emit(_state.copyWith(error: e.toString()));
+    }));
+  }
+
+  static DateTime _laterOf(DateTime a, DateTime b) => a.isAfter(b) ? a : b;
 
   /// Bildirim metinleri PARAMETRE: i18n `BuildContext` ister, provider'ın context'i
   /// yok. Metni ekran (l10n'u olan taraf) verir — controller çeviri bilmez.
@@ -146,6 +273,9 @@ class SleepModeController {
         eventCount: 0,
       ),
     );
+    // Alarm kayıt BAŞLADIKTAN sonra kurulur: kayıt başlamazsa (izin/servis) alarm
+    // da kurulmamalı — çalan ama hiçbir şey kaydetmeyen bir alarm yalan olurdu.
+    _armAlarm();
   }
 
   /// Kaydı bitirir ve oturumu SUNUCUYA yazar.
@@ -153,6 +283,13 @@ class SleepModeController {
   /// Sunucuya giden: başlangıç/bitiş + iki sayı. **Ham ses değil** (CLAUDE.md §6);
   /// zaten hiçbir yerde ham ses tutulmuyor (bkz. `SleepRecorder`).
   Future<void> stopAndSave() async {
+    // Alarm gece BİTİNCE susar: kullanıcı çalarken "geceyi bitir"e basmış olabilir
+    // ve alarmın ekran kapandıktan sonra çalmaya devam etmesi kabul edilemez.
+    _alarmTimer?.cancel();
+    _alarmTimer = null;
+    _alarm = null;
+    await alarmSound?.stop();
+
     // Servis ÖNCE durdurulur: kayıt bittiyse bildirimin bir an bile fazladan
     // durması "hâlâ dinliyorum" izlenimi verirdi.
     await nightService.stop();
@@ -164,7 +301,7 @@ class SleepModeController {
 
     // Zarf kaydedilir: kullanıcı isterse paylaşabilsin (otomatik gönderim YOK).
     _envelope = recorder.envelope;
-    _emit(_state.copyWith(isRecording: false, savedDraft: draft));
+    _emit(_state.copyWith(isRecording: false, alarmRinging: false, savedDraft: draft));
 
     try {
       await sleep.recordSession(draft);

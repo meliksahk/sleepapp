@@ -141,6 +141,37 @@ class AppL10nEn extends AppL10n {
   String get mixerVideoTitle => 'Tonight\'s mix';
 
   @override
+  String get alarmSectionTitle => 'Smart alarm';
+
+  @override
+  String get alarmOff => 'Off';
+
+  @override
+  String alarmSet(String time) {
+    return 'Wake me by $time';
+  }
+
+  @override
+  String alarmExplain(int minutes) {
+    return 'We\'ll look for a lighter moment in the $minutes minutes before, and wake you by then at the latest.';
+  }
+
+  @override
+  String get alarmChoose => 'Set alarm';
+
+  @override
+  String get alarmClear => 'Turn off';
+
+  @override
+  String get alarmRingingLightSleep => 'You stirred — good moment to wake up.';
+
+  @override
+  String get alarmRingingDeadline => 'Time to wake up.';
+
+  @override
+  String get alarmDismiss => 'Stop alarm';
+
+  @override
   String get reportCardHeader => 'Night receipt';
 
   @override

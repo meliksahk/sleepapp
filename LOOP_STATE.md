@@ -2,13 +2,18 @@
 
 ## 🔊 Kullanıcı bugün ne yapabiliyor?
 
-> 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139)
+> 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139) — **RELEASE'de doğrulandı (#147); bundan önce release APK'da SESSİZDİ, aşağıya bak.**
 > 2. **Kimliğini GÖRSEL olarak paylaşabiliyor**: testi bitir → paylaş → 1080×1920 kart
 >    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
 > 3. **Gecesini GÖRSEL olarak paylaşabiliyor**: gece makbuzu kartı (#144).
 > 4. **Mix'ini VİDEO olarak paylaşabiliyor**: 9:16 mp4 (h264+aac, 15 sn) — kendi sesi +
 >    audiogram + marka izi, native paylaşım sayfasına gidiyor. (#145) **Android'de.**
-> 5. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
+> 5. **Alarm kurabiliyor ve UYANDIRILIYOR**: hafif uyku sinyalinde erken, yoksa son
+>    tarihte koşulsuz — cihazda üretilen çan sesiyle. (#146) Emülatörde (DEBUG) çaldığı
+>    `dumpsys audio` ile doğrulanmıştı. Alarm mikserle **aynı** just_audio bellek-WAV
+>    yolunu kullanıyor → #147 fix'i buna da uygulanır; release'de **mikseri** doğruladım
+>    (aynı yol), alarmı release'de ayrıca yeniden doğrulamadım (dürüstlük notu).
+> 6. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
 >    artık MÜMKÜN.
@@ -21,10 +26,32 @@
 > yapılmadı** (CLAUDE.md §1.1 — insana ait). Önceden render edilmiş buffer döngüleniyor;
 > nihai native graf değil. Döngü dikişi duyulabilir.
 
-## 🚧 İlerleme: **%58** — formül 57.55 — F1–F5
+> ## 🔴 #147 — F1/F5 "ses çalıyor" iddiası RELEASE'de YALANDI (şimdi düzeldi)
+>
+> `src/main/AndroidManifest.xml` **INTERNET iznini taşımıyordu.** Flutter şablonu onu
+> yalnızca `src/debug/` ve `src/profile/` manifestlerine koyar. Yani **kullanıcıya giden
+> release APK'da yoktu** ve just_audio'nun localhost proxy'si bind edemiyordu
+> (`SocketException errno=1`) → **mikser (F1, #138/#139) ve alarm (F5, #146) release'de
+> SESSİZDİ.** API istemcisi de ölüydü.
+>
+> **Kaçırılma sebebi bu deftere birebir yansımıştı:** F1 ve F5 için "emülatörde doğrulandı"
+> yazıyordu — ama hepsi **debug** build'diydi ve debug manifesti izni gizlice ekliyordu.
+> D-12 SHIP KAPISI de kısmen "ses #138/#139'da çaldı"ya dayanarak açılmıştı; o ses
+> **debug'daydı**. 375 test yeşildi, hiçbiri göremezdi çünkü hepsi kaynak/host testi.
+>
+> **Düzeltme (#147) ve doğrulama — bu sefer RELEASE'de:** `flutter build apk --release`
+> → merged manifest'te INTERNET var → yüklü pakette `granted=true` → release mikser →
+> Play → `dumpsys audio`: 3 AudioTrack (brown/pink/white) 48kHz, `piid event:started`,
+> SocketException YOK. **Ses release'de çaldı.** Yeni `android_manifest_test.dart` satırı
+> kaynak düzeyinde kilitliyor (INTERNET silinince kırmızı).
+>
+> **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
+> doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
+
+## 🚧 İlerleme: **%60** — formül 59.15 — F1–F5
 
 ```
-[███████████████████████░░░░░░░░░░░░░░░░░] 58%
+[████████████████████████░░░░░░░░░░░░░░░░] 60%
 ```
 
 > ## 🔓 D-12 SHIP KAPISI AÇILDI (#145)
@@ -54,17 +81,18 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                  |
-| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                                                                                      |
-| Mobil       | ~67%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), akıllı alarm (ölü kod), paywall/entitlement, streak, haftalık içerik |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                    |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                           |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                |
+| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                                                                                                                    |
+| Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik, TR arb dosyası yok |
+| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                  |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                         |
 
-> **Hesap:** `0.40·67 + 0.30·70 + 0.15·32 + 0.15·33 = 57.55` → **≈58%**
+> **Hesap:** `0.40·71 + 0.30·70 + 0.15·32 + 0.15·33 = 59.15` → **≈60%**
 >
-> Mobil 62→67: mix-to-video (üçüncü ve son viral kanca) bitti ve deponun **ilk platform
-> kanalı** kuruldu — Kotlin↔Dart yolu artık açık (native ses grafı da oradan geçecek).
+> Mobil 67→71: akıllı alarm bağlandı (#146) — dört iterasyondur yazılı-test edilmiş-ölü
+> duran kod artık bir kullanıcı yeteneği. Bundan önce 62→67: mix-to-video + deponun ilk
+> platform kanalı.
 >
 > ⛔ **D-12 SHIP KAPISI DEVREDE:** kural "üç viral kanca render edilene kadar bar
 > %55'i geçemez". Kanca #1 (kimlik kartı) ✅, #2 (gece raporu) ve #3 (mix-to-video)
@@ -160,6 +188,51 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #146 — akıllı alarm bağlandı: 4 iterasyonluk ölü kod yeteneğe döndü (PR #146)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **Alarm ARTIK ÇALIYOR.** Uyku modunda opt-in alarm bölümü; pencere içinde hafif uyku
+  sinyalinde erken, sinyal yoksa **son tarihte koşulsuz** uyandırma; cihazda üretilen
+  "sunrise" çan sesi (asset yok, ~40 satır DSP); sustur → **gece kaydı devam eder**.
+- **Emülatörde doğrulandı** (test değil, `dumpsys`):
+  `07-18 13:31:01:746 player piid:151 event:started` +
+  `AudioPlaybackConfiguration piid:151 state:started sampleRate=48000`
+  — saati son tarihin ötesine aldığım saniyede çaldı, ses gerçekten başladı, ekranda
+  "Time to wake up." + "Stop alarm", gece kaydı sürüyordu (23:58:37, "Listening…").
+- 24 yeni test; tüm süit **375 yeşil**. Aralarında: **"mikrofon ölse bile alarm çalar"**
+  (tick'in `Timer`'a bağlı olmasının tek sebebi).
+
+🔥 **`dumpsys`'in ortaya çıkardığı GERÇEK HATA**
+
+`usage=USAGE_MEDIA content=CONTENT_TYPE_MUSIC` — alarm **medya kanalından** çalıyordu.
+İnsanlar geceleri medyayı kısar → alarm tam da ona ihtiyacı olan kullanıcıda **sessiz**
+kalırdı. Testler yeşilken. Düzeltme `USAGE_ALARM`; **ilk denemem yetmedi** çünkü
+just_audio'nun `androidApplyAudioAttributes` (varsayılan true) player'ı global
+`AudioSession`'a abone edip niteliği üstüne yazıyordu.
+
+❌ **Yapılmadı / eksik**
+
+- 🔥 **`USAGE_ALARM` düzeltmesi cihazda YENİDEN DOĞRULANMADI.** Emülatör kararsızlaştı
+  (`FlutterRenderer: Width is zero`, uygulama splash'ta asılı). Birim testi niteliğin
+  verildiğini kanıtlar ama **beni ısıran hatayı yakalayamaz** — o yalnızca `dumpsys`'te
+  görülür. **Bu bir RİSK, kapanmış iş değil.**
+- Bildirim yok (yeni bağımlılık, kapsam dışı bırakıldı) → ekran kapalıyken yalnız ses.
+- TR arb dosyası **hiç yok** (CLAUDE.md §4 "EN + TR" diyor) — önceden var olan borç.
+
+📌 **Varsayımlar / kararlar** (müdür bıraktı)
+
+- Bildirim paketi yok: alarmın mekanizması ses.
+- Alarm sesi cihazda üretilir: asset yok, lisans yok, on-device varsayılanı.
+- Tick `Timer` ile: mikrofon ölürse alarm ölmemeli.
+- Pencere 30 dk / lookback 5 dk / tick 10 sn.
+
+🔥 **Riskler / açıklar**
+
+- Yukarıdaki `USAGE_ALARM` doğrulama boşluğu.
+- Pencereden kısa alarmda (< 30 dk) pencere baştan açık → erken çalabilir (kabul edilmiş).
+- Hafif uyku **sezgisel**; uyku evrelemesiyle doğrulanmadı (UI bunu söylüyor).
 
 ### #145 — mix-to-video: ÜÇÜNCÜ viral kanca çalışıyor (PR #145) → **D-12 KAPISI AÇILDI**
 

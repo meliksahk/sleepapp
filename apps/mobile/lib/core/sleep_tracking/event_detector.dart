@@ -107,6 +107,14 @@ class AcousticEventDetector {
   /// Güncel gürültü tabanı — test/teşhis için.
   double get floorDb => _floorDb;
 
+  /// İşlenen çerçeve sayısı = dedektörün "şimdi"si.
+  ///
+  /// **Neden dışarı açık:** `hasRecentActivity` "son N dakikada ses var mıydı?"
+  /// sorusunu çerçeve biriminde soruyor ve referans noktası olarak GÜNCEL çerçeveyi
+  /// istiyor. Bunu çağıranın kendi sayacıyla tahmin etmesi, iki sayacın gece boyunca
+  /// birbirinden kaymasına açık olurdu.
+  int get frameCount => _frame;
+
   /// Bir dB zarfı çerçevesi işler. Çağıran `frameDbfs` ile üretir.
   void addFrame(double db) {
     final isLoud = db > _floorDb + thresholdDb;
