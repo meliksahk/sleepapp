@@ -18,6 +18,11 @@
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
 >    artık MÜMKÜN.
+> 7. **Premium'a giden bir yol GÖRÜYOR**: haftalık uyku trendi premium kapısının
+>    arkasında; free kullanıcı kilit + "Premium ile aç" görür → paywall açılır. (#159
+>    entitlement tüketimi, #161 paywall+kapı). **Viral paylaşım FREE kalır.** ⚠️ Dev
+>    stub herkese premium döndüğü için kilit runtime'da dev'e görünmez (gerçek IAP en
+>    son faz); iki durum da widget-test edildi.
 >
 > Bu satır D-12 kararıyla eklendi ve **barın aksine yalan söyleyemez**: her iterasyonda
 > "kullanıcı ne YAPABİLİYOR?" sorusuna cevap verir. 30 iterasyon boyunca bu satırın
@@ -82,12 +87,12 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                     |
-| ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                             |
-| Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **paywall UI + gated özellikler** (entitlement TÜKETİMİ ✓ #159), streak/haftalık ✓ (mevcut). ~~TR arb~~ ✓ #149 |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                                                                                                       |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                              |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                                                                                                 |
+| Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
+| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                                                                                                                                                                           |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
 > **Hesap:** `0.40·71 + 0.30·74 + 0.15·32 + 0.15·33 = 60.35` → **≈60%**
 >
@@ -199,6 +204,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #161 — paywall + ilk premium kapısı (müdür kararı) (PR #161)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Paywall ekranı (`/paywall`) + ilk gated özellik: **haftalık uyku trendi**. Free →
+  kilit + "Premium ile aç" CTA → paywall; premium → grafik. #153→#159→#161 zinciri.
+- **Loop kararı — hangi özellik:** haftalık trend (viral kancalara DOKUNMAZ, self-
+  contained, sunucu değişikliği yok). Mix-to-video paylaşımı KİLİTLENMEDİ (viral motor).
+- **Müdür sınırları:** gerçek IAP yok (§6, CTA "yakında"), ölü kod değil (kilit gerçek
+  aksiyondan paywall açar — test kanıtlar), fail-open (entitlement bilinmezse grafik).
+- 6 widget testi + i18n EN+TR (parity yeşil). **Tüm mobil süit: 391 test yeşil.**
+- 🔥 **Sınır:** dev stub herkese premium → kilit runtime'da dev'e görünmez (dev=premium
+  doğru); iki durum widget-test edildi. Gerçek IAP + daha fazla gated özellik en son faz.
 
 ### #159 — mobil entitlement tüketimi: backend #153 uygulamaya bağlandı (PR #159)
 
