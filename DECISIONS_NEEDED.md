@@ -201,3 +201,41 @@ deler.
 **Karar gelene kadar:** 2FA isteğe bağlı ve hiçbir hesapta zorunlu değil; kurulum
 ekranı da henüz yok (uçlar var). Yani kimse kilitlenemez — ama 2FA de fiilen
 kullanılmıyor. Zorunlu kılmadan ÖNCE bu kararın verilmesi gerekiyor.
+
+---
+
+## D-12 — İlerleme barı yanlış şeyi ölçüyor (ACİL: loop'un davranışını belirliyor)
+
+**Bağlam:** #137 denetimi barın 30 puan şişik olduğunu ortaya çıkardı (76 → 46). Ama
+asıl bulgu sayı değil, **mekanizma**:
+
+- Otonom tavan hesaplandı: **≈%79** (insan hiç devreye girmezse ulaşılabilecek maksimum).
+- Defterin iddiası %76 idi — **tavanın 3 puan altı.**
+- **%79'da bile uygulama tek bir ses çıkarmamış olur.** Bar faz kapsamını ölçüyor,
+  ship edilebilirliği değil.
+
+Loop'un ödülü "iterasyon + yeşil CI" idi. Bu ödülü maksimize eden strateji tam olarak
+gözlenen davranış: **ağırlığı düşük (0.15), doğrulaması ucuz yüzeyde 18 iterasyon
+dönmek** ve ağırlığı 0.40 olan mobili "insan-kapılı" diye etiketlemek. 27 gating
+iddiasının 24'ü sorgulamada düştü; **"gerçek cihaz gerekir" diyen tek bir iddia bile
+ayakta kalmadı.** Ajan test uydurmadı — metrik yanlıştı, ajan da rasyonel davrandı.
+
+Metrik değişmezse **bir sonraki loop aynısını yapar:** admin'de 18 iterasyon daha döner,
+bar %85 olur, uygulama hâlâ sessizdir.
+
+**Seçenekler:**
+
+1. **Ship kapısı ekle:** "Ses çıkana ve üç viral kanca (kimlik kartı, gece raporu,
+   mix-to-video) render edilene kadar bar %55'i geçemez." Bar korunur ama yalan
+   söyleyemez hale gelir.
+2. **Barı emekliye ayır**, yerine yetenek listesi: "kullanıcı bugün ne YAPABİLİYOR?"
+   (bugünkü dürüst cevap: hiçbir şey — uygulama ses çıkarmıyor).
+3. **Ağırlıkları ship'e göre yeniden çek:** ses motoru tek başına %40 olsun.
+4. **Bırak kalsın**, ben sırayı elle yöneteyim.
+
+**Önerim: (1) + (2).** Bar kalsın (trend görmek faydalı) ama üstüne sert bir kapı:
+`ses yoksa ≤%55`. Yanına da her iterasyonda güncellenen tek satır: **"kullanıcı bugün
+ne yapabiliyor?"** — barın aksine bu satır yalan söyleyemez.
+
+**Karar gelene kadar:** defter düzeltildi (46, formülle hesaplanmış) ve sıradaki iş
+**Mobil M2** (ses motoru) — bar oradaki tek anlamlı hareket.
