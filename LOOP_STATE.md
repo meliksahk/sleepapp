@@ -84,7 +84,7 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                       |
 | ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                                                                                                                                           |
+| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, veri export. ~~Dockerfile~~ ✓ #151 (build+Postgres'e karşı çalıştırıldı, express dep hatası düzeltildi)                                                                                 |
 | Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik. ~~TR arb~~ ✓ #149 (EN+TR + parity kapısı) |
 | Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                         |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                |
@@ -189,6 +189,28 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #151 — üretim Dockerfile'ı: build + Postgres'e karşı çalıştırılıp kanıtlandı (PR #151)
+
+✅ **Yapıldı ve doğrulandı (GERÇEKTEN çalıştırılarak, §0)**
+
+- Backend'in **ilk Dockerfile'ı** (repo'da 0'dı → deployment engelleyicisi). Çok
+  aşamalı, non-root, node-tabanlı healthcheck; `.dockerignore` secret'ları imajdan
+  tutuyor (§6).
+- **Yazıp bırakmadım — build edip Postgres'e karşı koşturdum:** `docker build` (797MB)
+  → `docker run` (production, gerçek Postgres, RS256 anahtar) → "Nest application
+  successfully started", **"Prisma bağlandı"**, `GET /health` **200**
+  `{"status":"ok"}`, `GET /v1/health/ready` **200** `{"db":"up"}` (Prisma SELECT 1),
+  `/docs` **200**, container "Up (healthy)", `id` → **non-root** `uid=1000(node)`.
+- 🔥 **GERÇEK gizli hata yakalandı:** `main.ts` `express`'i doğrudan import ediyordu
+  ama `express` `@nocta/api` deps'inde YOKTU (sadece `@nestjs/platform-express`).
+  Dev'de pnpm hoisting ile çalışıyor, izole prod deploy'da `Cannot find module
+'express'` ile patlıyordu. Düzeltme: express'i doğrudan bağımlılık olarak bildir.
+  **Dockerfile bir test süitinin göremediği bir hatayı ortaya çıkardı.**
+
+🔥 **Sınır / takip (dürüstlük):** **CI imajı build ETMİYOR** → bildirilmemiş-bağımlılık
+regresyonu tekrar sızabilir (Dockerfile'ı CI'a eklemek veya import↔deps kapısı ayrı iş).
+İmaj 797MB, boyut optimizasyonu yapılmadı.
 
 ### #149 — TR dili eklendi: §4 "EN + TR" borcu kapandı (PR #149)
 
