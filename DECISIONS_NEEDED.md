@@ -345,7 +345,17 @@ Bar kalır (trend faydalı) ama iki zorunluluk eklenir:
 
 Gerekçe: metrik değişmezse bir sonraki loop aynı ödülü aynı şekilde maksimize eder.
 
-## ⚖️ D-1 — Branch protection → BÖLÜNDÜ
+## ✅ D-1 — ÇÖZÜLDÜ (2026-07-17, kullanıcı izniyle)
+
+**Kullanıcı repoyu public yapmaya izin verdi. Yapıldı ve branch protection AÇILDI.**
+
+- Public yapmadan önce **352 commit'in tamamı** sır için tarandı: geçmişte gerçek `.env`
+  YOK (yalnızca `.env.example`), özel anahtar YOK, token YOK, `.env` gitignore'da.
+  Public yapmak geçmişin tamamını açar; bu tarama pazarlıksızdı.
+- `main` artık korumalı: **CI yeşil olmadan merge yok** (`TS workspace` + `Flutter`
+  zorunlu), force-push kapalı, silme kapalı. BLOCKERS B-4 de kapandı.
+
+### ~~Eski hali~~ (kayıt için)
 
 - **Bana ait olan kısım (yapılacak):** PR disiplinini platformdan bağımsız zorlamak —
   `main`'e doğrudan push'u engelleyen yerel hook + CI kapısı. Bunu yapabilirdim,
