@@ -6,7 +6,9 @@
 > 2. **Kimliğini GÖRSEL olarak paylaşabiliyor**: testi bitir → paylaş → 1080×1920 kart
 >    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
 > 3. **Gecesini GÖRSEL olarak paylaşabiliyor**: gece makbuzu kartı (#144).
-> 4. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
+> 4. **Mix'ini VİDEO olarak paylaşabiliyor**: 9:16 mp4 (h264+aac, 15 sn) — kendi sesi +
+>    audiogram + marka izi, native paylaşım sayfasına gidiyor. (#145) **Android'de.**
+> 5. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
 >    artık MÜMKÜN.
@@ -19,11 +21,18 @@
 > yapılmadı** (CLAUDE.md §1.1 — insana ait). Önceden render edilmiş buffer döngüleniyor;
 > nihai native graf değil. Döngü dikişi duyulabilir.
 
-## 🚧 İlerleme: **%55'te KİLİTLİ** (ship kapısı) — formül 55.55 — F1–F5
+## 🚧 İlerleme: **%58** — formül 57.55 — F1–F5
 
 ```
-[██████████████████████░░░░░░░░░░░░░░░░░░] 55% 🔒
+[███████████████████████░░░░░░░░░░░░░░░░░] 58%
 ```
+
+> ## 🔓 D-12 SHIP KAPISI AÇILDI (#145)
+>
+> Kapı şunu söylüyordu: _"ses çalana VE üç viral kancanın üçü de render edene kadar bar
+> %55'i geçemez."_ Üçü de artık render ediyor ve her biri **cihazda** doğrulandı:
+> kimlik kartı (#140), gece makbuzu (#144), mix-to-video (#145). Ses #138/#139'da çaldı.
+> Kapı bir temenniyle değil, kanıtla açıldı — bar yeniden formüle bırakıldı.
 
 > ## ⛔ #137 DÜZELTMESİ — BU BAR 30 PUAN ŞİŞİKTİ (76 → 46)
 >
@@ -45,14 +54,17 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                            |
-| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                |
-| Mobil       | ~62%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), uyku modu ekranı, 3 viral kanca (0 golden test) |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                              |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                     |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                  |
+| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                                                                                      |
+| Mobil       | ~67%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), akıllı alarm (ölü kod), paywall/entitlement, streak, haftalık içerik |
+| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                    |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                           |
 
-> **Hesap:** `0.40·62 + 0.30·70 + 0.15·32 + 0.15·33 = 55.55` → **≈56%**
+> **Hesap:** `0.40·67 + 0.30·70 + 0.15·32 + 0.15·33 = 57.55` → **≈58%**
+>
+> Mobil 62→67: mix-to-video (üçüncü ve son viral kanca) bitti ve deponun **ilk platform
+> kanalı** kuruldu — Kotlin↔Dart yolu artık açık (native ses grafı da oradan geçecek).
 >
 > ⛔ **D-12 SHIP KAPISI DEVREDE:** kural "üç viral kanca render edilene kadar bar
 > %55'i geçemez". Kanca #1 (kimlik kartı) ✅, #2 (gece raporu) ve #3 (mix-to-video)
@@ -148,6 +160,56 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #145 — mix-to-video: ÜÇÜNCÜ viral kanca çalışıyor (PR #145) → **D-12 KAPISI AÇILDI**
+
+✅ **Yapıldı ve doğrulandı**
+
+- **Mix → 9:16 mp4.** Mikser ekranında "Share as video" → on-device üretilen ses +
+  audiogram (dalga formu + ilerleyen playhead) + marka izi → native paylaşım sayfası.
+- **Emülatörde ÜRETİLDİ ve `ffprobe` ile doğrulandı** (test değil, dosya):
+  `h264 1080×1920 @24fps, 360 kare, 15.000 sn` + `aac 48kHz mono, 703 kare, 14.997 sn`,
+  2 akış, mp4. Ses `mean -18.4 dB / max -4.9 dB` → **sessiz değil**.
+  Çözülen kare gözle incelendi: audiogram, başlık, playhead %73'te (11/15 sn) — doğru.
+- **Deponun İLK platform kanalı** (`nocta/mix_video`). Kotlin↔Dart yolu artık açık;
+  native ses grafı (M2) da buradan geçecek. Sözleşme testle kilitli.
+- 30 yeni Dart testi; tüm süit **345 yeşil**.
+- **docs/04 §134 spike'ı yapıldı** (doküman şart koşmuştu) → **D-14**.
+
+🔥 **Yol boyunca bulunan İKİ gerçek hata** (ikisi de kendi kodumda)
+
+1. **3,7 GB tasarım hatası.** İlk hâli `encode(frames: List<IntArray>)` idi: 8,3 MB/kare
+   × 450 kare. Ne kanaldan geçer ne RAM'e sığar. → oturum tabanlı `pushFrame`.
+2. **Chroma hatası — yalnızca KAREYE BAKARAK bulundu.** NV12 varsayıp iç içe UV
+   yazıyordum. **Dosya üretildi, ffprobe temiz raporladı, video oynadı** — ama çözülen
+   karede metnin soluk renkli hayaletleri vardı. Luma kusursuz, chroma bozuk: bu cihazın
+   `COLOR_FormatYUV420Flexible`ı **düzlemsel I420** veriyor. → `getInputImage` (düzlem
+   stride'larına uyar; I420 da NV12 de kendiliğinden doğru).
+   **Ders: "dosya üretildi" + "ffprobe geçti" ≠ "kare doğru".** Bu, defterin
+   "yeşil test = ilerleme değil" kuralının tam olarak neye benzediğidir.
+
+❌ **Yapılmadı / eksik**
+
+- **iOS'ta mix-to-video YOK.** `AVAssetWriter` karşılığı Mac olmadan yazılamaz
+  (D-13/D-14). Buton iOS'ta gizli — basınca patlayan bir buton olmasın diye.
+  **D-13'ün üçüncü tetiği bununla çalıştı.**
+- Kullanıcının kendi arketip gradyanı videoya bağlı değil (sabit gradyan).
+- TR arb dosyası **hiç yok** — CLAUDE.md §4 "EN + TR" diyor. Bu #145'in getirdiği bir
+  eksik değil, **zaten var olan bir borç**; burada görünür kılınıyor.
+
+📌 **Varsayımlar**
+
+- 24 fps + 15 sn seçildi: kare başına bir render var (360 render ≈ 90 sn export).
+  Daha uzunu/hızlısı export'u dakikalara çıkarır, sosyal platformlar zaten kırpar.
+- 8 Mbps: gradyanda banding olmasın diye. Düşüğü denenmedi.
+
+🔥 **Riskler / açıklar**
+
+- Export **90 saniye** sürüyor (emülatörde). Gerçek cihazda daha hızlı olmalı ama
+  ölçülmedi. Kullanıcı bu süreyi bekler mi — bilinmiyor.
+- `renderFrame` testlerde sahte (`toImage` headless asılıyor, #140). Testler
+  orkestrasyonu kanıtlar, **çizimi değil** — çizimi cihaz kanıtladı.
+- Ses kalitesi kulaklıkla **insan tarafından yargılanmadı** (CLAUDE.md §1.1).
 
 ### #144 — gece raporu kartı: viral kanca #2 + D-10 uygulandı (PR #144, merged)
 

@@ -98,6 +98,14 @@
   2. TestFlight'a ilk build gerekiyor (o zaman ÖNCE Apple Developer hesabı), **veya**
   3. iOS'a özgü bir hata/derleme sorunu başka türlü doğrulanamıyor.
 
+- **TETİK DURUMU (#145 sonrası):** 3. tetik **çalıştı ama TEK BAŞINA yetmiyor.**
+  Mix-to-video Android'de bitti (`MediaCodec`); iOS'un `AVAssetWriter` karşılığı Mac
+  olmadan yazılamıyor → **iOS'ta üç viral kancadan biri eksik.** Yine de loop Mac
+  İSTEMİYOR, çünkü iOS'ta eksik olan tek şey bu değil: native ses grafı da yok. İki iş
+  aynı Mac oturumunda yapılmalı — biri için Mac açıp diğeri için tekrar açmak iki kat
+  maliyet olurdu. **Doğru an: Oboe (Android native graf) bitince** — o zaman 1. ve 3.
+  tetik birleşir ve tek oturumda ikisi de portlanır.
+
 - **KİMLİK BİLGİSİ BİÇİMİ (önemli):** parola sohbete YAZILMAZ. MacinCloud → **SSH
   anahtarı**; Apple → **App Store Connect API key (.p8)**. İkisi de `.env`'e girer,
   repoya asla (CLAUDE.md §6). Parola tabanlı erişim şartsa oturumu kullanıcı açar,
