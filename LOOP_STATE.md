@@ -7,6 +7,8 @@
 >    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
 > 3. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
+>    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
+>    artık MÜMKÜN.
 >
 > Bu satır D-12 kararıyla eklendi ve **barın aksine yalan söyleyemez**: her iterasyonda
 > "kullanıcı ne YAPABİLİYOR?" sorusuna cevap verir. 30 iterasyon boyunca bu satırın
@@ -145,6 +147,49 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #142 — gece kaydı ekran kapalıyken hayatta kalıyor (PR #142, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **Gerçek gece testinin ÖN KOŞULU kapatıldı.** #141'de uyku modu vardı ama bir gece
+  boyu çalışacağı garanti DEĞİLDİ: depoda sıfır foreground service/wakelock.
+  `targetSdk=36` → Android 14+ mikrofonu arka planda foreground service olmadan
+  ÖLDÜRÜR; kullanıcı sabah BOŞ raporla uyanırdı. `record` paketinin kendi dokümanı
+  da bunu söylüyor ("not supported by the plugin itself... use flutter_foreground_task").
+- `NightService` portu + `ForegroundNightService` (flutter_foreground_task 10, MIT).
+- **SERVİS BAŞLAMAZSA KAYIT DA BAŞLAMAZ** — mikrofon bırakılır, kullanıcıya söylenir.
+  Yarım çalışan gece takibi hiç çalışmayandan beter: kullanıcı ona güvenip uyur.
+  İzin reddinden AYRI gösterilir (biri kullanıcının seçimi, diğeri sistem sorunu).
+- Bildirim sessiz (LOW, playSound=false) ama **görünür** — mikrofonun açık olduğunu
+  kullanıcı gece boyunca görür. Bu bir bedel değil, dürüstlük.
+- **EMÜLATÖRDE KANITLANDI:** `isForeground=true, types=00000080`
+  (= FOREGROUND_SERVICE_TYPE_MICROPHONE) · HOME → `Standby: no` · **EKRAN KAPALI
+  (`mWakefulness=Asleep`) → mikrofon HÂLÂ açık, 60 sn sonra da** · geri dönünce sayaç
+  `00:02:19` (ekran kapalıyken saymaya devam etmiş) · bitir → `Standby: yes`,
+  foreground servis 0, DB `11:18:50→11:21:35`.
+- 5 yeni test. 301/301, analyze temiz, CI 2/2.
+
+⚠️ **Yapıldı, doğrulanmadı**
+
+- **Gerçek 8 saatlik gece HÂLÂ yapılmadı.** Emülatörde 60 sn kanıtlandı; gerçek
+  telefonda Doze ve üretici killer'ları (Xiaomi/Huawei/Samsung agresif) farklı
+  davranabilir.
+- Wakelock açık ama **pil etkisi ölçülmedi**.
+
+❌ **Yapılmadı / eksik**
+
+- **iOS arka plan yok** (`UIBackgroundModes: audio`) — bu makine win32.
+- **Gece verisi hâlâ bana ULAŞAMIYOR:** `apiBaseUrl: localhost` → telefon komodinde
+  PC'deki API'ye erişemez. Gerçek gece testinden ÖNCE bu ve dB zarfı dışa aktarımı
+  (docs/04 §120 fixture'ları) gerekiyor. **Sıradaki iş.**
+
+📌 **Varsayımlar** — kayıt ANA izolatta sürüyor, servisin işi yalnızca süreci hayatta
+tutmak (görev 15 dk'da bir tetiklenir, pil harcamaz).
+
+🔥 **Riskler / açıklar**
+
+- Emülatör Doze'u gerçek telefon gibi uygulamıyor olabilir; asıl kanıt gerçek gece.
 
 ### #141 — uyku modu: gerçek mikrofon, gece kaydediliyor (PR #141, merged)
 
