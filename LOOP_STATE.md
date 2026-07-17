@@ -2,7 +2,8 @@
 
 ## 🔊 Kullanıcı bugün ne yapabiliyor?
 
-> **Mikseri açıp SES DUYABİLİYOR ve slider'ı oynatınca ses değişiyor.** (#138)
+> **Mikseri açıp SES DUYABİLİYOR ve slider'ı oynatınca ses değişiyor — İNTERNETSİZ.**
+> (#138, #139)
 >
 > Bu satır D-12 kararıyla eklendi ve **barın aksine yalan söyleyemez**: her iterasyonda
 > "kullanıcı ne YAPABİLİYOR?" sorusuna cevap verir. 30 iterasyon boyunca bu satırın
@@ -136,6 +137,34 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #139 — mikser internetsiz çalışıyor (PR #139, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **CLAUDE.md §3.1 ihlali kapatıldı.** Kural ("mikser internetsiz TAM çalışır")
+  yazılıydı ama **zorlanmıyordu**: oturum kurulamazsa uygulamanın TAMAMI yeniden-dene
+  ikonuna düşüyor, tamamen yerel olan miksere bile ulaşılamıyordu.
+- Hata artık **çevrimdışı MOD** (router açılır) + çubuk + yeniden dene.
+- **KANIT — API KAPALI + `pm clear` ile oturum SİLİNMİŞ:** uygulama açıldı, çubuk
+  göründü, mikser açıldı, Play → **3 AudioTrack aktif**, kazançlar birebir
+  −6.9 / −10 / −20 dB. İnternetsiz ses çıkıyor.
+- 5 offline-first testi → kuralı artık **CI zorluyor** (insan disiplinine bırakılmıyor).
+- Yan bulgu: `appRouter` global singleton → testler arası sızıntı vardı, sıfırlandı.
+- 268/268 test, analyze temiz, CI 2/2 yeşil.
+
+⚠️ **Yapıldı, doğrulanmadı** — yok.
+
+❌ **Yapılmadı / eksik**
+
+- Çevrimdışıyken API isteyen ekranlar (archetype testi, kütüphane) kendi hatalarını
+  gösteriyor ama **yerel önbellek yok** — bir kez indirilen içerik çevrimdışı
+  görünmüyor. Ayrı iş (drift zaten bağımlılıkta).
+
+📌 **Varsayımlar** — çevrimdışı çubuğu tüm rotalarda görünür; miksere özel gizlemek
+"her şey yolunda" izlenimi verirdi.
+
+🔥 **Riskler / açıklar** — yok (bu iterasyon bir ihlali kapattı, yeni yüzey açmadı).
 
 ### #138 — MİKSER ÇALIYOR: uygulama ilk kez ses çıkardı (PR #138, merged)
 
