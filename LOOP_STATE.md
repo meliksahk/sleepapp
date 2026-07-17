@@ -2,8 +2,9 @@
 
 ## 🔊 Kullanıcı bugün ne yapabiliyor?
 
-> **Mikseri açıp SES DUYABİLİYOR ve slider'ı oynatınca ses değişiyor — İNTERNETSİZ.**
-> (#138, #139)
+> 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139)
+> 2. **Kimliğini GÖRSEL olarak paylaşabiliyor**: testi bitir → paylaş → 1080×1920 kart
+>    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
 >
 > Bu satır D-12 kararıyla eklendi ve **barın aksine yalan söyleyemez**: her iterasyonda
 > "kullanıcı ne YAPABİLİYOR?" sorusuna cevap verir. 30 iterasyon boyunca bu satırın
@@ -13,10 +14,10 @@
 > yapılmadı** (CLAUDE.md §1.1 — insana ait). Önceden render edilmiş buffer döngüleniyor;
 > nihai native graf değil. Döngü dikişi duyulabilir.
 
-## 🚧 İlerleme: ≈50% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: ≈53% — F1–F5 (otonom kapsam)
 
 ```
-[████████████████████░░░░░░░░░░░░░░░░░░░░] 50%
+[█████████████████████░░░░░░░░░░░░░░░░░░░] 53%
 ```
 
 > ## ⛔ #137 DÜZELTMESİ — BU BAR 30 PUAN ŞİŞİKTİ (76 → 46)
@@ -42,11 +43,11 @@
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                            |
 | ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                |
-| Mobil       | ~48%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), uyku modu ekranı, 3 viral kanca (0 golden test) |
+| Mobil       | ~55%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), uyku modu ekranı, 3 viral kanca (0 golden test) |
 | Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                              |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                     |
 
-> **Hesap:** `0.40·48 + 0.30·70 + 0.15·32 + 0.15·33 = 49.95` → **≈50%**
+> **Hesap:** `0.40·55 + 0.30·70 + 0.15·32 + 0.15·33 = 52.75` → **≈53%**
 >
 > **D-12 ship kapısı:** "ses yoksa ≤%55" kuralı aktif. Ses ÇIKIYOR (#138) ama üç viral
 > kanca (kimlik kartı, gece raporu, mix-to-video) henüz render edilmiyor → **kapı hâlâ
@@ -137,6 +138,45 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #140 — kimlik paylaşım kartı: viral kanca #1 ÇALIŞIYOR (PR #140, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Uygulama "paylaş"a basınca panoya **LİNK** kopyalıyordu — görsel hiç gitmiyordu.
+  docs/04 §103'ün 1080×1920 kartı depoda **hiç yoktu** (0 RepaintBoundary, 0 golden).
+- `core/media/card_renderer.dart`: widget → PNG, **kendi render hattında**.
+- **EMÜLATÖRDE: "Kimlik kartı render: 258ms (bütçe 300ms) İÇİNDE"** → M1 çıkış kriteri
+  (docs/04 §105) **İLK KEZ ölçüldü ve karşılandı**; bugüne dek ölçülemiyordu bile.
+- Paylaşım sayfası **"Sharing image"** diyor, önizlemede gerçek kart (gerçek fontlar).
+- `Sharer` port'u görsel taşıyor + `PlatformSharer` (share_plus) takıldı — port'un
+  kendi yorumu bunu zaten öngörüyordu. **Paralel yol açmadım**: ilk yazdığım ayrı
+  `ShareIdentityButton`'ı sildim, kartı mevcut viral ana (test sonucu) bağladım.
+- 8 kart testi (2 golden 1080×1920) + mevcut paylaş testi artık PNG baytlarını
+  doğruluyor. 280/280, analyze temiz, CI 2/2.
+
+⚠️ **Yapıldı, doğrulanmadı**
+
+- **Kart tasarımı insan gözüyle onaylanmadı.** "Render oluyor, bütçe içinde" ✅ —
+  "güzel ve paylaşılası" **bilinmiyor**.
+- Golden'lar **test fontuyla** (Ahem) render oluyor → geometriyi sabitliyorlar,
+  tipografiyi değil.
+
+❌ **Yapılmadı / eksik**
+
+- Kare varyant (docs/04 §103 "1080×1920 + kare varyant") yok.
+- Kalan iki viral kanca: gece raporu kartı, mix-to-video.
+
+📌 **Varsayımlar** — `share_plus` (MIT); render bütçesi emülatörde ölçüldü, gerçek
+cihaz farklı olabilir (debug headless test 594ms diyor → bütçe testte assert
+EDİLMİYOR, cihazda ölçülüyor).
+
+🔥 **Riskler / açıklar**
+
+- **ÖĞRENİLEN, kayda geçsin:** "gizli ama boyanan widget" yok. `Offstage` ve ekran
+  dışı `Positioned` boyamayı kesiyor → `toImage` `'!debugNeedsPaint'` ile düşüyor.
+  Kodda tam tersini iddia eden bir yorum yazmıştım; yanlıştı. Doğrusu: ağaçtan
+  bağımsız render hattı. (Beklenmedik fayda: headless testte de çalışıyor.)
 
 ### #139 — mikser internetsiz çalışıyor (PR #139, merged)
 
