@@ -9,10 +9,11 @@
 > 4. **Mix'ini VİDEO olarak paylaşabiliyor**: 9:16 mp4 (h264+aac, 15 sn) — kendi sesi +
 >    audiogram + marka izi, native paylaşım sayfasına gidiyor. (#145) **Android'de.**
 > 5. **Alarm kurabiliyor ve UYANDIRILIYOR**: hafif uyku sinyalinde erken, yoksa son
->    tarihte koşulsuz — cihazda üretilen çan sesiyle. (#146) Emülatörde (DEBUG) çaldığı
->    `dumpsys audio` ile doğrulanmıştı. Alarm mikserle **aynı** just_audio bellek-WAV
->    yolunu kullanıyor → #147 fix'i buna da uygulanır; release'de **mikseri** doğruladım
->    (aynı yol), alarmı release'de ayrıca yeniden doğrulamadım (dürüstlük notu).
+>    tarihte koşulsuz — cihazda üretilen çan sesiyle. (#146) **RELEASE build'de
+>    doğrulandı** (#147 sonrası): alarm koşulsuz çaldı, `dumpsys audio` →
+>    `state:started usage=USAGE_ALARM` (MEDYA değil → DND/sessiz modda bile duyulur),
+>    ekranda "Time to wake up.", kayıt sürüyordu. Böylece hem #146'nın açık `USAGE_ALARM`
+>    riski hem de alarmın release-sesi tek testte kapandı.
 > 6. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
@@ -214,10 +215,16 @@ just_audio'nun `androidApplyAudioAttributes` (varsayılan true) player'ı global
 
 ❌ **Yapılmadı / eksik**
 
-- 🔥 **`USAGE_ALARM` düzeltmesi cihazda YENİDEN DOĞRULANMADI.** Emülatör kararsızlaştı
-  (`FlutterRenderer: Width is zero`, uygulama splash'ta asılı). Birim testi niteliğin
-  verildiğini kanıtlar ama **beni ısıran hatayı yakalayamaz** — o yalnızca `dumpsys`'te
-  görülür. **Bu bir RİSK, kapanmış iş değil.**
+- ✅ **`USAGE_ALARM` riski KAPANDI — cihazda `dumpsys` ile doğrulandı (#147 sonrası tur).**
+  RELEASE build'de (main = #146+#147) alarm 5:41 PM'e kuruldu, kayıt başlatıldı, cihaz
+  saati son tarihin ötesine atlatıldı; alarm koşulsuz çaldı. `dumpsys audio`:
+  `piid:183 type:AudioTrack uid:10197(NOCTA) state:started usage=USAGE_ALARM
+content=CONTENT_TYPE_SONIFICATION sampleRate=48000`. Yani alarm ALARM kanalından
+  çalıyor (MEDYA değil) — gece medya kısık/DND olsa da duyulur. Ekranda "Time to wake
+  up." + "Stop alarm", kayıt sürüyordu (00:58:07, "Listening…"). Bonus: SocketException
+  yok → **alarm sesi RELEASE'de de çalıyor** (F5'in eksik yarısı da kapandı).
+  Not: `dumpsys`teki `usage=USAGE_MEDIA` satırı player değil, global AudioFocus girişi —
+  kodun dediği gibi global oturum MEDIA kalır, alarm player'ı niteliği kendi verir.
 - Bildirim yok (yeni bağımlılık, kapsam dışı bırakıldı) → ekran kapalıyken yalnız ses.
 - TR arb dosyası **hiç yok** (CLAUDE.md §4 "EN + TR" diyor) — önceden var olan borç.
 
