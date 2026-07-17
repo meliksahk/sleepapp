@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/archetype/presentation/archetype_detail_screen.dart';
 import '../features/archetype/presentation/archetype_history_screen.dart';
@@ -8,15 +9,14 @@ import '../features/home/home_screen.dart';
 import '../features/mixer/presentation/mixer_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sleep/presentation/night_report_screen.dart';
+import '../features/sleep/presentation/sleep_mode_screen.dart';
 import '../features/sleep/presentation/sleep_history_screen.dart';
+import '../features/sleep/sleep_providers.dart';
 
 /// Uygulama route'ları — tek dosyada tip güvenli (docs/04). M1'de büyür.
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeScreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
     GoRoute(
       path: '/archetype',
       builder: (context, state) => const ArchetypeTestScreen(),
@@ -31,9 +31,13 @@ final GoRouter appRouter = GoRouter(
           ArchetypeDetailScreen(slug: state.pathParameters['slug'] ?? ''),
     ),
     GoRoute(
-      path: '/mixer',
-      builder: (context, state) => const MixerScreen(),
+      path: '/sleep-mode',
+      builder: (context, state) => Consumer(
+        builder: (context, ref, _) =>
+            SleepModeScreen(controller: ref.read(sleepModeControllerProvider)),
+      ),
     ),
+    GoRoute(path: '/mixer', builder: (context, state) => const MixerScreen()),
     GoRoute(
       path: '/library',
       builder: (context, state) => const SoundscapeLibraryScreen(),
@@ -49,7 +53,8 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/report/:night',
-      builder: (context, state) => NightReportScreen(nightDate: state.pathParameters['night'] ?? ''),
+      builder: (context, state) =>
+          NightReportScreen(nightDate: state.pathParameters['night'] ?? ''),
     ),
     GoRoute(
       path: '/settings',

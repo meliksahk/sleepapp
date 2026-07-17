@@ -1,0 +1,186 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:nocta/core/sleep_tracking/mic_source.dart';
+import 'package:nocta/core/sleep_tracking/sleep_recorder.dart';
+import 'package:nocta/core/sleep_tracking/sleep_session_builder.dart';
+import 'package:nocta/features/sleep/presentation/sleep_mode_screen.dart';
+import 'package:nocta/features/sleep/sleep_controller.dart';
+import 'package:nocta/features/sleep/sleep_models.dart';
+import 'package:nocta/features/sleep/sleep_mode_controller.dart';
+import 'package:nocta/l10n/app_localizations.dart';
+
+/// Uyku modu ekranı — kullanıcının mikrofona ULAŞTIĞI yer.
+///
+/// #128–#132'de uyku takibi mantığı yazıldı, test edildi, yeşil geçti — ve kullanıcı
+/// ona hiç ulaşamadı. Bu ekran o kapı; testler de kapının gerçekten açıldığını
+/// kanıtlıyor.
+class _FakeSleep implements SleepController {
+  final List<SleepSessionDraft> saved = [];
+  Object? throwOnSave;
+
+  @override
+  Future<SleepSession> recordSession(SleepSessionDraft draft) async {
+    if (throwOnSave != null) throw throwOnSave!;
+    saved.add(draft);
+    return SleepSession(
+      id: 's1',
+      startedAt: draft.startedAt.toIso8601String(),
+      endedAt: draft.endedAt.toIso8601String(),
+      nightDate: '2026-07-17',
+      durationMinutes: draft.duration.inMinutes,
+      movementEvents: draft.movementEvents,
+      soundEvents: draft.soundEvents,
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+void main() {
+  Float32List frame(double a, {int n = 256}) {
+    final f = Float32List(n);
+    for (var i = 0; i < n; i++) {
+      f[i] = i.isEven ? a : -a;
+    }
+    return f;
+  }
+
+  List<Float32List> night({int events = 2}) {
+    final out = <Float32List>[];
+    out.addAll(List.generate(40, (_) => frame(0.0001)));
+    for (var i = 0; i < events; i++) {
+      out.addAll(List.generate(5, (_) => frame(0.5)));
+      out.addAll(List.generate(30, (_) => frame(0.0001)));
+    }
+    return out;
+  }
+
+  /// `pumpAndSettle` TEK BAŞINA YETMEZ: başlat/bitir zincirleri gerçek async
+  /// (akış aboneliği, kayıt) ve mikrotask'ları ancak pump'lar arasında boşalır.
+  /// Tek settle ile iddia, `recordSession` hiç çağrılmadan koşuyordu.
+  Future<void> settle(WidgetTester t) async {
+    for (var i = 0; i < 5; i++) {
+      await t.pump(const Duration(milliseconds: 20));
+    }
+    await t.pumpAndSettle();
+  }
+
+  Future<SleepModeController> pump(
+    WidgetTester t, {
+    bool permission = true,
+    _FakeSleep? sleep,
+    List<Float32List>? frames,
+  }) async {
+    final controller = SleepModeController(
+      recorder: SleepRecorder(
+        mic: FakeMicSource(frames ?? night(), permission: permission),
+        now: () => DateTime.utc(2026, 7, 17, 23),
+      ),
+      sleep: sleep ?? _FakeSleep(),
+    );
+    await t.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppL10n.localizationsDelegates,
+        supportedLocales: AppL10n.supportedLocales,
+        home: SleepModeScreen(controller: controller),
+      ),
+    );
+    await t.pumpAndSettle();
+    return controller;
+  }
+
+  testWidgets('ÇEKİRDEK: gizlilik notu mikrofon AÇILMADAN ÖNCE görünür', (t) async {
+    await pump(t);
+
+    // Kullanıcı izni verirken ne olduğunu BİLMELİ. Bunu ayarlara gömmek, iznin
+    // bilinçli olmasını engellerdi (CLAUDE.md §6'nın kullanıcıya söylenmiş hali).
+    expect(find.byKey(const Key('sleep-privacy')), findsOneWidget);
+    expect(
+      find.textContaining('never leaves'),
+      findsOneWidget,
+      reason: 'ham sesin cihazdan çıkmadığı AÇIKÇA yazmalı',
+    );
+  });
+
+  testWidgets('izin reddedilirse HATA gibi gösterilmez, kayıt başlamaz', (t) async {
+    final c = await pump(t, permission: false);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await t.pumpAndSettle();
+
+    expect(find.byKey(const Key('sleep-permission-denied')), findsOneWidget);
+    expect(c.state.isRecording, isFalse);
+    // "Bir şeyler ters gitti" DEĞİL: kullanıcı bilinçli bir seçim yaptı.
+    expect(c.state.error, isNull);
+  });
+
+  testWidgets('ÇEKİRDEK: başlat → kayıt sürüyor, geçen süre ve sayaç görünür', (t) async {
+    final c = await pump(t);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await t.pumpAndSettle();
+
+    expect(c.state.isRecording, isTrue);
+    expect(find.byKey(const Key('sleep-elapsed')), findsOneWidget);
+    // Canlı sayaç: gece kalkan kullanıcı "çalışıyor mu?" sorusunun cevabını görür.
+    expect(find.byKey(const Key('sleep-event-count')), findsOneWidget);
+  });
+
+  testWidgets('ÇEKİRDEK: bitir → oturum SUNUCUYA yazılır (ölü kod artık canlı)', (t) async {
+    final sleep = _FakeSleep();
+    await pump(t, sleep: sleep);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    // `recordSession`ın #131'den beri ilk gerçek çağrısı.
+    expect(sleep.saved, hasLength(1));
+    expect(find.byKey(const Key('sleep-saved')), findsOneWidget);
+  });
+
+  testWidgets('ÇEKİRDEK: sunucuya giden gövdede HAM SES YOK (CLAUDE.md §6)', (t) async {
+    final sleep = _FakeSleep();
+    await pump(t, sleep: sleep);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    final body = sleep.saved.single.toJson();
+    // Gövde YALNIZCA: zaman + iki sayı. Ses/örnek/frame taşıyan hiçbir alan yok.
+    expect(body.keys.toSet(), {'startedAt', 'endedAt', 'movementEvents', 'soundEvents'});
+    expect(body.values.whereType<List<dynamic>>(), isEmpty, reason: 'dizi = ham veri şüphesi');
+  });
+
+  testWidgets('sunucu hatası geceyi YOK SAYMAZ (özet yine görünür)', (t) async {
+    final sleep = _FakeSleep()..throwOnSave = Exception('ağ yok');
+    await pump(t, sleep: sleep);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    // Gece geçti, veri cihazda üretildi: sunucuya yazılamaması onu yok saymaz.
+    expect(find.byKey(const Key('sleep-saved')), findsOneWidget);
+    expect(find.byKey(const Key('sleep-save-failed')), findsOneWidget);
+  });
+
+  testWidgets('sessiz gecede SIFIR olay raporlanır (hayalet olay yok)', (t) async {
+    final sleep = _FakeSleep();
+    await pump(t, sleep: sleep, frames: List.generate(80, (_) => frame(0.0001)));
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    expect(sleep.saved.single.soundEvents, 0);
+  });
+}
