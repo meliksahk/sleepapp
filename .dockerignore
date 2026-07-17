@@ -1,0 +1,29 @@
+# Docker build context'ini küçük tutar ve SECRET'ların imaja girmesini engeller
+# (CLAUDE.md §6: .env asla repoya/imaja girmez). Build context = repo kökü.
+
+# Bağımlılıklar ve build çıktıları — imajda yeniden kurulur/üretilir
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/.dart_tool
+apps/mobile/build
+apps/mobile/android/.gradle
+apps/mobile/.flutter-plugins*
+
+# VCS ve editör
+.git
+.github
+**/*.log
+
+# SECRET'lar — imaja ASLA girmez (yalnızca runtime env'den okunur)
+.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Geliştirme/araç dosyaları imaja gerekmez
+**/*.spec.ts
+**/*.test.ts
+scratchpad
