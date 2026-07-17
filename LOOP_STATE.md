@@ -5,7 +5,8 @@
 > 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139)
 > 2. **Kimliğini GÖRSEL olarak paylaşabiliyor**: testi bitir → paylaş → 1080×1920 kart
 >    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
-> 3. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
+> 3. **Gecesini GÖRSEL olarak paylaşabiliyor**: gece makbuzu kartı (#144).
+> 4. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
 >    artık MÜMKÜN.
@@ -147,6 +148,41 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #144 — gece raporu kartı: viral kanca #2 + D-10 uygulandı (PR #144, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **Viral kanca #2 çalışıyor.** Gece raporunun paylaşımı da LİNK kopyalıyordu;
+  docs/04 §119'un "gece makbuzu" kartı yoktu. #140'ın render hattı doğrudan kullanıldı
+  — ikinci kanca için altyapı yazmaya gerek kalmadı.
+- **D-10 KARARI UYGULANDI** (verilmişti, uygulanmamıştı): "Sound events" →
+  "Louder moments"; **"Movement events" satırı KALDIRILDI** (ekrandan ve karttan).
+  Alan #141'den beri HER ZAMAN 0 ve hareketi ölçmüyoruz — "Movement: 0" göstermek
+  ölçmediğimiz bir şeyi ölçmüş gibi sunmaktır; **sıfır bile bir iddiadır**.
+- Sağlık iddiası uyarısı **KARTIN ÜSTÜNDE**: kart paylaşılıyor, uyarı ekranda
+  kalırsa kartı gören "Calm 78/100"u sağlık skoru sanar (CLAUDE.md §1.1).
+- **TESTİN YAKALADIĞI HATA:** uzun kimlik adı satırı **820 piksel taşırıyordu** →
+  kart bozuk paylaşılırdı. `Flexible` + ellipsis.
+- **CI'NIN YAKALADIĞI HATA:** golden Windows'ta üretilip Linux'ta karşılaştırılınca
+  **%0.24 fark** (AA/rasterleştirme). Toleranslı karşılaştırıcı (%0.5) + `flutter_test_config`.
+  **Kapının işlevsizleşmediği KANITLANDI:** yazı boyutu 132→120 → **%7.13 fark ile
+  yakalandı**. Mertebeler: gürültü 0.24 · eşik 0.5 · gerçek regresyon 7.13.
+- 10 kart testi + 2 mevcut test doğru şekilde kırılıp güncellendi. 325/325, CI 2/2.
+
+⚠️ **Yapıldı, doğrulanmadı** — kart tasarımı insan gözüyle onaylanmadı; golden'lar
+test fontuyla (geometri sabit, tipografi değil).
+
+❌ **Yapılmadı / eksik**
+
+- **Sparkline yok** (docs/04 §119 "olay zaman çizelgesi"): API yalnızca sayı
+  döndürüyor, olay zamanları yok. Zarf (#143) o veriye sahip ama kalıcı değil.
+- **Archetype'a göre tek cümlelik yorum yok** (yerel kural motoru yazılmadı).
+
+📌 **Varsayımlar** — golden toleransı %0.5 (gözlenen platform gürültüsünün 2 katı).
+
+🔥 **Riskler / açıklar** — tolerans çok küçük bir gerçek değişikliği kaçırabilir;
+alternatif CI'da golden'ı hiç koşturmamaktı (o zaman regresyon HİÇ yakalanmazdı).
 
 ### #143 — gece fixture'ı + API adresi (PR #143, merged) → **GERÇEK GECE TESTİ ARTIK MÜMKÜN**
 
