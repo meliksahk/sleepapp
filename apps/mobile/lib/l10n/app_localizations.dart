@@ -279,6 +279,54 @@ abstract class AppL10n {
   /// **'Sound could not start.'**
   String get mixerFailed;
 
+  /// Gece raporu kartı başlığı — 'makbuz' metaforu: iddia taşımaz, kayıt tutar
+  ///
+  /// In en, this message translates to:
+  /// **'Night receipt'**
+  String get reportCardHeader;
+
+  /// Kartta süre — biçim yerele bağlı
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String reportCardDuration(int hours, int minutes);
+
+  /// Kartta dinginlik satırı etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Calm'**
+  String get reportCardCalm;
+
+  /// D-10: ölçtüğümüz şey bu — 'hareket' değil
+  ///
+  /// In en, this message translates to:
+  /// **'Louder moments'**
+  String get reportCardLoud;
+
+  /// Kartta seri satırı
+  ///
+  /// In en, this message translates to:
+  /// **'Night streak'**
+  String get reportCardStreak;
+
+  /// Kartta uyku kimliği satırı
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get reportCardIdentity;
+
+  /// CLAUDE.md §1.1 — kart paylaşılıyor, uyarı kartın ÜSTÜNDE olmalı
+  ///
+  /// In en, this message translates to:
+  /// **'An in-app calm measure for your sleep ritual. Not a health score.'**
+  String get reportCardDisclaimer;
+
+  /// Gece raporu paylaşım metni
+  ///
+  /// In en, this message translates to:
+  /// **'My night on NOCTA'**
+  String get reportShareText;
+
   /// Gece raporu ekranı başlığı
   ///
   /// In en, this message translates to:
@@ -309,6 +357,12 @@ abstract class AppL10n {
   /// **'Sessions'**
   String get nightReportSessions;
 
+  /// D-10: ölçtüğümüz şeyin ne olduğunu açıkça söyler
+  ///
+  /// In en, this message translates to:
+  /// **'Short bursts of sound the app heard. Not movement — we don’t measure that.'**
+  String get nightReportLoudHint;
+
   /// On-device türetilmiş hareket olayı sayısı
   ///
   /// In en, this message translates to:
@@ -318,7 +372,7 @@ abstract class AppL10n {
   /// On-device türetilmiş ses olayı sayısı
   ///
   /// In en, this message translates to:
-  /// **'Sound events'**
+  /// **'Louder moments'**
   String get nightReportSoundEvents;
 
   /// Gece raporu paylaşım butonu (viral kanca #2)

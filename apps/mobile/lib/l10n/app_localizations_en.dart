@@ -124,6 +124,33 @@ class AppL10nEn extends AppL10n {
   String get mixerFailed => 'Sound could not start.';
 
   @override
+  String get reportCardHeader => 'Night receipt';
+
+  @override
+  String reportCardDuration(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get reportCardCalm => 'Calm';
+
+  @override
+  String get reportCardLoud => 'Louder moments';
+
+  @override
+  String get reportCardStreak => 'Night streak';
+
+  @override
+  String get reportCardIdentity => 'Identity';
+
+  @override
+  String get reportCardDisclaimer =>
+      'An in-app calm measure for your sleep ritual. Not a health score.';
+
+  @override
+  String get reportShareText => 'My night on NOCTA';
+
+  @override
   String get nightReportTitle => 'Night report';
 
   @override
@@ -142,10 +169,14 @@ class AppL10nEn extends AppL10n {
   String get nightReportSessions => 'Sessions';
 
   @override
+  String get nightReportLoudHint =>
+      'Short bursts of sound the app heard. Not movement — we don’t measure that.';
+
+  @override
   String get nightReportMovementEvents => 'Movement events';
 
   @override
-  String get nightReportSoundEvents => 'Sound events';
+  String get nightReportSoundEvents => 'Louder moments';
 
   @override
   String get nightReportShare => 'Share this night';
