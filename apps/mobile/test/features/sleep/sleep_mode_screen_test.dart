@@ -295,7 +295,7 @@ void main() {
     // `utf8.decode` — `String.fromCharCodes` UTF-8 baytlarını tek tek karakter sanar
     // ve Türkçe'yi bozar. Dosya UTF-8 kodlanmış olmalı (ShareFile.csv öyle yapıyor);
     // `codeUnits` ile kodlasaydık başlıklar alıcı tarafta bozuk çıkardı.
-    final csv = utf8.decode(f.bytes);
+    final csv = utf8.decode(f.bytes!);
     expect(csv, contains('second,minDb,meanDb,maxDb,frames'));
     expect(csv, contains('HAM SES DEĞİL'));
   });

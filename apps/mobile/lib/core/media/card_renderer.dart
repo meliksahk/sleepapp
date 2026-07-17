@@ -60,7 +60,29 @@ Future<RenderedCard> renderWidgetToPng(
   double pixelRatio = 1.0,
 }) async {
   final sw = Stopwatch()..start();
+  final bytes = await _renderWidget(widget, size, pixelRatio, ui.ImageByteFormat.png);
+  sw.stop();
+  return RenderedCard(pngBytes: bytes, elapsed: sw.elapsed);
+}
 
+/// [widget]'ı ham RGBA8888 baytlarına çevirir (width*height*4).
+///
+/// **NEDEN AYRI:** mix-to-video kareleri video kodlayıcıya beslenir, dosyaya yazılmaz.
+/// Her kareyi PNG'ye SIKIŞTIRIP native tarafta AÇMAK saf israf olurdu — saniyede 30
+/// kez, kare başına 8 MB. Kodlayıcının istediği zaten ham piksel.
+Future<Uint8List> renderWidgetToRgba(
+  Widget widget, {
+  required Size size,
+  double pixelRatio = 1.0,
+}) =>
+    _renderWidget(widget, size, pixelRatio, ui.ImageByteFormat.rawRgba);
+
+Future<Uint8List> _renderWidget(
+  Widget widget,
+  Size size,
+  double pixelRatio,
+  ui.ImageByteFormat format,
+) async {
   final view = WidgetsBinding.instance.platformDispatcher.implicitView;
   if (view == null) {
     throw StateError('Kart render edilemedi: platform view yok.');
@@ -98,12 +120,11 @@ Future<RenderedCard> renderWidgetToPng(
 
     final ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
     try {
-      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      final data = await image.toByteData(format: format);
       if (data == null) {
-        throw StateError('Kart render edilemedi: PNG kodlaması boş döndü.');
+        throw StateError('Kart render edilemedi: kodlama boş döndü.');
       }
-      sw.stop();
-      return RenderedCard(pngBytes: data.buffer.asUint8List(), elapsed: sw.elapsed);
+      return data.buffer.asUint8List();
     } finally {
       // GPU belleği: bırakılmazsa her paylaşımda bir görsel sızar.
       image.dispose();

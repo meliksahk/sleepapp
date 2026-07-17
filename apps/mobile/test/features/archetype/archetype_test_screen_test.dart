@@ -235,7 +235,7 @@ void main() {
       expect(sharer.last?.text, contains('Deep Ocean'));
       // ÇEKİRDEK: link değil GÖRSEL paylaşılıyor (docs/04 §103).
       expect(sharer.last?.file, isNotNull, reason: 'kimlik kartı PNG olarak gitmeli');
-      expect(sharer.last!.file!.bytes.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47],
+      expect(sharer.last!.file!.bytes!.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47],
           reason: 'gerçek PNG olmalı');
       // MIME tipi veriyle gelmeli — kart PNG, gece zarfı CSV.
       expect(sharer.last!.file!.mimeType, 'image/png');

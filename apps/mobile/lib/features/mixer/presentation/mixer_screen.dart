@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/audio_engine/dsp/mix_render.dart';
+import '../../../core/design_system/design_system.dart';
+import '../../../core/share/sharer.dart';
 import '../../../l10n/app_localizations.dart';
 import '../mixer_controller.dart';
 
@@ -9,10 +12,18 @@ import '../mixer_controller.dart';
 /// Slider'lar `setLayerGain`'e gider: yeniden render yok, ses kesilmez, değişim
 /// anında duyulur.
 class MixerScreen extends StatefulWidget {
-  const MixerScreen({super.key, this.controller});
+  const MixerScreen({super.key, this.controller, this.sharer, this.canExportVideo});
 
   /// Test sahte controller enjekte edebilsin diye (cihazsız widget testi).
   final MixerController? controller;
+
+  final Sharer? sharer;
+
+  /// Video export'u bu platformda mümkün mü.
+  ///
+  /// **Varsayılan `Platform.isAndroid` DEĞİL, `defaultTargetPlatform`:** ilki testte
+  /// host'u (Windows) görür ve butonu her zaman gizlerdi. Null → gerçek platform.
+  final bool? canExportVideo;
 
   @override
   State<MixerScreen> createState() => _MixerScreenState();
@@ -20,6 +31,12 @@ class MixerScreen extends StatefulWidget {
 
 class _MixerScreenState extends State<MixerScreen> {
   late final MixerController _c;
+  late final Sharer _sharer = widget.sharer ?? PlatformSharer();
+
+  /// iOS'ta native kodlayıcı YOK (D-13/D-14: `AVAssetWriter` Mac olmadan yazılamadı).
+  /// Butonu göstermek, basınca `MissingPluginException` atan bir buton olurdu.
+  bool get _canExportVideo =>
+      widget.canExportVideo ?? defaultTargetPlatform == TargetPlatform.android;
 
   @override
   void initState() {
@@ -71,7 +88,10 @@ class _MixerScreenState extends State<MixerScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  l10n.mixerFailed,
+                  // Ses hatası mı export hatası mı — kullanıcıya doğru olanı söyle.
+                  s.errorKind == MixerErrorKind.export
+                      ? l10n.mixerExportFailed
+                      : l10n.mixerFailed,
                   key: const Key('mixer-error'),
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
@@ -112,8 +132,51 @@ class _MixerScreenState extends State<MixerScreen> {
                     : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
               ),
             ),
+
+            // Viral kanca #3 (docs/04 §131). iOS'ta gizli: native kodlayıcı yok.
+            if (_canExportVideo) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                key: const Key('mixer-export-video'),
+                onPressed: s.isExporting ? null : _exportVideo,
+                icon: const Icon(Icons.movie_creation_outlined),
+                label: Text(
+                  s.isExporting
+                      ? l10n.mixerExporting((s.exportProgress! * 100).round())
+                      : l10n.mixerExportVideo,
+                ),
+              ),
+              if (s.isExporting)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: LinearProgressIndicator(
+                    key: const Key('mixer-export-progress'),
+                    value: s.exportProgress,
+                  ),
+                ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _exportVideo() async {
+    final l10n = AppL10n.of(context);
+    final path = await _c.exportVideo(
+      title: l10n.mixerVideoTitle,
+      // Kimlik gradyanı henüz mikser ekranına bağlı değil — sabit gradyan.
+      // ❌ EKSİK: kullanıcının kendi arketip gradyanı kullanılmalı (ayrı iş).
+      gradient: NoctaArchetypeGradient.overthinker,
+    );
+    // Hata state'e yazıldı ve ekranda gösteriliyor; burada paylaşacak bir şey yok.
+    if (path == null || !mounted) return;
+
+    await _sharer.share(
+      ShareContent(
+        text: l10n.mixerExportShareText,
+        url: 'https://nocta.app',
+        file: ShareFile.mp4(path: path, filename: 'nocta-mix.mp4'),
       ),
     );
   }

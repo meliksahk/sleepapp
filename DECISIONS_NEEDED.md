@@ -98,6 +98,14 @@
   2. TestFlight'a ilk build gerekiyor (o zaman ÖNCE Apple Developer hesabı), **veya**
   3. iOS'a özgü bir hata/derleme sorunu başka türlü doğrulanamıyor.
 
+- **TETİK DURUMU (#145 sonrası):** 3. tetik **çalıştı ama TEK BAŞINA yetmiyor.**
+  Mix-to-video Android'de bitti (`MediaCodec`); iOS'un `AVAssetWriter` karşılığı Mac
+  olmadan yazılamıyor → **iOS'ta üç viral kancadan biri eksik.** Yine de loop Mac
+  İSTEMİYOR, çünkü iOS'ta eksik olan tek şey bu değil: native ses grafı da yok. İki iş
+  aynı Mac oturumunda yapılmalı — biri için Mac açıp diğeri için tekrar açmak iki kat
+  maliyet olurdu. **Doğru an: Oboe (Android native graf) bitince** — o zaman 1. ve 3.
+  tetik birleşir ve tek oturumda ikisi de portlanır.
+
 - **KİMLİK BİLGİSİ BİÇİMİ (önemli):** parola sohbete YAZILMAZ. MacinCloud → **SSH
   anahtarı**; Apple → **App Store Connect API key (.p8)**. İkisi de `.env`'e girer,
   repoya asla (CLAUDE.md §6). Parola tabanlı erişim şartsa oturumu kullanıcı açar,
@@ -290,6 +298,23 @@ ne yapabiliyor?"** — barın aksine bu satır yalan söyleyemez.
 
 > Bunları vermek zaten benim işimdi. Her biri gerekçesiyle burada; itiraz eden
 > düzeltir. Artık "bekliyor" değiller.
+
+## ✅ D-14 — mix-to-video mux → **NATIVE** (ffmpeg-kit öldü, fork'u GPL)
+
+docs/04 §134 bu kararı öngörmüştü: _"ffmpeg_kit lisansı (LGPL yapılandırması) ve iOS
+binary boyutu bu fazda doğrulanacak — alternatif AVAssetWriter/MediaMuxer. Native yol
+daha çok iş ama sıfır lisans riski; faz başında spike yapılır."_ Spike yapıldı:
+
+- **`arthenica/ffmpeg-kit` GitHub'da ARŞİVLENMİŞ** (retired). `ffmpeg_kit_flutter`'ın
+  pub'daki son sürümü **2023-09-18**. Bakımı yok, binary'leri çekilmiş.
+- Tek canlı fork **`ffmpeg_kit_flutter_new` "Full GPL"** — GPL, kapalı kaynak ticari
+  bir uygulamayı kirletir. Ödeme alan bir üründe bu lisans riski **kabul edilemez**.
+
+**Karar: native mux.** Android `MediaCodec` + `MediaMuxer`, iOS `AVAssetWriter`.
+Daha çok iş ama sıfır lisans riski ve sıfır terk edilmiş bağımlılık.
+
+**Sonuç:** iOS tarafı Mac olmadan yazılamaz → **kanca #3 yalnızca Android'de tamamlanır**;
+iOS D-13'ün tetiğine bağlanır (Mac erişimi). Bu, D-13'ün üçüncü tetiğini AKTİF eder.
 
 ## ✅ D-4 — Marka/ton → NOCTA kalıyor
 

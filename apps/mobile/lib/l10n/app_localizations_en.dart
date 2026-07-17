@@ -124,6 +124,23 @@ class AppL10nEn extends AppL10n {
   String get mixerFailed => 'Sound could not start.';
 
   @override
+  String get mixerExportVideo => 'Share as video';
+
+  @override
+  String mixerExporting(int percent) {
+    return 'Making video… $percent%';
+  }
+
+  @override
+  String get mixerExportFailed => 'Video could not be created.';
+
+  @override
+  String get mixerExportShareText => 'My sleep mix — made with NOCTA';
+
+  @override
+  String get mixerVideoTitle => 'Tonight\'s mix';
+
+  @override
   String get reportCardHeader => 'Night receipt';
 
   @override
