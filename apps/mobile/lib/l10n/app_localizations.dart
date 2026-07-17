@@ -129,6 +129,18 @@ abstract class AppL10n {
   /// **'Could not keep listening in the background. Your night would not be recorded.'**
   String get sleepModeServiceFailed;
 
+  /// dB zarfını paylaş — eşik ayarı fixture'ı (docs/04 §120)
+  ///
+  /// In en, this message translates to:
+  /// **'Share night diagnostics'**
+  String get sleepModeExportEnvelope;
+
+  /// Zarfın ne olduğu — kullanıcı paylaşmadan önce bilmeli
+  ///
+  /// In en, this message translates to:
+  /// **'A per-second loudness summary — not a recording. Helps us tune detection.'**
+  String get sleepModeExportHint;
+
   /// Uyku modu ekranı başlığı
   ///
   /// In en, this message translates to:

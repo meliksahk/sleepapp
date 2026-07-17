@@ -1,27 +1,51 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Bellekteki paylaşım görseli (dosyaya yazılmaz).
-class ShareImage {
-  const ShareImage({required this.bytes, required this.filename});
+/// Bellekteki paylaşım dosyası (diske yazılmaz).
+///
+/// **`mimeType` TAŞINIR:** başta bu sınıf `ShareImage`'dı ve adaptör MIME tipini
+/// `image/png` diye SABİT yazıyordu. Kimlik kartı için doğruydu; gece zarfı CSV'si
+/// eklenince yanlış oldu — bir CSV'yi `image/png` diye paylaşmak, alıcı uygulamada
+/// bozuk görsel olarak açılırdı. Tip, veriyle birlikte gelmeli.
+class ShareFile {
+  const ShareFile({
+    required this.bytes,
+    required this.filename,
+    required this.mimeType,
+  });
 
   final Uint8List bytes;
   final String filename;
+  final String mimeType;
+
+  /// PNG kısayolu (viral kanca kartları).
+  factory ShareFile.png({required Uint8List bytes, required String filename}) =>
+      ShareFile(bytes: bytes, filename: filename, mimeType: 'image/png');
+
+  /// CSV kısayolu (gece zarfı fixture'ı, docs/04 §120).
+  factory ShareFile.csv({required String text, required String filename}) =>
+      ShareFile(
+        bytes: Uint8List.fromList(utf8.encode(text)),
+        filename: filename,
+        mimeType: 'text/csv',
+      );
 }
 
 /// Paylaşılacak içerik — başlık/metin + link, isteğe bağlı GÖRSEL.
 class ShareContent {
-  const ShareContent({required this.text, required this.url, this.image});
+  const ShareContent({required this.text, required this.url, this.file});
 
   final String text;
   final String url;
 
-  /// Paylaşım kartı PNG'si (viral kanca #1, docs/04 §103).
+  /// Eklenen dosya: paylaşım kartı PNG'si (viral kanca #1) veya gece zarfı CSV'si.
   ///
   /// **Neden isteğe bağlı:** kart render edilemezse paylaşım TÜMDEN düşmemeli —
   /// link paylaşımı hâlâ değerlidir. Kartı zorunlu kılmak, tek bir render hatasında
   /// viral yolu tamamen kapatırdı.
-  final ShareImage? image;
+  final ShareFile? file;
 
   /// Tek satır paylaşım gövdesi.
   String get body => '$text\n$url';
@@ -44,17 +68,18 @@ abstract class Sharer {
 class PlatformSharer implements Sharer {
   @override
   Future<void> share(ShareContent content) async {
-    final image = content.image;
+    final file = content.file;
     await SharePlus.instance.share(
-      image == null
+      file == null
           ? ShareParams(text: content.body)
           : ShareParams(
               text: content.body,
               files: [
                 XFile.fromData(
-                  image.bytes,
-                  mimeType: 'image/png',
-                  name: image.filename,
+                  file.bytes,
+                  // Tip veriyle GELİR, sabit değil (bkz. ShareFile yorumu).
+                  mimeType: file.mimeType,
+                  name: file.filename,
                 ),
               ],
             ),

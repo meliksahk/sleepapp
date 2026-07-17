@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_providers.dart';
+import '../../core/share/sharer.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/record_mic_source.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
@@ -49,9 +50,13 @@ final sleepTrendProvider = FutureProvider<WeeklyTrend>((ref) {
 /// sahte `MicSource` ile kurar (bu provider'a dokunmadan).
 final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
   return SleepModeController(
-    recorder: SleepRecorder(mic: RecordMicSource()),
+    // `logEnvelope: true` — eşikler gerçek gece kayıtlarıyla AYARLANMADI
+    // (docs/04 §120 fixture'ları yok) ve veri olmadan ayarlanamaz. Zarf saniyede
+    // 3 sayı; ham ses değil, konuşma geri getirilemez. Kullanıcı isterse paylaşır.
+    recorder: SleepRecorder(mic: RecordMicSource(), logEnvelope: true),
     sleep: ref.read(sleepControllerProvider),
     // Android 14+ arka planda mikrofonu foreground service olmadan öldürür.
     nightService: ForegroundNightService(),
+    sharer: PlatformSharer(),
   );
 });
