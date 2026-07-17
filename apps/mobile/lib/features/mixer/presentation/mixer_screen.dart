@@ -89,7 +89,10 @@ class _MixerScreenState extends State<MixerScreen> {
                       value: s.gains[layer.id] ?? 0,
                       onChanged: (v) => _c.setGain(layer.id, v),
                       // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
-                      label: '${((s.gains[layer.id] ?? 0) * 100).round()}%',
+                      // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
+                      label: l10n.mixerGainPercent(
+                        ((s.gains[layer.id] ?? 0) * 100).round(),
+                      ),
                       divisions: 20,
                     ),
                   ],

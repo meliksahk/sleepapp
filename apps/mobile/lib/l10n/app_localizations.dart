@@ -141,6 +141,12 @@ abstract class AppL10n {
   /// **'Brown noise'**
   String get mixerLayerBrown;
 
+  /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String mixerGainPercent(int percent);
+
   /// Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil
   ///
   /// In en, this message translates to:

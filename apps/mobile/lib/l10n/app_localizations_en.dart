@@ -33,6 +33,11 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerBrown => 'Brown noise';
 
   @override
+  String mixerGainPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String get mixerStopgapNotice =>
       'Early build: generated locally, looped. Sound quality is not final.';
 

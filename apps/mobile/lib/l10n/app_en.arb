@@ -25,6 +25,12 @@
   "mixerLayerBrown": "Brown noise",
   "@mixerLayerBrown": { "description": "Kahverengi gürültü katmanı adı" },
 
+  "mixerGainPercent": "{percent}%",
+  "@mixerGainPercent": {
+    "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",
+    "placeholders": { "percent": { "type": "int" } }
+  },
+
   "mixerStopgapNotice": "Early build: generated locally, looped. Sound quality is not final.",
   "@mixerStopgapNotice": { "description": "Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil" },
 
