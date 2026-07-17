@@ -565,6 +565,24 @@ abstract class AppL10n {
   /// **'Notifications'**
   String get settingsNotificationsSection;
 
+  /// Ayarlar üyelik/premium bölüm başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Membership'**
+  String get settingsMembershipSection;
+
+  /// Kullanıcı premium olduğunda; SAĞLIK İDDİASI DEĞİL, sadece özellik erişimi
+  ///
+  /// In en, this message translates to:
+  /// **'Premium — all features unlocked'**
+  String get membershipPremium;
+
+  /// Kullanıcı ücretsiz katmandayken
+  ///
+  /// In en, this message translates to:
+  /// **'Free plan'**
+  String get membershipFree;
+
   /// Bildirim ac/kapa anahtari etiketi
   ///
   /// In en, this message translates to:

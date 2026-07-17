@@ -276,6 +276,15 @@
   "settingsNotificationsSection": "Notifications",
   "@settingsNotificationsSection": { "description": "Ayarlar bolum basligi" },
 
+  "settingsMembershipSection": "Membership",
+  "@settingsMembershipSection": { "description": "Ayarlar üyelik/premium bölüm başlığı" },
+
+  "membershipPremium": "Premium — all features unlocked",
+  "@membershipPremium": { "description": "Kullanıcı premium olduğunda; SAĞLIK İDDİASI DEĞİL, sadece özellik erişimi" },
+
+  "membershipFree": "Free plan",
+  "@membershipFree": { "description": "Kullanıcı ücretsiz katmandayken" },
+
   "settingsPushNotifications": "Push notifications",
   "@settingsPushNotifications": { "description": "Bildirim ac/kapa anahtari etiketi" },
 
