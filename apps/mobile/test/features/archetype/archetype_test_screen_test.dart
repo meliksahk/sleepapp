@@ -223,10 +223,20 @@ void main() {
 
       // Paylaş → sharer'a paylaşım kartı iletilir + SnackBar.
       await tester.tap(find.byKey(const Key('archetype-share')));
+
+      // `runAsync` ŞART: paylaşım artık önce kimlik kartını PNG'ye render ediyor
+      // (viral kanca #1) ve `toImage` motorun GERÇEK asenkron işi — sahte zaman
+      // bölgesinde tamamlanmaz. `pumpAndSettle` tek başına yetmez ve iddia,
+      // `share()` hiç çağrılmadan koşardı.
+      await tester.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
       await tester.pumpAndSettle();
 
       expect(sharer.last?.url, 'https://nocta.app/a/deep-ocean');
       expect(sharer.last?.text, contains('Deep Ocean'));
+      // ÇEKİRDEK: link değil GÖRSEL paylaşılıyor (docs/04 §103).
+      expect(sharer.last?.image, isNotNull, reason: 'kimlik kartı PNG olarak gitmeli');
+      expect(sharer.last!.image!.bytes.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47],
+          reason: 'gerçek PNG olmalı');
       expect(find.text('Link copied'), findsOneWidget);
       // Viral huni: sonuç görüldü + paylaşıldı.
       expect(

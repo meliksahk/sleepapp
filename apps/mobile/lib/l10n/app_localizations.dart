@@ -93,6 +93,24 @@ abstract class AppL10n {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Kimlik kartını paylaş butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Share your identity'**
+  String get shareIdentityCta;
+
+  /// Kart render edilirken buton metni
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get sharePreparing;
+
+  /// Paylaşım sayfasına giden metin
+  ///
+  /// In en, this message translates to:
+  /// **'My sleep identity is {name}.'**
+  String shareIdentityText(String name);
+
   /// Oturum kurulamadığında üstte görünen çubuk
   ///
   /// In en, this message translates to:
