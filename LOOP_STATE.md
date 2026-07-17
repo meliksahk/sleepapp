@@ -1,9 +1,21 @@
 # LOOP_STATE — NOCTA geliştirme döngüsü defteri
 
-## 🚧 İlerleme: ≈46% — F1–F5 (otonom kapsam)
+## 🔊 Kullanıcı bugün ne yapabiliyor?
+
+> **Mikseri açıp SES DUYABİLİYOR ve slider'ı oynatınca ses değişiyor.** (#138)
+>
+> Bu satır D-12 kararıyla eklendi ve **barın aksine yalan söyleyemez**: her iterasyonda
+> "kullanıcı ne YAPABİLİYOR?" sorusuna cevap verir. 30 iterasyon boyunca bu satırın
+> cevabı **"hiçbir şey"** olurdu — bar ise %76 diyordu. Ölçüt buydu, artık bu.
+>
+> Sınırlar (dürüstlük): ses **emülatörde** doğrulandı, kulaklıkla **kalite yargısı
+> yapılmadı** (CLAUDE.md §1.1 — insana ait). Önceden render edilmiş buffer döngüleniyor;
+> nihai native graf değil. Döngü dikişi duyulabilir.
+
+## 🚧 İlerleme: ≈50% — F1–F5 (otonom kapsam)
 
 ```
-[██████████████████░░░░░░░░░░░░░░░░░░░░░░] 46%
+[████████████████████░░░░░░░░░░░░░░░░░░░░] 50%
 ```
 
 > ## ⛔ #137 DÜZELTMESİ — BU BAR 30 PUAN ŞİŞİKTİ (76 → 46)
@@ -26,14 +38,18 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                 |
-| ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export     |
-| Mobil       | ~38%     | 0.40    | **M2 ses motoru (%15)**, kanal sözleşmesi (0 MethodChannel), mikser, uyku modu ekranı, 3 viral kanca (0 golden test) |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                   |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                          |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                            |
+| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                |
+| Mobil       | ~48%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), uyku modu ekranı, 3 viral kanca (0 golden test) |
+| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                              |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                     |
 
-> **Hesap:** `0.40·38 + 0.30·70 + 0.15·32 + 0.15·33 = 45.95` → **≈46%**
+> **Hesap:** `0.40·48 + 0.30·70 + 0.15·32 + 0.15·33 = 49.95` → **≈50%**
+>
+> **D-12 ship kapısı:** "ses yoksa ≤%55" kuralı aktif. Ses ÇIKIYOR (#138) ama üç viral
+> kanca (kimlik kartı, gece raporu, mix-to-video) henüz render edilmiyor → **kapı hâlâ
+> %55'te.** Bar oraya dayandığında kanca render'ı zorunlu hale gelir.
 >
 > Yüzeyler kanıta dayalı ama yine de TAHMİN (Dürüstlük Protokolü). Kesin olan şey
 > yüzdeler değil, **yönü**: aşağıdaki olgular tek tek doğrulandı →
@@ -120,6 +136,62 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #138 — MİKSER ÇALIYOR: uygulama ilk kez ses çıkardı (PR #138, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **Uygulama bugüne kadar TEK BİR SES ÇIKARMAMIŞTI.** DSP zinciri #95'ten beri yazılı,
+  test edilmiş ve hiçbir yere bağlanmamıştı. Artık bağlı.
+- `wav_encoder.dart` (saf Dart, RIFF spesifikasyonuna göre, 15 bayt-seviyesi testi) +
+  `mix_player.dart` (katman başına render + katman başına `just_audio` player) +
+  MixerScreen + rota + **ana ekran girişi** (bağlanmayan ekran ölü koddur).
+- **EMÜLATÖRDE KANITLANDI** (`dumpsys media.audio_flinger` — duyamadığım için ses
+  sunucusuna sordum): 3 AudioTrack `state:started`, USAGE_MEDIA, 48 kHz. Kazançlar
+  `20·log₁₀` ile birebir: brown 0.45→**−6.9 dB**, pink 0.30→**−10 dB**,
+  white 0.10→**−20 dB**. Slider sona çekilince track 85 **−20 → 0 dB**, diğerleri
+  değişmedi → gerçek zamanlı, katman-bağımsız, **yeniden render yok**.
+- **CANLI HATA (testler yeşilken bulundu):** `CleartextNotPermittedException` —
+  just_audio bellekteki WAV'ı ExoPlayer'a yerel HTTP sunucusuyla veriyor, Android 9+
+  engelliyordu → **ses çıkmıyordu**. Dar düzeltme: yalnızca 127.0.0.1'e izin
+  (`usesCleartextTraffic=true` her hosta izin verirdi — güvenlik gerilemesi).
+- **DÜZEN HATASI (widget testi yakaladı):** mikser butonu ana ekranı 27px taşırdı →
+  ana ekran kaydırılabilir yapıldı.
+- **i18N KAPISI YAKALADI:** slider'ın `'30%'` etiketi literaldi. Kapı haklıydı — yüzde
+  biçimi yerele bağlı (EN "30%", TR "%30"). i18n'e taşındı.
+- 263/263 test, analyze temiz, CI 2/2 yeşil.
+
+⚠️ **Yapıldı, doğrulanmadı**
+
+- **Ses KALİTESİ.** Emülatör hoparlörü kalite yargısı için geçersiz (CLAUDE.md §1.1:
+  "gerçek cihazda kulaklıkla doğrulanır"). "Ses çıkıyor" ✅ — "ses iyi" **bilinmiyor**.
+
+❌ **Yapılmadı / eksik**
+
+- **Native graf yok** (AVAudioEngine/Oboe). Bu, önceden render edilmiş buffer döngüsü:
+  döngü dikişi duyulabilir, referans mikserin kompresörü devrede değil, gerçek zamanlı
+  kazanç rampası yok. Kodda ve ekranda kullanıcıya açıkça yazılı.
+- **YENİ BULGU — offline-first ihlali:** mikser API bootstrap'ına takılıyor. Uygulama
+  cihaz kaydı yapamazsa miksere HİÇ ulaşılamıyor. Ama CLAUDE.md §3.1: _"ses üretimi ve
+  mikser internetsiz TAM çalışır."_ Mikser tamamen yerel — bootstrap'ın arkasında
+  olmamalı. **Sıradaki iş.**
+
+📌 **Varsayımlar**
+
+- `just_audio` (MIT, 4140 like) seçildi; bellekten `StreamAudioSource` besleyebiliyor →
+  geçici dosya yok. `flutter_soloud` nihai motora daha yakın ama bu iterasyonun amacı
+  ses çıkarmaktı, motor yazmak değil.
+- Katman başına ayrı player: gürültüde faz algısal değil, player kayması duyulmaz.
+  **Ritmik/tonal katman eklenirse bu varsayım ÇÖKER.**
+
+🔥 **Riskler / açıklar**
+
+- Varsayılan kazançlar toplamı 1.0 altında tutuldu (test zorluyor) çünkü toplama OS
+  mikserinde: aşarsa **kırpma** olur. Native graf gelene kadar bu kırılgan.
+- RAM: katman başına ~2.8 MB (30 sn @48 kHz). Katman sayısı artarsa büyür.
+- **Müdür mekanizması işe yaradı:** ilk denetimde planımı reddetti ve haklıydı —
+  facade/MethodChannel kulesi ölü koda soyutlama dikmek olurdu. Ayrıca itirafımın bile
+  kapsam daralttığını yakaladı (`recordSession`'ı itiraf ettim, `renderMix`'i etmedim).
 
 ### #136 — 2FA kurulum ekranı + CI kırılganlığı (PR #136 & #137, **merged**)
 
