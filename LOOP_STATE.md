@@ -2,15 +2,17 @@
 
 ## 🔊 Kullanıcı bugün ne yapabiliyor?
 
-> 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139)
+> 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139) — **RELEASE'de doğrulandı (#147); bundan önce release APK'da SESSİZDİ, aşağıya bak.**
 > 2. **Kimliğini GÖRSEL olarak paylaşabiliyor**: testi bitir → paylaş → 1080×1920 kart
 >    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
 > 3. **Gecesini GÖRSEL olarak paylaşabiliyor**: gece makbuzu kartı (#144).
 > 4. **Mix'ini VİDEO olarak paylaşabiliyor**: 9:16 mp4 (h264+aac, 15 sn) — kendi sesi +
 >    audiogram + marka izi, native paylaşım sayfasına gidiyor. (#145) **Android'de.**
 > 5. **Alarm kurabiliyor ve UYANDIRILIYOR**: hafif uyku sinyalinde erken, yoksa son
->    tarihte koşulsuz — cihazda üretilen çan sesiyle. (#146) Emülatörde çaldığı ve
->    sesin gerçekten başladığı `dumpsys audio` ile doğrulandı.
+>    tarihte koşulsuz — cihazda üretilen çan sesiyle. (#146) Emülatörde (DEBUG) çaldığı
+>    `dumpsys audio` ile doğrulanmıştı. Alarm mikserle **aynı** just_audio bellek-WAV
+>    yolunu kullanıyor → #147 fix'i buna da uygulanır; release'de **mikseri** doğruladım
+>    (aynı yol), alarmı release'de ayrıca yeniden doğrulamadım (dürüstlük notu).
 > 6. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
 >    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >    **Ekran kapalıyken de sürüyor** (foreground service, #142) → gerçek gece testi
@@ -23,6 +25,28 @@
 > Sınırlar (dürüstlük): ses **emülatörde** doğrulandı, kulaklıkla **kalite yargısı
 > yapılmadı** (CLAUDE.md §1.1 — insana ait). Önceden render edilmiş buffer döngüleniyor;
 > nihai native graf değil. Döngü dikişi duyulabilir.
+
+> ## 🔴 #147 — F1/F5 "ses çalıyor" iddiası RELEASE'de YALANDI (şimdi düzeldi)
+>
+> `src/main/AndroidManifest.xml` **INTERNET iznini taşımıyordu.** Flutter şablonu onu
+> yalnızca `src/debug/` ve `src/profile/` manifestlerine koyar. Yani **kullanıcıya giden
+> release APK'da yoktu** ve just_audio'nun localhost proxy'si bind edemiyordu
+> (`SocketException errno=1`) → **mikser (F1, #138/#139) ve alarm (F5, #146) release'de
+> SESSİZDİ.** API istemcisi de ölüydü.
+>
+> **Kaçırılma sebebi bu deftere birebir yansımıştı:** F1 ve F5 için "emülatörde doğrulandı"
+> yazıyordu — ama hepsi **debug** build'diydi ve debug manifesti izni gizlice ekliyordu.
+> D-12 SHIP KAPISI de kısmen "ses #138/#139'da çaldı"ya dayanarak açılmıştı; o ses
+> **debug'daydı**. 375 test yeşildi, hiçbiri göremezdi çünkü hepsi kaynak/host testi.
+>
+> **Düzeltme (#147) ve doğrulama — bu sefer RELEASE'de:** `flutter build apk --release`
+> → merged manifest'te INTERNET var → yüklü pakette `granted=true` → release mikser →
+> Play → `dumpsys audio`: 3 AudioTrack (brown/pink/white) 48kHz, `piid event:started`,
+> SocketException YOK. **Ses release'de çaldı.** Yeni `android_manifest_test.dart` satırı
+> kaynak düzeyinde kilitliyor (INTERNET silinince kırmızı).
+>
+> **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
+> doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
 
 ## 🚧 İlerleme: **%60** — formül 59.15 — F1–F5
 
