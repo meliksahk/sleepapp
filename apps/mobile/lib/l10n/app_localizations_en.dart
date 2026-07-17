@@ -20,6 +20,17 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
+  String get sleepModeNotificationTitle => 'Listening to your night';
+
+  @override
+  String get sleepModeNotificationBody =>
+      'Analysed on your phone. Tap to open.';
+
+  @override
+  String get sleepModeServiceFailed =>
+      'Could not keep listening in the background. Your night would not be recorded.';
+
+  @override
   String get sleepModeTitle => 'Sleep mode';
 
   @override

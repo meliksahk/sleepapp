@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_providers.dart';
+import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/record_mic_source.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import 'sleep_controller.dart';
@@ -50,5 +51,7 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
   return SleepModeController(
     recorder: SleepRecorder(mic: RecordMicSource()),
     sleep: ref.read(sleepControllerProvider),
+    // Android 14+ arka planda mikrofonu foreground service olmadan öldürür.
+    nightService: ForegroundNightService(),
   );
 });

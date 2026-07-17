@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nocta/core/sleep_tracking/mic_source.dart';
+import 'package:nocta/core/sleep_tracking/night_service.dart';
 import 'package:nocta/core/sleep_tracking/sleep_recorder.dart';
 import 'package:nocta/core/sleep_tracking/sleep_session_builder.dart';
 import 'package:nocta/features/sleep/presentation/sleep_mode_screen.dart';
@@ -68,18 +69,24 @@ void main() {
     await t.pumpAndSettle();
   }
 
+  late FakeNightService service;
+
   Future<SleepModeController> pump(
     WidgetTester t, {
     bool permission = true,
+    bool serviceCanStart = true,
     _FakeSleep? sleep,
     List<Float32List>? frames,
+    FakeMicSource? mic,
   }) async {
+    service = FakeNightService(canStart: serviceCanStart);
     final controller = SleepModeController(
       recorder: SleepRecorder(
-        mic: FakeMicSource(frames ?? night(), permission: permission),
+        mic: mic ?? FakeMicSource(frames ?? night(), permission: permission),
         now: () => DateTime.utc(2026, 7, 17, 23),
       ),
       sleep: sleep ?? _FakeSleep(),
+      nightService: service,
     );
     await t.pumpWidget(
       MaterialApp(
@@ -170,6 +177,66 @@ void main() {
     // Gece geçti, veri cihazda üretildi: sunucuya yazılamaması onu yok saymaz.
     expect(find.byKey(const Key('sleep-saved')), findsOneWidget);
     expect(find.byKey(const Key('sleep-save-failed')), findsOneWidget);
+  });
+
+  testWidgets('ÇEKİRDEK: başlat → foreground SERVİS de başlar (gece hayatta kalsın)', (t) async {
+    // Android 14+ arka planda mikrofonu foreground service olmadan ÖLDÜRÜR.
+    // Servis başlamazsa kullanıcı "dinliyorum" ekranını görür ve sabah BOŞ raporla
+    // uyanır — yarım çalışan gece takibi hiç çalışmayandan beter.
+    await pump(t);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    expect(service.started, isTrue);
+    expect(service.startCalls, 1);
+  });
+
+  testWidgets('ÇEKİRDEK: SERVİS başlatılamazsa KAYIT DA başlamaz', (t) async {
+    final mic = FakeMicSource(night());
+    final c = await pump(t, serviceCanStart: false, mic: mic);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    expect(c.state.isRecording, isFalse, reason: 'kayıt başlamamalı');
+    expect(find.byKey(const Key('sleep-service-failed')), findsOneWidget);
+    // Mikrofon da BIRAKILMALI: boşuna açık kalması pil ve gizlilik sorunu.
+    expect(mic.stopped, isTrue, reason: 'mikrofon bırakılmalı');
+  });
+
+  testWidgets('servis hatası İZİN REDDİNDEN ayrı gösterilir', (t) async {
+    // Biri kullanıcının seçimi, diğeri sistem sorunu — aynı mesaj yanlış olurdu.
+    await pump(t, serviceCanStart: false);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    expect(find.byKey(const Key('sleep-service-failed')), findsOneWidget);
+    expect(find.byKey(const Key('sleep-permission-denied')), findsNothing);
+  });
+
+  testWidgets('mikrofon izni YOKSA servis HİÇ başlatılmaz (boş bildirim olmasın)', (t) async {
+    await pump(t, permission: false);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    // Servis bildirimi gösterip sonra "aslında iznin yok" demek, kullanıcıya
+    // anlamsız bir bildirim bırakırdı.
+    expect(service.startCalls, 0);
+  });
+
+  testWidgets('bitir → SERVİS de durur (bildirim "hâlâ dinliyorum" demesin)', (t) async {
+    await pump(t);
+
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('sleep-toggle')));
+    await settle(t);
+
+    expect(service.started, isFalse);
+    expect(service.stopCalls, greaterThanOrEqualTo(1));
   });
 
   testWidgets('sessiz gecede SIFIR olay raporlanır (hayalet olay yok)', (t) async {
