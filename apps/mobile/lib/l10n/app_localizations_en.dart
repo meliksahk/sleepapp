@@ -9,6 +9,17 @@ class AppL10nEn extends AppL10n {
   AppL10nEn([String locale = 'en']) : super(locale);
 
   @override
+  String get shareIdentityCta => 'Share your identity';
+
+  @override
+  String get sharePreparing => 'Preparing…';
+
+  @override
+  String shareIdentityText(String name) {
+    return 'My sleep identity is $name.';
+  }
+
+  @override
   String get offlineBanner => 'Offline — some features need a connection';
 
   @override

@@ -10,7 +10,9 @@ final archetypeControllerProvider = Provider<ArchetypeController>((ref) {
 });
 
 /// Paylaşım adaptörü — interim: panoya kopyalar (native share sheet ertelendi).
-final sharerProvider = Provider<Sharer>((ref) => ClipboardSharer());
+/// Üretimde native paylaşım sayfası: kart GÖRSEL olarak gider. Pano adaptörü
+/// görsel taşıyamaz ve kullanıcıya "git yapıştır" dedirtirdi (bkz. sharer.dart).
+final sharerProvider = Provider<Sharer>((ref) => PlatformSharer());
 
 /// Archetype tanıtım içeriği slug→info haritası (sonuç ekranı açıklaması).
 final archetypeContentProvider = FutureProvider<Map<String, ArchetypeInfo>>((ref) async {

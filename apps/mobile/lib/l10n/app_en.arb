@@ -1,6 +1,18 @@
 {
   "@@locale": "en",
 
+  "shareIdentityCta": "Share your identity",
+  "@shareIdentityCta": { "description": "Kimlik kartını paylaş butonu" },
+
+  "sharePreparing": "Preparing…",
+  "@sharePreparing": { "description": "Kart render edilirken buton metni" },
+
+  "shareIdentityText": "My sleep identity is {name}.",
+  "@shareIdentityText": {
+    "description": "Paylaşım sayfasına giden metin",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
   "offlineBanner": "Offline — some features need a connection",
   "@offlineBanner": { "description": "Oturum kurulamadığında üstte görünen çubuk" },
 

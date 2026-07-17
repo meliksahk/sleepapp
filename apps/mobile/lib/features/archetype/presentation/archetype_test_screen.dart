@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/media/card_renderer.dart';
 import '../../../core/share/sharer.dart';
+import 'identity_share_card.dart';
 import '../../analytics/analytics_providers.dart';
 import '../archetype_models.dart';
 import '../archetype_providers.dart';
@@ -201,6 +203,20 @@ class _ResultView extends ConsumerStatefulWidget {
 class _ResultViewState extends ConsumerState<_ResultView> {
   bool _sharing = false;
 
+  /// slug → görünen ad ("deep-ocean" → "Deep Ocean"). İçerik ucu gelmezse yedek.
+  String get _display => widget.result.archetypeSlug
+      .split('-')
+      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+
+  /// Tanıtım içeriği (public uç); gelmediyse null.
+  ArchetypeInfo? get _info => ref
+      .read(archetypeContentProvider)
+      .maybeWhen(
+        data: (m) => m[widget.result.archetypeSlug],
+        orElse: () => null,
+      );
+
   @override
   void initState() {
     super.initState();
@@ -221,9 +237,40 @@ class _ResultViewState extends ConsumerState<_ResultView> {
     try {
       final share = await ref.read(archetypeControllerProvider).fetchShare();
       if (share == null) return;
+
+      // Viral kanca #1: link DEĞİL, GÖRSEL paylaşılır (docs/04 §103).
+      // Kart render edilemezse paylaşım TÜMDEN düşmez — link'le devam eder.
+      ShareImage? image;
+      try {
+        // Kart ağaçta DEĞİL: kendi render hattında çizilir (bkz. card_renderer.dart).
+        final card = await renderWidgetToPng(
+          IdentityShareCard(
+            name: _info?.name ?? _display,
+            tagline: _info?.tagline,
+            gradient: IdentityShareCard.gradientFor(
+              widget.result.archetypeSlug,
+            ),
+          ),
+        );
+        debugPrint(
+          'Kimlik kartı render: ${card.elapsed.inMilliseconds}ms '
+          '(bütçe ${shareCardRenderBudget.inMilliseconds}ms — docs/04 §105) '
+          '${card.withinBudget ? "İÇİNDE" : "AŞILDI"}',
+        );
+        image = ShareImage(
+          bytes: card.pngBytes,
+          filename: 'nocta-${widget.result.archetypeSlug}.png',
+        );
+      } catch (e) {
+        // Sessiz yutma DEĞİL: kart gitmedi ama kullanıcı yine paylaşabilsin.
+        debugPrint('Kimlik kartı render edilemedi, link ile paylaşılıyor: $e');
+      }
+
       await ref
           .read(sharerProvider)
-          .share(ShareContent(text: share.title, url: share.webUrl));
+          .share(
+            ShareContent(text: share.title, url: share.webUrl, image: image),
+          );
       // Viral huni ölçümü: tamamlama → paylaşım (analitik, bloklamaz).
       ref
           .read(analyticsProvider)
@@ -245,11 +292,7 @@ class _ResultViewState extends ConsumerState<_ResultView> {
 
   @override
   Widget build(BuildContext context) {
-    // slug → görünen ad ("deep-ocean" → "Deep Ocean").
-    final display = widget.result.archetypeSlug
-        .split('-')
-        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
-        .join(' ');
+    final display = _display;
     // Tanıtım içeriği (public uç) — geldiyse tagline/özet göster (yoksa gizli).
     final info = ref
         .watch(archetypeContentProvider)
