@@ -148,6 +148,40 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+### #143 — gece fixture'ı + API adresi (PR #143, merged) → **GERÇEK GECE TESTİ ARTIK MÜMKÜN**
+
+✅ **Yapıldı ve doğrulandı**
+
+- Gerçek gece testinin kalan **iki ön koşulu** kapandı (#142 birincisiydi):
+  1. **Telefon API'ye ulaşamıyordu** — `apiBaseUrl: 'localhost'` sabit kodluydu ama
+     localhost telefonun KENDİSİ. Artık `--dart-define=API_BASE_URL=http://<LAN-IP>:3099`.
+  2. **Gece verisi analiz edilemiyordu** — kayıt bitince geriye tek bir SAYI kalıyordu
+     ("12 olay"), o da eşiğin doğru olup olmadığını SÖYLEMEZ. `EnvelopeLog` docs/04
+     §120 fixture'ını üretiyor.
+- **Gizlilik:** zarf saniyede ÜÇ SAYI (min/ortalama/maks dBFS). 1 Hz'lik genlik
+  zarfından kelime çıkarmak fiziksel olarak mümkün değil — ham ses DEĞİL. **Otomatik
+  gönderim YOK** (test zorluyor); CSV başlığı ne olduğunu dosyanın İÇİNDE yazar.
+- **YOL ÜSTÜNDE BULUNAN HATA:** `Sharer` portu MIME tipini `image/png` diye SABİT
+  yazıyordu → CSV bozuk görsel olarak paylaşılacaktı. `ShareFile`'a genelleştirildi,
+  tip veriyle geliyor. Test UTF-8'i de doğruluyor (`codeUnits` Türkçe'yi bozuyordu —
+  mojibake ile yakalandı).
+- **EMÜLATÖRDE:** gece kaydedildi → "Night saved" + "Share night diagnostics" →
+  paylaşım sayfası **"Sharing 1 file: ....csv"** (görsel değil, gerçek CSV).
+- 10 zarf + 4 ekran testi. 315/315, analyze temiz, CI 2/2.
+
+⚠️ **Yapıldı, doğrulanmadı** — LAN IP ile gerçek telefon bağlantısı denenmedi
+(emülatörde `adb reverse` kullanılıyor).
+
+❌ **Yapılmadı / eksik**
+
+- **GERÇEK 8 SAATLİK GECE** — artık teknik engel YOK, yalnızca insan gerekiyor.
+  **Sıradaki insan işi bu.**
+
+📌 **Varsayımlar** — zarf tavanı 10 saat (8 saatlik gece güvende); aşılırsa sessizce
+kırpılmaz, CSV'ye UYARI düşer.
+
+🔥 **Riskler / açıklar** — yok.
+
 ### #142 — gece kaydı ekran kapalıyken hayatta kalıyor (PR #142, merged)
 
 ✅ **Yapıldı ve doğrulandı**
