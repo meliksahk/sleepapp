@@ -303,6 +303,15 @@ class AppL10nEn extends AppL10n {
   String get settingsNotificationsSection => 'Notifications';
 
   @override
+  String get settingsMembershipSection => 'Membership';
+
+  @override
+  String get membershipPremium => 'Premium — all features unlocked';
+
+  @override
+  String get membershipFree => 'Free plan';
+
+  @override
   String get settingsPushNotifications => 'Push notifications';
 
   @override

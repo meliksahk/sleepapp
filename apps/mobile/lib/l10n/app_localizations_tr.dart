@@ -304,6 +304,15 @@ class AppL10nTr extends AppL10n {
   String get settingsNotificationsSection => 'Bildirimler';
 
   @override
+  String get settingsMembershipSection => 'Üyelik';
+
+  @override
+  String get membershipPremium => 'Premium — tüm özellikler açık';
+
+  @override
+  String get membershipFree => 'Ücretsiz plan';
+
+  @override
   String get settingsPushNotifications => 'Anlık bildirimler';
 
   @override

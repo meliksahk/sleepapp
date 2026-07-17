@@ -89,6 +89,9 @@
 
   "settingsTitle": "Ayarlar",
   "settingsNotificationsSection": "Bildirimler",
+  "settingsMembershipSection": "Üyelik",
+  "membershipPremium": "Premium — tüm özellikler açık",
+  "membershipFree": "Ücretsiz plan",
   "settingsPushNotifications": "Anlık bildirimler",
   "settingsNotificationsUpdateFailed": "Bildirim ayarı güncellenemedi",
   "settingsAccountSecuritySection": "Hesap güvenliği",

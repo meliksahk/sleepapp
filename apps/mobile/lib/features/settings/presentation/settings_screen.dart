@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/auth_providers.dart';
+import '../../entitlement/entitlement_providers.dart';
 import '../../profile/profile_providers.dart';
 
 /// Ayarlar (docs/06 hesap güvenliği). "Diğer cihazlardan çık" akışı.
@@ -59,6 +60,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppL10n.of(context);
     final sessions = ref.watch(activeSessionsProvider);
     final profile = ref.watch(profileProvider);
+    final entitlement = ref.watch(entitlementProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: SafeArea(
@@ -67,6 +69,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Üyelik — premium durumu sunucudan (docs/02 §183). Premium özellikler
+              // eklendiğinde bu bayrak üzerinden gate edilir; şu an durum göstergesi.
+              Text(
+                l10n.settingsMembershipSection,
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+              entitlement.maybeWhen(
+                data: (e) => Padding(
+                  padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                  child: Text(
+                    e.premium ? l10n.membershipPremium : l10n.membershipFree,
+                    key: const Key('membership-status'),
+                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                  ),
+                ),
+                // Yükleme/hata → gizli (dayanıklı; ayarlar ekranı bloke olmaz).
+                orElse: () => const SizedBox.shrink(),
+              ),
+              const SizedBox(height: NoctaSpace.s5),
               Text(
                 l10n.settingsNotificationsSection,
                 style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
