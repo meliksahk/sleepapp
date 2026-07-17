@@ -4,6 +4,8 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../../src/app.module';
+import { CACHE } from '../../src/shared/cache/cache.port';
+import { InMemoryCache } from '../../src/shared/cache/in-memory-cache';
 
 /** content e2e (gerçek DB). Soundscape'ler prisma ile seed edilir. */
 describe('Content e2e (HTTP)', () => {
@@ -60,7 +62,16 @@ describe('Content e2e (HTTP)', () => {
       },
     });
 
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    // Feed davranışını test ediyoruz, cache ADAPTÖRÜNÜ değil. `.env`'de REDIS_URL
+    // varsa app RedisCache kullanır ve PAYLAŞIMLI/kalıcı Redis'ten sızan bayat feed
+    // anahtarı ("content:feed:overthinker") taze DB içeriğini maskeler → testler
+    // sızıntıyla düşer (CI'da REDIS_URL yok, in-memory, geçer). InMemoryCache'e
+    // override ederek e2e'yi deterministik + Redis-state'inden bağımsız yaparız.
+    // Redis adaptörü ayrıca redis-cache.spec + gerçek-Redis anahtar doğrulamasıyla test edildi.
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(CACHE)
+      .useValue(new InMemoryCache())
+      .compile();
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('v1', { exclude: ['health'] });
     app.useGlobalPipes(
