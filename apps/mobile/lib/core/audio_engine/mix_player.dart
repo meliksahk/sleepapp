@@ -41,9 +41,13 @@ import 'dsp/wav_encoder.dart';
 ///
 /// Diske yazmamak bilinçli: uyku sesi kullanıcının cihazında saatlerce çalar; her
 /// mix değişiminde dosya yazmak hem gereksiz I/O hem de temizlenmesi unutulacak çöp.
+///
+/// **Public çünkü alarm da aynı şeye ihtiyaç duyuyor** (`SunriseAlarmSound`): ikinci
+/// bir kopya yazmak, `experimental_member_use` bastırmasını ve içerik tipini iki yerde
+/// tutmak olurdu.
 // ignore: experimental_member_use
-class _BytesSource extends StreamAudioSource {
-  _BytesSource(this._bytes);
+class BytesAudioSource extends StreamAudioSource {
+  BytesAudioSource(this._bytes);
 
   final Uint8List _bytes;
 
@@ -117,7 +121,7 @@ class MixPlayer {
       );
 
       final player = _newPlayer();
-      await player.setAudioSource(_BytesSource(encodeWav(pcm, sampleRate: sampleRate)));
+      await player.setAudioSource(BytesAudioSource(encodeWav(pcm, sampleRate: sampleRate)));
       await player.setLoopMode(LoopMode.one);
       await player.setVolume(layer.gain.clamp(0.0, 1.0));
       _voices.add(_LayerVoice(layer.id, player));

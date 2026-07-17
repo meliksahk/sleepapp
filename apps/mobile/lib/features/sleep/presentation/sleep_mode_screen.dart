@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/design_system/design_system.dart';
+import '../../../core/sleep_tracking/smart_alarm.dart';
 import '../../../l10n/app_localizations.dart';
 import '../sleep_mode_controller.dart';
 
@@ -39,6 +40,67 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
     _tick?.cancel();
     widget.controller.onChanged = null;
     super.dispose();
+  }
+
+  /// Alarm kurma bölümü — **opt-in**, varsayılan kapalı.
+  Widget _alarmSection(BuildContext context, AppL10n l10n, SleepModeState s) {
+    final at = s.alarmAt;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.alarmSectionTitle, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Text(
+          at == null ? l10n.alarmOff : l10n.alarmSet(_formatTime(context, at)),
+          key: const Key('alarm-status'),
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        const SizedBox(height: 4),
+        // Alarmın ne YAPTIĞINI söyler: sezgisel + son tarih garantisi. Kullanıcı
+        // "akıllı" kelimesinden uyku evresi ölçtüğümüzü sanmamalı (CLAUDE.md §1.1).
+        Text(
+          l10n.alarmExplain(widget.controller.alarmWindow.inMinutes),
+          key: const Key('alarm-explain'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            OutlinedButton(
+              key: const Key('alarm-choose'),
+              onPressed: () => _pickAlarm(context),
+              child: Text(l10n.alarmChoose),
+            ),
+            if (at != null) ...[
+              const SizedBox(width: 12),
+              TextButton(
+                key: const Key('alarm-clear'),
+                onPressed: () => widget.controller.setAlarm(null),
+                child: Text(l10n.alarmClear),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _formatTime(BuildContext context, DateTime at) =>
+      TimeOfDay.fromDateTime(at).format(context);
+
+  Future<void> _pickAlarm(BuildContext context) async {
+    final now = DateTime.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 8))),
+    );
+    if (picked == null || !context.mounted) return;
+
+    var at = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+    // Seçilen saat GEÇMİŞSE yarın demektir — "07:00" diyen biri sabahı kastediyor,
+    // 11 saat öncesini değil. Kırpmasaydık alarm anında (son tarih geçmiş) çalardı.
+    if (!at.isAfter(now)) at = at.add(const Duration(days: 1));
+    widget.controller.setAlarm(at);
   }
 
   String _elapsed(DateTime started) {
@@ -171,6 +233,38 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                   ),
                 ],
               ],
+
+              // ÇALIYORSA her şeyin üstünde: kullanıcı yarı uykulu, aradığı tek
+              // düğme bu. Aşağıda bir yerde olsaydı telefonu kurcalardı.
+              if (s.alarmRinging) ...[
+                Card(
+                  key: const Key('alarm-ringing'),
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Text(
+                          s.alarmTrigger == AlarmTrigger.lightSleep
+                              ? l10n.alarmRingingLightSleep
+                              : l10n.alarmRingingDeadline,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        NButton(
+                          key: const Key('alarm-dismiss'),
+                          label: l10n.alarmDismiss,
+                          onPressed: widget.controller.dismissAlarm,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              _alarmSection(context, l10n, s),
 
               const Spacer(),
               NButton(

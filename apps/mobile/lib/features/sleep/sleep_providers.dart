@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_providers.dart';
 import '../../core/share/sharer.dart';
+import '../../core/sleep_tracking/alarm_sound.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/record_mic_source.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
@@ -58,5 +59,8 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
     // Android 14+ arka planda mikrofonu foreground service olmadan öldürür.
     nightService: ForegroundNightService(),
     sharer: PlatformSharer(),
+    // Alarmın SESİ. Verilmezse alarm yalnızca ekranda görünür — uyuyan biri için
+    // hiçbir işe yaramaz.
+    alarmSound: SunriseAlarmSound(),
   );
 });

@@ -124,6 +124,39 @@
   "mixerVideoTitle": "Tonight's mix",
   "@mixerVideoTitle": { "description": "Videonun üstünde görünen başlık" },
 
+  "alarmSectionTitle": "Smart alarm",
+  "@alarmSectionTitle": { "description": "Uyku modundaki alarm bölümü başlığı" },
+
+  "alarmOff": "Off",
+  "@alarmOff": { "description": "Alarm kurulu değil — varsayılan (opt-in)" },
+
+  "alarmSet": "Wake me by {time}",
+  "@alarmSet": {
+    "description": "Kurulu alarm. 'by' bilinçli: bu bir son tarih, tam saat değil — pencerede daha erken çalabilir",
+    "placeholders": { "time": { "type": "String" } }
+  },
+
+  "alarmExplain": "We'll look for a lighter moment in the {minutes} minutes before, and wake you by then at the latest.",
+  "@alarmExplain": {
+    "description": "Alarmın ne yaptığını dürüstçe anlatır: sezgisel + son tarih garantisi. Uyku evresi İDDİASI yok (CLAUDE.md §1.1)",
+    "placeholders": { "minutes": { "type": "int" } }
+  },
+
+  "alarmChoose": "Set alarm",
+  "@alarmChoose": { "description": "Alarm saati seçme butonu" },
+
+  "alarmClear": "Turn off",
+  "@alarmClear": { "description": "Alarmı kaldır" },
+
+  "alarmRingingLightSleep": "You stirred — good moment to wake up.",
+  "@alarmRingingLightSleep": { "description": "Alarm hafif uyku sinyaliyle çaldı. 'stirred' = gözlemlediğimiz şey; uyku evresi iddiası DEĞİL" },
+
+  "alarmRingingDeadline": "Time to wake up.",
+  "@alarmRingingDeadline": { "description": "Alarm son tarihte çaldı (hafif uyku sinyali hiç görülmedi)" },
+
+  "alarmDismiss": "Stop alarm",
+  "@alarmDismiss": { "description": "Alarmı susturur; gece kaydı devam eder" },
+
   "reportCardHeader": "Night receipt",
   "@reportCardHeader": { "description": "Gece raporu kartı başlığı — 'makbuz' metaforu: iddia taşımaz, kayıt tutar" },
 

@@ -5,6 +5,7 @@ import 'db_envelope.dart';
 import 'envelope_log.dart';
 import 'event_detector.dart';
 import 'mic_source.dart';
+import 'recent_activity.dart';
 import 'sleep_session_builder.dart';
 
 /// Uyku kaydı — mikrofondan gece raporuna giden **tek hat**.
@@ -123,6 +124,29 @@ class SleepRecorder {
 
   Object? _lastError;
   Object? get lastError => _lastError;
+
+  /// Bir çerçevenin kapsadığı süre — çerçeve indeksi ile duvar saati arasındaki köprü.
+  Duration get frameDuration =>
+      Duration(microseconds: frameSamples * 1000000 ~/ sampleRate);
+
+  /// Son [lookback] süresinde akustik aktivite oldu mu — akıllı alarmın girdisi.
+  ///
+  /// **Neden burada:** çerçeve saatini ve dedektörü bu sınıf tutuyor. Alarmın
+  /// dedektöre doğrudan uzanması, iki sınıfı birbirine bağlar ve alarmı çerçeve
+  /// kavramına bulaştırırdı (alarm duvar saatiyle çalışır, bkz. `recent_activity`).
+  ///
+  /// Isınma bitmeden (dedektör yokken) **false**: taban henüz bilinmiyor, "aktivite
+  /// var" demek uydurma olurdu.
+  bool hasRecentActivityIn(Duration lookback) {
+    final detector = _detector;
+    if (detector == null) return false;
+    return hasRecentActivity(
+      events: detector.events,
+      currentFrame: detector.frameCount,
+      lookback: lookback,
+      frameDuration: frameDuration,
+    );
+  }
 
   /// Isınma bitene kadar taban ölçülür; sonra dedektör O TABANLA kurulur.
   void _feed(double db) {

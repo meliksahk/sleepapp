@@ -309,6 +309,60 @@ abstract class AppL10n {
   /// **'Tonight\'s mix'**
   String get mixerVideoTitle;
 
+  /// Uyku modundaki alarm bölümü başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Smart alarm'**
+  String get alarmSectionTitle;
+
+  /// Alarm kurulu değil — varsayılan (opt-in)
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get alarmOff;
+
+  /// Kurulu alarm. 'by' bilinçli: bu bir son tarih, tam saat değil — pencerede daha erken çalabilir
+  ///
+  /// In en, this message translates to:
+  /// **'Wake me by {time}'**
+  String alarmSet(String time);
+
+  /// Alarmın ne yaptığını dürüstçe anlatır: sezgisel + son tarih garantisi. Uyku evresi İDDİASI yok (CLAUDE.md §1.1)
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll look for a lighter moment in the {minutes} minutes before, and wake you by then at the latest.'**
+  String alarmExplain(int minutes);
+
+  /// Alarm saati seçme butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Set alarm'**
+  String get alarmChoose;
+
+  /// Alarmı kaldır
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get alarmClear;
+
+  /// Alarm hafif uyku sinyaliyle çaldı. 'stirred' = gözlemlediğimiz şey; uyku evresi iddiası DEĞİL
+  ///
+  /// In en, this message translates to:
+  /// **'You stirred — good moment to wake up.'**
+  String get alarmRingingLightSleep;
+
+  /// Alarm son tarihte çaldı (hafif uyku sinyali hiç görülmedi)
+  ///
+  /// In en, this message translates to:
+  /// **'Time to wake up.'**
+  String get alarmRingingDeadline;
+
+  /// Alarmı susturur; gece kaydı devam eder
+  ///
+  /// In en, this message translates to:
+  /// **'Stop alarm'**
+  String get alarmDismiss;
+
   /// Gece raporu kartı başlığı — 'makbuz' metaforu: iddia taşımaz, kayıt tutar
   ///
   /// In en, this message translates to:
