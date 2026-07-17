@@ -13,6 +13,15 @@
     "placeholders": { "name": { "type": "String" } }
   },
 
+  "sleepModeNotificationTitle": "Listening to your night",
+  "@sleepModeNotificationTitle": { "description": "Gece boyu duran bildirim başlığı — kullanıcı mikrofonun açık olduğunu GÖRÜR" },
+
+  "sleepModeNotificationBody": "Analysed on your phone. Tap to open.",
+  "@sleepModeNotificationBody": { "description": "Gece bildirimi gövdesi" },
+
+  "sleepModeServiceFailed": "Could not keep listening in the background. Your night would not be recorded.",
+  "@sleepModeServiceFailed": { "description": "Foreground servis başlatılamadı — kayıt başlatılmadı" },
+
   "sleepModeTitle": "Sleep mode",
   "@sleepModeTitle": { "description": "Uyku modu ekranı başlığı" },
 

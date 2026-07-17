@@ -1,7 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-        <!-- Uyku takibi: mikrofon YALNIZCA dB zarfı ölçmek için kullanılır; ham ses
-         cihazdan çıkmaz ve hiçbir yerde saklanmaz (CLAUDE.md §6, bkz. SleepRecorder). -->
+        <!-- Uyku takibi: mikrofon YALNIZCA dB zarfı ölçmek için; ham ses cihazdan çıkmaz
+         ve hiçbir yerde saklanmaz (CLAUDE.md §6, bkz. SleepRecorder). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- ARKA PLANDA GECE BOYU KAYIT (targetSdk=36 → Android 14+ kuralları).
+         Android 14'ten beri mikrofonu arka planda kullanmak için foreground service
+         ZORUNLU ve tipi "microphone" olmalı; aksi halde sistem kaydı ÖLDÜRÜR ve
+         kullanıcı sabah BOŞ bir raporla uyanır. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- Foreground service kalıcı bir bildirim GÖSTERMEK ZORUNDA (Android kuralı) ve
+         Android 13+ bunun için ayrı izin ister. Bu aynı zamanda dürüstlük: kullanıcı
+         mikrofonun açık olduğunu gece boyunca bildirimde GÖRÜR. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
 <application
         android:networkSecurityConfig="@xml/network_security_config"
@@ -35,7 +46,13 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-    </application>
+    
+        <!-- Gece kaydı servisi. `microphone` tipi Android 14+ için ZORUNLU. -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
+</application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

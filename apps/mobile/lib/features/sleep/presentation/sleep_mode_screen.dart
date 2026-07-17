@@ -110,6 +110,16 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                   style: TextStyle(color: NoctaColors.accentDawn),
                 ),
 
+              // Servis başlatılamadı → kayıt BAŞLATILMADI. Bunu izin reddinden ayrı
+              // göstermek şart: biri kullanıcının seçimi, diğeri sistem sorunu.
+              if (s.serviceFailed)
+                Text(
+                  l10n.sleepModeServiceFailed,
+                  key: const Key('sleep-service-failed'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: NoctaColors.accentDawn),
+                ),
+
               if (s.savedDraft != null) ...[
                 Text(
                   l10n.sleepModeSaved(
@@ -152,7 +162,10 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                   if (now.isRecording) {
                     widget.controller.stopAndSave();
                   } else {
-                    widget.controller.start();
+                    widget.controller.start(
+                      notificationTitle: l10n.sleepModeNotificationTitle,
+                      notificationBody: l10n.sleepModeNotificationBody,
+                    );
                   }
                 },
               ),

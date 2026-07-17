@@ -111,6 +111,24 @@ abstract class AppL10n {
   /// **'My sleep identity is {name}.'**
   String shareIdentityText(String name);
 
+  /// Gece boyu duran bildirim başlığı — kullanıcı mikrofonun açık olduğunu GÖRÜR
+  ///
+  /// In en, this message translates to:
+  /// **'Listening to your night'**
+  String get sleepModeNotificationTitle;
+
+  /// Gece bildirimi gövdesi
+  ///
+  /// In en, this message translates to:
+  /// **'Analysed on your phone. Tap to open.'**
+  String get sleepModeNotificationBody;
+
+  /// Foreground servis başlatılamadı — kayıt başlatılmadı
+  ///
+  /// In en, this message translates to:
+  /// **'Could not keep listening in the background. Your night would not be recorded.'**
+  String get sleepModeServiceFailed;
+
   /// Uyku modu ekranı başlığı
   ///
   /// In en, this message translates to:
