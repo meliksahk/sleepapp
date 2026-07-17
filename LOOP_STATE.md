@@ -37,9 +37,12 @@
 >
 > Yüzeyler kanıta dayalı ama yine de TAHMİN (Dürüstlük Protokolü). Kesin olan şey
 > yüzdeler değil, **yönü**: aşağıdaki olgular tek tek doğrulandı →
-> `entitlement` API'de **0 isabet** · `redis/ioredis/bullmq` **kurulu değil** ·
-> Dockerfile **0** · kaynak kodda MethodChannel **0** · golden test **0** ·
-> `recordSession` **çağıranı yok** (5 iterasyonluk ölü kod).
+> `redis/ioredis/bullmq` **kurulu değil** · Dockerfile **0** · kaynak kodda
+> MethodChannel **0** · golden test **0** · `entitlement` API'de **0 isabet**
+> (ama bu bir **stub**, çıkış kriteri değil — docs/02:152) ·
+> **ÖLÜ KOD ZİNCİRİ:** `recordSession` **ve** `renderMix` **ve** `toMixSpec` —
+> üçünün de üretimde çağıranı yok. Yani ses zinciri (`engine_params → MixSpec →
+renderMix → PCM`) baştan sona yazıldı, test edildi, **hiçbir yere bağlanmadı**.
 >
 > F6 (ödeme + lansman) insan-kapılı olduğundan otonom kapsamın dışında.
 

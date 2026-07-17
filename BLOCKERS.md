@@ -8,8 +8,14 @@
 ### ~~B-3 · Java yok → Dart API client üretilemiyor~~ → ⛔ **BU BLOCKER YANLIŞTI (#137)**
 
 - **Yazdığım iddia:** "ortamda Java kurulu değil."
-- **Gerçek:** **Java KURULU.** `C:/Program Files/Android/Android Studio/jbr/bin/java.exe`
-  → `openjdk version "17.0.9"`. Flutter'ın Android build'inin **zaten kullandığı** JBR.
+- **Gerçek (müdür denetimiyle DÜZELTİLDİ):** JDK **var ama PATH'te DEĞİL.**
+  `java -version` → _command not found_; `JAVA_HOME` → **boş**. JDK yalnızca şurada:
+  `C:/Program Files/Android/Android Studio/jbr/bin/java.exe` → `openjdk 17.0.9`.
+  Flutter'ın Android build'inin **zaten kullandığı** JBR.
+- **Doğru komut:** `JAVA_HOME="C:/Program Files/Android/Android Studio/jbr" npx @openapitools/openapi-generator-cli generate ...`
+- **NOT:** ilk düzeltmem "Java KURULU" diyordu — bu da yanıltıcıydı: `java -version`
+  koşan sonraki okuyucu "command not found" alıp blocker'ı geri yazardı. Yanlış bir
+  cümleyi başka bir yanlış cümleyle düzeltmek, hatanın kendisinin tekrarıdır.
   `apps/api/openapi.json` da yerinde (71.550 bayt). Yani ön koşulların ikisi de vardı.
 - **Neden önemli:** bu tek yanlış cümle bir blocker dosyasında durdu ve **her planlama
   kararını zehirledi** — Dart client "üretilemez" sayıldığı için mobil API katmanı
