@@ -84,12 +84,12 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                       |
 | ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~72%     | 0.30    | Redis/BullMQ (kurulu değil), outbox, veri export. ~~Dockerfile~~ ✓ #151 · ~~entitlement (B1 çıkış kriteri)~~ ✓ #153 (EntitlementService port + dev stub + `GET /v1/me/entitlement`, e2e gerçek Postgres'e karşı; IAP hâlâ en son faz)                                      |
+| Backend/API | ~73%     | 0.30    | Redis/BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 (`GET /v1/me/export` GDPR taşınabilirliği — silmenin simetriği, izolasyon e2e ile kanıtlandı; IAP hâlâ en son faz)                                            |
 | Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik. ~~TR arb~~ ✓ #149 (EN+TR + parity kapısı) |
 | Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                         |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                |
 
-> **Hesap:** `0.40·71 + 0.30·72 + 0.15·32 + 0.15·33 = 59.75` → **≈60%**
+> **Hesap:** `0.40·71 + 0.30·73 + 0.15·32 + 0.15·33 = 60.05` → **≈60%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -194,6 +194,21 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #155 — GDPR veri export: GET /v1/me/export, silmenin simetriği (PR #155)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `privacy` modülü + `GET /v1/me/export`: kullanıcı kendi verisini indirilebilir JSON
+  olarak alır (profil, arketip geçmişi, TÜM uyku oturumları, aktif oturumlar). Silme
+  vardı, export eksik yarısıydı — GDPR Md.20 + App Store veri şeffaflığı. Kapsam D-7:
+  push token'ları hariç (opak altyapı); ham mikrofon zaten sunucuya gelmiyor (§6).
+- **Sınır-temiz, sıfır yeni sorgu:** modüllerde ZATEN var olan public read use case'leri
+  export edip besteledim; application katmanı local `ExportSources` port'una bağlı,
+  cross-module wiring modülde (eslint boundaries yeşil).
+- **GERÇEKTEN çalıştırılarak (§0):** birim (2) + **e2e (3, gerçek Postgres):** token'sız
+  401, `Content-Disposition: attachment`, **izolasyon — A, B'nin verisini export EDEMEZ.**
+  Tüm api süiti: **70 suite / 440 test yeşil.**
 
 ### #153 — entitlement stub: B1 çıkış kriteri, premium kapısı tek arayüz arkasında (PR #153)
 
