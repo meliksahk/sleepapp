@@ -5,6 +5,7 @@ import '../features/archetype/presentation/archetype_test_screen.dart';
 import '../features/content/presentation/soundscape_detail_screen.dart';
 import '../features/content/presentation/soundscape_library_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/mixer/presentation/mixer_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sleep/presentation/night_report_screen.dart';
 import '../features/sleep/presentation/sleep_history_screen.dart';
@@ -28,6 +29,10 @@ final GoRouter appRouter = GoRouter(
       path: '/identity/:slug',
       builder: (context, state) =>
           ArchetypeDetailScreen(slug: state.pathParameters['slug'] ?? ''),
+    ),
+    GoRoute(
+      path: '/mixer',
+      builder: (context, state) => const MixerScreen(),
     ),
     GoRoute(
       path: '/library',

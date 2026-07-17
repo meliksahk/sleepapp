@@ -93,6 +93,66 @@ abstract class AppL10n {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Ana ekrandan miksere giden buton
+  ///
+  /// In en, this message translates to:
+  /// **'Open mixer'**
+  String get homeOpenMixer;
+
+  /// Mikser ekranı başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Mixer'**
+  String get mixerTitle;
+
+  /// Sesi başlat
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get mixerPlay;
+
+  /// Sesi duraklat
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get mixerPause;
+
+  /// Katmanlar render edilirken
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing sound…'**
+  String get mixerPreparing;
+
+  /// Beyaz gürültü katmanı adı
+  ///
+  /// In en, this message translates to:
+  /// **'White noise'**
+  String get mixerLayerWhite;
+
+  /// Pembe gürültü katmanı adı
+  ///
+  /// In en, this message translates to:
+  /// **'Pink noise'**
+  String get mixerLayerPink;
+
+  /// Kahverengi gürültü katmanı adı
+  ///
+  /// In en, this message translates to:
+  /// **'Brown noise'**
+  String get mixerLayerBrown;
+
+  /// Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil
+  ///
+  /// In en, this message translates to:
+  /// **'Early build: generated locally, looped. Sound quality is not final.'**
+  String get mixerStopgapNotice;
+
+  /// Ses başlatılamadığında
+  ///
+  /// In en, this message translates to:
+  /// **'Sound could not start.'**
+  String get mixerFailed;
+
   /// Gece raporu ekranı başlığı
   ///
   /// In en, this message translates to:
