@@ -5,6 +5,8 @@
 > 1. **Mikseri açıp SES DUYABİLİYOR**, slider'ı oynatınca ses değişiyor — **internetsiz**. (#138, #139)
 > 2. **Kimliğini GÖRSEL olarak paylaşabiliyor**: testi bitir → paylaş → 1080×1920 kart
 >    native paylaşım sayfasına gidiyor (link değil, görsel). (#140)
+> 3. **Gecesini kaydedebiliyor**: uyku modu gerçek mikrofonla dinliyor, olayları
+>    cihazda sayıyor ve geceyi sunucuya yazıyor — **ham ses hiçbir yere gitmiyor**. (#141)
 >
 > Bu satır D-12 kararıyla eklendi ve **barın aksine yalan söyleyemez**: her iterasyonda
 > "kullanıcı ne YAPABİLİYOR?" sorusuna cevap verir. 30 iterasyon boyunca bu satırın
@@ -14,10 +16,10 @@
 > yapılmadı** (CLAUDE.md §1.1 — insana ait). Önceden render edilmiş buffer döngüleniyor;
 > nihai native graf değil. Döngü dikişi duyulabilir.
 
-## 🚧 İlerleme: ≈53% — F1–F5 (otonom kapsam)
+## 🚧 İlerleme: **%55'te KİLİTLİ** (ship kapısı) — formül 55.55 — F1–F5
 
 ```
-[█████████████████████░░░░░░░░░░░░░░░░░░░] 53%
+[██████████████████████░░░░░░░░░░░░░░░░░░] 55% 🔒
 ```
 
 > ## ⛔ #137 DÜZELTMESİ — BU BAR 30 PUAN ŞİŞİKTİ (76 → 46)
@@ -43,11 +45,16 @@
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                            |
 | ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, Dockerfile (yok), veri export                                |
-| Mobil       | ~55%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), uyku modu ekranı, 3 viral kanca (0 golden test) |
+| Mobil       | ~62%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), uyku modu ekranı, 3 viral kanca (0 golden test) |
 | Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                              |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                     |
 
-> **Hesap:** `0.40·55 + 0.30·70 + 0.15·32 + 0.15·33 = 52.75` → **≈53%**
+> **Hesap:** `0.40·62 + 0.30·70 + 0.15·32 + 0.15·33 = 55.55` → **≈56%**
+>
+> ⛔ **D-12 SHIP KAPISI DEVREDE:** kural "üç viral kanca render edilene kadar bar
+> %55'i geçemez". Kanca #1 (kimlik kartı) ✅, #2 (gece raporu) ve #3 (mix-to-video)
+> ❌ → **bar %55'te KİLİTLİ.** Formül 55.55 diyor ama kapı geçirmiyor; kapının
+> varlık sebebi tam olarak bu. Sıradaki iş kanca #2.
 >
 > **D-12 ship kapısı:** "ses yoksa ≤%55" kuralı aktif. Ses ÇIKIYOR (#138) ama üç viral
 > kanca (kimlik kartı, gece raporu, mix-to-video) henüz render edilmiyor → **kapı hâlâ
@@ -138,6 +145,48 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #141 — uyku modu: gerçek mikrofon, gece kaydediliyor (PR #141, merged)
+
+✅ **Yapıldı ve doğrulandı**
+
+- **#128–#132'nin beş iterasyonluk ölü kodu artık CANLI.** `recordSession`'ın
+  üretimde ilk gerçek çağrısı.
+- `MicSource` portu + `RecordMicSource` (record 7.1.1, BSD-3) + `SleepRecorder` +
+  uyku modu ekranı + rota + ana ekran girişi + RECORD_AUDIO izni.
+- **CLAUDE.md §6 MİMARİYLE zorlanıyor:** çerçeve → anında dB → düşer. Hiçbir yerde
+  ham ses birikmiyor; test de gövdenin yalnızca `{zaman, iki sayı}` olduğunu doğruluyor.
+- **EMÜLATÖRDE (gerçek mikrofon + gerçek DB):** `Input thread Standby:no,
+Sample rate 16000 Hz, pack com.nocta.nocta` · ekran `00:00:46 · Listening… ·
+No sounds yet` · bitir → mikrofon KAPANDI + DB satırı `started 07:28:46.209Z,
+ended 07:29:59.369Z, sound_events 0` — **ham ses yok**.
+- **TESTLER ÜÇ GERÇEK HATA YAKALADI:** (1) **hayalet olay** — taban -100 dB'den
+  başlıyordu, her gecenin başında uydurma olay sayılırdı → ısınma (medyanlı);
+  (2) **bayat closure** — "bitir" yeniden `start()` çağırıyor, gece kaydedilmiyordu;
+  (3) **iki kilitlenme** — `async*`'a `cancel()` ve aboneliksiz `close()` beklemek
+  sahte zamanda sonsuza kadar asılıyor.
+- 13 recorder + 7 ekran testi. 296/296, analyze temiz, CI 2/2.
+
+⚠️ **Yapıldı, doğrulanmadı**
+
+- **Gerçek gece testi YOK** (8 saat, telefon kilitli). Ekran kapanınca Android kaydı
+  öldürebilir — arka plan/uyanık kalma yazılmadı.
+- **Dedektörün gerçek sesle davranışı doğrulanmadı**: emülatör sessiz, 0 olay çıktı.
+
+❌ **Yapılmadı / eksik**
+
+- **`movementEvents` her zaman 0** — ölçmüyoruz. Ayrımı uydurmaktansa sıfır (D-10).
+- Eşikler gerçek gecelerle ayarlanmadı (fabrika enjekte edilebilir — ayarlanınca
+  çağıran kod değişmeyecek).
+- Akıllı alarm (`smart_alarm.dart`) HÂLÂ ölü kod — uyku moduna bağlanmadı.
+
+📌 **Varsayımlar** — 16 kHz (horlama/konuşma bandına yeter, 48 kHz'in 1/3 pili);
+ısınma 16 çerçeve ≈ 0.25 sn.
+
+🔥 **Riskler / açıklar**
+
+- Arka planda kayıt garantisi yok → kullanıcı "gece dinledim" sanıp boş rapor
+  görebilir. **Gerçek gece testi yapılmadan bu özellik ship EDİLEMEZ.**
 
 ### #140 — kimlik paylaşım kartı: viral kanca #1 ÇALIŞIYOR (PR #140, merged)
 
