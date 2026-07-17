@@ -1,4 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ██ INTERNET — BURADA OLMAK ZORUNDA, `src/debug/`de DEĞİL. ██
+
+         Flutter şablonu INTERNET'i YALNIZCA `src/debug/` ve `src/profile/`
+         manifestlerine koyar (hot reload için). `src/main/` yani KULLANICIYA GİDEN
+         APK bu izin olmadan çıkıyordu ve iki şey birden ölüydü:
+
+         1. **SES HİÇ ÇIKMIYORDU.** `BytesAudioSource` bir `StreamAudioSource`;
+            just_audio bellekteki WAV'ı beslemek için yerel (localhost) bir proxy HTTP
+            sunucusu açar. İzin yoksa bind edemez:
+              SocketException: Failed to create server socket (errno = 1)
+              #4 _ProxyHttpServer.start (just_audio.dart:2522)
+            → mikser de (#138) alarm da (#146) release'de SESSİZDİ.
+         2. API istemcisi: login, arketip, içerik, rapor — hepsi ölüydü.
+
+         Beş iterasyon boyunca "cihazda doğruladım" dedim; hepsi DEBUG build'diydi ve
+         debug manifesti izni gizlice ekliyordu. Ders: **"emülatörde duydum" ≠
+         "kullanıcı duyar"**. Bunu bir daha kaçırmamak için `android_manifest_test.dart`
+         bu satırı kilitliyor. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
         <!-- Uyku takibi: mikrofon YALNIZCA dB zarfı ölçmek için; ham ses cihazdan çıkmaz
          ve hiçbir yerde saklanmaz (CLAUDE.md §6, bkz. SleepRecorder). -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
