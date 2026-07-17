@@ -313,6 +313,33 @@ class AppL10nTr extends AppL10n {
   String get membershipFree => 'Ücretsiz plan';
 
   @override
+  String get paywallTitle => 'NOCTA Premium';
+
+  @override
+  String get paywallTagline => 'Uyku ritüelinden daha fazlası.';
+
+  @override
+  String get paywallBenefitTrends => 'Haftalık uyku trendleri';
+
+  @override
+  String get paywallBenefitMore => 'Daha fazla premium özellik yolda';
+
+  @override
+  String get paywallCta => 'Premium\'a geç';
+
+  @override
+  String get paywallComingSoon => 'Premium çok yakında.';
+
+  @override
+  String get paywallLater => 'Belki sonra';
+
+  @override
+  String get trendLockText => 'Haftalık trendler bir Premium özelliği.';
+
+  @override
+  String get trendLockCta => 'Premium ile aç';
+
+  @override
   String get settingsPushNotifications => 'Anlık bildirimler';
 
   @override

@@ -5,6 +5,7 @@ import '../features/archetype/presentation/archetype_history_screen.dart';
 import '../features/archetype/presentation/archetype_test_screen.dart';
 import '../features/content/presentation/soundscape_detail_screen.dart';
 import '../features/content/presentation/soundscape_library_screen.dart';
+import '../features/entitlement/presentation/paywall_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/mixer/presentation/mixer_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
@@ -59,6 +60,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/paywall',
+      builder: (context, state) => const PaywallScreen(),
     ),
   ],
 );

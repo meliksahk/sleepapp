@@ -312,6 +312,33 @@ class AppL10nEn extends AppL10n {
   String get membershipFree => 'Free plan';
 
   @override
+  String get paywallTitle => 'NOCTA Premium';
+
+  @override
+  String get paywallTagline => 'More from your sleep ritual.';
+
+  @override
+  String get paywallBenefitTrends => 'Weekly sleep trends';
+
+  @override
+  String get paywallBenefitMore => 'More premium features on the way';
+
+  @override
+  String get paywallCta => 'Get Premium';
+
+  @override
+  String get paywallComingSoon => 'Premium is coming soon.';
+
+  @override
+  String get paywallLater => 'Maybe later';
+
+  @override
+  String get trendLockText => 'Weekly trends are a Premium feature.';
+
+  @override
+  String get trendLockCta => 'Unlock with Premium';
+
+  @override
   String get settingsPushNotifications => 'Push notifications';
 
   @override
