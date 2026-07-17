@@ -9,6 +9,12 @@ class AppL10nEn extends AppL10n {
   AppL10nEn([String locale = 'en']) : super(locale);
 
   @override
+  String get offlineBanner => 'Offline — some features need a connection';
+
+  @override
+  String get offlineRetry => 'Retry';
+
+  @override
   String get homeOpenMixer => 'Open mixer';
 
   @override

@@ -93,6 +93,18 @@ abstract class AppL10n {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Oturum kurulamadığında üstte görünen çubuk
+  ///
+  /// In en, this message translates to:
+  /// **'Offline — some features need a connection'**
+  String get offlineBanner;
+
+  /// Çevrimdışı çubuğundaki yeniden dene
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get offlineRetry;
+
   /// Ana ekrandan miksere giden buton
   ///
   /// In en, this message translates to:

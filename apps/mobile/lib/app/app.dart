@@ -8,8 +8,17 @@ import '../features/auth/auth_providers.dart';
 import 'router.dart';
 
 /// Kök uygulama widget'ı — dark-first (uygulama gece yaşar, docs/06).
-/// Açılışta anonim oturumu garantiler (restore-or-register); çözülene dek
-/// splash, hata durumunda yeniden dene gösterir (docs/04 M0).
+///
+/// Açılışta anonim oturumu kurmayı dener; çözülene dek splash.
+///
+/// **OTURUM HATASI UYGULAMAYI BLOKLAMAZ (CLAUDE.md §3.1).** Kural açık:
+/// *"Uygulama offline-first: ses üretimi ve mikser internetsiz TAM çalışır."*
+/// Önceden hata durumunda tüm uygulama bir "yeniden dene" ekranına düşüyordu —
+/// yani internet yoksa **tamamen yerel olan mikser'e bile ulaşılamıyordu.** Bu,
+/// uçakta/kırsalda/sunucu çökünce uygulamanın çekirdek işlevini yok ederdi.
+///
+/// Artık hata durumunda da router açılır: API isteyen ekranlar kendi hatalarını
+/// gösterir, internetsiz çalışabilenler (mikser) çalışır.
 class NoctaApp extends ConsumerWidget {
   const NoctaApp({super.key});
 
@@ -20,20 +29,24 @@ class NoctaApp extends ConsumerWidget {
 
     return bootstrap.when(
       data: (_) => _AppRoot(theme: theme),
+      // Yükleme KISA ve belirleyici: oturum ya kurulur ya hata verir. Splash burada
+      // kalır çünkü henüz hangi durumda olduğumuzu bilmiyoruz.
       loading: () => _SplashApp(theme: theme),
-      error: (error, stack) => _SplashApp(
-        theme: theme,
-        onRetry: () => ref.invalidate(sessionBootstrapProvider),
-      ),
+      // Hata = ÇEVRİMDIŞI MOD, kilit değil.
+      error: (error, stack) => _AppRoot(theme: theme, offline: true),
     );
   }
 }
 
 /// Oturum kurulduktan sonraki kök — router + analitik lifecycle flush observer'ı.
 class _AppRoot extends ConsumerStatefulWidget {
-  const _AppRoot({required this.theme});
+  const _AppRoot({required this.theme, this.offline = false});
 
   final ThemeData theme;
+
+  /// Oturum kurulamadı → çevrimdışı mod. Uygulama AÇILIR; API isteyen ekranlar
+  /// kendi hatalarını gösterir, mikser gibi yerel olanlar çalışır.
+  final bool offline;
 
   @override
   ConsumerState<_AppRoot> createState() => _AppRootState();
@@ -65,17 +78,62 @@ class _AppRootState extends ConsumerState<_AppRoot> {
       localizationsDelegates: AppL10n.localizationsDelegates,
       supportedLocales: AppL10n.supportedLocales,
       routerConfig: appRouter,
+      builder: (context, child) {
+        if (!widget.offline || child == null) {
+          return child ?? const SizedBox.shrink();
+        }
+        // Çevrimdışıyken kullanıcı NEDEN bazı şeylerin boş olduğunu bilmeli —
+        // sessizce boş ekran göstermek "uygulama bozuk" izlenimi verirdi.
+        return Column(
+          children: [
+            Material(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cloud_off, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          AppL10n.of(context).offlineBanner,
+                          key: const Key('offline-banner'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      TextButton(
+                        key: const Key('offline-retry'),
+                        onPressed: () =>
+                            ref.invalidate(sessionBootstrapProvider),
+                        child: Text(AppL10n.of(context).offlineRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: child),
+          ],
+        );
+      },
     );
   }
 }
 
-/// Metinsiz açılış ekranı (l10n M1'de gelene dek prose yok). Yükleme → spinner;
-/// hata → yeniden dene ikonu.
+/// Metinsiz açılış ekranı: yalnızca oturum ÇÖZÜLENE KADAR görünür.
+///
+/// Artık "yeniden dene" yolu YOK — hata durumunda uygulama bu ekranda kalmıyor,
+/// çevrimdışı moda geçip router'ı açıyor (bkz. [NoctaApp]). Yeniden deneme,
+/// çevrimdışı çubuğundaki butonda.
 class _SplashApp extends StatelessWidget {
-  const _SplashApp({required this.theme, this.onRetry});
+  const _SplashApp({required this.theme});
 
   final ThemeData theme;
-  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -83,18 +141,7 @@ class _SplashApp extends StatelessWidget {
       title: 'NOCTA',
       debugShowCheckedModeBanner: false,
       theme: theme,
-      home: Scaffold(
-        body: Center(
-          child: onRetry == null
-              ? const CircularProgressIndicator()
-              : IconButton(
-                  key: const Key('session-retry'),
-                  icon: const Icon(Icons.refresh),
-                  iconSize: 40,
-                  onPressed: onRetry,
-                ),
-        ),
-      ),
+      home: const Scaffold(body: Center(child: CircularProgressIndicator())),
     );
   }
 }

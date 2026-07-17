@@ -1,6 +1,12 @@
 {
   "@@locale": "en",
 
+  "offlineBanner": "Offline — some features need a connection",
+  "@offlineBanner": { "description": "Oturum kurulamadığında üstte görünen çubuk" },
+
+  "offlineRetry": "Retry",
+  "@offlineRetry": { "description": "Çevrimdışı çubuğundaki yeniden dene" },
+
   "homeOpenMixer": "Open mixer",
   "@homeOpenMixer": { "description": "Ana ekrandan miksere giden buton" },
 
