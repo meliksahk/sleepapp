@@ -9,6 +9,42 @@ class AppL10nEn extends AppL10n {
   AppL10nEn([String locale = 'en']) : super(locale);
 
   @override
+  String get homeOpenMixer => 'Open mixer';
+
+  @override
+  String get mixerTitle => 'Mixer';
+
+  @override
+  String get mixerPlay => 'Play';
+
+  @override
+  String get mixerPause => 'Pause';
+
+  @override
+  String get mixerPreparing => 'Preparing sound…';
+
+  @override
+  String get mixerLayerWhite => 'White noise';
+
+  @override
+  String get mixerLayerPink => 'Pink noise';
+
+  @override
+  String get mixerLayerBrown => 'Brown noise';
+
+  @override
+  String mixerGainPercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get mixerStopgapNotice =>
+      'Early build: generated locally, looped. Sound quality is not final.';
+
+  @override
+  String get mixerFailed => 'Sound could not start.';
+
+  @override
   String get nightReportTitle => 'Night report';
 
   @override

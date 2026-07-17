@@ -1,6 +1,42 @@
 {
   "@@locale": "en",
 
+  "homeOpenMixer": "Open mixer",
+  "@homeOpenMixer": { "description": "Ana ekrandan miksere giden buton" },
+
+  "mixerTitle": "Mixer",
+  "@mixerTitle": { "description": "Mikser ekranı başlığı" },
+
+  "mixerPlay": "Play",
+  "@mixerPlay": { "description": "Sesi başlat" },
+
+  "mixerPause": "Pause",
+  "@mixerPause": { "description": "Sesi duraklat" },
+
+  "mixerPreparing": "Preparing sound…",
+  "@mixerPreparing": { "description": "Katmanlar render edilirken" },
+
+  "mixerLayerWhite": "White noise",
+  "@mixerLayerWhite": { "description": "Beyaz gürültü katmanı adı" },
+
+  "mixerLayerPink": "Pink noise",
+  "@mixerLayerPink": { "description": "Pembe gürültü katmanı adı" },
+
+  "mixerLayerBrown": "Brown noise",
+  "@mixerLayerBrown": { "description": "Kahverengi gürültü katmanı adı" },
+
+  "mixerGainPercent": "{percent}%",
+  "@mixerGainPercent": {
+    "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",
+    "placeholders": { "percent": { "type": "int" } }
+  },
+
+  "mixerStopgapNotice": "Early build: generated locally, looped. Sound quality is not final.",
+  "@mixerStopgapNotice": { "description": "Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil" },
+
+  "mixerFailed": "Sound could not start.",
+  "@mixerFailed": { "description": "Ses başlatılamadığında" },
+
   "nightReportTitle": "Night report",
   "@nightReportTitle": { "description": "Gece raporu ekranı başlığı" },
 

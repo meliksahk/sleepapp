@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  YALNIZCA 127.0.0.1 için cleartext HTTP izni.
+
+  NEDEN GEREKLİ: just_audio, bellekteki WAV'ı ExoPlayer'a yerel bir HTTP sunucusu
+  (127.0.0.1) üzerinden servis eder. Android 9+ cleartext'i varsayılan olarak
+  engeller → "CleartextNotPermittedException" ve SES ÇIKMAZ. (Uygulamanın kendi API
+  çağrıları etkilenmiyordu: Dart'ın HttpClient'ı Java ağ katmanını kullanmaz, ExoPlayer
+  kullanır.)
+
+  NEDEN `usesCleartextTraffic="true"` DEĞİL: o, uygulamanın HER hosta şifresiz
+  bağlanmasına izin verirdi — API trafiğimiz dahil. Bu dosya izni yalnızca loopback'e
+  verir; gerçek sunucularla trafik TLS zorunlu kalır.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
