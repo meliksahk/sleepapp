@@ -87,6 +87,6 @@ const providers: Provider[] = [
   controllers: [SleepController],
   providers,
   // Modüller-arası okuma için dışa açılır (ör. sharing gece raporu kartı üretir).
-  exports: [GetNightReportUseCase],
+  exports: [GetNightReportUseCase, ListSleepSessionsUseCase],
 })
 export class SleepModule {}

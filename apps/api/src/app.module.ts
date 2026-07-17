@@ -19,6 +19,7 @@ import { SharingModule } from './modules/sharing/sharing.module';
 import { SleepModule } from './modules/sleep/sleep.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { EntitlementModule } from './modules/entitlement';
+import { PrivacyModule } from './modules/privacy/privacy.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { EntitlementModule } from './modules/entitlement';
     SleepModule,
     AnalyticsModule,
     EntitlementModule,
+    PrivacyModule,
   ],
   providers: [
     // KRİTİK: ThrottlerModule tek başına HİÇBİR ŞEY zorlamaz — guard'ın kayıtlı

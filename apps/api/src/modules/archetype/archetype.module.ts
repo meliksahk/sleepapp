@@ -77,6 +77,6 @@ const providers: Provider[] = [
   controllers: [ArchetypeController, WebArchetypeController, ArchetypeContentController],
   providers,
   // Modüller-arası okuma için dışa açılır (ör. sharing modülü sonuç okur).
-  exports: [GetLatestResultUseCase],
+  exports: [GetLatestResultUseCase, ListResultsUseCase],
 })
 export class ArchetypeModule {}
