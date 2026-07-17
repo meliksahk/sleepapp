@@ -82,12 +82,12 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                       |
-| ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz               |
-| Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik. ~~TR arb~~ ✓ #149 (EN+TR + parity kapısı) |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                         |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                     |
+| ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                             |
+| Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **paywall UI + gated özellikler** (entitlement TÜKETİMİ ✓ #159), streak/haftalık ✓ (mevcut). ~~TR arb~~ ✓ #149 |
+| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                                                                                                       |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                              |
 
 > **Hesap:** `0.40·71 + 0.30·74 + 0.15·32 + 0.15·33 = 60.35` → **≈60%**
 >
@@ -199,6 +199,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #159 — mobil entitlement tüketimi: backend #153 uygulamaya bağlandı (PR #159)
+
+✅ **Yapıldı ve doğrulandı**
+
+- Mobil artık `GET /v1/me/entitlement`'i çekiyor (model + controller + Riverpod
+  provider); ayarlarda "Üyelik" durumu. Backend'de #153 vardı ama uygulama HİÇ
+  tüketmiyordu — premium gating mekanizması kuruldu (paywall'un temeli).
+- premium bayrağı SUNUCUDAN türetilir (istemci `tier`den hesaplamaz). i18n EN+TR
+  (parity yeşil), sağlık iddiası yok (§1.1).
+- Controller (2: endpoint+parse, premium & free) + widget (2: premium/free görünüm) +
+  mevcut settings regresyonsuz. **Tüm mobil süit: 385 test yeşil.**
+- 🔥 **Sınır:** henüz gate'lenen premium özellik YOK — mekanizma + durum göstergesi.
+  Gerçek paywall ekranı + hangi özelliklerin premium olacağı ayrı iş; IAP en son faz.
 
 ### #157 — dağıtık cache: Redis adaptörü (B4) + iki gerçek hata (PR #157)
 
