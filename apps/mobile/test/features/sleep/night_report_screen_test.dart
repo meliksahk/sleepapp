@@ -123,8 +123,13 @@ void main() {
     expect(find.text('7h 42m'), findsOneWidget);
     expect(find.byKey(const Key('report-calm')), findsOneWidget);
     expect(find.text('Calm 85/100'), findsOneWidget);
-    expect(find.text('12'), findsOneWidget); // movement
-    expect(find.text('3'), findsOneWidget); // sound
+    // **"Movement events" ARTIK GÖSTERİLMİYOR (D-10):** dedektör hareketi ölçmüyor
+    // (docs/04 §120 fixture'ları yok) ve alan her zaman 0 dönüyor. Ölçmediğimiz bir
+    // şeyi göstermek — sıfır bile olsa — bir iddiadır.
+    expect(find.textContaining('Movement'), findsNothing);
+    expect(find.text('3'), findsOneWidget); // yüksek anlar
+    // Ölçtüğümüz şeyin NE olduğu kullanıcıya açıkça söylenir.
+    expect(find.byKey(const Key('report-loud-hint')), findsOneWidget);
   });
 
   testWidgets('calm skoru sağlık iddiası taşımaz (uyarı metni)', (tester) async {
@@ -163,11 +168,19 @@ void main() {
     );
 
     await tester.tap(find.byKey(const Key('report-share')));
+    // `runAsync` ŞART: paylaşım artık önce gece raporu KARTINI PNG'ye render ediyor
+    // (viral kanca #2) ve `toImage` motorun gerçek asenkron işi — sahte zaman
+    // bölgesinde tamamlanmaz.
+    await tester.runAsync(() => Future<void>.delayed(const Duration(seconds: 2)));
     await tester.pumpAndSettle();
 
     expect(sharer.shared, hasLength(1));
     expect(sharer.shared.first.text, 'My night: 7h 42m');
     expect(sharer.shared.first.url, 'https://nocta.app/r/abc');
+    // ÇEKİRDEK: link DEĞİL, GÖRSEL paylaşılıyor (docs/04 §119).
+    expect(sharer.shared.first.file, isNotNull, reason: 'gece kartı PNG olarak gitmeli');
+    expect(sharer.shared.first.file!.mimeType, 'image/png');
+    expect(sharer.shared.first.file!.bytes.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
     expect(find.text('Link copied'), findsOneWidget);
     // Viral huni: paylaşım başarılıysa olay (sözlükte tanımlı).
     expect(analytics.events, contains('report_shared'));

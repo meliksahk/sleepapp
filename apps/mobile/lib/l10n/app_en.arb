@@ -106,6 +106,33 @@
   "mixerFailed": "Sound could not start.",
   "@mixerFailed": { "description": "Ses başlatılamadığında" },
 
+  "reportCardHeader": "Night receipt",
+  "@reportCardHeader": { "description": "Gece raporu kartı başlığı — 'makbuz' metaforu: iddia taşımaz, kayıt tutar" },
+
+  "reportCardDuration": "{hours}h {minutes}m",
+  "@reportCardDuration": {
+    "description": "Kartta süre — biçim yerele bağlı",
+    "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
+  },
+
+  "reportCardCalm": "Calm",
+  "@reportCardCalm": { "description": "Kartta dinginlik satırı etiketi" },
+
+  "reportCardLoud": "Louder moments",
+  "@reportCardLoud": { "description": "D-10: ölçtüğümüz şey bu — 'hareket' değil" },
+
+  "reportCardStreak": "Night streak",
+  "@reportCardStreak": { "description": "Kartta seri satırı" },
+
+  "reportCardIdentity": "Identity",
+  "@reportCardIdentity": { "description": "Kartta uyku kimliği satırı" },
+
+  "reportCardDisclaimer": "An in-app calm measure for your sleep ritual. Not a health score.",
+  "@reportCardDisclaimer": { "description": "CLAUDE.md §1.1 — kart paylaşılıyor, uyarı kartın ÜSTÜNDE olmalı" },
+
+  "reportShareText": "My night on NOCTA",
+  "@reportShareText": { "description": "Gece raporu paylaşım metni" },
+
   "nightReportTitle": "Night report",
   "@nightReportTitle": { "description": "Gece raporu ekranı başlığı" },
 
@@ -126,10 +153,13 @@
   "nightReportSessions": "Sessions",
   "@nightReportSessions": { "description": "O gecedeki uyku oturumu sayısı etiketi" },
 
+  "nightReportLoudHint": "Short bursts of sound the app heard. Not movement — we don’t measure that.",
+  "@nightReportLoudHint": { "description": "D-10: ölçtüğümüz şeyin ne olduğunu açıkça söyler" },
+
   "nightReportMovementEvents": "Movement events",
   "@nightReportMovementEvents": { "description": "On-device türetilmiş hareket olayı sayısı" },
 
-  "nightReportSoundEvents": "Sound events",
+  "nightReportSoundEvents": "Louder moments",
   "@nightReportSoundEvents": { "description": "On-device türetilmiş ses olayı sayısı" },
 
   "nightReportShare": "Share this night",

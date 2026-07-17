@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/media/card_renderer.dart';
 import '../../../core/share/sharer.dart';
+import 'night_report_card.dart';
 import '../../analytics/analytics_providers.dart';
-import '../../archetype/archetype_providers.dart' show sharerProvider;
+import '../../archetype/archetype_providers.dart'
+    show
+        archetypeContentProvider,
+        latestArchetypeResultProvider,
+        sharerProvider;
 import '../sleep_models.dart';
 import '../sleep_providers.dart';
 
@@ -22,6 +28,28 @@ class NightReportScreen extends ConsumerStatefulWidget {
 class _NightReportScreenState extends ConsumerState<NightReportScreen> {
   bool _sharing = false;
 
+  /// Raporu provider'dan OKUR: `_share` build'in yerel `r`'sini göremez ve o veriyi
+  /// widget'a parametre olarak taşımak, kartı ekranın çizim döngüsüne bağlardı.
+  NightReport? get _report0 => ref
+      .read(nightReportProvider(widget.nightDate))
+      .maybeWhen(data: (r) => r, orElse: () => null);
+
+  /// Seri — kartta gösterilir; gelmezse 0 (kart yine çizilir).
+  int get _streak => ref
+      .read(streakProvider)
+      .maybeWhen(data: (s) => s.current, orElse: () => 0);
+
+  /// Uyku kimliği — gelmezse kartta o satır hiç çizilmez.
+  String? get _archetypeName {
+    final slug = ref
+        .read(latestArchetypeResultProvider)
+        .maybeWhen(data: (r) => r?.archetypeSlug, orElse: () => null);
+    if (slug == null) return null;
+    return ref
+        .read(archetypeContentProvider)
+        .maybeWhen(data: (m) => m[slug]?.name ?? slug, orElse: () => slug);
+  }
+
   Future<void> _share() async {
     if (_sharing) return;
     setState(() => _sharing = true);
@@ -38,9 +66,52 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
         );
         return;
       }
+      // Viral kanca #2: link DEĞİL, GÖRSEL paylaşılır (docs/04 §119).
+      // Kart render edilemezse paylaşım TÜMDEN düşmez — link'le devam eder.
+      ShareFile? card;
+      final r = _report0;
+      try {
+        if (r == null) throw StateError('rapor yok');
+        final rendered = await renderWidgetToPng(
+          NightReportCard(
+            nightDate: widget.nightDate,
+            durationMinutes: r.totalDurationMinutes,
+            soundEvents: r.soundEvents,
+            calmScore: r.calmScore,
+            streak: _streak,
+            archetypeName: _archetypeName,
+            gradient: NoctaArchetypeGradient.overthinker,
+            labels: NightReportCardLabels(
+              header: l10n.reportCardHeader,
+              duration: l10n.reportCardDuration(
+                r.totalDurationMinutes ~/ 60,
+                r.totalDurationMinutes % 60,
+              ),
+              calmLabel: l10n.reportCardCalm,
+              loudLabel: l10n.reportCardLoud,
+              streakLabel: l10n.reportCardStreak,
+              identityLabel: l10n.reportCardIdentity,
+              disclaimer: l10n.reportCardDisclaimer,
+            ),
+          ),
+        );
+        debugPrint(
+          'Gece raporu kartı render: ${rendered.elapsed.inMilliseconds}ms '
+          '(bütçe ${shareCardRenderBudget.inMilliseconds}ms) '
+          '${rendered.withinBudget ? "İÇİNDE" : "AŞILDI"}',
+        );
+        card = ShareFile.png(
+          bytes: rendered.pngBytes,
+          filename: 'nocta-night-${widget.nightDate}.png',
+        );
+      } catch (e) {
+        // Sessiz yutma DEĞİL: kart gitmedi ama kullanıcı yine paylaşabilsin.
+        debugPrint('Gece raporu kartı render edilemedi, link ile: $e');
+      }
+
       await ref
           .read(sharerProvider)
-          .share(ShareContent(text: share.title, url: share.webUrl));
+          .share(ShareContent(text: share.title, url: share.webUrl, file: card));
       // Viral huni ölçümü (analitik bloklamaz). props YOK: gece tarihi PII'ye yakın
       // ve huni için gereksiz (docs/analytics-events.md).
       ref.read(analyticsProvider).track('report_shared');
@@ -136,11 +207,22 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
           ),
           const SizedBox(height: NoctaSpace.s3),
           _Row(label: l10n.nightReportSessions, value: '${r.sessionCount}'),
-          _Row(
-            label: l10n.nightReportMovementEvents,
-            value: '${r.movementEvents}',
-          ),
+          // **`movementEvents` GÖSTERİLMİYOR (D-10):** ölçmüyoruz. Dedektör "hareket"
+          // ile "ses"i ayıramıyor (docs/04 §120 fixture'ları yok) ve alan her zaman 0
+          // dönüyor. "Movement events: 0" göstermek, ölçmediğimiz bir şeyi ölçmüş
+          // gibi sunmaktır — sıfır bile bir iddiadır.
           _Row(label: l10n.nightReportSoundEvents, value: '${r.soundEvents}'),
+          Padding(
+            padding: const EdgeInsets.only(top: NoctaSpace.s1),
+            child: Text(
+              l10n.nightReportLoudHint,
+              key: const Key('report-loud-hint'),
+              style: TextStyle(
+                fontSize: NoctaFontSize.caption,
+                color: NoctaColors.inkFaint,
+              ),
+            ),
+          ),
           const SizedBox(height: NoctaSpace.s5),
           NButton(
             key: const Key('report-share'),
