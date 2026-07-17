@@ -285,6 +285,33 @@
   "membershipFree": "Free plan",
   "@membershipFree": { "description": "Kullanıcı ücretsiz katmandayken" },
 
+  "paywallTitle": "NOCTA Premium",
+  "@paywallTitle": { "description": "Paywall ekranı başlığı" },
+
+  "paywallTagline": "More from your sleep ritual.",
+  "@paywallTagline": { "description": "Paywall alt başlığı — SAĞLIK İDDİASI DEĞİL, 'ritual' konumlandırması (§1.1)" },
+
+  "paywallBenefitTrends": "Weekly sleep trends",
+  "@paywallBenefitTrends": { "description": "Premium fayda: haftalık trend grafiği" },
+
+  "paywallBenefitMore": "More premium features on the way",
+  "@paywallBenefitMore": { "description": "Premium fayda: gelecek özellikler (dürüst — bugün yalnız trend gated)" },
+
+  "paywallCta": "Get Premium",
+  "@paywallCta": { "description": "Paywall ana buton — gerçek IAP en son faz, şimdilik 'yakında'" },
+
+  "paywallComingSoon": "Premium is coming soon.",
+  "@paywallComingSoon": { "description": "CTA'ya basınca — satın alma henüz yok (§6)" },
+
+  "paywallLater": "Maybe later",
+  "@paywallLater": { "description": "Paywall'ı kapat" },
+
+  "trendLockText": "Weekly trends are a Premium feature.",
+  "@trendLockText": { "description": "Free kullanıcıya trend yerine gösterilen kilit metni" },
+
+  "trendLockCta": "Unlock with Premium",
+  "@trendLockCta": { "description": "Kilit CTA'sı — paywall'ı açar" },
+
   "settingsPushNotifications": "Push notifications",
   "@settingsPushNotifications": { "description": "Bildirim ac/kapa anahtari etiketi" },
 

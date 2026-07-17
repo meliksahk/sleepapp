@@ -583,6 +583,60 @@ abstract class AppL10n {
   /// **'Free plan'**
   String get membershipFree;
 
+  /// Paywall ekranı başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'NOCTA Premium'**
+  String get paywallTitle;
+
+  /// Paywall alt başlığı — SAĞLIK İDDİASI DEĞİL, 'ritual' konumlandırması (§1.1)
+  ///
+  /// In en, this message translates to:
+  /// **'More from your sleep ritual.'**
+  String get paywallTagline;
+
+  /// Premium fayda: haftalık trend grafiği
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly sleep trends'**
+  String get paywallBenefitTrends;
+
+  /// Premium fayda: gelecek özellikler (dürüst — bugün yalnız trend gated)
+  ///
+  /// In en, this message translates to:
+  /// **'More premium features on the way'**
+  String get paywallBenefitMore;
+
+  /// Paywall ana buton — gerçek IAP en son faz, şimdilik 'yakında'
+  ///
+  /// In en, this message translates to:
+  /// **'Get Premium'**
+  String get paywallCta;
+
+  /// CTA'ya basınca — satın alma henüz yok (§6)
+  ///
+  /// In en, this message translates to:
+  /// **'Premium is coming soon.'**
+  String get paywallComingSoon;
+
+  /// Paywall'ı kapat
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get paywallLater;
+
+  /// Free kullanıcıya trend yerine gösterilen kilit metni
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly trends are a Premium feature.'**
+  String get trendLockText;
+
+  /// Kilit CTA'sı — paywall'ı açar
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Premium'**
+  String get trendLockCta;
+
   /// Bildirim ac/kapa anahtari etiketi
   ///
   /// In en, this message translates to:
