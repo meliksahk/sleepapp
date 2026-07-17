@@ -84,12 +84,12 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                       |
 | ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~73%     | 0.30    | Redis/BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 (`GET /v1/me/export` GDPR taşınabilirliği — silmenin simetriği, izolasyon e2e ile kanıtlandı; IAP hâlâ en son faz)                                            |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz               |
 | Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik. ~~TR arb~~ ✓ #149 (EN+TR + parity kapısı) |
 | Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                         |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                |
 
-> **Hesap:** `0.40·71 + 0.30·73 + 0.15·32 + 0.15·33 = 60.05` → **≈60%**
+> **Hesap:** `0.40·71 + 0.30·74 + 0.15·32 + 0.15·33 = 60.35` → **≈60%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -110,7 +110,12 @@
 > %55'te.** Bar oraya dayandığında kanca render'ı zorunlu hale gelir.
 >
 > Yüzeyler kanıta dayalı ama yine de TAHMİN (Dürüstlük Protokolü). Kesin olan şey
-> yüzdeler değil, **yönü**: aşağıdaki olgular tek tek doğrulandı →
+> yüzdeler değil, **yönü**.
+>
+> **⚠️ NOT: aşağısı #137 DENETİMİ anındaki durumdur (tarihsel). Sayılan boşlukların
+> çoğu SONRADAN KAPANDI** — Dockerfile #151, MethodChannel #145, golden #144,
+> entitlement #153, Redis cache #157. Canlı durum yukarıdaki tablodadır. O günkü
+> doğrulanan olgular →
 > `redis/ioredis/bullmq` **kurulu değil** · Dockerfile **0** · kaynak kodda
 > MethodChannel **0** · golden test **0** · `entitlement` API'de **0 isabet**
 > (ama bu bir **stub**, çıkış kriteri değil — docs/02:152) ·
@@ -194,6 +199,27 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #157 — dağıtık cache: Redis adaptörü (B4) + iki gerçek hata (PR #157)
+
+✅ **Yapıldı ve doğrulandı (GERÇEK Redis'e karşı, §0)**
+
+- `RedisCache` aynı `Cache` port'unun arkasına takıldı; `CacheModule` REDIS_URL varsa
+  Redis, yoksa in-memory. Dockerfile'ın (#151) çok-instance deploy'unu tamamlıyor.
+- **Çalıştırma İKİ gerçek hatayı açığa çıkardı:** (1) ioredis client kapatılmıyordu →
+  açık soket event loop'u canlı tutunca **jest ASILIYORDU** (loop bu yüzden durdu!) →
+  `OnModuleDestroy → quit()` ile düzeltildi. (2) content.e2e kalıcı Redis'te bayat
+  feed anahtarıyla sızıyordu → CACHE'i InMemoryCache'e override.
+- Birim (5, onModuleDestroy dahil) + **gerçek docker Redis:** feed e2e'lerinden sonra
+  `content:feed:*` anahtarları Redis'te görüldü. **71 suite / 445 test yeşil, jest
+  temiz çıkıyor.**
+
+> 🧭 **#157 sonrası müdür timeline denetimi (kullanıcı sorusu "ne zaman biter"):**
+> %60 KABUL (şişme yok). Otonom tavan ≈%82-85; ~30-45 iterasyon (3-6 hafta loop-zamanı)
+> sonra insan/para duvarı: iOS build (Mac), ses kalite yargısı (kulaklık, §1.1), IAP
+> (Apple hesabı), VPS deploy, store submission. Müdür düzeltmesi: native ses grafiği +
+> iOS Swift kanal **KODU otonom yazılabilir** (sadece çalıştırmak/kulak-yargısı gated) —
+> "doğrulayamıyorum"u "yapamıyorum"a çevirme.
 
 ### #155 — GDPR veri export: GET /v1/me/export, silmenin simetriği (PR #155)
 
