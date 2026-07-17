@@ -84,12 +84,17 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                       |
 | ----------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~70%     | 0.30    | **entitlement (B1 çıkış kriteri — HİÇ YOK)**, Redis/BullMQ (kurulu değil), outbox, veri export. ~~Dockerfile~~ ✓ #151 (build+Postgres'e karşı çalıştırıldı, express dep hatası düzeltildi)                                                                                 |
+| Backend/API | ~72%     | 0.30    | Redis/BullMQ (kurulu değil), outbox, veri export. ~~Dockerfile~~ ✓ #151 · ~~entitlement (B1 çıkış kriteri)~~ ✓ #153 (EntitlementService port + dev stub + `GET /v1/me/entitlement`, e2e gerçek Postgres'e karşı; IAP hâlâ en son faz)                                      |
 | Mobil       | ~71%     | 0.40    | **M2 native graf** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render edilmiş buffer ile), **iOS tarafı HİÇ doğrulanmadı** (Mac yok, D-13), alarm bildirimi yok (yalnız ses), paywall/entitlement, streak, haftalık içerik. ~~TR arb~~ ✓ #149 (EN+TR + parity kapısı) |
 | Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                         |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                |
 
-> **Hesap:** `0.40·71 + 0.30·70 + 0.15·32 + 0.15·33 = 59.15` → **≈60%**
+> **Hesap:** `0.40·71 + 0.30·72 + 0.15·32 + 0.15·33 = 59.75` → **≈60%**
+>
+> Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
+> çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
+> kalem; elle şişirme değil. Bar yine ≈60 (büyük kalemler mobil native graf / admin /
+> web'de).
 >
 > Mobil 67→71: akıllı alarm bağlandı (#146) — dört iterasyondur yazılı-test edilmiş-ölü
 > duran kod artık bir kullanıcı yeteneği. Bundan önce 62→67: mix-to-video + deponun ilk
@@ -189,6 +194,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #153 — entitlement stub: B1 çıkış kriteri, premium kapısı tek arayüz arkasında (PR #153)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `entitlement` modülü (hexagonal): `EntitlementService` portu + dev stub (herkes
+  premium) + `GET /v1/me/entitlement`. docs/02 §152 B1'in istediği tam şey: billing
+  modülü YAZILMADAN premium gating tek arayüz arkasında. **Ödeme kodu yok** (§6/§1:
+  IAP en son faz) — DB/HTTP/secret yok; IAP geldiğinde YALNIZCA provider'ın bir satırı
+  değişir.
+- **GERÇEKTEN çalıştırılarak (§0):** birim (4: isPremium, stub, use case porta delege —
+  premium'a sabitlenmemiş), **e2e (2, gerçek Postgres):** `GET /v1/me/entitlement`
+  token'sız 401, kayıtlı token'la `{tier:'plus', premium:true}`. typecheck + eslint
+  boundaries temiz. **Tüm api süiti: 68 suite / 435 test yeşil.**
 
 ### #151 — üretim Dockerfile'ı: build + Postgres'e karşı çalıştırılıp kanıtlandı (PR #151)
 
