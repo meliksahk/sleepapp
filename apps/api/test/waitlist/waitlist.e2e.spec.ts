@@ -4,6 +4,7 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../../src/app.module';
+import { resetThrottleCounters } from '../support/reset-throttle';
 
 /** Public bekleme listesi e2e (docs/05 W0, gerçek DB). */
 describe('Waitlist e2e (HTTP, public)', () => {
@@ -15,6 +16,10 @@ describe('Waitlist e2e (HTTP, public)', () => {
     emails.push(e);
     return e;
   };
+
+  // Hız sınırına tabi uç (10/60sn, aynı IP). Paylaşılan Redis sayacı diğer
+  // testlerce tüketildiğinde bu dosya sıraya bağlı olarak kırılıyordu.
+  beforeEach(resetThrottleCounters);
 
   beforeAll(async () => {
     await prisma.$connect();
