@@ -6,7 +6,7 @@ vi.mock('@/shared/api/server-client', () => ({ apiPost }));
 const revalidatePath = vi.fn();
 vi.mock('next/cache', () => ({ revalidatePath }));
 
-const { startEnrollment, confirmEnrollment } = await import('./actions');
+const { startEnrollment, confirmEnrollment, resetTotp } = await import('./actions');
 
 /**
  * 2FA kurulum akışının panel tarafı.
@@ -108,6 +108,35 @@ describe('security actions', () => {
       const state = await confirmEnrollment({}, new FormData());
       expect(state.error).toContain('6 haneli');
       expect(apiPost).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resetTotp (#186 — cihaz rotasyonu)', () => {
+    const formWithPassword = (password: string): FormData => {
+      const fd = new FormData();
+      fd.set('password', password);
+      return fd;
+    };
+
+    it("ÇEKİRDEK: parola boşsa API'ye gitmez", async () => {
+      const state = await resetTotp({}, new FormData());
+      expect(state.error).toContain('Parola');
+      expect(apiPost).not.toHaveBeenCalled();
+    });
+
+    it('ÇEKİRDEK: başarılı reset → done, /security tazelenir', async () => {
+      apiPost.mockResolvedValue({ ok: true, data: undefined });
+      const state = await resetTotp({}, formWithPassword('correct'));
+      expect(state.done).toBe(true);
+      expect(apiPost).toHaveBeenCalledWith('/v1/auth/admin/totp/reset', { password: 'correct' });
+      expect(revalidatePath).toHaveBeenCalledWith('/security');
+    });
+
+    it('yanlış parola (401 invalid_credentials) AYIRT EDİCİ mesaj', async () => {
+      apiPost.mockResolvedValue({ ok: false, status: 401, code: 'invalid_credentials' });
+      const state = await resetTotp({}, formWithPassword('wrong'));
+      expect(state.error).toBe('Parola hatalı.');
+      expect(state.done).toBeUndefined();
     });
   });
 });

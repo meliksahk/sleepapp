@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
-| Admin       | ~45%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated) · **2FA-reset UI** (API ✓). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ✓ **2FA reset API** #186 (parola-doğrulamalı TOTP sıfırlama = cihaz rotasyonu; enroll-totp:33 boşluğu kapandı, throttle'lı, 4 e2e). Müdür (C): admin'i bitir                                                                                   |
+| Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                  |
 | Web         | ~43%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ **blog OG görselleri** #182 (7 sosyal önizleme PNG'si — 6 yazı + dizin; paylaşılınca kart çıkar, satori/archetype-OG deseni; HTTP'de geçerli PNG kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·45 + 0.15·43 = 67.00` → **≈67%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·46 + 0.15·43 = 67.15` → **≈67%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,22 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #187 — 2FA reset panel UI: /security cihaz rotasyonu formu (PR #187)
+
+✅ **Yapıldı ve doğrulandı** — 2FA reset TAM (API #186 + UI #187), müdür (C) admin'i bitir
+
+- **Yapıldı:** `/security` sayfası (2FA etkinken) parola-doğrulamalı reset bölümü gösterir:
+  parola → `resetTotp` Server Action → #186 API → 2FA kalkar (yeniden kurulabilir). `TotpReset.tsx`
+  client component. 401'de code'a göre ayırt edici mesaj (parola-hatalı vs oturum-bitti).
+- **Dürüstlük güncellemesi:** eski uyarı "kaybederseniz KURTARMA YOK" diyordu — #186 ile artık
+  GİRİŞ YAPMIŞKEN cihaz rotasyonu mümkün. Uyarı düzeltildi: "giriş yapmışken sıfırlanabilir; çıkış
+  yapmışken kayıp cihaz hâlâ kurtarılamaz" (yedek-kod D-11). Ne fazla ne eksik söz.
+- **DOĞRULAMA:** 3 yeni action testi (boş parola→API'ye gitmez, başarılı→done+revalidate, 401
+  invalid_credentials→"Parola hatalı"). admin typecheck 0, lint 0, **vitest 131 test yeşil**,
+  Next build ✓ (`/security` + TotpReset).
+- 📌 Admin 45→46 (+1, reset UI yarısı). Kalan admin: D7 (veri-gated), total-users/sessions metrik,
+  davet/parola-sıfırlama (teslim SMTP-gated). Bar 67.15 ≈ **67%**.
 
 ### #186 — 2FA reset API: parola-doğrulamalı TOTP sıfırlama (PR #186)
 

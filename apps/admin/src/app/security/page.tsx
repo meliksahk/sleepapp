@@ -1,5 +1,6 @@
 import { apiGet } from '@/shared/api/server-client';
 import { TotpSetup } from '@/features/security/TotpSetup';
+import { TotpReset } from '@/features/security/TotpReset';
 
 interface TotpStatus {
   enabled: boolean;
@@ -31,17 +32,25 @@ export default async function SecurityPage() {
         </div>
 
         {status.enabled ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             <p className="text-body text-ink-muted">
               Her girişte doğrulama uygulamanızdaki kod istenir.
             </p>
-            {/* Dürüstlük: kurtarma yolu YOK. Kullanıcının bunu ÖNCEDEN bilmesi gerekir —
-                telefonunu kaybettikten sonra öğrenmesi çok geç olur. (Yedek kod akışı
-                için bkz. DECISIONS_NEEDED.md D-11.) */}
+            {/* Dürüstlük: GİRİŞ YAPMIŞKEN cihaz rotasyonu artık mümkün (#186, aşağıda),
+                ama telefonu kaybedip ÇIKIŞ yapmışken hâlâ kurtarma yok (yedek kod akışı
+                D-11). Kullanıcının bunu ÖNCEDEN bilmesi gerekir. */}
             <p className="text-caption text-accent-ember">
-              Doğrulama uygulamanızı kaybederseniz bu hesaba giriş yapamazsınız; kurulum anahtarını
-              güvenli bir yerde saklayın.
+              Giriş yapmışken 2FA&apos;yı aşağıdan sıfırlayıp yeni cihaza taşıyabilirsiniz; ancak
+              çıkış yapmışken doğrulama uygulamanızı kaybederseniz giriş yapamazsınız — kurulum
+              anahtarını güvenli bir yerde saklayın.
             </p>
+
+            <div className="border-t border-ink-faint/20 pt-4">
+              <h3 className="text-body font-display">Yeni cihaza taşı / sıfırla</h3>
+              <div className="mt-2">
+                <TotpReset />
+              </div>
+            </div>
           </div>
         ) : (
           <TotpSetup />

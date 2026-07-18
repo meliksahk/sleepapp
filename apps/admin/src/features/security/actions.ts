@@ -91,6 +91,34 @@ export async function confirmEnrollment(
   return { enabled: true };
 }
 
+export interface ResetState {
+  error?: string;
+  /** 2FA kaldırıldı → kullanıcı yeniden kurabilir (cihaz rotasyonu). */
+  done?: boolean;
+}
+
+/**
+ * 2FA'yı PAROLA doğrulamasıyla sıfırlar (#186 API'si) — yeni cihaza geçmek için. Parola
+ * olmadan sıfırlama, oturumu ele geçirenin 2FA'yı devralmasına izin verirdi; bu yüzden
+ * parola zorunlu (doğrulama sunucuda). Sıfırlama sonrası kullanıcı baştan kurabilir.
+ */
+export async function resetTotp(_previous: ResetState, formData: FormData): Promise<ResetState> {
+  const password = String(formData.get('password') ?? '');
+  // Sunucuda da doğrulanır (boş parola 400); burada erken geri bildirim.
+  if (password.length === 0) {
+    return { error: 'Parola gerekli.' };
+  }
+
+  const res = await apiPost<undefined>('/v1/auth/admin/totp/reset', { password });
+  if (!res.ok) {
+    return { error: resetError(res.status, res.code) };
+  }
+
+  // 2FA kalktı → rozet + kurulum ekranı SUNUCUDAN yeniden okunmalı.
+  revalidatePath('/security');
+  return { done: true };
+}
+
 function enrollError(status: number, code?: string): string {
   if (code === 'totp_already_enabled') {
     // Bilinçli 409: onaylı 2FA'nın üstüne yazmak, oturumu ele geçirenin 2FA'yı
@@ -100,6 +128,14 @@ function enrollError(status: number, code?: string): string {
   if (status === 401) return 'Oturumunuz sona ermiş. Yeniden giriş yapın.';
   if (status === 429) return 'Çok fazla deneme yapıldı. Bir dakika bekleyin.';
   return 'Kurulum başlatılamadı. Lütfen tekrar deneyin.';
+}
+
+function resetError(status: number, code?: string): string {
+  // Reset ucunda 401: parola hatası (invalid_credentials) VEYA oturum bitti — code ayırır.
+  if (code === 'invalid_credentials') return 'Parola hatalı.';
+  if (status === 401) return 'Oturumunuz sona ermiş. Yeniden giriş yapın.';
+  if (status === 429) return 'Çok fazla deneme yapıldı. Bir dakika bekleyin.';
+  return 'Sıfırlanamadı. Lütfen tekrar deneyin.';
 }
 
 function confirmError(status: number, code?: string): string {
