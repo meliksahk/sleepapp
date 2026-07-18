@@ -161,5 +161,7 @@
   "homeSectionExplore": "Keşfet",
 
   "settingsSignatureSound": "Açılış sesi",
-  "settingsSignatureSoundHint": "Uygulama açılırken kısa bir atmosfer."
+  "settingsSignatureSoundHint": "Uygulama açılırken kısa bir atmosfer.",
+
+  "settingsSoundSection": "Ses"
 }

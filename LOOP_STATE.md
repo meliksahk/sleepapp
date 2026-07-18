@@ -220,6 +220,24 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #200 — erişilebilirlik: AA kontrast + ses ayarı kendi bölümüne (PR #200)
+
+✅ **Yapıldı ve doğrulandı (449 test + golden yakaladı)** — Faz 0 cila
+
+- **Kapatılan ihlal:** `inkFaint` (#5A6284) bg-base üzerinde **3.22:1** idi — WCAG AA eşiği 4.5.
+  Yani ipucu/soluk metinler (streak rekoru, bölüm etiketleri) erişilebilirlik ihlaliydi
+  (CLAUDE.md §7). `#767FB0` → **4.98:1**. Token tek kaynakta değişti, mobil+web+admin'e yayıldı.
+- **Kontrast NÖBETÇİSİ eklendi:** `contrast_test.dart` üç metin rengini bg üzerinde ölçer;
+  biri AA'nın altına düşerse build kırılır. Bu ihlal bir daha sessizce geri gelemez.
+- **Golden testi işini yaptı:** token değişimi gece raporu **paylaşım kartının** piksellerini
+  değiştirdi ve golden yakaladı (viral kanca kazara değişmesin diye tam bu var). Değişim
+  istenen yönde (daha okunaklı) → golden bilinçli olarak yenilendi.
+- **Ayar düzeltmesi:** açılış sesi anahtarı "Notifications" altında görünüyordu (çevrimdışıyken
+  bildirim toggle'ı gizlenince ses ayarı bildirim gibi okunuyordu) → kendi **"Sound"** bölümüne
+  taşındı, EN/TR.
+- **DOĞRULAMA:** 449 test yeşil, analyze temiz, web+admin build ✓ (paylaşımlı token).
+- 📌 Yüzde değişmedi (erişilebilirlik düzeltmesi + UI konum düzeltmesi).
+
 ### #199 — aura kapatma anahtarı: ayarlarda "Açılış sesi" (PR #199)
 
 ✅ **Yapıldı ve doğrulandı (448 test)** — spec'in BLOKLAYICI şartı kapandı

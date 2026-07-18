@@ -10,7 +10,7 @@ class NoctaColors {
   static const Color bgOverlay = Color(0xFF1A2138);
   static const Color inkPrimary = Color(0xFFF2F4FF);
   static const Color inkSecondary = Color(0xFF9AA3C7);
-  static const Color inkFaint = Color(0xFF5A6284);
+  static const Color inkFaint = Color(0xFF767FB0);
   static const Color accentAurora = Color(0xFF7C6CFF);
   static const Color accentDawn = Color(0xFFFFB489);
   static const Color accentDeep = Color(0xFF2EC5B6);

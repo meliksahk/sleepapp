@@ -458,5 +458,8 @@
   "settingsSignatureSound": "Opening sound",
   "@settingsSignatureSound": { "description": "Acilis aurasi anahtari" },
   "settingsSignatureSoundHint": "A short ambience when the app opens.",
-  "@settingsSignatureSoundHint": { "description": "Acilis sesi aciklamasi" }
+  "@settingsSignatureSoundHint": { "description": "Acilis sesi aciklamasi" },
+
+  "settingsSoundSection": "Sound",
+  "@settingsSoundSection": { "description": "Ayarlar ses bolumu basligi" }
 }
