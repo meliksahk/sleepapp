@@ -39,50 +39,74 @@ const double signatureSeconds = 3.6;
 /// Temel frekans (Hz) — C3, eşit tampere. Estetik seçim (bkz. sınıf notu).
 const double signatureF0 = 130.81;
 
-const double _attack = 0.60;
-const double _release = 1.40;
-const double _tiltSeconds = 1.60;
+/// Zarfın yükseliş süresi (sn). **PUBLIC ÇÜNKÜ GÖRSEL DE BUNU KULLANIYOR:**
+/// açılış animasyonu (`core/launch/`) bu sabitleri KOPYALAMADAN import eder —
+/// kopyalasaydık ses ve görsel ileride sessizce ayrışırdı (`ambient_phase.dart`
+/// ile aynı gerekçe).
+const double signatureAttackSeconds = 0.60;
 
-/// Pad kısmi tonları: (oran, ağırlık, detune Hz).
-/// Ağırlık toplamı **tam 1.00** — kırpma ispatı buna dayanır, değiştirilemez.
-/// Detune'lar sabit **Hz** (cent değil: cent'te vuru hızı frekansla ölçeklenir ve
-/// üst partial'da vibrato gibi duyulur) ve birbirinin katı DEĞİL (17,23,29,37,41)
-/// → ortak periyot 3.6 sn'ye sığmaz, ses kendini tekrar etmez.
-const List<List<double>> _padPartials = <List<double>>[
-  <double>[1.0, 0.30, 0.17], // gövde (kulaklıkta; hoparlörde duyulmaz — kasıtlı)
-  <double>[1.5, 0.18, 0.23], // beşli
-  <double>[2.0, 0.24, 0.29], // hoparlörün duymaya başladığı ilk bant
-  <double>[3.0, 0.16, 0.37], // parlaklık
-  <double>[4.0, 0.12, 0.41], // üst renk
-];
+/// Zarfın sönüş süresi (sn).
+const double signatureReleaseSeconds = 1.40;
 
-const double _padAmp = 0.26;
-const double _detuneGain = 0.35;
+/// Tilt (gökyüzünün açılması) süresi (sn).
+const double signatureTiltSeconds = 1.60;
 
-/// Parıltı perdeleri: yalnız f0'ın tam katları → disonans imkânsız.
-const List<int> _shimmerMultiples = <int>[8, 12, 16, 20, 24];
-const double _shimmerAmp = 0.14;
+/// Parıltı tanesinin sönüm zaman sabiti (sn) — görsel parıltı da bunu kullanır.
+const double signatureGrainDecay = 0.55;
+
 const double _grainAttack = 0.015;
-const double _grainDecay = 0.55;
 
-const double _airAmp = 0.03;
-
-/// Üretilen parıltı sayısı (test #16 bunu bekler: 4–6).
-int lastSignatureGrainCount = 0;
-
-/// Açılış imzası — Float32, [-1,1], mono.
+/// Master zarf: **yükseltilmiş kosinüs** → uçlarda hem değer hem türev sıfır,
+/// tık imkânsız. `t` saniye; [0,1] döner ve aralık dışında 0'a sabitlenir.
 ///
-/// **Ağır iş:** ~2.3M `sin()`. UI isolate'inde çağrılırsa açılışta görünür donma
-/// olur — çağıran `compute()` ile ayrı isolate'e almalıdır.
-Float32List noctaSignature({
-  int sampleRate = signatureSampleRate,
-  int seed = 1308,
-}) {
-  final int n = (signatureSeconds * sampleRate).round();
-  final out = Float32List(n);
+/// Ses üretim döngüsü ile açılış animasyonu bu TEK fonksiyonu paylaşır.
+double signatureEnvelopeAt(double t) {
+  if (t <= 0 || t >= signatureSeconds) return 0;
+  if (t < signatureAttackSeconds) {
+    return 0.5 - 0.5 * math.cos(math.pi * t / signatureAttackSeconds);
+  }
+  if (t <= signatureSeconds - signatureReleaseSeconds) return 1;
+  return 0.5 +
+      0.5 *
+          math.cos(
+            math.pi *
+                (t - (signatureSeconds - signatureReleaseSeconds)) /
+                signatureReleaseSeconds,
+          );
+}
 
-  // ── Parıltı zamanlaması: Lcg çekim SIRASI kilitli (golden'ın belkemiği) ──
+/// Tilt eğrisi: gökyüzü yavaşça açılır (smoothstep). 0.35 → 1.00.
+double signatureTiltAt(double t) {
+  final x = (t / signatureTiltSeconds).clamp(0.0, 1.0);
+  return 0.35 + 0.65 * (x * x * (3 - 2 * x));
+}
+
+/// Tek bir parıltı tanesi: ne zaman, hangi perdede, ne kadar parlak.
+class SignatureGrain {
+  const SignatureGrain({
+    required this.onset,
+    required this.multiple,
+    required this.amp,
+  });
+
+  /// Başlangıç anı (sn, buffer başından).
+  final double onset;
+
+  /// f0'ın kaçıncı katı (yalnız tam katlar → disonans imkânsız).
+  final int multiple;
+
+  /// Genlik çarpanı [0.55, 1.00].
+  final double amp;
+}
+
+/// Parıltıların zamanlamasını üretir — **sesin kendisini üretmeden**.
+///
+/// `noctaSignature` bunu kullanır; açılış animasyonu da aynı listeyi ister ve
+/// yıldızlarını TAM OLARAK sesin parıldadığı anlarda parlatır. Lcg çekim SIRASI
+/// burada kilitli: değiştirilirse ses de değişir.
+List<SignatureGrain> signatureGrains({int seed = 1308}) {
   final rng = Lcg(seed);
+  final grains = <SignatureGrain>[];
   final onsets = <double>[];
   final mults = <int>[];
   final amps = <double>[];
@@ -113,7 +137,52 @@ Float32List noctaSignature({
       amps[last] = 1.0;
     }
   }
-  lastSignatureGrainCount = onsets.length;
+  for (var i = 0; i < onsets.length; i++) {
+    grains.add(SignatureGrain(onset: onsets[i], multiple: mults[i], amp: amps[i]));
+  }
+  return grains;
+}
+
+/// Pad kısmi tonları: (oran, ağırlık, detune Hz).
+/// Ağırlık toplamı **tam 1.00** — kırpma ispatı buna dayanır, değiştirilemez.
+/// Detune'lar sabit **Hz** (cent değil: cent'te vuru hızı frekansla ölçeklenir ve
+/// üst partial'da vibrato gibi duyulur) ve birbirinin katı DEĞİL (17,23,29,37,41)
+/// → ortak periyot 3.6 sn'ye sığmaz, ses kendini tekrar etmez.
+const List<List<double>> _padPartials = <List<double>>[
+  <double>[1.0, 0.30, 0.17], // gövde (kulaklıkta; hoparlörde duyulmaz — kasıtlı)
+  <double>[1.5, 0.18, 0.23], // beşli
+  <double>[2.0, 0.24, 0.29], // hoparlörün duymaya başladığı ilk bant
+  <double>[3.0, 0.16, 0.37], // parlaklık
+  <double>[4.0, 0.12, 0.41], // üst renk
+];
+
+const double _padAmp = 0.26;
+const double _detuneGain = 0.35;
+
+/// Parıltı perdeleri: yalnız f0'ın tam katları → disonans imkânsız.
+const List<int> _shimmerMultiples = <int>[8, 12, 16, 20, 24];
+const double _shimmerAmp = 0.14;
+
+const double _airAmp = 0.03;
+
+/// Üretilen parıltı sayısı (test #16 bunu bekler: 4–6).
+int lastSignatureGrainCount = 0;
+
+/// Açılış imzası — Float32, [-1,1], mono.
+///
+/// **Ağır iş:** ~2.3M `sin()`. UI isolate'inde çağrılırsa açılışta görünür donma
+/// olur — çağıran `compute()` ile ayrı isolate'e almalıdır.
+Float32List noctaSignature({
+  int sampleRate = signatureSampleRate,
+  int seed = 1308,
+}) {
+  final int n = (signatureSeconds * sampleRate).round();
+  final out = Float32List(n);
+
+  // ── Parıltı zamanlaması: Lcg çekim SIRASI kilitli (golden'ın belkemiği) ──
+  // Tek kaynak `signatureGrains` — görsel açılış da AYNI listeyi okur.
+  final grains = signatureGrains(seed: seed);
+  lastSignatureGrainCount = grains.length;
 
   // ── Hava katmanı: mevcut pinkNoise + mevcut DcBlocker (yeni HP YAZMA) ──
   final air = pinkNoise(n, seed: seed ^ 0x5EED);
@@ -123,19 +192,9 @@ Float32List noctaSignature({
   for (var i = 0; i < n; i++) {
     final t = i / sampleRate;
 
-    // Master zarf: yükseltilmiş kosinüs → uçlarda değer VE türev sıfır, tık imkânsız.
-    double env;
-    if (t < _attack) {
-      env = 0.5 - 0.5 * math.cos(math.pi * t / _attack);
-    } else if (t <= signatureSeconds - _release) {
-      env = 1.0;
-    } else {
-      env = 0.5 + 0.5 * math.cos(math.pi * (t - (signatureSeconds - _release)) / _release);
-    }
-
-    // Tilt: gökyüzü yavaşça açılır — yalnız üst iki partial parlar (smoothstep).
-    final x = (t / _tiltSeconds).clamp(0.0, 1.0);
-    final tilt = 0.35 + 0.65 * (x * x * (3 - 2 * x));
+    // Master zarf ve tilt: görselle PAYLAŞILAN fonksiyonlar (bkz. dosya başı).
+    final env = signatureEnvelopeAt(t);
+    final tilt = signatureTiltAt(t);
 
     var pad = 0.0;
     for (var k = 0; k < _padPartials.length; k++) {
@@ -147,12 +206,13 @@ Float32List noctaSignature({
     pad *= _padAmp;
 
     var shimmer = 0.0;
-    for (var j = 0; j < onsets.length; j++) {
-      final u = t - onsets[j];
-      if (u < 0 || u > 4 * _grainDecay) continue;
-      final e = (1 - math.exp(-u / _grainAttack)) * math.exp(-u / _grainDecay);
-      final gain = _shimmerAmp * amps[j] * math.sqrt(8 / mults[j]);
-      shimmer += gain * e * math.sin(twoPi * mults[j] * signatureF0 * u);
+    for (var j = 0; j < grains.length; j++) {
+      final g = grains[j];
+      final u = t - g.onset;
+      if (u < 0 || u > 4 * signatureGrainDecay) continue;
+      final e = (1 - math.exp(-u / _grainAttack)) * math.exp(-u / signatureGrainDecay);
+      final gain = _shimmerAmp * g.amp * math.sqrt(8 / g.multiple);
+      shimmer += gain * e * math.sin(twoPi * g.multiple * signatureF0 * u);
     }
 
     // clamp bir EMNİYET değil: yapısal sınır 0.6485, tetiklenirse bug'dır.

@@ -199,6 +199,18 @@ abstract class AppL10n {
   /// **'Saved on your phone, but could not reach the server.'**
   String get sleepModeSaveFailed;
 
+  /// Kabuk şeridi — süren gece HER ekranda görünür. 'Dinliyor…' tek başına mikser ekranında çalan sesle karışırdı
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking your night'**
+  String get sleepStripActive;
+
+  /// Kabuk şeridinin erişilebilirlik etiketi — şerit dokunulabilir bir kısayoldur
+  ///
+  /// In en, this message translates to:
+  /// **'Open sleep mode'**
+  String get sleepStripOpen;
+
   /// Ana ekrandan uyku moduna giden buton
   ///
   /// In en, this message translates to:
@@ -246,6 +258,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Preparing sound…'**
   String get mixerPreparing;
+
+  /// Player hero'sunda adın üstündeki etiket. 'Now playing' DEĞİL: ses duraklatılmışken yalan olurdu
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight\'s sound'**
+  String get mixerSoundLabel;
+
+  /// Player durum satırı — ses çalıyor
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get mixerStatusPlaying;
+
+  /// Player durum satırı — ses duraklatıldı
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get mixerStatusPaused;
+
+  /// Kontrol sayfasındaki sürgü listesinin başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Layers'**
+  String get mixerLayersLabel;
 
   /// Beyaz gürültü katmanı adı
   ///

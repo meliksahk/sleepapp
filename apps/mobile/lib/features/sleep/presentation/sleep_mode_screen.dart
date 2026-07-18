@@ -6,6 +6,7 @@ import '../../../core/design_system/design_system.dart';
 import '../../../core/sleep_tracking/smart_alarm.dart';
 import '../../../l10n/app_localizations.dart';
 import '../sleep_mode_controller.dart';
+import '../sleep_session_beacon.dart';
 
 /// Uyku modu (docs/04 M3) — **mikrofonun gerçekten dinlediği ekran**.
 ///
@@ -103,13 +104,10 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
     widget.controller.setAlarm(at);
   }
 
-  String _elapsed(DateTime started) {
-    final d = DateTime.now().difference(started);
-    final h = d.inHours.toString().padLeft(2, '0');
-    final m = (d.inMinutes % 60).toString().padLeft(2, '0');
-    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$h:$m:$s';
-  }
+  /// Biçim, kabuk şeridiyle ORTAK (`formatElapsed`): kullanıcı şeritten bu ekrana
+  /// geçtiğinde iki farklı biçimde iki sayı görürse hangisine güveneceğini bilemez.
+  String _elapsed(DateTime started) =>
+      formatElapsed(DateTime.now().difference(started));
 
   @override
   Widget build(BuildContext context) {

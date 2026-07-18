@@ -93,8 +93,21 @@ void main() {
     await t.pumpWidget(appWith(const AsyncValue.loading()));
     await t.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    // Splash artık spinner değil, açılış anı (`LaunchMoment`) — sözleşme aynı.
+    expect(find.byKey(const Key('launch-moon')), findsOneWidget);
     // Yükleme sırasında çevrimdışı DEMEK yanlış olurdu — henüz bilmiyoruz.
     expect(find.byKey(const Key('offline-banner')), findsNothing);
+  });
+
+  testWidgets('ÇEKİRDEK: oturum HİÇ çözülmezse bile üst sınırda uygulama açılır', (t) async {
+    // Sonsuz splash regresyonunun kapısı: bootstrap asla tamamlanmasa da
+    // kullanıcı çalışan bir uygulamaya (yerel mikser + yeniden dene) girer.
+    await t.pumpWidget(appWith(const AsyncValue.loading()));
+    await t.pump(const Duration(seconds: 3));
+    await t.pumpAndSettle();
+
+    expect(find.byKey(const Key('launch-moon')), findsNothing);
+    expect(find.byKey(const Key('mixer-cta')), findsOneWidget);
+    expect(find.byKey(const Key('offline-retry')), findsOneWidget);
   });
 }

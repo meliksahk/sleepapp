@@ -10,6 +10,7 @@ import '../../core/sleep_tracking/sleep_session_builder.dart';
 import '../../core/sleep_tracking/sleep_session_queue.dart';
 import '../../core/sleep_tracking/smart_alarm.dart';
 import 'sleep_controller.dart';
+import 'sleep_session_beacon.dart';
 
 /// Uyku modunun durumu — UI'ın gördüğü tek şey.
 class SleepModeState {
@@ -99,6 +100,7 @@ class SleepModeController {
     this.alarmSound,
     this.alarmScheduler,
     this.sessionQueue,
+    this.beacon,
     this.alarmWindow = const Duration(minutes: 30),
     this.alarmLookback = const Duration(minutes: 5),
     this.alarmTick = const Duration(seconds: 10),
@@ -139,6 +141,13 @@ class SleepModeController {
   /// başarısızsa geceyi kuyruğa alır, açılışta ve her başarılı kayıttan sonra boşaltır.
   final SleepSessionQueue? sessionQueue;
 
+  /// Aktif geceyi UYGULAMA KABUĞUNA duyuran ilan tahtası (#…, "her ekranda sayaç").
+  ///
+  /// Null → duyuru yok (testlerin çoğu vermez); uyku modu ekranı yine çalışır.
+  /// Verilirse: gece başlayınca/bitince kabuktaki şerit kendini gösterir/gizler.
+  /// Controller şeridi TANIMAZ — yalnızca "gece sürüyor" der; çizim kabuğun işi.
+  final SleepSessionBeacon? beacon;
+
   /// Hedef saatten NE KADAR ÖNCE hafif uyku aranmaya başlanır.
   ///
   /// 30 dk kategori standardı: uyku döngüsü ~90 dk, hafif uyku evresi o döngünün
@@ -170,7 +179,22 @@ class SleepModeController {
 
   void _emit(SleepModeState next) {
     _state = next;
+    // Duyuru TEK NOKTADAN: her `_emit` yolunu (başlat, bitir, hata, alarm) tek
+    // tek işaretlemek, birini unutunca kabukta ASILI KALAN bir şerit demekti.
+    _publishToBeacon();
     onChanged?.call();
+  }
+
+  /// Kabuktaki şeridin gördüğü tek gerçek: gece sürüyor mu, ne zaman başladı.
+  void _publishToBeacon() {
+    final b = beacon;
+    if (b == null) return;
+    final startedAt = _state.startedAt;
+    if (_state.isRecording && startedAt != null) {
+      b.begin(startedAt);
+    } else {
+      b.end();
+    }
   }
 
   /// Kullanıcının "beni en geç şu saatte uyandır" seçimi. Null → alarm kapalı.

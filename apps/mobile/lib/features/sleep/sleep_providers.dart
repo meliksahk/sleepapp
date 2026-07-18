@@ -11,6 +11,7 @@ import '../../core/sleep_tracking/sleep_recorder.dart';
 import 'sleep_controller.dart';
 import 'sleep_mode_controller.dart';
 import 'sleep_models.dart';
+import 'sleep_session_beacon.dart';
 
 /// Uyku controller'ı — auth (oturum + refresh) + api client üzerine.
 final sleepControllerProvider = Provider<SleepController>((ref) {
@@ -48,6 +49,18 @@ final sleepTrendProvider = FutureProvider<WeeklyTrend>((ref) {
   return ref.read(sleepControllerProvider).weeklyTrend();
 });
 
+/// Aktif geceyi uygulama kabuğuna duyuran ilan tahtası.
+///
+/// **Uyku modu controller'ından AYRI ve HAFİF olması bilinçli:** kabuktaki şerit
+/// açılışta kurulur ve bunu izler. Doğrudan `sleepModeControllerProvider`'ı
+/// izleseydi, kullanıcı uyku moduna hiç girmese bile her açılışta gerçek
+/// mikrofon/servis/alarm/güvenli-depo adaptörleri kurulurdu.
+final sleepSessionBeaconProvider = Provider<SleepSessionBeacon>((ref) {
+  final beacon = SleepSessionBeacon();
+  ref.onDispose(beacon.dispose);
+  return beacon;
+});
+
 /// Uyku modu denetleyicisi — gerçek mikrofonla.
 ///
 /// `RecordMicSource` üretim adaptörü; testler `SleepModeController`'ı doğrudan
@@ -71,5 +84,7 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
     // Çevrimdışı biten geceleri kaybetme (#177): secure storage'da kuyruğa alır,
     // açılışta + her başarılı kayıttan sonra sunucuya boşaltır.
     sessionQueue: SleepSessionQueue(SecureKeyValueStore()),
+    // Gece başlayınca/bitince kabuktaki şerit kendini gösterir/gizler.
+    beacon: ref.read(sleepSessionBeaconProvider),
   );
 });
