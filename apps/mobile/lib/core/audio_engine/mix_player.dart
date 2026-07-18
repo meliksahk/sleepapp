@@ -28,12 +28,20 @@
 ///
 /// Bunlar native graf gelince çözülür; o zaman bu sınıf `AudioEngineFacade`'in
 /// arkasındaki bir implementasyona dönüşür. Şimdilik amacı tek: **ses çıksın.**
+///
+/// ## Güncelleme (#170): döngü dikişi ÇÖZÜLDÜ
+///
+/// Yukarıdaki "döngü dikişi duyulabilir" sınırı artık geçerli DEĞİL. Katman buffer'ı
+/// `renderSeamlessLoop` ile üretiliyor: kuyruk başa eşit-güç crossfade'leniyor →
+/// `LoopMode.one` dikişi sürekli (periyodik tık yok). Diğer sınırlar (OS mikseri
+/// kompresörsüz, rampa, RAM) native graf işidir; onlar duruyor.
 library;
 
 import 'dart:typed_data';
 
 import 'package:just_audio/just_audio.dart';
 
+import 'dsp/mix_loop.dart';
 import 'dsp/mix_render.dart';
 import 'dsp/wav_encoder.dart';
 
@@ -111,11 +119,12 @@ class MixPlayer {
     for (var i = 0; i < spec.layers.length; i++) {
       final layer = spec.layers[i];
 
-      // Tek katmanlık spec: var olan, test edilmiş renderMix'i yeniden kullanır.
-      // Seed katman indeksinden türetilir (renderMix içinde) → katmanlar korelasyonsuz.
-      final pcm = renderMix(
+      // Tek katmanlık spec, SORUNSUZ döngü ile: kuyruk başa crossfade'lenir →
+      // `LoopMode.one` dikişinde periyodik tık yok (#170). Seed katman indeksinden
+      // türetilir → katmanlar korelasyonsuz.
+      final pcm = renderSeamlessLoop(
         MixSpec([MixLayer(id: layer.id, type: layer.type, gain: 1.0)]),
-        seconds: loopSeconds,
+        loopSeconds: loopSeconds,
         sampleRate: sampleRate,
         seed: i * 104729, // asal: katmanlar arası benzerlik olmasın
       );

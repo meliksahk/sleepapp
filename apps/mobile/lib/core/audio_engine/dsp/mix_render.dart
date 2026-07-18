@@ -55,15 +55,22 @@ Float32List _generate(NoiseType type, int samples, int seed) {
 ///
 /// [clippedSamples] non-null verilirse kırpılan örnek sayısı oraya yazılır —
 /// çağıran headroom'u görebilsin (mikser sessizce bozmaz).
+///
+/// [extraSamples] > 0 verilirse `seconds`in ÜSTÜNE o kadar örnek daha üretilir
+/// (aynı deterministik gürültü dizisinin devamı). Sorunsuz döngü crossfade'i
+/// (`renderSeamlessLoop`) bunu kullanır: kuyruğu başa harmanlamak için döngü
+/// uzunluğunun biraz ötesini ister. Süreç aksi halde değişmez.
 Float32List renderMix(
   MixSpec spec, {
   required int seconds,
   int sampleRate = 48000,
   int seed = 0,
+  int extraSamples = 0,
   void Function(int clipped)? onClipReport,
 }) {
   assert(seconds > 0);
-  final samples = sampleRate * seconds;
+  assert(extraSamples >= 0);
+  final samples = sampleRate * seconds + extraSamples;
 
   final buffers = <String, Float32List>{};
   final mixer = Mixer(sampleRate: sampleRate);
