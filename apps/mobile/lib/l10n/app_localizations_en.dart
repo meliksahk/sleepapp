@@ -518,4 +518,16 @@ class AppL10nEn extends AppL10n {
   @override
   String get loadFailed =>
       'Could not load this. Check your connection and try again.';
+
+  @override
+  String get settingsLanguageSection => 'Language';
+
+  @override
+  String get settingsLanguageSystem => 'System';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get settingsLanguageTurkish => 'Türkçe';
 }

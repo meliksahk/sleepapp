@@ -165,5 +165,10 @@
 
   "settingsSoundSection": "Ses",
 
-  "loadFailed": "Bu yüklenemedi. Bağlantını kontrol edip tekrar dene."
+  "loadFailed": "Bu yüklenemedi. Bağlantını kontrol edip tekrar dene.",
+
+  "settingsLanguageSection": "Dil",
+  "settingsLanguageSystem": "Sistem",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageTurkish": "Türkçe"
 }

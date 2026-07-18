@@ -942,6 +942,30 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Could not load this. Check your connection and try again.'**
   String get loadFailed;
+
+  /// Ayarlar dil bolumu basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguageSection;
+
+  /// Cihaz dilini kullan
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsLanguageSystem;
+
+  /// Ingilizce secenegi
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
+
+  /// Turkce secenegi (kendi dilinde yazilir)
+  ///
+  /// In en, this message translates to:
+  /// **'Türkçe'**
+  String get settingsLanguageTurkish;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
