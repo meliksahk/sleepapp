@@ -4,6 +4,8 @@ import '../../core/share/sharer.dart';
 import '../../core/sleep_tracking/alarm_sound.dart';
 import '../../core/sleep_tracking/night_alarm_scheduler.dart';
 import '../../core/sleep_tracking/night_service.dart';
+import '../../core/sleep_tracking/sleep_session_queue.dart';
+import '../../core/storage/key_value_store.dart';
 import '../../core/sleep_tracking/record_mic_source.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import 'sleep_controller.dart';
@@ -66,5 +68,8 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
     // Süreç ölse bile son-tarihte uyandıran sistem backstop'u (EK güvence).
     // Native handler cihaz-kapılı; o gelene kadar en iyi çabayla sessizce atlanır.
     alarmScheduler: const PlatformNightAlarmScheduler(),
+    // Çevrimdışı biten geceleri kaybetme (#177): secure storage'da kuyruğa alır,
+    // açılışta + her başarılı kayıttan sonra sunucuya boşaltır.
+    sessionQueue: SleepSessionQueue(SecureKeyValueStore()),
   );
 });
