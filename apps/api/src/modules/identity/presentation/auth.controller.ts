@@ -26,6 +26,7 @@ import { RefreshSessionUseCase } from '../application/refresh-session.usecase';
 import { LoginAdminUseCase } from '../application/login-admin.usecase';
 import { EnrollTotpUseCase } from '../application/enroll-totp.usecase';
 import { ConfirmTotpUseCase } from '../application/confirm-totp.usecase';
+import { ResetTotpUseCase } from '../application/reset-totp.usecase';
 import { GetTotpStatusUseCase } from '../application/get-totp-status.usecase';
 import { LogoutUseCase } from '../application/logout.usecase';
 import { DeleteAccountUseCase } from '../application/delete-account.usecase';
@@ -51,6 +52,7 @@ import {
   SessionInfoDto,
   SessionResponseDto,
   TotpConfirmDto,
+  ResetTotpDto,
   TotpEnrollResponseDto,
   TotpStatusResponseDto,
   VerifyEmailDto,
@@ -77,6 +79,7 @@ export class AuthController {
     private readonly loginAdmin: LoginAdminUseCase,
     private readonly enrollTotp: EnrollTotpUseCase,
     private readonly confirmTotp: ConfirmTotpUseCase,
+    private readonly resetTotp: ResetTotpUseCase,
     private readonly totpStatus: GetTotpStatusUseCase,
     private readonly logout: LogoutUseCase,
     private readonly deleteAccount: DeleteAccountUseCase,
@@ -191,6 +194,28 @@ export class AuthController {
     @Body() dto: TotpConfirmDto,
   ): Promise<void> {
     await this.runTotp(() => this.confirmTotp.execute(claims.sub, dto.code));
+  }
+
+  /**
+   * 2FA sıfırla (#186): PAROLA doğrulamasıyla mevcut 2FA'yı kaldırır → kullanıcı yeni
+   * cihazda yeniden kurabilir. `enroll-totp`'un "zaten etkin" duvarını parola-kapılı bir
+   * yolla aşar: parola olmadan reset, oturumu ele geçirenin 2FA'yı KENDİ cihazına
+   * taşımasına izin verirdi. `sub` token'dan (gövdeden değil) — başkasının 2FA'sı sıfırlanamaz.
+   * Login ile aynı throttle (kaba kuvvet: parola tahmini burada da 5/dk).
+   */
+  @Post('admin/totp/reset')
+  @HttpCode(204)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @Throttle({ default: { limit: adminLoginLimit, ttl: 60_000 } })
+  @ApiOperation({ summary: '2FA sıfırla (parola doğrulamalı) — yeni cihazda yeniden kur' })
+  @ApiNoContentResponse({ description: '2FA kaldırıldı; yeniden kurulabilir' })
+  @ApiUnauthorizedResponse({ description: 'Parola hatalı' })
+  async totpReset(
+    @CurrentUser() claims: AccessTokenClaims,
+    @Body() dto: ResetTotpDto,
+  ): Promise<void> {
+    await this.runTotp(() => this.resetTotp.execute(claims.sub, dto.password));
   }
 
   /**

@@ -54,6 +54,13 @@ export class TotpConfirmDto {
   code!: string;
 }
 
+export class ResetTotpDto {
+  @ApiProperty({ description: 'Mevcut parola — 2FA sıfırlamayı doğrular (#186)' })
+  @IsString()
+  @MinLength(1)
+  password!: string;
+}
+
 export class TotpStatusResponseDto {
   @ApiProperty({ description: 'İki adımlı doğrulama etkin mi (onaylanmış mı)' })
   enabled!: boolean;

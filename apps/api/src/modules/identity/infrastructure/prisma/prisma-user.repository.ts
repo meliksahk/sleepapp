@@ -115,6 +115,14 @@ export class PrismaUserRepository implements UserRepository {
     });
   }
 
+  async clearTotp(userId: string): Promise<void> {
+    // Anahtar + onay + sayaç sıfırlanır → 2FA yokmuş gibi; yeniden kurulum baştan başlar.
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: { totp_secret: null, totp_confirmed_at: null, totp_last_counter: null },
+    });
+  }
+
   async recordTotpCounter(userId: string, counter: number): Promise<void> {
     await this.prisma.users.update({
       where: { id: userId },

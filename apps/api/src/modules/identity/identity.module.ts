@@ -44,6 +44,7 @@ import { RefreshSessionUseCase } from './application/refresh-session.usecase';
 import { LoginAdminUseCase } from './application/login-admin.usecase';
 import { EnrollTotpUseCase } from './application/enroll-totp.usecase';
 import { ConfirmTotpUseCase } from './application/confirm-totp.usecase';
+import { ResetTotpUseCase } from './application/reset-totp.usecase';
 import { GetTotpStatusUseCase } from './application/get-totp-status.usecase';
 import { LogoutUseCase } from './application/logout.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
@@ -168,6 +169,12 @@ const providers: Provider[] = [
     inject: [USER_REPOSITORY, CLOCK],
     useFactory: (users: UserRepository, clock: Clock): ConfirmTotpUseCase =>
       new ConfirmTotpUseCase(users, clock),
+  },
+  {
+    provide: ResetTotpUseCase,
+    inject: [USER_REPOSITORY, PASSWORD_HASHER],
+    useFactory: (users: UserRepository, passwords: PasswordHasher): ResetTotpUseCase =>
+      new ResetTotpUseCase(users, passwords),
   },
   {
     provide: LogoutUseCase,
