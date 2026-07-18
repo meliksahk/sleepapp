@@ -10,6 +10,7 @@ import {
 import { PrismaFlagRepository } from './infrastructure/prisma-flag.repository';
 import { CryptoBucketHasher } from './infrastructure/crypto-bucket-hasher';
 import { GetFlagsUseCase } from './application/get-flags.usecase';
+import { ListAllFlagsUseCase } from './application/list-all-flags.usecase';
 import { FlagsController } from './presentation/flags.controller';
 
 const providers: Provider[] = [
@@ -25,11 +26,18 @@ const providers: Provider[] = [
     useFactory: (repo: FlagRepository, hasher: BucketHasher): GetFlagsUseCase =>
       new GetFlagsUseCase(repo, hasher),
   },
+  {
+    provide: ListAllFlagsUseCase,
+    inject: [FLAG_REPOSITORY],
+    useFactory: (repo: FlagRepository): ListAllFlagsUseCase => new ListAllFlagsUseCase(repo),
+  },
 ];
 
 @Module({
   imports: [IdentityModule],
   controllers: [FlagsController],
   providers,
+  // Admin paneli ham flag tanımlarını buradan okur (docs/03 A4).
+  exports: [ListAllFlagsUseCase],
 })
 export class FlagsModule {}
