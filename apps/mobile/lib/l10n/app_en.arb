@@ -488,5 +488,11 @@
   "settingsLanguageEnglish": "English",
   "@settingsLanguageEnglish": { "description": "Ingilizce secenegi" },
   "settingsLanguageTurkish": "Türkçe",
-  "@settingsLanguageTurkish": { "description": "Turkce secenegi (kendi dilinde yazilir)" }
+  "@settingsLanguageTurkish": { "description": "Turkce secenegi (kendi dilinde yazilir)" },
+
+  "soundscapePlay": "Play this sound",
+  "@soundscapePlay": { "description": "Soundscape detayinda birincil eylem: mikseri bu tarifle acar" },
+
+  "mixerRecipeUnavailable": "We couldn't load this sound's recipe, so your default mix is playing.",
+  "@mixerRecipeUnavailable": { "description": "Slug cozulemedi, mikser varsayilan tarifle acildi" }
 }

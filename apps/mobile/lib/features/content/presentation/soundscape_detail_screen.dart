@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../content_models.dart';
@@ -76,6 +77,21 @@ class SoundscapeDetailScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: NoctaSpace.s5),
+          // Ekranın birincil eylemi: sesi DUYMAK. Mikseri bu tarifle açar —
+          // ayrı bir mini oynatıcı değil, çünkü kullanıcı orada sesi kendi
+          // mix'ine çevirip video olarak paylaşabilir (viral kanca #3).
+          //
+          // **Otomatik çalma YOK** (uyku uygulaması): ekran açılınca ses başlamaz,
+          // mikserde de kullanıcı ayrıca çal'a basar.
+          FilledButton.icon(
+            key: const Key('soundscape-play'),
+            onPressed: () => context.push(
+              '/mixer?soundscape=${Uri.encodeQueryComponent(d.soundscape.slug)}',
+            ),
+            icon: const Icon(Icons.play_arrow),
+            label: Text(AppL10n.of(context).soundscapePlay),
+          ),
         ],
       ),
     );

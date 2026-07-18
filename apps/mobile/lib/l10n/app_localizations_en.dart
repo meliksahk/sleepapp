@@ -542,4 +542,11 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get settingsLanguageTurkish => 'Türkçe';
+
+  @override
+  String get soundscapePlay => 'Play this sound';
+
+  @override
+  String get mixerRecipeUnavailable =>
+      'We couldn\'t load this sound\'s recipe, so your default mix is playing.';
 }

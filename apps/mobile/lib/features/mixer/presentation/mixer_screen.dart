@@ -14,10 +14,28 @@ import '../mixer_controller.dart';
 /// Slider'lar `setLayerGain`'e gider: yeniden render yok, ses kesilmez, değişim
 /// anında duyulur.
 class MixerScreen extends ConsumerStatefulWidget {
-  const MixerScreen({super.key, this.controller, this.sharer, this.canExportVideo});
+  const MixerScreen({
+    super.key,
+    this.controller,
+    this.sharer,
+    this.canExportVideo,
+    this.spec,
+    this.recipeUnavailable = false,
+  });
 
   /// Test sahte controller enjekte edebilsin diye (cihazsız widget testi).
   final MixerController? controller;
+
+  /// Çalınacak tarif — kütüphaneden gelen soundscape'in tarifi.
+  ///
+  /// `initState`'te BİR KEZ okunur ([controller] verilmişse hiç okunmaz): sonradan
+  /// değişen bir spec, çalan sesi kesip yeniden render etmek anlamına gelirdi.
+  /// null → [defaultMixSpec].
+  final MixSpec? spec;
+
+  /// Sesin kendi tarifi çözülemedi, varsayılanla açıldı — kullanıcıya söylenir.
+  /// Ses YİNE DE çalar; bu bir hata ekranı değil, bir dipnottur.
+  final bool recipeUnavailable;
 
   final Sharer? sharer;
 
@@ -43,7 +61,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
   @override
   void initState() {
     super.initState();
-    _c = widget.controller ?? MixerController();
+    _c = widget.controller ?? MixerController(spec: widget.spec);
     _c.onChanged = () {
       if (mounted) setState(() {});
     };
@@ -85,6 +103,18 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 24),
+
+            // Dürüstlük: kullanıcı istediği sesi seçti ama başka bir mix duyuyor.
+            // Bunu söylemek zorundayız — ama ses çalmaya devam eder (offline-first).
+            if (widget.recipeUnavailable)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  l10n.mixerRecipeUnavailable,
+                  key: const Key('mixer-recipe-fallback'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
 
             if (s.error != null)
               Padding(
