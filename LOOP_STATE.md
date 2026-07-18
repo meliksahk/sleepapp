@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                |
-| Mobil       | ~73%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac ÇALIŞTIRMAK için), **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi #169), **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI~~ ✓ #161 · ~~entitlement~~ ✓ #159 · **alarm backstop dikişi** ✓ #169 · **mikser döngü dikişi (tık) ÇÖZÜLDÜ** ✓ #170 (eşit-güç crossfade, 8 istatistik testi) · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                     |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                       |
+| Mobil       | ~74%     | 0.40    | **native graf slice 2+**: canlı yola bağla (per-blok kazanç → anlık slider korunur) + iOS AVAudioEngine (Mac-gated). **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi #169), **gerçek IAP** (en son faz). ✓ **native graf slice 1** #172 (Kotlin AudioTrack — emülatörde DERLENDİ+KOŞTU+dumpsys tek-track; "native gated" varsayımı → OLGU: Android OTONOM) · ~~mikser döngü tıkı~~ ✓ #170 · ~~alarm backstop dikişi~~ ✓ #169 · ~~paywall~~ ✓ #161 · streak/haftalık ✓ |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                            |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
-> **Hesap:** `0.40·73 + 0.30·74 + 0.15·39 + 0.15·33 = 62.20` → **≈62%**
+> **Hesap:** `0.40·74 + 0.30·74 + 0.15·39 + 0.15·33 = 62.60` → **≈63%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,33 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #172 — native ses grafı SLICE 1: Kotlin AudioTrack, emülatörde doğrulandı (PR #172)
+
+✅ **Yapıldı ve DOĞRULANDI (emülatörde derlendi+koştu+dumpsys)** — müdür kararı
+
+- **Strateji:** müdür "native graf gated mi otonom mu" varsayımını olguya çevirmemi
+  istedi (pazarlıksız kısıt: emülatörde gerçekten derlenip koşmalı — #169'un düştüğü
+  "yazıldı, derlenmedi" tuzağı değil). Ortamda 2 çalışan emülatör + adb bulundu → kısıt
+  karşılanabilir.
+- **Yapıldı:** `NativeMixPlayer` — Kotlin `AudioTrack` (streaming, NDK/Oboe YOK) tek
+  in-app-mikslenmiş (renderMix kompresörü + #170 crossfade) buffer'ı döngüde çalar →
+  TEK track (N just_audio player'ın OS-seviye kırpması yerine). MethodChannel
+  `nocta/native_mix` (MixVideoEncoder deseni), Dart `NativeMixPlayer.playSpec/stop`.
+- **DOĞRULAMA (kanıtlı):** (1) `flutter build apk` → **Kotlin DERLENDİ**; (2)
+  `integration_test/native_mix_test.dart` emülatör-5554'te **GEÇTİ** (play→3sn→stop
+  uçtan uca, hatasız); (3) `dumpsys media.audio_flinger` → **tek AudioTrack @48kHz**,
+  play/stop ile senkron add/remove. + Dart headless: kanal sözleşmesi + 3 unit test.
+  Tam mobil süit **410 test yeşil**, analyze temiz.
+- 🔥 **Sınır (dürüstlük):** slice 1 mekanizmayı KANITLAR, canlı yolu DEĞİŞTİRMEZ —
+  `MixPlayer` hâlâ aktif (anlık slider regresyonu yok). OS-kırpma düzeltmesi kullanıcıya
+  ancak **slice 2** ile ulaşır: native'i canlı yola bağla + per-blok kazanç (anlık slider
+  korunur). iOS yarısı Mac-gated. Kulakla "temiz mi" yargısı §1.1, sonraya.
+- 📌 En önemli çıktı: **"native graf gated" varsayımı ÇÜRÜTÜLDÜ** — Android native graf
+  OTONOM ve bu ortamda uçtan uca doğrulanabilir. Kalan mobil kaldıraç artık "bilinmeyen
+  gated" değil, "bilinen çok-iterasyonluk otonom proje" (yalnızca iOS Mac-gated).
+- 📌 Mobil 73→74: cihazda doğrulanmış gerçek temel dilim; canlı olmadığı için +1 ile
+  sınırlı (slice 2 canlı bağlar).
 
 ### #170 — mikser döngü dikişi (tık) çözüldü: eşit-güç crossfade (PR #170)
 

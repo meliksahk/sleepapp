@@ -28,17 +28,53 @@ class MainActivity : FlutterActivity() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var encoder: MixVideoEncoder? = null
 
+    // Native ses grafı slice 1 (#172): tek in-app-mikslenmiş buffer'ı çalan AudioTrack.
+    private val nativeMix = NativeMixPlayer()
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "nocta/mix_video")
             .setMethodCallHandler(::onMethodCall)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "nocta/native_mix")
+            .setMethodCallHandler(::onNativeMixCall)
     }
 
     override fun onDestroy() {
         // Kullanıcı export sırasında çıkarsa codec sızmasın.
         encoderThread.execute { encoder?.release(); encoder = null }
         encoderThread.shutdown()
+        // Ses track'i süreç kapanırken bırakılmazsa sistemde asılı kalır.
+        nativeMix.stop()
         super.onDestroy()
+    }
+
+    /**
+     * `nocta/native_mix` kanalı — sözleşme `lib/core/audio_engine/native_mix_player.dart`
+     * ile eşleşir (Dart tarafında `setMockMethodCallHandler` ile testli). AudioTrack
+     * çağrıları ANA thread'den güvenli (kendi yazıcı thread'ini kurar) → executor gerekmez.
+     */
+    private fun onNativeMixCall(call: MethodCall, result: MethodChannel.Result) {
+        try {
+            when (call.method) {
+                "play" -> {
+                    nativeMix.play(
+                        pcm = call.argument<ByteArray>("pcm")!!,
+                        sampleRate = call.argument<Int>("sampleRate")!!,
+                    )
+                    result.success(null)
+                }
+
+                "stop" -> {
+                    nativeMix.stop()
+                    result.success(null)
+                }
+
+                else -> result.notImplemented()
+            }
+        } catch (e: Throwable) {
+            // Yutulmaz: çağıran bir cevap almalı (CLAUDE.md §4).
+            result.error("native_mix_failed", e.message, null)
+        }
     }
 
     private fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
