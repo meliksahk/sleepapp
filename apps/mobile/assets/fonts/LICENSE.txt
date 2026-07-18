@@ -1,0 +1,6 @@
+Inter — SIL Open Font License 1.1 (OFL)
+Telif: The Inter Project Authors (https://github.com/rsms/inter)
+Kaynak: Google Fonts (fonts.google.com/specimen/Inter)
+
+OFL, fontun uygulama içinde gömülü olarak dağıtılmasına izin verir.
+Tam lisans metni: https://scripts.sil.org/OFL
