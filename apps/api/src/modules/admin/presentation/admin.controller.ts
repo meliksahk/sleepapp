@@ -41,7 +41,9 @@ import {
   type AccessTokenClaims,
 } from '../../identity';
 import { Inject, Query } from '@nestjs/common';
+import { ListAllFlagsUseCase } from '../../flags';
 import { AdminUserDto } from './admin-user.dto';
+import { AdminFlagDto } from './admin-flag.dto';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { OverviewDto } from './overview.dto';
@@ -76,7 +78,21 @@ export class AdminController {
     @Inject(OVERVIEW_SOURCE) private readonly overviewSource: OverviewSource,
     @Inject(AUDIT_LOG) private readonly audit: AuditLog,
     private readonly userSearch: SearchUsersUseCase,
+    private readonly flagsList: ListAllFlagsUseCase,
   ) {}
+
+  /**
+   * Tüm feature flag tanımlarını ham kurallarıyla listeler (docs/03 A4 rollout
+   * görünürlüğü). Salt OKUMA → her panel rolü (sınıf `@Roles(...ADMIN_ROLES)`).
+   * Değiştirme (upsert) ayrı, owner-kapılı bir iş (zincirle sırada).
+   */
+  @Get('flags')
+  @ApiOperation({ summary: 'Feature flag tanımlarını listele (rollout görünürlüğü)' })
+  @ApiOkResponse({ type: [AdminFlagDto] })
+  async listFlags(): Promise<AdminFlagDto[]> {
+    const flags = await this.flagsList.execute();
+    return flags.map((f) => ({ key: f.key, rules: f.rules }));
+  }
 
   /**
    * Kullanıcı arama (docs/02 §165 destek senaryosu): e-posta alt-dizesi veya tam id.

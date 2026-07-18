@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                                                                                                 |
 | Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~36%     | 0.15    | feature flag, kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ API #163 + **UI #164** (`/users` arama sayfası, rol-görünürlük owner/support, nav linklendi; typecheck+vitest+lint). 5 özelliğin ~2.5'i                                                                                                                                                                                                                    |
+| Admin       | ~37%     | 0.15    | feature flag **düzenleme (upsert)** + UI, kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ #163+#164 · **flag GÖRÜNÜRLÜK API'si** ✓ #165 (`GET /v1/admin/flags`, e2e; upsert+UI zincirle sırada). 5 özelliğin ~2.5'i                                                                                                                                                                                                      |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
-> **Hesap:** `0.40·71 + 0.30·74 + 0.15·36 + 0.15·33 = 60.95` → **≈61%**
+> **Hesap:** `0.40·71 + 0.30·74 + 0.15·37 + 0.15·33 = 61.10` → **≈61%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,17 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #165 — admin feature flag görünürlük API'si (PR #165)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `GET /v1/admin/flags` — tüm flag tanımlarını ham kurallarıyla listeler (rollout
+  görünürlüğü, docs/03 A4). Salt okuma → her panel rolü (kullanıcı aramasının aksine —
+  PII değil). Sınır-temiz: flags `ListAllFlagsUseCase` sunar, admin tüketir.
+- 4 e2e (gerçek Postgres): owner ham kuralları alır, analyst da okur, non-admin 403, 401. **Tüm api süit: 73/455 yeşil**, lint temiz.
+- 🔥 **Sınır:** yalnızca GÖRÜNÜRLÜK (okuma). **Flag DÜZENLEME (upsert) + UI zincirle
+  sırada** (upsert audit-action tipi ister). Dürüst kısmi.
 
 ### #164 — admin kullanıcı yönetimi UI'ı (zincirin ikinci yarısı) (PR #164)
 

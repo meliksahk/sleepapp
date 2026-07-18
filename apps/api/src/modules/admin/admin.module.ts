@@ -1,5 +1,6 @@
 import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
+import { FlagsModule } from '../flags';
 import type { SoundscapeSummary } from '../content';
 import { WaitlistModule, CountWaitlistUseCase } from '../waitlist';
 import { AnalyticsModule, GetShareFunnelUseCase } from '../analytics';
@@ -113,7 +114,7 @@ const providers: Provider[] = [
  * application servislerinden tüketilir (repo/Prisma modeline dokunulmaz).
  */
 @Module({
-  imports: [IdentityModule, ContentModule, WaitlistModule, AnalyticsModule],
+  imports: [IdentityModule, ContentModule, WaitlistModule, AnalyticsModule, FlagsModule],
   controllers: [AdminController],
   providers,
 })
