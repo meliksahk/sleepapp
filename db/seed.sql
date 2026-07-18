@@ -138,6 +138,33 @@ VALUES
     '[]'::jsonb,
     '{overthinker,deep-ocean}',
     'published', now(), NULL, NULL
+  ),
+  -- ==========================================================================
+  -- Hearth & Static — TAM DEMO: müzik + gürültü + efekt bir arada.
+  --
+  -- NEDEN BU KAYIT VAR: yukarıdaki altı tarif #210'da yazıldı, meditatif
+  -- kaynaklar (#213) HENÜZ YOKKEN. Sonuç: motor pad/fire/rain/waves biliyor
+  -- ama HİÇBİR tarif onları kullanmıyordu; kullanıcı mikseri açınca yalnızca
+  -- gürültü görüyordu ve ürün "yarım yamalak" hissettiriyordu. Bu kayıt
+  -- kombinasyonun çalıştığını GÖSTEREN referans tariftir.
+  --
+  -- Katmanlar (üçü üç farklı sınıftan):
+  --   pad   = melodik/tonal gövde ("müzik") — 30 sn döngüye faz-kilitli
+  --   white = maskeleyici gürültü yatağı
+  --   fire  = çıtırtı transient'leri (efekt)
+  -- Toplam kazanç 0.34+0.30+0.26 = 0.90 < 1.0 → kırpma payı korunuyor.
+  (
+    'a0000000-0000-4000-8000-000000000007',
+    'hearth-and-static',
+    '{"en": "Hearth & Static", "tr": "Ocak ve Parazit"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "music",  "type": "pad",   "gain": 0.34},
+        {"id": "static", "type": "white", "gain": 0.30},
+        {"id": "hearth", "type": "fire",  "gain": 0.26}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{overthinker,delta-drifter}',
+    'published', now(), NULL, NULL
   )
 ON CONFLICT (slug) DO NOTHING;
 
