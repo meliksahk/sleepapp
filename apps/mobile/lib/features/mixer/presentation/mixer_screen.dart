@@ -1,17 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/audio_engine/dsp/mix_render.dart';
-import '../../../core/design_system/design_system.dart';
 import '../../../core/share/sharer.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../archetype/archetype_gradient.dart';
+import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
 
 /// Mikser ekranı (docs/04 M2) — **uygulamanın ses çıkardığı ilk yer.**
 ///
 /// Slider'lar `setLayerGain`'e gider: yeniden render yok, ses kesilmez, değişim
 /// anında duyulur.
-class MixerScreen extends StatefulWidget {
+class MixerScreen extends ConsumerStatefulWidget {
   const MixerScreen({super.key, this.controller, this.sharer, this.canExportVideo});
 
   /// Test sahte controller enjekte edebilsin diye (cihazsız widget testi).
@@ -26,10 +28,10 @@ class MixerScreen extends StatefulWidget {
   final bool? canExportVideo;
 
   @override
-  State<MixerScreen> createState() => _MixerScreenState();
+  ConsumerState<MixerScreen> createState() => _MixerScreenState();
 }
 
-class _MixerScreenState extends State<MixerScreen> {
+class _MixerScreenState extends ConsumerState<MixerScreen> {
   late final MixerController _c;
   late final Sharer _sharer = widget.sharer ?? PlatformSharer();
 
@@ -163,11 +165,16 @@ class _MixerScreenState extends State<MixerScreen> {
 
   Future<void> _exportVideo() async {
     final l10n = AppL10n.of(context);
+    // Viral kanca #3: export edilen video kullanıcının KENDİ arketip gradyanını
+    // taşır (#178). Sonuç henüz yüklenmemişse/test yapılmamışsa slug null → nötr
+    // varsayılan. `read` (watch değil): export tek seferlik bir eylem, o anki değer yeter.
+    final slug = ref.read(latestArchetypeResultProvider).maybeWhen(
+          data: (r) => r?.archetypeSlug,
+          orElse: () => null,
+        );
     final path = await _c.exportVideo(
       title: l10n.mixerVideoTitle,
-      // Kimlik gradyanı henüz mikser ekranına bağlı değil — sabit gradyan.
-      // ❌ EKSİK: kullanıcının kendi arketip gradyanı kullanılmalı (ayrı iş).
-      gradient: NoctaArchetypeGradient.overthinker,
+      gradient: archetypeGradientForSlug(slug),
     );
     // Hata state'e yazıldı ve ekranda gösteriliyor; burada paylaşacak bir şey yok.
     if (path == null || !mounted) return;

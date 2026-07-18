@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/design_system/design_system.dart';
 import '../../../core/media/card_renderer.dart';
+import '../archetype_gradient.dart';
 
 /// Paylaşılabilir kimlik kartı — **viral kanca #1** (docs/04 §103).
 ///
@@ -27,22 +28,9 @@ class IdentityShareCard extends StatelessWidget {
   final String? tagline;
   final LinearGradient gradient;
 
-  /// Archetype slug → gradyan. Bilinmeyen slug'da aurora'ya düşer: yeni bir archetype
-  /// eklendiğinde kart ÇÖKMEZ, yalnızca jenerik görünür.
-  static LinearGradient gradientFor(String slug) {
-    switch (slug) {
-      case 'deep-ocean':
-        return NoctaArchetypeGradient.deepOcean;
-      case 'overthinker':
-        return NoctaArchetypeGradient.overthinker;
-      case 'delta-drifter':
-        return NoctaArchetypeGradient.deltaDrifter;
-      case 'dawn-chaser':
-        return NoctaArchetypeGradient.dawnChaser;
-      default:
-        return NoctaArchetypeGradient.overthinker;
-    }
-  }
+  /// Archetype slug → gradyan. Tek kaynak `archetypeGradientForSlug` (#178); burada
+  /// geriye-uyumlu ince sarmalayıcı olarak durur (mevcut çağıranlar kırılmasın).
+  static LinearGradient gradientFor(String slug) => archetypeGradientForSlug(slug);
 
   @override
   Widget build(BuildContext context) {
