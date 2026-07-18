@@ -34,6 +34,22 @@
          mikrofonun açık olduğunu gece boyunca bildirimde GÖRÜR. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- SÜREÇ-ÖLÜMÜNE DAYANIKLI ALARM (#169). In-app akıllı alarm ana izolatta
+         Timer ile tick'lenir; OS süreci öldürürse (Doze / OEM pil katili / OOM)
+         sessizce ölür. Bu izinler, son-tarih anını AlarmManager'a kaydeden native
+         backstop içindir → uygulama ölü olsa bile OS kullanıcıyı uyandırır.
+
+         USE_EXACT_ALARM: gerçek alarm-saati uygulamaları için (Android 14+),
+         kurulumda verilir. SCHEDULE_EXACT_ALARM: Android 12/13 karşılığı
+         (kullanıcı iptal edebilir). Kesin zamanlama ŞART — pencere alarmı işe
+         geç kalmayı garanti etmez. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Ekran kapalı/kilitliyken alarmı tam-ekran (alarm-saati gibi) göster. -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Cihaz gece yeniden başlarsa kurulu alarm kaybolmasın → yeniden zamanla. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
 <application
         android:networkSecurityConfig="@xml/network_security_config"
         android:label="nocta"

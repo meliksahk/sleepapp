@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_providers.dart';
 import '../../core/share/sharer.dart';
 import '../../core/sleep_tracking/alarm_sound.dart';
+import '../../core/sleep_tracking/night_alarm_scheduler.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/record_mic_source.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
@@ -62,5 +63,8 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
     // Alarmın SESİ. Verilmezse alarm yalnızca ekranda görünür — uyuyan biri için
     // hiçbir işe yaramaz.
     alarmSound: SunriseAlarmSound(),
+    // Süreç ölse bile son-tarihte uyandıran sistem backstop'u (EK güvence).
+    // Native handler cihaz-kapılı; o gelene kadar en iyi çabayla sessizce atlanır.
+    alarmScheduler: const PlatformNightAlarmScheduler(),
   );
 });
