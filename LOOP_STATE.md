@@ -220,6 +220,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #201 — Inter fontu bundle edildi: tasarım niyeti nihayet uygulanıyor (PR #201)
+
+✅ **Yapıldı ve doğrulandı (449 test)** — Faz 0 cila
+
+- **Kapatılan sessiz kusur:** `nocta_tokens.dart:91` **`fontFamily: 'Inter'` bildiriyordu** ama
+  font hiç bundle edilmemişti → Flutter sessizce Roboto'ya düşüyordu. Yani tasarım sisteminin
+  tipografi niyeti uygulamada HİÇ uygulanmamıştı; kimse fark etmemişti çünkü hata vermiyor.
+- **Yapıldı:** Inter 400 + 600 (Google Fonts, **OFL** — gömülü dağıtıma izin verir; lisans notu
+  `assets/fonts/LICENSE.txt`), pubspec `fonts:` bildirimi. ~650 KB APK artışı.
+- **DOĞRULAMA:** 449 test yeşil, analyze temiz. 🔥 **Golden testi bu değişimi YAKALAYAMAZ** —
+  Flutter test ortamı kendi test fontunu kullanır; gerçek tipografi ancak cihazda/emülatörde
+  görülür. Bu, golden'ın bilinen sınırı (dürüstlük notu).
+- 📌 Yüzde değişmedi (tasarım niyetinin uygulanması).
+
 ### #200 — erişilebilirlik: AA kontrast + ses ayarı kendi bölümüne (PR #200)
 
 ✅ **Yapıldı ve doğrulandı (449 test + golden yakaladı)** — Faz 0 cila
