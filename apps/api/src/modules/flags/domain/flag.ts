@@ -80,6 +80,25 @@ export function parseRules(raw: unknown): FlagRules {
 
 export interface FlagRepository {
   findAll(): Promise<Flag[]>;
+  /** Flag'i oluşturur ya da kurallarını değiştirir; `updatedBy` denetim için yazılır. */
+  upsert(key: string, rules: FlagRules, updatedBy: string): Promise<Flag>;
+}
+
+/** Geçersiz flag anahtarı (küçük-harf-kebab değil). Controller 400'e çevirir. */
+export class InvalidFlagKeyError extends Error {
+  readonly code = 'flag_key_invalid';
+  constructor() {
+    super('Flag anahtarı geçersiz (küçük-harf-kebab, 1-64 karakter).');
+    this.name = 'InvalidFlagKeyError';
+  }
+}
+
+// Anahtar URL'den gelir (doğrulanmış DTO gövdesinden DEĞİL) → burada kapılanır:
+// serbest anahtar, kod içinde beklenen sabit anahtarlarla eşleşmeyen çöp üretir.
+const FLAG_KEY_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+
+export function assertValidFlagKey(key: string): void {
+  if (!FLAG_KEY_RE.test(key)) throw new InvalidFlagKeyError();
 }
 
 export const FLAG_REPOSITORY = Symbol('FlagRepository');

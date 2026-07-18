@@ -41,9 +41,10 @@ import {
   type AccessTokenClaims,
 } from '../../identity';
 import { Inject, Query } from '@nestjs/common';
-import { ListAllFlagsUseCase } from '../../flags';
+import { InvalidFlagKeyError, ListAllFlagsUseCase, UpsertFlagUseCase } from '../../flags';
 import { AdminUserDto } from './admin-user.dto';
 import { AdminFlagDto } from './admin-flag.dto';
+import { UpsertFlagDto } from './upsert-flag.dto';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { OverviewDto } from './overview.dto';
@@ -79,6 +80,7 @@ export class AdminController {
     @Inject(AUDIT_LOG) private readonly audit: AuditLog,
     private readonly userSearch: SearchUsersUseCase,
     private readonly flagsList: ListAllFlagsUseCase,
+    private readonly flagUpsert: UpsertFlagUseCase,
   ) {}
 
   /**
@@ -92,6 +94,55 @@ export class AdminController {
   async listFlags(): Promise<AdminFlagDto[]> {
     const flags = await this.flagsList.execute();
     return flags.map((f) => ({ key: f.key, rules: f.rules }));
+  }
+
+  /**
+   * Flag oluştur/değiştir (docs/03 A4). **ROL DARALTMASI: yalnızca `owner`.**
+   * Flag'ler HER özelliğin rollout'unu kontrol eder — yanlış bir upsert (ör. paywall'ı
+   * herkese kapatmak) tüm tabanı etkiler; içerik editöründen (`editor`) daha dar bir
+   * yetki gerektirir. `analyst`/`support` zaten yazamaz. Denetim izi zorunlu (kim/ne).
+   */
+  @Put('flags/:key')
+  @HttpCode(200)
+  @Roles('owner')
+  @ApiOperation({ summary: 'Feature flag oluştur/değiştir (yalnızca owner)' })
+  @ApiOkResponse({ type: AdminFlagDto })
+  @ApiForbiddenResponse({ description: 'Yalnızca owner flag düzenler' })
+  async upsertFlag(
+    @Param('key') key: string,
+    @Body() dto: UpsertFlagDto,
+    @CurrentUser() user: AccessTokenClaims,
+  ): Promise<AdminFlagDto> {
+    try {
+      const flag = await this.flagUpsert.execute(
+        key,
+        {
+          enabled: dto.enabled,
+          rolloutPercentage: dto.rolloutPercentage,
+          platforms: dto.platforms,
+          minAppVersion: dto.minAppVersion,
+        },
+        user.sub,
+      );
+      // Denetim izi YALNIZCA başarıda + yalnızca NE değişti (değerler değil): enabled
+      // + hangi segment kuralları tanımlı. Gövde ham değer sızdırmaz ilkesi.
+      await this.audit.record({
+        actorId: user.sub,
+        action: 'flag.upsert',
+        target: flag.key,
+        details: {
+          enabled: flag.rules.enabled,
+          rollout: flag.rules.rolloutPercentage ?? null,
+          segmented: Boolean(flag.rules.platforms?.length || flag.rules.minAppVersion),
+        },
+      });
+      return { key: flag.key, rules: flag.rules };
+    } catch (err) {
+      if (err instanceof InvalidFlagKeyError) {
+        throw new BadRequestException({ code: err.code, message: err.message });
+      }
+      throw err;
+    }
   }
 
   /**

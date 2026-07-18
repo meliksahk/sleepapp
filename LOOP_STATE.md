@@ -89,9 +89,9 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                                                                                                 |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                    |
 | Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~38%     | 0.15    | feature flag **düzenleme (upsert)**, kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ #163+#164 · **flag görünürlük API'si** ✓ #165 + **UI `/flags`** ✓ #166 (rollout tablosu: durum rozeti + hedefleme özeti; upsert owner-kapılı sırada). 5 özelliğin ~2.5'i                                                                                                                                                            |
+| Admin       | ~38%     | 0.15    | flag düzenleme **PANEL FORMU** (API #167 hazır, UI formu sırada), kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ #163+#164 · flag görünürlük ✓ #165+#166 (API+`/flags` UI) · flag upsert **API'si** ✓ #167. 5 özelliğin ~2.5'i                                                                                                                                                                                          |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
 > **Hesap:** `0.40·71 + 0.30·74 + 0.15·38 + 0.15·33 = 61.25` → **≈61%**
@@ -204,6 +204,24 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #167 — feature flag DÜZENLEME (upsert) — owner-kapılı PUT + audit (PR #167)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `PUT /v1/admin/flags/:key` — flag oluştur/değiştir. **Yalnızca `owner`** (flag'ler
+  her özelliğin rollout'unu kontrol eder → editörden dar yetki). Denetim izi zorunlu:
+  yeni `flag.upsert` audit-action (kim/ne — değerler değil, NE değişti).
+- Domain: `FlagRepository.upsert` + `assertValidFlagKey` (URL anahtarı kebab kapısı).
+  Prisma `upsert`, `updated_by` token'dan (gövdeden değil), `updated_at` elle bump.
+  Gövde doğrulaması DTO'da (rollout 0-100, semver `minAppVersion`).
+- 7 e2e (gerçek Postgres): owner oluştur→değiştir + updated_by, audit akışında görünür,
+  editor/analyst 403, rollout>100 400, geçersiz anahtar 400, 401. **Tüm api süit:
+  74 suite / 462 test yeşil**, typecheck + lint temiz.
+- 🔥 **Sınır:** API tam; **panel DÜZENLEME FORMU (UI) hâlâ sırada** — admin şu an
+  yalnızca API ile düzenleyebiliyor, `/flags` sayfası salt okur. Dürüst kısmi.
+- 📌 Yüzde şişirilmedi: olgun bir yüzeyde (74%) tek yazma ucu büyük B-kalemi
+  (BullMQ/outbox) değil; kapanan alt-kalem olarak kaydedildi, bar ≈61 kaldı.
 
 ### #166 — admin feature flag UI'ı `/flags` (zincirin ikinci yarısı) (PR #166)
 
