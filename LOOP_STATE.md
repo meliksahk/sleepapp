@@ -54,10 +54,10 @@
 > **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
 > doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
 
-## 🚧 İlerleme: **%70** — formül 69.65 (tablodan, #137 kuralı)
+## 🚧 İlerleme: **%72** — formül 71.95 (tablodan, #137 kuralı)
 
 ```
-[████████████████████████████░░░░░░░░░░░░] 70%
+[█████████████████████████████░░░░░░░░░░░] 72%
 ```
 
 > ⚠️ Bu üst-bar #167 civarında 59.15'te BAYAT kalmıştı (tablonun altındaki Hesap satırı
@@ -94,11 +94,11 @@
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~80%     | 0.30    | ~~BullMQ~~ ✓ #190 · ~~rate-limit Redis'e~~ ✓ #191 · ~~outbox~~ ✓ #192 (**Müdür (C) TAM**). ~~Sentry (API)~~ ✓ #193 (§4 zorunlu hata izleme — DSN-gated init + 5xx-only rapor; **kullanıcı deploy/infra kapısını açtı**). **Kalan infra-kapı otonom:** SMTP e-posta adaptörü (OTT teslimi: magic-link/parola-sıfırlama/e-posta-doğrulama) · admin/web/mobil Sentry · deploy scaffolding. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157. IAP en son faz                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Mobil       | ~84%     | 0.40    | **FAZ 0 CİLA sürüyor** (kullanıcı hedefi: cilalı Android APK; dev hesabı en son — APK Apple gerektirmez). ✓ **app kimliği #194** (launcher ikonu: hilal+brand-violet gradyan, adaptive fg/bg + splash: dark bg beyaz-flaşı öldürdü + `flavor:PROD` dev-yazısı prod'da gizlendi; SVG→sharp rasterize, generatörler, **debug APK aapt'ten geçti**, görsel kontrol). ✓ **onboarding #195** (3 sayfa: kimlik→ritüel→izin priming; ilk-açılış kapısı router'a dokunmadan, kalıcı flag, EN/TR, Atla ile hapsetmez; ham-ses-telefonda vaadi açıkça yazılı §6). ✓ **ana ekran teması #196** (3 bölge: Bu gece→Kimlik→Keşfet; gradyanlı kimlik hero'su, ikonlu keşif karoları, ayarlar AppBar'a; ghost-buton yığını 0). Kalan cila: Inter font bundle, AA kontrast, hata/boş ekranlar, native ses default(kulak-gated), arketip on-device (backend'siz kanca#1). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 · ✓ çevrimdışı gece kuyruğu #177 · ✓ viral kanca kişiselleştirme #178 · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
-| Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Mobil       | ~85%     | 0.40    | **FAZ 0 CİLA sürüyor** (kullanıcı hedefi: cilalı Android APK; dev hesabı en son — APK Apple gerektirmez). ✓ **app kimliği #194** (launcher ikonu: hilal+brand-violet gradyan, adaptive fg/bg + splash: dark bg beyaz-flaşı öldürdü + `flavor:PROD` dev-yazısı prod'da gizlendi; SVG→sharp rasterize, generatörler, **debug APK aapt'ten geçti**, görsel kontrol). ✓ **onboarding #195** (3 sayfa: kimlik→ritüel→izin priming; ilk-açılış kapısı router'a dokunmadan, kalıcı flag, EN/TR, Atla ile hapsetmez; ham-ses-telefonda vaadi açıkça yazılı §6). ✓ **ana ekran teması #196** (3 bölge: Bu gece→Kimlik→Keşfet; gradyanlı kimlik hero'su, ikonlu keşif karoları, ayarlar AppBar'a; ghost-buton yığını 0). Kalan cila: Inter font bundle, AA kontrast, hata/boş ekranlar, native ses default(kulak-gated), arketip on-device (backend'siz kanca#1). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 · ✓ çevrimdışı gece kuyruğu #177 · ✓ viral kanca kişiselleştirme #178 · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
+| Admin       | ~48%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
-> **Hesap:** `0.40·84 + 0.30·80 + 0.15·46 + 0.15·45 = 71.25` → **≈71%**
+> **Hesap:** `0.40·85 + 0.30·80 + 0.15·48 + 0.15·45 = 71.95` → **≈72%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -220,6 +220,19 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #207 — admin nav + giriş ekranı i18n'e göçtü (PR #207)
+
+✅ **Yapıldı ve doğrulandı (136 test)** — dil desteği: admin göçü 1. parti
+
+- **Kapatılan tutarsızlık:** panel **karışık dildeydi** — navigasyon İngilizce
+  (Dashboard/Content/Users…), gövde metinleri Türkçe. Nav artık anahtar tabanlı.
+- **Önemli detay:** giriş hataları **dizge yerine MESAJ ANAHTARI** tutuyor
+  (`messageFor → MessageKey`). Dizge tutsaydı kullanıcı İngilizce paneldeyken
+  Türkçe hata görürdü — dil değişimi geçmişte üretilmiş dizgeyi çeviremez.
+  `login/page.tsx` sunucu bileşeni olduğu için `translate(locale, …)` kullanır.
+- **DOĞRULAMA:** 136 test yeşil, typecheck+lint+build temiz, CI yeşil.
+- 📌 Admin 46→48. Kalan: 10+ tsx (content/users/flags/security).
+
 ### #206 — admin i18n altyapısı + dil değiştirici (PR #206)
 
 ✅ **Yapıldı ve doğrulandı (136 admin testi)** — kullanıcı isteği: "her şeye Türkçe dil desteği"
@@ -240,7 +253,22 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - 📌 Kalan: 14 tsx dosyasının göçü + web i18n (en riskli, `[locale]` refactor) + admin'de çeviri
   yönetim ekranı. Bu ilk PR altyapıyı kurdu.
 
-### #205 — mobil dil seçici
+### #205 — mobil dil seçici: EN/TR kullanıcı tarafından seçilebilir (PR #205)
+
+✅ **Yapıldı ve DOĞRULANDI (emülatör, release APK)** — dil desteği: mobil TAMAM
+
+- **Kapatılan erişilemezlik:** çeviriler (EN+TR) **baştan beri tamdı** ama yalnızca
+  CİHAZ diline uyuluyordu — Türkçe telefonu olmayan kullanıcı Türkçe'yi göremiyordu.
+  Var olan bir yetenek erişilemez haldeydi.
+- **Yapıldı:** `LocaleStore` (Sistem/EN/TR, kalıcı) + ayarlarda seçici + üç MaterialApp'e
+  locale bağlandı (onboarding kökü dahil).
+- 🔴 **Kendi hatam:** `_AppRoot`'un `MaterialApp.router`'ına locale İLK DENEMEDE
+  eklenmemişti (python-replace Türkçe karakter yüzünden sessizce tutmadı) → seçim
+  kaydediliyor ama arayüz İngilizce kalıyordu. **Emülatörde yakalandı**, Edit ile düzeltildi.
+- **DOĞRULAMA:** 5 test (varsayılan sistem / seçim kalıcı / sisteme dönüş / desteklenen
+  diller `AppL10n` ile aynı / bozuk kod çökmez) → **456 test yeşil**. Emülatörde release
+  APK ile tüm arayüzün Türkçeye döndüğü, seçimin uygulama kapanıp açılınca korunduğu görüldü.
+- 📌 Mobil 84→85.
 
 ### #204 — alarm çanı 528 Hz'den çekildi: uyum sızıntısı kapandı (PR #204)
 
