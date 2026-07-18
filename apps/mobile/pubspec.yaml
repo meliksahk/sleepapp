@@ -59,6 +59,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Native ses grafı (#172) emülatörde gerçekten çalar mı — cihazda e2e doğrulama.
+  # `flutter test` (CI) integration_test/'i koşmaz; yerel emülatörde açıkça koşulur.
+  integration_test:
+    sdk: flutter
   # Alarm testleri saatlerce süren geceyi milisaniyede koşturur: sahte zaman şart.
   # (flutter_test zaten geçişli olarak getiriyor ama doğrudan import edildiği için
   # açıkça bildirilir — depend_on_referenced_packages.)
