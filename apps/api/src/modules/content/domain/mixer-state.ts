@@ -12,13 +12,25 @@
  * değişirse İKİSİ birlikte değişmelidir.
  */
 
-/** Motorun desteklediği jeneratif kaynaklar (mobil NoiseType ile aynı). */
-export const NOISE_TYPES = ['white', 'pink', 'brown'] as const;
-export type NoiseType = (typeof NOISE_TYPES)[number];
+/**
+ * Motorun desteklediği jeneratif kaynaklar (mobil `LayerSource` enum'u ile AYNI).
+ *
+ * `white|pink|brown` düz gürültü; `waves|fire|rain` gürültü yatağı üstüne zarf ve
+ * transient kuran meditatif dokular; `pad` tonal (içinde gürültü yok). Hepsi
+ * on-device SENTEZDİR — sunucu ses dosyası tutmaz, yalnızca tarifi doğrular.
+ *
+ * ⚠️ **SIRA ÖNEMLİ:** `tooling/check-layer-source-drift.mjs` bu listeyi mobil
+ * enum'la ve admin panelinin kopyasıyla SIRA DAHİL karşılaştırır. Yeni kaynak
+ * eklerken üçü birden güncellenmeli, yoksa CI kırmızıya döner. Kapının varlık
+ * sebebi: liste ayrışırsa editör panelde geçerli görünen bir tarif kaydeder,
+ * hata ancak KULLANICININ TELEFONUNDA çalma anında ortaya çıkar.
+ */
+export const LAYER_SOURCES = ['white', 'pink', 'brown', 'waves', 'fire', 'rain', 'pad'] as const;
+export type LayerSource = (typeof LAYER_SOURCES)[number];
 
 export interface MixerLayer {
   readonly id: string;
-  readonly type: NoiseType;
+  readonly type: LayerSource;
   /** [0,1] — mikser kazancı. */
   readonly gain: number;
 }
@@ -32,8 +44,8 @@ export const MAX_MIXER_LAYERS = 8;
 
 const MAX_LAYER_ID_LENGTH = 40;
 
-function isNoiseType(v: unknown): v is NoiseType {
-  return typeof v === 'string' && (NOISE_TYPES as readonly string[]).includes(v);
+function isLayerSource(v: unknown): v is LayerSource {
+  return typeof v === 'string' && (LAYER_SOURCES as readonly string[]).includes(v);
 }
 
 export function parseLayer(input: unknown): MixerLayer | null {
@@ -41,7 +53,7 @@ export function parseLayer(input: unknown): MixerLayer | null {
   const { id, type, gain } = input as Record<string, unknown>;
 
   if (typeof id !== 'string' || id.length === 0 || id.length > MAX_LAYER_ID_LENGTH) return null;
-  if (!isNoiseType(type)) return null;
+  if (!isLayerSource(type)) return null;
   // NaN/Infinity da elenmeli: Number.isFinite hem tipi hem geçerliliği kontrol eder.
   if (typeof gain !== 'number' || !Number.isFinite(gain) || gain < 0 || gain > 1) return null;
 

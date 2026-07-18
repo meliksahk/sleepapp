@@ -53,6 +53,10 @@ MixerController _testController(MixSpec spec) {
   return MixerController(
     spec: spec,
     player: MixPlayer(
+      // Üretimde render ayrı isolate'te (compute) yapılır; widget testinin sabit
+      // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
+      // ediyoruz — `playerFactory` ile aynı desen.
+      loopRenderer: (r) async => renderLoopSync(r),
       loopSeconds: 1, // 30 sn render testi yavaşlatırdı
       sampleRate: 8000,
       playerFactory: () {
@@ -104,8 +108,8 @@ double _sliderValue(WidgetTester tester, String id) =>
 
 void main() {
   const oceanSpec = MixSpec([
-    MixLayer(id: 'deep', type: NoiseType.brown, gain: 0.5),
-    MixLayer(id: 'surf', type: NoiseType.pink, gain: 0.25),
+    MixLayer(id: 'deep', type: LayerSource.brown, gain: 0.5),
+    MixLayer(id: 'surf', type: LayerSource.pink, gain: 0.25),
   ]);
 
   testWidgets('slug verilince mikser O SESİN tarifiyle kurulur', (tester) async {
@@ -239,7 +243,7 @@ void main() {
 
       // Yanıt GEÇ gelir (gerçek tarifle).
       late$.complete(_detailWithSpec(MixSpec(const [
-        MixLayer(id: 'deep', type: NoiseType.brown, gain: 0.5),
+        MixLayer(id: 'deep', type: LayerSource.brown, gain: 0.5),
       ])));
       await tester.pump();
       await tester.pump();
@@ -300,8 +304,8 @@ void main() {
     tester,
   ) async {
     const loud = MixSpec([
-      MixLayer(id: 'a', type: NoiseType.white, gain: 1.0),
-      MixLayer(id: 'b', type: NoiseType.pink, gain: 1.0),
+      MixLayer(id: 'a', type: LayerSource.white, gain: 1.0),
+      MixLayer(id: 'b', type: LayerSource.pink, gain: 1.0),
     ]);
     await _pump(
       tester,

@@ -83,14 +83,22 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     super.dispose();
   }
 
-  String _layerLabel(AppL10n l10n, NoiseType type) {
+  String _layerLabel(AppL10n l10n, LayerSource type) {
     switch (type) {
-      case NoiseType.white:
+      case LayerSource.white:
         return l10n.mixerLayerWhite;
-      case NoiseType.pink:
+      case LayerSource.pink:
         return l10n.mixerLayerPink;
-      case NoiseType.brown:
+      case LayerSource.brown:
         return l10n.mixerLayerBrown;
+      case LayerSource.waves:
+        return l10n.mixerLayerWaves;
+      case LayerSource.fire:
+        return l10n.mixerLayerFire;
+      case LayerSource.rain:
+        return l10n.mixerLayerRain;
+      case LayerSource.pad:
+        return l10n.mixerLayerPad;
     }
   }
 
@@ -106,101 +114,121 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
           key: const Key('mixer-title'),
         ),
       ),
+      // **Kaydırılan liste + SABİT taşıma çubuğu (#213).** Önceden çal butonu
+      // listenin sonundaydı; katman sayısı 3'ten 7'ye çıkınca ekranın ALTINA
+      // düştü — kullanıcı sesi başlatmak için kaydırmak zorunda kalıyordu (ve
+      // widget testleri bunu yakaladı: buton hiç inşa edilmiyordu). Taşıma
+      // kontrolleri katman sayısından BAĞIMSIZ olarak erişilebilir olmalı.
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
+        child: Column(
           children: [
-            // Dürüstlük: kullanıcı duyduğu şeyin nihai kalite olmadığını BİLMELİ.
-            // Bunu saklamak, erken sürümde "ses kötü" izlenimini kalıcılaştırırdı.
-            Text(
-              l10n.mixerStopgapNotice,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 24),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  // Dürüstlük: kullanıcı duyduğu şeyin nihai kalite olmadığını BİLMELİ.
+                  // Bunu saklamak, erken sürümde "ses kötü" izlenimini kalıcılaştırırdı.
+                  Text(l10n.mixerStopgapNotice, style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: 24),
 
-            // Dürüstlük: kullanıcı istediği sesi seçti ama başka bir mix duyuyor.
-            // Bunu söylemek zorundayız — ama ses çalmaya devam eder (offline-first).
-            if (widget.recipeUnavailable)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  l10n.mixerRecipeUnavailable,
-                  key: const Key('mixer-recipe-fallback'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-
-            if (s.error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  // Ses hatası mı export hatası mı — kullanıcıya doğru olanı söyle.
-                  s.errorKind == MixerErrorKind.export
-                      ? l10n.mixerExportFailed
-                      : l10n.mixerFailed,
-                  key: const Key('mixer-error'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-
-            for (final layer in s.layers)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_layerLabel(l10n, layer.type)),
-                    Slider(
-                      key: Key('gain-${layer.id}'),
-                      value: s.gains[layer.id] ?? 0,
-                      onChanged: (v) => _c.setGain(layer.id, v),
-                      // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
-                      // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
-                      label: l10n.mixerGainPercent(
-                        ((s.gains[layer.id] ?? 0) * 100).round(),
+                  // Dürüstlük: kullanıcı istediği sesi seçti ama başka bir mix duyuyor.
+                  // Bunu söylemek zorundayız — ama ses çalmaya devam eder (offline-first).
+                  if (widget.recipeUnavailable)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        l10n.mixerRecipeUnavailable,
+                        key: const Key('mixer-recipe-fallback'),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      divisions: 20,
                     ),
-                  ],
-                ),
-              ),
 
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              key: const Key('mixer-toggle'),
-              // Hazırlanırken buton KİLİTLİ: render sırasında ikinci kez basmak
-              // ikinci bir render tetiklerdi.
-              onPressed: s.isPreparing ? null : () => _c.toggle(),
-              icon: Icon(s.isPlaying ? Icons.pause : Icons.play_arrow),
-              label: Text(
-                s.isPreparing
-                    ? l10n.mixerPreparing
-                    : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
+                  if (s.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        // Ses hatası mı export hatası mı — kullanıcıya doğru olanı söyle.
+                        s.errorKind == MixerErrorKind.export
+                            ? l10n.mixerExportFailed
+                            : l10n.mixerFailed,
+                        key: const Key('mixer-error'),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
+                      ),
+                    ),
+
+                  for (final layer in s.layers)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_layerLabel(l10n, layer.type)),
+                          Slider(
+                            key: Key('gain-${layer.id}'),
+                            value: s.gains[layer.id] ?? 0,
+                            onChanged: (v) => _c.setGain(layer.id, v),
+                            // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
+                            // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
+                            label: l10n.mixerGainPercent(((s.gains[layer.id] ?? 0) * 100).round()),
+                            divisions: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
 
-            // Viral kanca #3 (docs/04 §131). iOS'ta gizli: native kodlayıcı yok.
-            if (_canExportVideo) ...[
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                key: const Key('mixer-export-video'),
-                onPressed: s.isExporting ? null : _exportVideo,
-                icon: const Icon(Icons.movie_creation_outlined),
-                label: Text(
-                  s.isExporting
-                      ? l10n.mixerExporting((s.exportProgress! * 100).round())
-                      : l10n.mixerExportVideo,
-                ),
-              ),
-              if (s.isExporting)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: LinearProgressIndicator(
-                    key: const Key('mixer-export-progress'),
-                    value: s.exportProgress,
+            // ── SABİT taşıma çubuğu: her zaman görünür ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      key: const Key('mixer-toggle'),
+                      // Hazırlanırken buton KİLİTLİ: render sırasında ikinci kez
+                      // basmak ikinci bir render tetiklerdi.
+                      onPressed: s.isPreparing ? null : () => _c.toggle(),
+                      icon: Icon(s.isPlaying ? Icons.pause : Icons.play_arrow),
+                      label: Text(
+                        s.isPreparing
+                            ? l10n.mixerPreparing
+                            : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
+                      ),
+                    ),
                   ),
-                ),
-            ],
+
+                  // Viral kanca #3 (docs/04 §131). iOS'ta gizli: native kodlayıcı yok.
+                  if (_canExportVideo) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        key: const Key('mixer-export-video'),
+                        onPressed: s.isExporting ? null : _exportVideo,
+                        icon: const Icon(Icons.movie_creation_outlined),
+                        label: Text(
+                          s.isExporting
+                              ? l10n.mixerExporting((s.exportProgress! * 100).round())
+                              : l10n.mixerExportVideo,
+                        ),
+                      ),
+                    ),
+                    if (s.isExporting)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: LinearProgressIndicator(
+                          key: const Key('mixer-export-progress'),
+                          value: s.exportProgress,
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -212,10 +240,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     // Viral kanca #3: export edilen video kullanıcının KENDİ arketip gradyanını
     // taşır (#178). Sonuç henüz yüklenmemişse/test yapılmamışsa slug null → nötr
     // varsayılan. `read` (watch değil): export tek seferlik bir eylem, o anki değer yeter.
-    final slug = ref.read(latestArchetypeResultProvider).maybeWhen(
-          data: (r) => r?.archetypeSlug,
-          orElse: () => null,
-        );
+    final slug = ref
+        .read(latestArchetypeResultProvider)
+        .maybeWhen(data: (r) => r?.archetypeSlug, orElse: () => null);
     final path = await _c.exportVideo(
       title: l10n.mixerVideoTitle,
       gradient: archetypeGradientForSlug(slug),

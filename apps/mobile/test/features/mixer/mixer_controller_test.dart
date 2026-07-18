@@ -55,8 +55,8 @@ class _FakePlayer implements AudioPlayer {
 
 void main() {
   const spec = MixSpec([
-    MixLayer(id: 'brown', type: NoiseType.brown, gain: 0.4),
-    MixLayer(id: 'pink', type: NoiseType.pink, gain: 0.2),
+    MixLayer(id: 'brown', type: LayerSource.brown, gain: 0.4),
+    MixLayer(id: 'pink', type: LayerSource.pink, gain: 0.2),
   ]);
 
   late List<_FakePlayer> created;
@@ -66,6 +66,10 @@ void main() {
     return MixerController(
       spec: spec,
       player: MixPlayer(
+      // Üretimde render ayrı isolate'te (compute) yapılır; widget testinin sabit
+      // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
+      // ediyoruz — `playerFactory` ile aynı desen.
+      loopRenderer: (r) async => renderLoopSync(r),
         // 1 sn: test hızlı koşsun (30 sn render × katman = yavaş).
         loopSeconds: 1,
         sampleRate: 8000,

@@ -92,6 +92,13 @@ jobs:
       - name: Archetype matrix drift scan
         run: pnpm check:archetype-drift
 
+      # Mikser kaynak listesi ÜÇ yerde yaşamak zorunda (apps/* birbirini import
+      # edemez): mobil enum, sunucu LAYER_SOURCES, panel LAYER_SOURCES. Ayrışırsa
+      # editör panelde geçerli görünen bir tarif kaydeder ve hata ancak
+      # KULLANICININ TELEFONUNDA, çalma anında ortaya çıkar (ses gelmez).
+      - name: Layer source drift scan
+        run: pnpm check:layer-source-drift
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest

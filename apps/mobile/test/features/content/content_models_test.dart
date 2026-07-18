@@ -29,7 +29,7 @@ void main() {
     }));
 
     expect(s.mixSpec, isNotNull);
-    expect(s.mixSpec!.layers.single.type, NoiseType.brown);
+    expect(s.mixSpec!.layers.single.type, LayerSource.brown);
     expect(s.mixSpec!.layers.single.gain, 0.7);
   });
 

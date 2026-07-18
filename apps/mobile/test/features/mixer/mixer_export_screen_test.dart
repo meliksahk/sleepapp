@@ -55,7 +55,7 @@ class _RecordingSharer implements Sharer {
 }
 
 void main() {
-  const spec = MixSpec([MixLayer(id: 'pink', type: NoiseType.pink, gain: 0.3)]);
+  const spec = MixSpec([MixLayer(id: 'pink', type: LayerSource.pink, gain: 0.3)]);
 
   late FakeMixVideoEncoder encoder;
   late _RecordingSharer sharer;
@@ -70,6 +70,10 @@ void main() {
     return MixerController(
       spec: spec,
       player: MixPlayer(
+      // Üretimde render ayrı isolate'te (compute) yapılır; widget testinin sabit
+      // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
+      // ediyoruz — `playerFactory` ile aynı desen.
+      loopRenderer: (r) async => renderLoopSync(r),
         loopSeconds: 1,
         sampleRate: 8000,
         playerFactory: _FakePlayer.new,

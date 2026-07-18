@@ -9,9 +9,22 @@
 /// Katman başına player'da slider doğrudan `setVolume`'a gider → **anında ve sürekli**.
 /// Bu, mikserin gerçek semantiği (bağımsız katman kazançları).
 ///
-/// **Player'ların birbirinden kayması** kabul edilebilir: katmanlar gürültü (pembe/
-/// kahverengi/beyaz) ve gürültüde faz algısal DEĞİL — kayma duyulmaz. Ritmik/tonal
-/// katman eklenirse bu varsayım ÇÖKER ve senkron gerekir (o zaman native graf zaten şart).
+/// **Player'ların birbirinden kayması** gürültü katmanlarında kabul edilebilir:
+/// gürültüde faz algısal DEĞİL — kayma duyulmaz.
+///
+/// **AMA BU VARSAYIM ARTIK TAM DEĞİL (#213).** Motora `pad` eklendi ve pad TONAL.
+/// Bu yorum eskiden "tonal katman eklenirse varsayım çöker" diyordu; katman eklendi,
+/// yorum güncellenmedi — denetimde yakalandı. Bugünkü durum dürüstçe şudur:
+///
+/// - **Tek pad + gürültüler:** sorun yok. Kayma ancak İKİ tonal kaynak arasında
+///   duyulur (vuru/faz girişimi); pad ile gürültü arasında algısal bir faz ilişkisi
+///   yoktur.
+/// - **İki pad katmanı aynı tarifte:** player'lar bağımsız başladığı için aralarında
+///   sabit olmayan bir faz farkı olur → vuru duyulabilir. Bu ÖLÇÜLMEDİ (cihaz
+///   gerekiyor) ve bugün hiçbir tarifte iki pad yok.
+///
+/// Gerçek çözüm native graf (aşağıda); o gelene kadar tarif yazarken tek pad kuralı
+/// geçerli sayılmalıdır.
 ///
 /// ## ⚠️ BU NİHAİ MİMARİ DEĞİL
 ///
@@ -32,6 +45,8 @@
 library;
 
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show compute;
 
 import 'package:just_audio/just_audio.dart';
 
@@ -82,11 +97,27 @@ class _LayerVoice {
 
 /// Bir [MixSpec]'i çalar; katman kazançları canlı değiştirilebilir.
 class MixPlayer {
+  /// Varsayılan döngü uzunluğu. **Paylaşılan sabit:** video export'u da meditatif
+  /// kaynakların modülasyon periyodunu buna kilitler ki paylaşılan ses, kullanıcının
+  /// duyduğu sesle aynı karakterde olsun (bkz. `renderMix(loopSeconds:)`).
+  static const int defaultLoopSeconds = 30;
+
   MixPlayer({
-    this.loopSeconds = 30,
+    this.loopSeconds = defaultLoopSeconds,
     this.sampleRate = 48000,
     AudioPlayer Function()? playerFactory,
-  }) : _newPlayer = playerFactory ?? AudioPlayer.new;
+    Future<Float32List> Function(LoopRequest)? loopRenderer,
+  })  : _newPlayer = playerFactory ?? AudioPlayer.new,
+        _renderLoop = loopRenderer ?? _computeLoop;
+
+  /// Katman buffer'ını üreten fonksiyon.
+  ///
+  /// **Neden enjekte edilebilir:** üretimde `compute()` ile AYRI ISOLATE'te
+  /// çalışır (ölçüldü: yedi katman 285 ms — UI isolate'inde görünür donma).
+  /// Ama `compute()` gerçek bir isolate açar ve widget testlerinin sabit `pump`
+  /// döngüleri onun tamamlanmasını beklemez; testler senkron bir renderer
+  /// enjekte eder. `playerFactory` ile aynı desen.
+  final Future<Float32List> Function(LoopRequest) _renderLoop;
 
   /// Döngü uzunluğu. Uzun = dikiş daha seyrek duyulur, RAM daha çok. 30 sn ≈ 2.8 MB/katman.
   final int loopSeconds;
@@ -116,11 +147,21 @@ class MixPlayer {
       // Tek katmanlık spec, SORUNSUZ döngü ile: kuyruk başa crossfade'lenir →
       // `LoopMode.one` dikişinde periyodik tık yok (#170). Seed katman indeksinden
       // türetilir → katmanlar korelasyonsuz.
-      final pcm = renderSeamlessLoop(
-        MixSpec([MixLayer(id: layer.id, type: layer.type, gain: 1.0)]),
-        loopSeconds: loopSeconds,
-        sampleRate: sampleRate,
-        seed: i * 104729, // asal: katmanlar arası benzerlik olmasın
+      // AYRI ISOLATE'TE ÜRETİLİR. Ölçüldü (30 sn @48kHz, host CPU): pad tek
+      // başına 189 ms, yedi katmanın tamamı 285 ms. UI isolate'inde yapılırsa
+      // mikser açılışında görünür donma olur. Kod tabanının kendi kuralı bu:
+      // `signature_player.dart` aynı gerekçeyle `compute()` kullanıyor ve
+      // `nocta_signature.dart` "çağıran compute() ile ayrı isolate'e almalıdır"
+      // diyor — pad aynı partial+shimmer desenini kullandığı için kural ona da
+      // uygulanmalıydı; bu iterasyonda atlanmıştı.
+      final pcm = await _renderLoop(
+        LoopRequest(
+          type: layer.type,
+          id: layer.id,
+          loopSeconds: loopSeconds,
+          sampleRate: sampleRate,
+          seed: i * 104729, // asal: katmanlar arası benzerlik olmasın
+        ),
       );
 
       final player = _newPlayer();
@@ -176,3 +217,35 @@ void unawaited(Future<void> f) {
     print('MixPlayer: çalma hatası: $e');
   });
 }
+
+
+/// `compute()` argümanı — isolate'e kapanış gönderilemez, sade veri gerekir.
+///
+/// **Public çünkü** hem `compute()` imzasında hem de testlerin enjekte ettiği
+/// renderer imzasında görünüyor (private tip public API'de kullanılamaz).
+class LoopRequest {
+  const LoopRequest({
+    required this.type,
+    required this.id,
+    required this.loopSeconds,
+    required this.sampleRate,
+    required this.seed,
+  });
+
+  final LayerSource type;
+  final String id;
+  final int loopSeconds;
+  final int sampleRate;
+  final int seed;
+}
+
+/// Üretim yolu: render'ı ayrı isolate'e taşır.
+Future<Float32List> _computeLoop(LoopRequest r) => compute(renderLoopSync, r);
+
+/// Testlerin de kullanabildiği SENKRON render (isolate giriş noktası).
+Float32List renderLoopSync(LoopRequest r) => renderSeamlessLoop(
+      MixSpec([MixLayer(id: r.id, type: r.type, gain: 1.0)]),
+      loopSeconds: r.loopSeconds,
+      sampleRate: r.sampleRate,
+      seed: r.seed,
+    );

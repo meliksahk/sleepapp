@@ -20,7 +20,7 @@ void main() {
       expect(spec, isNotNull);
       expect(spec!.layers, hasLength(1));
       expect(spec.layers.first.id, 'base');
-      expect(spec.layers.first.type, NoiseType.pink);
+      expect(spec.layers.first.type, LayerSource.pink);
       expect(spec.layers.first.gain, 0.5);
     });
 
@@ -32,7 +32,7 @@ void main() {
         '{"id":"c","type":"brown","gain":0.3}]}',
       ));
       expect(spec!.layers.map((l) => l.type),
-          [NoiseType.white, NoiseType.pink, NoiseType.brown]);
+          [LayerSource.white, LayerSource.pink, LayerSource.brown]);
     });
 
     test('gain tam sayı gelebilir (JSON 1 ile 1.0 aynı şeydir)', () {

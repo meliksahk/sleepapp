@@ -28,8 +28,8 @@ SoundscapeDetail _detail({
 void main() {
   test('sesin kendi tarifi kullanılır (id/tip/kazanç birebir)', () {
     const spec = MixSpec([
-      MixLayer(id: 'deep', type: NoiseType.brown, gain: 0.5),
-      MixLayer(id: 'surf', type: NoiseType.pink, gain: 0.25),
+      MixLayer(id: 'deep', type: LayerSource.brown, gain: 0.5),
+      MixLayer(id: 'surf', type: LayerSource.pink, gain: 0.25),
     ]);
 
     final r = resolveSoundscapeMix(_detail(mixSpec: spec));
@@ -37,8 +37,8 @@ void main() {
     expect(r.usedFallback, isFalse);
     expect(r.spec.layers.map((l) => l.id).toList(), ['deep', 'surf']);
     expect(r.spec.layers.map((l) => l.type).toList(), [
-      NoiseType.brown,
-      NoiseType.pink,
+      LayerSource.brown,
+      LayerSource.pink,
     ]);
     expect(r.spec.layers.map((l) => l.gain).toList(), [0.5, 0.25]);
   });
@@ -63,7 +63,7 @@ void main() {
 
     expect(r.usedFallback, isFalse);
     expect(r.spec.layers.single.id, 'p1');
-    expect(r.spec.layers.single.type, NoiseType.white);
+    expect(r.spec.layers.single.type, LayerSource.white);
   });
 
   test('OFFLINE: detay null (ağ yok / bilinmeyen slug) → varsayılan tarif', () {
@@ -85,9 +85,9 @@ void main() {
   test('SES GÜVENLİĞİ: toplam kazanç 1.0 üstündeyse ölçeklenir', () {
     // Sunucu katman başına 0..1 doğruluyor ama TOPLAMI doğrulamıyor.
     const loud = MixSpec([
-      MixLayer(id: 'a', type: NoiseType.white, gain: 1.0),
-      MixLayer(id: 'b', type: NoiseType.pink, gain: 1.0),
-      MixLayer(id: 'c', type: NoiseType.brown, gain: 1.0),
+      MixLayer(id: 'a', type: LayerSource.white, gain: 1.0),
+      MixLayer(id: 'b', type: LayerSource.pink, gain: 1.0),
+      MixLayer(id: 'c', type: LayerSource.brown, gain: 1.0),
     ]);
 
     final r = resolveSoundscapeMix(_detail(mixSpec: loud));
@@ -100,8 +100,8 @@ void main() {
 
   test('toplam 1.0 altındaysa tarife DOKUNULMAZ', () {
     const quiet = MixSpec([
-      MixLayer(id: 'a', type: NoiseType.brown, gain: 0.2),
-      MixLayer(id: 'b', type: NoiseType.pink, gain: 0.1),
+      MixLayer(id: 'a', type: LayerSource.brown, gain: 0.2),
+      MixLayer(id: 'b', type: LayerSource.pink, gain: 0.1),
     ]);
     final r = resolveSoundscapeMix(_detail(mixSpec: quiet));
     expect(r.spec.layers.map((l) => l.gain).toList(), [0.2, 0.1]);

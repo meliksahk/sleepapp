@@ -8,7 +8,7 @@ export { GetAdminSoundscapeUseCase } from './application/get-admin-soundscape.us
 export { UpdateSoundscapeUseCase, EmptyTitleError } from './application/update-soundscape.usecase';
 export { CountSoundscapesUseCase } from './application/count-soundscapes.usecase';
 export { ENGINE_PARAMS_SCHEMA_VERSION, MAX_MIXER_LAYERS } from './domain/engine-params';
-export { NOISE_TYPES } from './domain/mixer-state';
+export { LAYER_SOURCES } from './domain/mixer-state';
 export {
   ContentError,
   EmptyRecipeError,

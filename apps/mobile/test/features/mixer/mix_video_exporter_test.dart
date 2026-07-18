@@ -20,7 +20,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const gradient = NoctaArchetypeGradient.overthinker;
-  const spec = MixSpec([MixLayer(id: 'a', type: NoiseType.pink, gain: 0.5)]);
+  const spec = MixSpec([MixLayer(id: 'a', type: LayerSource.pink, gain: 0.5)]);
 
   /// Gerçek renderer yerine: doğru boyutta ham RGBA döner, çizmez.
   /// Neden: `toImage` headless ASILI KALIYOR (#140) — bkz. `MixVideoExporter.renderFrame`.

@@ -265,6 +265,30 @@ abstract class AppL10n {
   /// **'Brown noise'**
   String get mixerLayerBrown;
 
+  /// Dalga katmanı adı (sentezlenmiş)
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean waves'**
+  String get mixerLayerWaves;
+
+  /// Ateş katmanı adı (sentezlenmiş)
+  ///
+  /// In en, this message translates to:
+  /// **'Crackling fire'**
+  String get mixerLayerFire;
+
+  /// Yağmur katmanı adı (sentezlenmiş)
+  ///
+  /// In en, this message translates to:
+  /// **'Rainfall'**
+  String get mixerLayerRain;
+
+  /// Melodik pad katmanı adı (sentezlenmiş)
+  ///
+  /// In en, this message translates to:
+  /// **'Warm pad'**
+  String get mixerLayerPad;
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:

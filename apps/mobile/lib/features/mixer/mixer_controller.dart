@@ -76,10 +76,21 @@ class MixerState {
 /// Kazançlar toplamı 1'in altında tutuldu: katmanlar işletim sistemi mikserinde
 /// toplandığı için (referans kompresör devrede değil, bkz. [MixPlayer]) yüksek
 /// kazançlar OS seviyesinde kırpardı.
+/// **#213:** meditatif kaynaklar (dalga/ateş/yağmur/pad) buraya eklendi — mikserin
+/// vaadi "gürültüyü meditatif seslerle KARIŞTIR" ise, kullanıcının onları sürgü
+/// olarak görmesi gerekir. Kazanç toplamı yine 1.00 (bkz. yukarıdaki gerekçe).
+///
+/// ⚠️ **MALİYET (gizlenmiyor):** katman başına 30 sn @48 kHz render + ~2.8 MB RAM.
+/// 3 → 7 katman, ilk `prepare()` süresini ve bellek ayak izini ~2.3× büyütür.
+/// Ölçüm raporda; native graf gelince (docs/04) bu tamamen değişecek.
 MixSpec defaultMixSpec() => const MixSpec([
-      MixLayer(id: 'brown', type: NoiseType.brown, gain: 0.45),
-      MixLayer(id: 'pink', type: NoiseType.pink, gain: 0.30),
-      MixLayer(id: 'white', type: NoiseType.white, gain: 0.10),
+      MixLayer(id: 'brown', type: LayerSource.brown, gain: 0.28),
+      MixLayer(id: 'pink', type: LayerSource.pink, gain: 0.12),
+      MixLayer(id: 'white', type: LayerSource.white, gain: 0.06),
+      MixLayer(id: 'waves', type: LayerSource.waves, gain: 0.22),
+      MixLayer(id: 'rain', type: LayerSource.rain, gain: 0.14),
+      MixLayer(id: 'fire', type: LayerSource.fire, gain: 0.10),
+      MixLayer(id: 'pad', type: LayerSource.pad, gain: 0.08),
     ]);
 
 /// Mikser ekranının denetleyicisi (docs/04 M2).

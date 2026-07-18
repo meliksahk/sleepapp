@@ -1,3 +1,5 @@
+import { LAYER_SOURCES } from './mixer-state';
+
 /** content domain hataları — tipli hiyerarşi (CLAUDE.md §4). */
 export class ContentError extends Error {
   constructor(
@@ -51,7 +53,7 @@ export class InvalidRecipeError extends ContentError {
     super(
       'invalid_recipe',
       'Ses tarifi geçersiz: schemaVersion=1 ve 1–8 arası benzersiz katman ' +
-        '({id, type: white|pink|brown, gain: 0–1}) gerekir.',
+        `({id, type: ${LAYER_SOURCES.join('|')}, gain: 0–1}) gerekir.`,
     );
   }
 }

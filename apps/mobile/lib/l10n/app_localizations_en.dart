@@ -112,6 +112,18 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerBrown => 'Brown noise';
 
   @override
+  String get mixerLayerWaves => 'Ocean waves';
+
+  @override
+  String get mixerLayerFire => 'Crackling fire';
+
+  @override
+  String get mixerLayerRain => 'Rainfall';
+
+  @override
+  String get mixerLayerPad => 'Warm pad';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }

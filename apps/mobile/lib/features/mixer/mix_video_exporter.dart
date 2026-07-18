@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../core/audio_engine/dsp/mix_render.dart';
+import '../../core/audio_engine/mix_player.dart';
 import '../../core/audio_engine/dsp/wav_encoder.dart';
 import '../../core/media/card_renderer.dart';
 import '../../core/media/mix_video_channel.dart';
@@ -67,6 +68,12 @@ class MixVideoExporter {
       seconds: seconds,
       sampleRate: sampleRate,
       seed: seed,
+      // KULLANICININ DUYDUĞU KARAKTERİ PAYLAŞ. Export tek atımlıktır (15 sn,
+      // döngülenmez) ama meditatif kaynakların modülasyon periyodu döngü
+      // ızgarasına kilitli. Bunu söylemezsek periyot 15 sn'ye göre hesaplanır
+      // ve dalga kabarması 10 sn yerine 7.5 sn olur — kullanıcı duymadığı bir
+      // sesi paylaşır. Çalma yolundaki döngü uzunluğunu açıkça geçiyoruz.
+      loopSeconds: MixPlayer.defaultLoopSeconds,
     );
     // Dalga formu BİR KEZ hesaplanır: her karede yeniden çıkarmak aynı sonucu
     // 300+ kez üretmek olurdu.

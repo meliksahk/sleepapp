@@ -50,6 +50,65 @@ features/report/
 
 **Lint ile zorlanan kurallar:** `domain` → Flutter import edemez; feature'dan feature'a import yasak (ortaklaşan şey `core`'a iner); `presentation` → `data` import edemez (yalnızca domain arayüzü + provider).
 
+### 1.2.0 Ses kaynağı kararı: SENTEZ — örnek/kayıt indirme YOK
+
+**Karar (#213, kullanıcı önerisi üzerine):** ses içeriği cihazda ÜRETİLİR. YouTube'dan
+(veya benzeri platformlardan) ses çekme/indirme **yapılmayacak**.
+
+**Neden — pazarlıksız sebepler:**
+
+1. **Mağaza politikası.** Google Play, YouTube içeriğini indiren/çıkaran uygulamaları
+   açıkça yasaklıyor; bilinen bir ret/kaldırma sebebi. Ürünün hedefi mağazaya çıkmak
+   olduğu için bu özellik doğrudan hedefi öldürür.
+2. **Telif.** Platformdaki müzik bestecilerin/etiketlerin telifinde. Ticari bir uyku
+   uygulamasında kullanmak mağaza reddinin ötesinde sorumluluk doğurur.
+3. **Mimari.** Uygulama #212'de backend'siz çalışır hale getirildi; akış/indirme ağ,
+   depolama ve CDN bağımlılığını geri getirir ve maliyet disiplini ilkesine aykırıdır.
+
+**Sentezin ürün avantajı (teselli değil):** üretilen ses **hiç döngüye girmez** —
+örneklenmiş uyku sesindeki en yaygın şikâyet duyulabilir loop noktasıdır. Ayrıca bant
+genişliği/depolama maliyeti sıfırdır ve internetsiz çalışır.
+
+**v2'de gerçek kayıt istenirse yol:** CC0/kamu malı kütüphaneler veya ısmarlama/kendi
+kaydımız. Motora bir "asset katmanı" tipi eklenir ve sentez katmanlarıyla yan yana
+çalışır — bugünkü sentez kararı o kapıyı kapatmıyor.
+
+### 1.2.1 Katman kaynakları ve DÖNGÜ KİLİDİ (#213)
+
+Motorun kaynak listesi (`LayerSource`, `core/audio_engine/dsp/mix_render.dart`):
+
+| kaynak                 | yapı                                                      | tepe sınırı (kapalı form) |
+| ---------------------- | --------------------------------------------------------- | ------------------------- |
+| `white`/`pink`/`brown` | düz gürültü (`noise.dart`)                                | 1.00 (tepe-normalize)     |
+| `waves`                | kahverengi yatak + yavaş zarf + zarfa bağlı alçak geçiren | 0.96                      |
+| `fire`                 | kahverengi yatak + kısa çıtırtı transientleri             | 0.80                      |
+| `rain`                 | filtrelenmiş beyaz yatak + sık damla transientleri        | 0.64                      |
+| `pad`                  | tamamen tonal (kısmi tonlar + parıltı), gürültü YOK       | 0.491                     |
+
+Sınırlar `meditative.dart`'ta kanıtlanır ve testle doğrulanır; **hiçbir kaynakta
+`clamp` yoktur** — clamp gerekiyorsa sınır yanlıştır.
+
+**DÖNGÜ KİLİDİ — pazarlıksız kural.** `MixPlayer` 30 sn'lik buffer'ı döngüler.
+`renderSeamlessLoop`'un eşit-güç crossfade'i **korelasyonsuz gürültü** için dikiş
+tıkını çözer, ama YAVAŞ MODÜLASYON için çözmez: dalganın kabarma periyodu döngüyü
+tam bölmezse dikişte zarfın FAZI sıçrar ve kullanıcı her 30 saniyede dalganın
+"yeniden başladığını" duyar. Kural:
+
+- her modülasyon periyodu döngü uzunluğunu TAM BÖLER (`loopLockedPeriod`; 30 sn →
+  dalga 10 sn, pad nefesi 15 sn);
+- pad'in her frekansı döngüde TAM SAYIDA periyot tamamlar (`loopLockedHz`, ızgara
+  adımı 1/döngü Hz);
+- her transient döngü sonundan önce TAMAMEN söner (guard) → dikişte yarım transient yok.
+
+**Pad crossfade'e girmez.** Pad döngü-periyodik olduğu için kuyruğu ile başı
+birebir aynıdır; eşit-güç harmanı onu `sin θ + cos θ ≤ √2` ile toplar, yani her
+döngü başında 50 ms'lik +3 dB kabarma olurdu. `isLoopPeriodic` bunu ayırır ve
+kilitli katman ham kopyalanır (`mix_loop.dart`).
+
+**Sözleşme üç yerde yaşar** (apps/* birbirini import edemez): mobil enum, sunucu
+`LAYER_SOURCES`, panel `LAYER_SOURCES`. `tooling/check-layer-source-drift.mjs`
+üçünü sıra dahil karşılaştırır ve CI'da zorlar.
+
 ### 1.2 Ses Motoru Mimarisi (teknik hendek)
 
 ```

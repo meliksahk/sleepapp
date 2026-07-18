@@ -62,7 +62,7 @@ class MixerLayerState {
   const MixerLayerState({required this.id, required this.type, required this.gain});
 
   final String id;
-  final NoiseType type;
+  final LayerSource type;
   final double gain;
 }
 
@@ -76,10 +76,10 @@ class MixerState {
 
   final List<MixerLayerState> layers;
 
-  static const _types = <String, NoiseType>{
-    'white': NoiseType.white,
-    'pink': NoiseType.pink,
-    'brown': NoiseType.brown,
+  /// Tel dizgisi → enum. `LayerSource.values`'tan türetilir; elle yazılmış liste
+  /// enum'a kaynak eklenince sessizce eksik kalırdı (preset "geçersiz" sayılırdı).
+  static final Map<String, LayerSource> _types = {
+    for (final s in LayerSource.values) s.name: s,
   };
 
   /// Geçersiz/tanınmayan yapı → null (çağıran preset'i yok sayar).

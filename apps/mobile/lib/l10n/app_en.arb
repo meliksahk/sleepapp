@@ -94,6 +94,18 @@
   "mixerLayerBrown": "Brown noise",
   "@mixerLayerBrown": { "description": "Kahverengi gürültü katmanı adı" },
 
+  "mixerLayerWaves": "Ocean waves",
+  "@mixerLayerWaves": { "description": "Dalga katmanı adı (sentezlenmiş)" },
+
+  "mixerLayerFire": "Crackling fire",
+  "@mixerLayerFire": { "description": "Ateş katmanı adı (sentezlenmiş)" },
+
+  "mixerLayerRain": "Rainfall",
+  "@mixerLayerRain": { "description": "Yağmur katmanı adı (sentezlenmiş)" },
+
+  "mixerLayerPad": "Warm pad",
+  "@mixerLayerPad": { "description": "Melodik pad katmanı adı (sentezlenmiş)" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",
