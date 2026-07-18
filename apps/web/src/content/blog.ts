@@ -121,13 +121,111 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   },
 ];
 
-export const BLOG_SLUGS: readonly string[] = BLOG_POSTS.map((p) => p.slug);
+const MORE_POSTS: readonly BlogPost[] = [
+  {
+    slug: 'setting-up-sound-in-your-bedroom',
+    title: 'Setting Up Sound in Your Bedroom',
+    description:
+      'A few small choices — where the sound comes from, how loud it is, and when it starts — make a bedroom soundscape feel calm instead of distracting.',
+    publishedAt: '2026-07-17',
+    readingMinutes: 4,
+    intro:
+      'A good bedroom soundscape is easy to get slightly wrong: too loud, too bright, or started too late. The fixes are small and mostly about placement and habit, not gear.',
+    sections: [
+      {
+        heading: 'Let the sound come from low and far',
+        paragraphs: [
+          'Sound that sits low in the room and slightly away from your head feels more like an environment and less like a device talking at you. A speaker across the room usually beats a phone on the pillow.',
+          'If a phone is all you have, that is fine — just turn the screen away and set it face down so light does not leak into the room.',
+        ],
+      },
+      {
+        heading: 'Keep it quieter than you think',
+        paragraphs: [
+          'The goal is a floor of steady sound you stop noticing, not something you actively listen to. Set it just loud enough to soften the edges of the room, then leave it there.',
+        ],
+      },
+      {
+        heading: 'Start it before you need it',
+        paragraphs: [
+          'Begin the soundscape a little before you lie down, so it is already part of the room when your mind starts to settle. Starting it after you are already restless makes it feel like a fix rather than a background.',
+          'The NOCTA mixer lets you set a blend once and reuse it every night, so the setup becomes part of the ritual instead of a nightly decision.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'layering-soundscapes',
+    title: 'How to Layer Soundscapes for a Fuller Night',
+    description:
+      'Layering means blending two or three simple sounds — like rain over a low drone — into one texture that feels richer than any single layer alone.',
+    publishedAt: '2026-07-11',
+    readingMinutes: 4,
+    intro:
+      'A single sound can feel thin after a while. Layering a few simple textures together gives you something fuller and more natural, without becoming busy enough to hold your attention.',
+    sections: [
+      {
+        heading: 'Start with a base',
+        paragraphs: [
+          'Begin with one low, continuous layer — brown noise or a soft drone — as the floor of the mix. This is the part that fills the room and covers sudden changes from outside.',
+        ],
+      },
+      {
+        heading: 'Add one character layer',
+        paragraphs: [
+          'On top of the base, add a single layer with some character: gentle rain, distant water, or soft wind. One is usually enough. Two character layers tend to compete, and the mix starts to sound busy.',
+        ],
+      },
+      {
+        heading: 'Balance, then leave it',
+        paragraphs: [
+          'Bring the character layer up until you can just hear it over the base, then stop. The best sleep mix is one you notice for a moment and then forget.',
+          'The NOCTA mixer runs each layer independently, so you can nudge one without restarting the others — blend once, and it stays yours.',
+        ],
+      },
+    ],
+  },
+  {
+    slug: 'consistent-bedtime',
+    title: 'Why a Consistent Bedtime Makes a Ritual Stick',
+    description:
+      'A consistent bedtime gives the rest of your evening ritual something to attach to, so the small steps start happening on their own.',
+    publishedAt: '2026-07-08',
+    readingMinutes: 3,
+    intro:
+      'Evening rituals fall apart when the finish line keeps moving. A roughly consistent bedtime is the anchor that makes every other small step easier to keep.',
+    sections: [
+      {
+        heading: 'The anchor does the work',
+        paragraphs: [
+          'When bedtime lands around the same time most nights, your wind-down steps have somewhere to attach. The cutoff, the dimmed lights, the soundscape — they all line up behind a fixed point instead of floating loose.',
+        ],
+      },
+      {
+        heading: 'Aim for a window, not a stopwatch',
+        paragraphs: [
+          'Consistency does not mean the exact same minute every night. A thirty-minute window is enough for your evening to find its rhythm, and it survives the occasional late night without collapsing.',
+        ],
+      },
+      {
+        heading: 'Let the rhythm you have guide you',
+        paragraphs: [
+          'The right window depends on your natural rhythm — an early riser and a night owl should not force the same bedtime. The free sleep identity test is a quick way to find the window that already fits you.',
+        ],
+      },
+    ],
+  },
+];
+
+export const BLOG_POSTS_ALL: readonly BlogPost[] = [...BLOG_POSTS, ...MORE_POSTS];
+
+export const BLOG_SLUGS: readonly string[] = BLOG_POSTS_ALL.map((p) => p.slug);
 
 export function getBlogPost(slug: string): BlogPost | undefined {
-  return BLOG_POSTS.find((p) => p.slug === slug);
+  return BLOG_POSTS_ALL.find((p) => p.slug === slug);
 }
 
 /** En yeniden eskiye — dizin sayfası sıralaması. */
 export function blogPostsNewestFirst(): readonly BlogPost[] {
-  return [...BLOG_POSTS].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  return [...BLOG_POSTS_ALL].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }

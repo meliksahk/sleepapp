@@ -92,9 +92,9 @@
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
 | Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                        |
-| Web         | ~38%     | 0.15    | hreflang EN/TR (sıradaki dilim), daha fazla seed yazı, LCP/CLS lighthouse-ci. ✓ **W0 paylaşım kartı** #176 (canvas 9:16, tarayıcıda kanıtlı) · ✓ **blog içerik motoru** #179 (dosya-tabanlı pipeline + 3 seed yazı + Article/Breadcrumb JSON-LD + sitemap → 4 yeni indekslenebilir long-tail sayfa; sağlık-iddiası kapısı geçti; TARAYICIDA kanıtlı: /blog + yazı + JSON-LD + sitemap). Müdür: web en büyük otonom kaldıraç (docs/05 viral ön-lansman aracı)                                                                                                |
+| Web         | ~40%     | 0.15    | **hreflang EN/TR** (sıradaki dilim — sıfırdan i18n refactor, çok-PR), LCP/CLS lighthouse-ci. ✓ W0 paylaşım kartı #176 (canvas 9:16) · ✓ blog içerik motoru #179 (pipeline + 3 yazı + JSON-LD + sitemap) · ✓ **blog long-tail derinleştirme** #180 (+3 yazı → 6 indekslenebilir sayfa: bedroom-sound, layering-soundscapes→mikser, consistent-bedtime; sağlık-iddiası geçti; TARAYICIDA kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                      |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·38 = 65.35` → **≈65%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·40 = 65.65` → **≈66%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,22 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #180 — web blog long-tail derinleştirme: +3 yazı (6 toplam) (PR #180)
+
+✅ **Yapıldı ve DOĞRULANDI (tarayıcıda + health-claims)** — web içerik motoru devam (müdür: en büyük kaldıraç)
+
+- **Yapıldı:** #179 pipeline'ına 3 gerçek uyku-ritüeli yazısı daha (blog 3→6 = ikiye katlandı):
+  `setting-up-sound-in-your-bedroom`, `layering-soundscapes` (mikser'e iç-bağlantı — NOCTA'nın
+  çekirdek özelliği), `consistent-bedtime`. Hepsi gerçek nesir + /test veya /mixer CTA'sı.
+- **DOĞRULAMA:** `check:health-claims` GEÇTİ (397 dosya). 8 test (6 yazı doğrulanıyor). typecheck+lint
+  temiz, Next build 25 statik sayfa, bundle bütçesinde. **TARAYICIDA:** /blog/layering-soundscapes
+  render + `"@type":"Article"`, sitemap.xml **6 blog rotası** (hepsi indekslenebilir).
+- 📌 Karar (web-içi sıralama bana bırakıldı): hreflang EN/TR yerine önce daha-fazla-yazı seçtim —
+  web EN-only (`<html lang=en>`, i18n kütüphanesi/TR içerik YOK) → hreflang = sıfırdan i18n refactor
+  (locale routing + tüm içerik çevirisi + hreflang) = çok-PR'lık, taze bağlam ister. Daha-fazla-yazı:
+  temiz, düşük risk, long-tail'i ŞİMDİ büyütür (müdür de "daha fazla seed yazı" listeledi).
+  hreflang açıkça sıradaki dilim. Web 38→40 (+2). Bar 65.65 ≈ **66%**.
 
 ### #179 — web blog içerik motoru: 4 indekslenebilir long-tail sayfa (PR #179)
 
