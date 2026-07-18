@@ -92,9 +92,9 @@
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
 | Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                        |
-| Web         | ~40%     | 0.15    | **hreflang EN/TR** (sıradaki dilim — sıfırdan i18n refactor, çok-PR), LCP/CLS lighthouse-ci. ✓ W0 paylaşım kartı #176 (canvas 9:16) · ✓ blog içerik motoru #179 (pipeline + 3 yazı + JSON-LD + sitemap) · ✓ **blog long-tail derinleştirme** #180 (+3 yazı → 6 indekslenebilir sayfa: bedroom-sound, layering-soundscapes→mikser, consistent-bedtime; sağlık-iddiası geçti; TARAYICIDA kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                      |
+| Web         | ~42%     | 0.15    | **hreflang EN/TR** (sıradaki dilim — sıfırdan i18n refactor, çok-PR), LCP/CLS lighthouse-ci. ✓ W0 paylaşım kartı #176 · ✓ blog motoru #179 + long-tail #180 (6 indekslenebilir yazı) · ✓ **VİRAL DÖNGÜ kapatıldı** #181 (test sonuç ekranı artık paylaşım kartını ORADA gösteriyor — edinim döngüsü tek ekranda: test→sonuç→paylaş; docs/05 web'in çekirdek amacı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·40 = 65.65` → **≈66%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·42 = 65.95` → **≈66%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,27 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #181 — web viral döngü kapatıldı: test sonucunda paylaşım kartı (PR #181)
+
+✅ **Yapıldı ve doğrulandı** — web'in ÇEKİRDEK amacına (viral edinim) dokunur
+
+- **Bulunan boşluk (viral döngüde):** `/test` sonuç ekranı yalnızca `/a/[slug]`'a LİNK
+  veriyordu — paylaşım kartını (#176) sonuç anında GÖSTERMİYORDU. Oysa "Deep Ocean çıktım!"
+  heyecanı = paylaşma anı. Ekstra tıklama viral döngüyü sızdırıyordu (docs/05: web = viral
+  ön-lansman aracı, edinim kanalı).
+- **Yapıldı:** `ArchetypeTest` sonuç dalına `ShareCard` (slug→`getArchetype` ile ad/tagline/
+  sesler) + gerçek arketip adı (slug yerine "3AM Overthinker"). Döngü tek ekranda: test→sonuç→
+  KART. Bilinmeyen slug'da kart atlanır (çökmez). `ShareCard` çizimi try/catch'e alındı →
+  canvas yoksa (SSR/jsdom) sayfa/test çökmez (robustness).
+- **DOĞRULAMA:** ArchetypeTest unit testi viral-döngü wiring'ini kanıtlıyor (mock sonuç →
+  ShareCard + "Save your card" düğmesi + kart önizleme görünür). Tam web süiti 41 test, typecheck+
+  lint temiz, Next build 25 sayfa, bundle bütçesinde. ShareCard canvas render'ı #176'da TARAYICIDA
+  kanıtlıydı. 🔥 Sınır: tam test→API→sonuç→kart E2E API stack ister (bu fire koşulmadı) — wiring
+  unit-kanıtlı, component browser-kanıtlı.
+- 📌 hreflang yerine bunu seçtim: doğru hreflang `<html lang>` için `[locale]` root refactor ister
+  (çok-PR/riskli, uzun bağlamda); viral-döngü kapatma web'in ÇEKİRDEK amacına dokunur, düşük risk,
+  #176'yı yeniden kullanır. hreflang hâlâ sıradaki (kendi çok-dilimli planıyla). Web 40→42 (+2). Bar ≈66%.
 
 ### #180 — web blog long-tail derinleştirme: +3 yazı (6 toplam) (PR #180)
 

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { fetchQuestions, submitAnswers, type QuestionMatrix, type WebResult } from '@/lib/api';
+import { getArchetype } from '@/content/archetypes';
+import { ShareCard } from '@/components/ShareCard';
 
 export function ArchetypeTest() {
   const [matrix, setMatrix] = useState<QuestionMatrix | null>(null);
@@ -25,14 +27,30 @@ export function ArchetypeTest() {
   }
 
   if (result) {
+    const data = getArchetype(result.archetypeSlug);
+    // Viral döngü (docs/05): sonucu görme anı = paylaşma anı. Kartı BURADA göster —
+    // /a/[slug]'a ekstra tıklama beklemeden. Bilinmeyen slug'da kart atlanır (çökmez).
     return (
       <div className="rounded-card bg-bg-raised p-5">
         <p className="text-ink-secondary text-caption">Your sleep identity</p>
         <h2 className="text-h1 font-display capitalize">
-          {result.archetypeSlug.replace('-', ' ')}
+          {data?.name ?? result.archetypeSlug.replace(/-/g, ' ')}
         </h2>
+        {data && <p className="mt-2 text-body text-ink-secondary">{data.tagline}</p>}
+
+        {data && (
+          <div className="mt-5">
+            <ShareCard
+              slug={data.slug}
+              name={data.name}
+              tagline={data.tagline}
+              sounds={data.soundsThatHelp}
+            />
+          </div>
+        )}
+
         <a
-          className="mt-4 inline-block rounded-button bg-accent-aurora px-5 py-3 text-bg-base"
+          className="mt-5 inline-block rounded-button bg-accent-aurora px-5 py-3 text-bg-base"
           href={`/a/${result.archetypeSlug}`}
         >
           Read about your archetype
