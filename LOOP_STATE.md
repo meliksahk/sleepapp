@@ -54,10 +54,10 @@
 > **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
 > doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
 
-## 🚧 İlerleme: **%69** — formül 68.95 (tablodan, #137 kuralı)
+## 🚧 İlerleme: **%70** — formül 69.65 (tablodan, #137 kuralı)
 
 ```
-[███████████████████████████░░░░░░░░░░░░░] 69%
+[████████████████████████████░░░░░░░░░░░░] 70%
 ```
 
 > ⚠️ Bu üst-bar #167 civarında 59.15'te BAYAT kalmıştı (tablonun altındaki Hesap satırı
@@ -91,14 +91,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~80%     | 0.30    | ~~BullMQ~~ ✓ #190 · ~~rate-limit Redis'e~~ ✓ #191 · ~~outbox~~ ✓ #192 (**Müdür (C) TAM**). ~~Sentry (API)~~ ✓ #193 (§4 zorunlu hata izleme — DSN-gated init + 5xx-only rapor; **kullanıcı deploy/infra kapısını açtı**). **Kalan infra-kapı otonom:** SMTP e-posta adaptörü (OTT teslimi: magic-link/parola-sıfırlama/e-posta-doğrulama) · admin/web/mobil Sentry · deploy scaffolding. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157. IAP en son faz                                                                                    |
-| Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓                                 |
-| Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                  |
-| Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~80%     | 0.30    | ~~BullMQ~~ ✓ #190 · ~~rate-limit Redis'e~~ ✓ #191 · ~~outbox~~ ✓ #192 (**Müdür (C) TAM**). ~~Sentry (API)~~ ✓ #193 (§4 zorunlu hata izleme — DSN-gated init + 5xx-only rapor; **kullanıcı deploy/infra kapısını açtı**). **Kalan infra-kapı otonom:** SMTP e-posta adaptörü (OTT teslimi: magic-link/parola-sıfırlama/e-posta-doğrulama) · admin/web/mobil Sentry · deploy scaffolding. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157. IAP en son faz                                                                                                                                                                                                                                                                |
+| Mobil       | ~80%     | 0.40    | **FAZ 0 CİLA başladı** (kullanıcı hedefi: cilalı Android APK; dev hesabı en son — APK Apple gerektirmez). ✓ **app kimliği #194** (launcher ikonu: hilal+brand-violet gradyan, adaptive fg/bg + splash: dark bg beyaz-flaşı öldürdü + `flavor:PROD` dev-yazısı prod'da gizlendi; SVG→sharp rasterize, generatörler, **debug APK aapt'ten geçti**, görsel kontrol). Kalan cila: onboarding+izin priming, ana ekranı dev-menüden gerçek ekrana, Inter font bundle, AA kontrast, hata/boş ekranlar, native ses default(kulak-gated), arketip on-device (backend'siz kanca#1). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 · ✓ çevrimdışı gece kuyruğu #177 · ✓ viral kanca kişiselleştirme #178 · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
+| Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                                                                                                                                                                                              |
+| Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı                                                                                                                                                                             |
 
-> **Hesap:** `0.40·79 + 0.30·80 + 0.15·46 + 0.15·45 = 69.25` → **≈69%**
+> **Hesap:** `0.40·80 + 0.30·80 + 0.15·46 + 0.15·45 = 69.65` → **≈70%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -219,6 +219,27 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #194 — mobil app kimliği: launcher ikonu + splash + dev-yazısı temizliği (PR #194)
+
+✅ **Yapıldı ve DOĞRULANDI (görsel + analyze + 428 test + debug APK build)** — Faz 0 cila başladı
+
+- **Yön değişimi:** kullanıcı asıl hedefi netleştirdi — **cilalı Android APK** (dev hesabı en son; ben de
+  teyit ettim: Android APK Apple hesabı GEREKTİRMEZ, lokal/sideload sıfır ücret). Loop backend-infra'dan
+  mobil-cilaya döndü. Anima-karşılaştırma denetimi (5 ajanlı workflow) en büyük "yarım-build" sinyallerini
+  saptadı: varsayılan Flutter ikonu + beyaz splash flaşı + ekranda `flavor: PROD`.
+- **Yapıldı:** hilal-ay + brand-violet gece gradyanı ikonu (design-tokens renkleriyle SVG tasarım → sharp
+  ile PNG rasterize: full + adaptive fg/bg + splash logo). `flutter_launcher_icons` + `flutter_native_splash`
+  konfigüre + koşuldu → tüm yoğunluklarda mipmap + adaptive (anydpi-v26) + dark splash drawable'ları üretildi.
+  Splash dark marka arka planı (#0A0E1A) beyaz-flaşı öldürdü. `flavor: PROD` rozeti collection-if ile prod'da
+  gizlendi (dev/staging'de test için kalır).
+- **DOĞRULAMA:** ikon görsel kontrol edildi (temiz hilal + gradyan + yıldızlar). flutter analyze temiz,
+  **428 test geçti**, **`flutter build apk --debug` BAŞARILI** (aapt ikon/splash kaynaklarını doğruladı —
+  CI build etmediği için bu kendi-doğrulamam kritik).
+- 🔥 Sınır: ikon/splash'in gerçek cihazda GÖRÜNÜMÜ senin yargın (görsel tasarım öznel; varsayılan-logodan
+  kat kat iyi ama beğenmezsen değiştirilebilir). iOS splash de brandlandı (zararsız; iOS kapsamda değil).
+- 📌 Mobil 79→80 (+1, app kimliği cilası). Kalan Faz 0: onboarding+izin priming, ana ekranı gerçek ekrana,
+  Inter font, AA kontrast, hata/boş ekranlar. Bar 69.65 ≈ **70%**.
 
 ### #193 — API Sentry hata izleme: deploy/infra kapısı açıldı (PR #193)
 

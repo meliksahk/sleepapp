@@ -75,6 +75,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Uygulama kimliği: launcher ikonu + splash üretimi (varsayılan Flutter logosu
+  # ve beyaz splash flaşı "yarım build" izlenimi veriyordu). Kaynak SVG'lerden
+  # rasterlenen PNG'ler assets/icon/'da; generatörler mipmap/drawable üretir.
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -118,3 +124,22 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# ---- Uygulama kimliği (Faz 0 cila) ----
+# Launcher ikonu: crescent (gece/uyku) + brand-violet gradyan. Android-only
+# (iOS kapsamda değil — Mac yok). Adaptive: fg=hilal, bg=gradyan.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "assets/icon/icon_background.png"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+
+# Splash: dark marka arka planı (beyaz flaşı öldürür) + ortada hilal logo.
+flutter_native_splash:
+  color: "#0A0E1A"
+  image: assets/icon/splash_logo.png
+  android_12:
+    color: "#0A0E1A"
+    image: assets/icon/splash_logo.png
