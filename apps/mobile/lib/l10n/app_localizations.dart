@@ -984,6 +984,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Türkçe'**
   String get settingsLanguageTurkish;
+
+  /// Soundscape detayinda birincil eylem: mikseri bu tarifle acar
+  ///
+  /// In en, this message translates to:
+  /// **'Play this sound'**
+  String get soundscapePlay;
+
+  /// Slug cozulemedi, mikser varsayilan tarifle acildi
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load this sound\'s recipe, so your default mix is playing.'**
+  String get mixerRecipeUnavailable;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

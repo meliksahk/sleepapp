@@ -173,5 +173,9 @@
   "settingsLanguageSection": "Dil",
   "settingsLanguageSystem": "Sistem",
   "settingsLanguageEnglish": "English",
-  "settingsLanguageTurkish": "Türkçe"
+  "settingsLanguageTurkish": "Türkçe",
+
+  "soundscapePlay": "Bu sesi çal",
+
+  "mixerRecipeUnavailable": "Bu sesin tarifi yüklenemedi; varsayılan mix'in çalıyor."
 }

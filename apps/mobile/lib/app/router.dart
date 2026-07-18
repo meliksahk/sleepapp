@@ -7,7 +7,7 @@ import '../features/content/presentation/soundscape_detail_screen.dart';
 import '../features/content/presentation/soundscape_library_screen.dart';
 import '../features/entitlement/presentation/paywall_screen.dart';
 import '../features/home/home_screen.dart';
-import '../features/mixer/presentation/mixer_screen.dart';
+import '../features/mixer/presentation/mixer_route.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sleep/presentation/night_report_screen.dart';
 import '../features/sleep/presentation/sleep_mode_screen.dart';
@@ -38,7 +38,13 @@ final GoRouter appRouter = GoRouter(
             SleepModeScreen(controller: ref.read(sleepModeControllerProvider)),
       ),
     ),
-    GoRoute(path: '/mixer', builder: (context, state) => const MixerScreen()),
+    // `?soundscape=<slug>` → mikser O sesin tarifiyle açılır. Parametre yoksa
+    // varsayılan mix. Slug çözülemezse yine varsayılan — hata ekranı YOK.
+    GoRoute(
+      path: '/mixer',
+      builder: (context, state) =>
+          MixerRoute(soundscapeSlug: state.uri.queryParameters['soundscape']),
+    ),
     GoRoute(
       path: '/library',
       builder: (context, state) => const SoundscapeLibraryScreen(),

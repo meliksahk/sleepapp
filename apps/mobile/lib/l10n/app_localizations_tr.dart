@@ -544,4 +544,11 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get settingsLanguageTurkish => 'Türkçe';
+
+  @override
+  String get soundscapePlay => 'Bu sesi çal';
+
+  @override
+  String get mixerRecipeUnavailable =>
+      'Bu sesin tarifi yüklenemedi; varsayılan mix\'in çalıyor.';
 }
