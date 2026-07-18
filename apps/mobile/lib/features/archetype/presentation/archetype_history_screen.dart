@@ -27,13 +27,11 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
               ? _empty(context)
               : _list(context, ref, list, content),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: IconButton(
-              key: const Key('history-retry'),
-              icon: const Icon(Icons.refresh),
-              iconSize: 40,
-              onPressed: () => ref.invalidate(archetypeHistoryProvider),
-            ),
+          error: (error, stack) => NErrorState(
+            retryKey: const Key('history-retry'),
+            message: AppL10n.of(context).loadFailed,
+            retryLabel: AppL10n.of(context).offlineRetry,
+            onRetry: () => ref.invalidate(archetypeHistoryProvider),
           ),
         ),
       ),

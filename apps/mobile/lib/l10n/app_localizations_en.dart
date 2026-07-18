@@ -514,4 +514,8 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get settingsSoundSection => 'Sound';
+
+  @override
+  String get loadFailed =>
+      'Could not load this. Check your connection and try again.';
 }

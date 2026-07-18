@@ -163,5 +163,7 @@
   "settingsSignatureSound": "Açılış sesi",
   "settingsSignatureSoundHint": "Uygulama açılırken kısa bir atmosfer.",
 
-  "settingsSoundSection": "Ses"
+  "settingsSoundSection": "Ses",
+
+  "loadFailed": "Bu yüklenemedi. Bağlantını kontrol edip tekrar dene."
 }

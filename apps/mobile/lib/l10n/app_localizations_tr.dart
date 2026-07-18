@@ -516,4 +516,8 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get settingsSoundSection => 'Ses';
+
+  @override
+  String get loadFailed =>
+      'Bu yüklenemedi. Bağlantını kontrol edip tekrar dene.';
 }

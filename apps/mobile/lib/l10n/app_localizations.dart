@@ -936,6 +936,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Sound'**
   String get settingsSoundSection;
+
+  /// Genel veri yukleme hatasi metni
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this. Check your connection and try again.'**
+  String get loadFailed;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
