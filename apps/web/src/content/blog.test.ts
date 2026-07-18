@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { BLOG_POSTS, BLOG_SLUGS, getBlogPost, blogPostsNewestFirst } from './blog';
+import {
+  BLOG_POSTS_ALL as BLOG_POSTS,
+  BLOG_SLUGS,
+  getBlogPost,
+  blogPostsNewestFirst,
+} from './blog';
 
 /** Blog içeriği long-tail SEO'nun gövdesi; yapı + sağlık-iddiası kapısı burada kilitli. */
 describe('blog content', () => {
