@@ -71,6 +71,11 @@ describe('ArchetypeTest', () => {
     expect(await screen.findByText(/overthinker/i)).toBeInTheDocument();
     const link = screen.getByRole('link', { name: /archetype/i });
     expect(link).toHaveAttribute('href', '/a/overthinker');
+
+    // VİRAL DÖNGÜ (docs/05): sonuç anında paylaşım kartı + kaydet düğmesi burada olmalı
+    // (kullanıcı /a/[slug]'a gitmeden paylaşabilsin — edinim döngüsü kapanır).
+    expect(screen.getByRole('button', { name: /save your card/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/share card preview/i)).toBeInTheDocument();
   });
 
   it('sorular yüklenemezse hata gösterir', async () => {

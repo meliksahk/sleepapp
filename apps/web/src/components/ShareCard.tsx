@@ -29,6 +29,16 @@ export function ShareCard({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Canvas ortamda yoksa (SSR/jsdom test) çizim atlanır ama sayfa/test ÇÖKMEZ.
+    // Try/catch tüm çizimi sarar: bir ctx metodu desteklenmese bile kart sessizce boş kalır.
+    try {
+      draw(canvas);
+    } catch {
+      // no-op: kart çizilemedi (canvas yok) — ama sonuç ekranı yaşamaya devam eder.
+    }
+  }, [slug, name, tagline, sounds]);
+
+  function draw(canvas: HTMLCanvasElement): void {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -114,7 +124,7 @@ export function ShareCard({
     ctx.fillStyle = inkDim;
     ctx.font = "400 36px 'Segoe UI', system-ui, -apple-system, sans-serif";
     ctx.fillText(`nocta.app/a/${slug}`, pad, CARD_HEIGHT - 60);
-  }, [slug, name, tagline, sounds]);
+  }
 
   async function onSave(): Promise<void> {
     const canvas = canvasRef.current;
