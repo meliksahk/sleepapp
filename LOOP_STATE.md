@@ -54,11 +54,15 @@
 > **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
 > doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
 
-## 🚧 İlerleme: **%60** — formül 59.15 — F1–F5
+## 🚧 İlerleme: **%67** — formül 67.3 (tablodan, #137 kuralı)
 
 ```
-[████████████████████████░░░░░░░░░░░░░░░░] 60%
+[███████████████████████████░░░░░░░░░░░░░] 67%
 ```
+
+> ⚠️ Bu üst-bar #167 civarında 59.15'te BAYAT kalmıştı (tablonun altındaki Hesap satırı
+> 67.15 derken üst 60 diyordu — tam da #137'nin yasakladığı ledger-içi çelişki). #188'de
+> Hesap ile eşitlendi. Tek doğruluk kaynağı aşağıdaki tablo + Hesap satırıdır.
 
 > ## 🔓 D-12 SHIP KAPISI AÇILDI (#145)
 >
@@ -92,9 +96,9 @@
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
 | Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                  |
-| Web         | ~43%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ **blog OG görselleri** #182 (7 sosyal önizleme PNG'si — 6 yazı + dizin; paylaşılınca kart çıkar, satori/archetype-OG deseni; HTTP'de geçerli PNG kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
+| Web         | ~44%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ **llms.txt üretilen #188** (statik+bayat dosya→`app/llms.txt/route.ts`, archetypes+blog tek-kaynak; eski dosya 0 blog listeliyordu, artık 6/6; HTTP 200 text/plain kanıtlı; bayatlık-guard testi). Hepsi docs/05 viral ön-lansman + GEO kanalı                |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·46 + 0.15·43 = 67.15` → **≈67%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·46 + 0.15·44 = 67.3` → **≈67%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +219,30 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #188 — web llms.txt üretilen rotaya taşındı: GEO bayatlığı kapandı (PR #188)
+
+✅ **Yapıldı ve DOĞRULANDI (HTTP + test)** — müdür hükmü: web'e dön (kullanıcı-değeri, yeşil-kolaylık değil)
+
+- **Müdür stratejik hükmü:** 5 ardışık admin PR #137 tuzağı DEĞİLdi (iş gerçekti, diğer cepheler
+  dürüstçe gated) ama 6.'sı tuzak olurdu. Tell = "yüzeyi yeşil-kolaylığıyla mı kullanıcı-değeriyle mi
+  seçiyorsun." Web = kullanıcı-değeri (docs/05 viral edinim). Hüküm: web'e kürek (hreflang DEĞİL,
+  o ayrı oturum + markör "4. erteleme yok"). total-users metriği manşet değil → atladım (web'e temiz
+  iterasyon; admin PR'ına bolt-on doğal ride-along değil).
+- **Kapatılan GERÇEK bug:** `public/llms.txt` STATİK + BAYATtı — #17'de elle yazılmış, blog motoru
+  (#179+) sonradan gelince **6 yazının 0'ını** listeliyordu. AI asistanları (GEO edinim kanalı,
+  CLAUDE.md §3.4) bu dosyayı okur → long-tail içeriğimiz görünmezdi. Statik olduğu için her yeni
+  içerikte tekrar bayatlardı.
+- **Yapıldı:** `public/llms.txt` silindi → `app/llms.txt/route.ts` (force-static) + saf `lib/llms.ts`
+  `buildLlmsTxt()` archetypes.ts + blog.ts'ten ÜRETİR (sitemap/robots deseni). Statik dosya route'u
+  gölgeliyordu → silme zorunluydu. Bir daha asla bayatlamaz (yeni içerik otomatik dahil).
+- **DOĞRULAMA:** bayatlık-guard testi (HER arketip + HER blog yazısı çıktıda; 4 test) → web süiti
+  41→45 yeşil. typecheck+lint temiz, Next build 33 sayfa (`○ /llms.txt` static), `check:health-claims`
+  geçti (416 dosya). **HTTP (prod `next start` + curl):** `/llms.txt` → 200, `text/plain; charset=utf-8`,
+  **6/6 blog yazısı + 4/4 arketip** listeli (eski dosya: 0 blog), sağlık-iddiası konumu korunmuş.
+- 📌 Web 43→44 (+1; mütevazı kapsam ama gerçek GEO boşluğu + tekrarı yapısal olarak önler). hreflang
+  yine ertelendi ama bu sefer müdür markörüyle: sıradaki gerçek web dilimi = hreflang kendi iterasyonu
+  (4. erteleme yok) VEYA CWV lighthouse-ci. Bar 67.3 ≈ **67%**.
 
 ### #187 — 2FA reset panel UI: /security cihaz rotasyonu formu (PR #187)
 
