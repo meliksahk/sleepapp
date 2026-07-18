@@ -12,6 +12,8 @@
 /// (uyku oturumu, alarm, arka plandan sıcak dönüş → çalınmaz).
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -41,10 +43,12 @@ class SignaturePlayer {
       await player.setAudioSource(BytesAudioSource(bytes));
       // Seviye buffer'a gömülü (RMS ≈ −20 dBFS); cihaz sesi zaten kullanıcıda.
       await player.setVolume(1.0);
-      await player.play();
-    } catch (_) {
-      // Yutuluyor ama sessizce DEĞİL: bu yol yalnız "ses çalmadı" ile sonuçlanır,
-      // veri kaybı ya da yanlış durum üretmez. Açılışı bloklamamak önceliklidir.
+      unawaited(player.play());
+    } catch (e, st) {
+      // SESSİZ YUTMA YOK. Bu catch bir tur boyunca "ses hiç çalmıyor" hatasını
+      // gizledi ve teşhisi imkânsızlaştırdı. Açılışı hâlâ bloklamıyoruz, ama
+      // artık sorunu GÖRÜYORUZ (CLAUDE.md §4: boş catch yasak).
+      debugPrint('nocta.aura: imza sesi çalınamadı: $e\n$st');
     }
   }
 
