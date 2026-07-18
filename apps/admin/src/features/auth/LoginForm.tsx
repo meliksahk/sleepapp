@@ -3,18 +3,20 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@nocta/ui';
+import type { MessageKey } from '@/shared/i18n/dictionaries';
+import { useT } from '@/shared/i18n/I18nProvider';
 
 /** API'nin durum + hata kodunu kullanıcının anlayacağı tek cümleye çevirir. */
-function messageFor(status: number, code: string | null): string {
+function messageFor(status: number, code: string | null): MessageKey {
   // 429 ile 401'i AYIRMAK önemli: ikisini birleştirmek, limite takılan kullanıcıyı
   // "parolam yanlış" sanıp denemeye devam ettirir — ve limit hiç açılmaz.
-  if (status === 429) return 'Çok fazla deneme yapıldı. Bir dakika bekleyip tekrar deneyin.';
+  if (status === 429) return 'login.errorRate' as const;
   // 401'in iki anlamı var; "parola hatalı" demek, parolası DOĞRU olan kullanıcıyı
   // yanlış yere bakmaya gönderirdi.
-  if (code === 'totp_required') return 'Doğrulama uygulamanızdaki 6 haneli kodu girin.';
-  if (code === 'invalid_totp') return 'Kod hatalı veya süresi doldu. Yeni kodu deneyin.';
-  if (status === 401) return 'E-posta veya parola hatalı.';
-  return 'Giriş yapılamadı. Lütfen tekrar deneyin.';
+  if (code === 'totp_required') return 'login.errorTotpRequired' as const;
+  if (code === 'invalid_totp') return 'login.errorTotpInvalid' as const;
+  if (status === 401) return 'login.errorCredentials' as const;
+  return 'login.errorGeneric' as const;
 }
 
 /** Vekilin ilettiği hata kodu; gövde bozuksa null (çağıran genel mesaja düşer). */
@@ -33,11 +35,13 @@ async function codeFrom(res: Response): Promise<string | null> {
 
 /** Panel giriş formu (docs/03 A0). Token'a DOKUNMAZ: /api/session httpOnly çerez yazar. */
 export function LoginForm({ next }: { next: string }) {
+  const t = useT();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  // Hata artık MESAJ ANAHTARI tutar (dizge değil): dil değişince mesaj da değişsin.
+  const [error, setError] = useState<MessageKey | null>(null);
   const [busy, setBusy] = useState(false);
   /**
    * Kod alanı YALNIZCA API istediğinde açılır. Herkese baştan göstermek, 2FA'sı
@@ -72,7 +76,7 @@ export function LoginForm({ next }: { next: string }) {
       router.push(next);
       router.refresh();
     } catch {
-      setError('Sunucuya ulaşılamadı.');
+      setError('login.errorUnreachable');
     } finally {
       setBusy(false);
     }
@@ -113,11 +117,11 @@ export function LoginForm({ next }: { next: string }) {
       )}
       {error !== null && (
         <p role="alert" className="text-body text-accent-ember">
-          {error}
+          {t(error)}
         </p>
       )}
       <Button type="submit" disabled={busy}>
-        {busy ? 'Giriş yapılıyor…' : 'Giriş yap'}
+        {busy ? t('login.submitting') : t('login.submit')}
       </Button>
     </form>
   );
