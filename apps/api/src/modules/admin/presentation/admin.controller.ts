@@ -175,7 +175,7 @@ export class AdminController {
       actorId: user.sub,
       action: 'campaign.send',
       target: dto.platform ?? 'all',
-      details: { recipients: result.recipients, sent: result.sent, failed: result.failed },
+      details: { recipients: result.recipients, queued: result.queued },
     });
     return result;
   }
