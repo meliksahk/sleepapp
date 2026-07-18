@@ -484,4 +484,24 @@ class AppL10nEn extends AppL10n {
   @override
   String get onboardingAlarmBody =>
       'With your permission, NOCTA listens for lighter sleep to time your alarm. The analysis happens on your phone — raw audio never leaves it.';
+
+  @override
+  String get homeTonightLabel => 'Tonight';
+
+  @override
+  String get homeRitualTitle => 'Start your night ritual';
+
+  @override
+  String get homeRitualSubtitle =>
+      'Sound, and a gentler wake-up. Works with no connection.';
+
+  @override
+  String get homeStartRitual => 'Start tonight';
+
+  @override
+  String get homeIdentityInviteBody =>
+      'Two minutes, no account. Turn your nights into a card you can share.';
+
+  @override
+  String get homeSectionExplore => 'Explore';
 }
