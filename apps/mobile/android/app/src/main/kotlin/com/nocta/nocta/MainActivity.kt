@@ -57,9 +57,21 @@ class MainActivity : FlutterActivity() {
         try {
             when (call.method) {
                 "play" -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val buffers = call.argument<List<ByteArray>>("buffers")!!
+                    val gains = (call.argument<List<Double>>("gains")!!).toDoubleArray()
                     nativeMix.play(
-                        pcm = call.argument<ByteArray>("pcm")!!,
+                        buffers = buffers,
                         sampleRate = call.argument<Int>("sampleRate")!!,
+                        initialGains = gains,
+                    )
+                    result.success(null)
+                }
+
+                "setGain" -> {
+                    nativeMix.setGain(
+                        index = call.argument<Int>("index")!!,
+                        gain = call.argument<Double>("gain")!!,
                     )
                     result.success(null)
                 }
