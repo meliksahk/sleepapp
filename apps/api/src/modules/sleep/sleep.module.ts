@@ -2,6 +2,7 @@ import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
 import { ProfileModule, GetProfileUseCase } from '../profile';
 import { PrismaService } from '../../shared/infra/prisma.service';
+import { OutboxWriter } from '../../shared/outbox/outbox-writer';
 import {
   CLOCK,
   PROFILE_TIMEZONE_READER,
@@ -22,9 +23,9 @@ import { SleepController } from './presentation/sleep.controller';
 const providers: Provider[] = [
   {
     provide: SLEEP_SESSION_REPOSITORY,
-    inject: [PrismaService],
-    useFactory: (prisma: PrismaService): SleepSessionRepository =>
-      new PrismaSleepSessionRepository(prisma),
+    inject: [PrismaService, OutboxWriter],
+    useFactory: (prisma: PrismaService, outbox: OutboxWriter): SleepSessionRepository =>
+      new PrismaSleepSessionRepository(prisma, outbox),
   },
   // Cross-module adapter (module-def): profile public servisinden timezone okur.
   // Sleep, profiles tablosuna DOKUNMAZ (port üzerinden).

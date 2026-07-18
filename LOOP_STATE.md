@@ -54,10 +54,10 @@
 > **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
 > doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
 
-## 🚧 İlerleme: **%68** — formül 68.05 (tablodan, #137 kuralı)
+## 🚧 İlerleme: **%69** — formül 68.95 (tablodan, #137 kuralı)
 
 ```
-[███████████████████████████░░░░░░░░░░░░░] 68%
+[███████████████████████████░░░░░░░░░░░░░] 69%
 ```
 
 > ⚠️ Bu üst-bar #167 civarında 59.15'te BAYAT kalmıştı (tablonun altındaki Hesap satırı
@@ -93,12 +93,12 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~77%     | 0.30    | ~~BullMQ kurulu~~ ✓ #190 (async kampanya fan-out, gerçek-Redis testli) · ~~rate-limit Redis'e~~ ✓ #191 (dağıtık throttler — çok-instance login brute-force tek sayılır, atomik Lua fixed-window, gerçek-Redis testli); **outbox** (transactional domain event + tüketici) MIGRATION-GATED (§8, yeni `outbox` tablosu → kullanıcı onayı bekliyor). ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · ~~flag upsert~~ ✓ #167. IAP hâlâ en son faz                                                                                            |
+| Backend/API | ~79%     | 0.30    | ~~BullMQ kurulu~~ ✓ #190 · ~~rate-limit Redis'e~~ ✓ #191 (dağıtık throttler) · ~~outbox~~ ✓ #192 (transactional outbox — uyku oturumu kaydı + olay AYNI tx'te atomik → relay → push kuyruğu; kullanıcı onaylı migration; gerçek-Postgres uçtan uca testli). **Müdür (C) TAM** (BullMQ+throttler+outbox). ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · ~~flag upsert~~ ✓ #167. IAP hâlâ en son faz                                                                                                                                     |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓                                 |
 | Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                  |
 | Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı |
 
-> **Hesap:** `0.40·79 + 0.30·77 + 0.15·46 + 0.15·45 = 68.35` → **≈68%**
+> **Hesap:** `0.40·79 + 0.30·79 + 0.15·46 + 0.15·45 = 68.95` → **≈69%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -219,6 +219,31 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #192 — backend transactional outbox: müdür (C) 2. yarı TAMAM (PR #192)
+
+✅ **Yapıldı ve DOĞRULANDI (gerçek Postgres uçtan uca + tam süit)** — müdür (C) tam kapandı; migration KULLANICI ONAYLI
+
+- **Kullanıcı onayı:** outbox yeni `outbox` tablosu ister → §8 gereği sordum, kullanıcı AskUserQuestion'da
+  "outbox migration'ını onayla" dedi → migration kuruldu (dbmate `20260718000002_add_outbox.sql`, prisma
+  db pull ile şema senkronu — scoped diff, yalnız outbox modeli).
+- **Yapıldı (CLAUDE.md §3.2 zorunlu mimari):** dual-write kaybını çözer. Uyku oturumu kaydı artık
+  `$transaction` içinde: `sleep_sessions` insert + `outbox` olayı (`sleep.session_recorded`) AYNI tx'te
+  atomik yazılır → süreç çökse de olay kaybolmaz. Shared `OutboxWriter` (tx içinde append) +
+  `OUTBOX_REPOSITORY` (findUnpublished/markPublished, kısmi index). `OutboxRelay` (notification): poll
+  eder → olayı push'a çevirir (#190 PushQueue → worker → sender) → damgalar.
+- **Gözlemlenebilir tüketici (müdür sert kısıtı):** olay ÖLÜ KOD değil — gerçek domain yazısı → gerçek DB
+  → gerçek relay → gerçek push kuyruğu. Zincir e2e-kanıtlı; yalnız nihai APNs/FCM anahtar-kapılı.
+- **DOĞRULAMA:** unit (relay dispatch: session→push, bilinmeyen olay→damgalanır-push-yok, boş kuyruk) +
+  **gerçek Postgres e2e** (transactional write: session+outbox aynı tx kalıcı; relay: yayınlanmamış→push
+  kuyruğa→damgalandı) + sleep e2e regresyonsuz (tx değişikliği kırmadı). **Tam api süiti 81 suite/489 test
+  - coverage tuttu.** typecheck+lint+build 0, health-claims+i18n geçti.
+- 🔥 Sınır: (a) prod poll INTERVAL'i (NODE_ENV!=test) testte koşmaz — `relayOnce()` tam testli, interval
+  onu saran 3 satırlık setInterval; dürüstçe: wrapper test-dışı. (b) push içeriği İngilizce hardcoded
+  (backend i18n altyapısı yok; check:i18n yalnız mobil tarar); gerçek APNs ile lokalizasyon ertelenir.
+  (c) test-DB'de outbox satırları birikir (sleep.e2e temizlemez) — CI'da DB taze, sorun değil; e2e clean-slate.
+- 📌 Backend 77→79 (+2; §3.2 zorunlu tam-özellik, gerçek-Postgres uçtan uca). **Müdür (C) tümüyle bitti.**
+  Bar 68.95 ≈ **69%**. Not: otonom kullanıcı-değer stoğu artık gerçekten tükendi — kalan lansman/onay-kapılı.
 
 ### #191 — backend dağıtık rate-limit: Redis throttler + otonom-stok envanteri (PR #191)
 
