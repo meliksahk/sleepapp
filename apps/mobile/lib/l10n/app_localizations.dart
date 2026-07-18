@@ -882,6 +882,42 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'With your permission, NOCTA listens for lighter sleep to time your alarm. The analysis happens on your phone — raw audio never leaves it.'**
   String get onboardingAlarmBody;
+
+  /// Ana ekran birincil eylem bolumunun etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight'**
+  String get homeTonightLabel;
+
+  /// Ana ekranin tek display basligi; ritual dili, saglik iddiasi yok
+  ///
+  /// In en, this message translates to:
+  /// **'Start your night ritual'**
+  String get homeRitualTitle;
+
+  /// Ritualin ne oldugu + cevrimdisi calistigi; ozellik tarifi
+  ///
+  /// In en, this message translates to:
+  /// **'Sound, and a gentler wake-up. Works with no connection.'**
+  String get homeRitualSubtitle;
+
+  /// Birincil buton etiketi -> /sleep-mode
+  ///
+  /// In en, this message translates to:
+  /// **'Start tonight'**
+  String get homeStartRitual;
+
+  /// Test yapilmamisken davet karti govdesi
+  ///
+  /// In en, this message translates to:
+  /// **'Two minutes, no account. Turn your nights into a card you can share.'**
+  String get homeIdentityInviteBody;
+
+  /// Ikincil navigasyon rafinin bolum etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'Explore'**
+  String get homeSectionExplore;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
