@@ -220,6 +220,28 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #206 — admin i18n altyapısı + dil değiştirici (PR #206)
+
+✅ **Yapıldı ve doğrulandı (136 admin testi)** — kullanıcı isteği: "her şeye Türkçe dil desteği"
+
+- **Gerçek durum (ölçüldü):** admin'de i18n **hiç yoktu**; metinler TSX içine **hardcoded Türkçe**
+  yazılmıştı (25 tsx dosyasının 15'inde). Yani panel zaten Türkçeydi ama **İngilizce yoktu ve
+  yönetilemiyordu**.
+- **Mimari karar:** URL'de `[locale]` segmenti YOK, **çerez tabanlı dil**. Gerekçe: admin bir İÇ
+  ARAÇ — SEO/paylaşılabilir çok-dilli URL gerekmiyor; `[locale]` refactor'ü tüm route/link/testleri
+  değiştirir, kazancı sıfır riski yüksek olurdu.
+- **Yapıldı:** tipli sözlükler (EN/TR — anahtar sapması DERLEME HATASI), çerezden dil okuma,
+  `setLocale` sunucu eylemi (+ `revalidatePath` — yoksa sunucu bileşenleri eski dilde kalırdı),
+  `I18nProvider`/`useT`, AppShell'de dil değiştirici. `<html lang>` artık gerçek dili bildiriyor
+  (öncesinde Türkçe metinde `lang="en"` yazıyordu — ekran okuyucuya yanlış telaffuz).
+- **Ölü kod DEĞİL:** kampanya ekranı gerçekten göç etti (altyapıyı tüketicisiz bırakmadım).
+- **DOĞRULAMA:** 5 sözlük testi (boş çeviri yok / EN-TR anahtar eşitliği / yer tutucu / eksik
+  değişken görünür kalır / bozuk çerez reddedilir) → **136 test yeşil**, typecheck+lint+build temiz.
+- 📌 Kalan: 14 tsx dosyasının göçü + web i18n (en riskli, `[locale]` refactor) + admin'de çeviri
+  yönetim ekranı. Bu ilk PR altyapıyı kurdu.
+
+### #205 — mobil dil seçici
+
 ### #204 — alarm çanı 528 Hz'den çekildi: uyum sızıntısı kapandı (PR #204)
 
 ✅ **Yapıldı ve doğrulandı (451 test)** — sonik jürinin işaretlediği §1.1 riski

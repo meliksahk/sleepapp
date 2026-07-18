@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { Button, Input } from '@nocta/ui';
 import { sendCampaignAction, type SendCampaignState } from './actions';
+import { useT } from '@/shared/i18n/I18nProvider';
 
 const INITIAL: SendCampaignState = {};
 
@@ -12,6 +13,7 @@ const INITIAL: SendCampaignState = {};
  * owner ne yaptığını bilerek göndersin. Doğrulama sunucuda (#183); form reddi + sonucu gösterir.
  */
 export function CampaignForm() {
+  const t = useT();
   const [state, action, pending] = useActionState(sendCampaignAction, INITIAL);
 
   return (
@@ -60,13 +62,15 @@ export function CampaignForm() {
       )}
       {state.result !== undefined && (
         <p role="status" className="text-body text-accent-aurora">
-          Kuyruğa alındı: {state.result.recipients} kullanıcı segmentte, {state.result.queued}{' '}
-          teslim işi sıraya kondu. Teslim arka planda yapılıyor.
+          {t('campaign.queued', {
+            recipients: state.result.recipients,
+            queued: state.result.queued,
+          })}
         </p>
       )}
 
       <Button type="submit" disabled={pending}>
-        {pending ? 'Gönderiliyor…' : 'Kampanyayı gönder'}
+        {pending ? t('campaign.submitting') : t('campaign.submit')}
       </Button>
     </form>
   );

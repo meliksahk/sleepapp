@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { LocaleSwitcher } from '../i18n/LocaleSwitcher';
 
 // Mevcut route → link; henüz yapılmamışlar (href yok) sönük span kalır (B3).
 const NAV: ReadonlyArray<{ label: string; href?: string }> = [
@@ -47,7 +48,10 @@ export function AppShell({ children, actions }: { children: ReactNode; actions?:
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-ink-faint/20 px-6 py-4">
           <h1 className="text-h2 font-display">Admin</h1>
-          {actions}
+          <div className="flex items-center gap-4">
+            <LocaleSwitcher />
+            {actions}
+          </div>
         </header>
         <main className="p-6">{children}</main>
       </div>
