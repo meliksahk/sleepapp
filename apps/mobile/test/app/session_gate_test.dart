@@ -11,6 +11,7 @@ import 'package:nocta/core/api/session.dart';
 import 'package:nocta/core/storage/key_value_store.dart';
 import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
+import 'package:nocta/features/onboarding/onboarding_store.dart';
 
 NoctaApiClient _registerClient({Duration delay = Duration.zero}) {
   final mock = MockClient((req) async {
@@ -42,6 +43,8 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore()),
+          // Oturum kapısını doğruluyoruz, onboarding'i değil.
+          onboardingSeenProvider.overrideWith((ref) async => true),
           sessionStoreProvider.overrideWithValue(InMemorySessionStore()),
           apiClientProvider.overrideWithValue(
             _registerClient(delay: const Duration(milliseconds: 50)),
@@ -77,6 +80,8 @@ void main() {
       ProviderScope(
         overrides: <Override>[
           keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore()),
+          // Oturum kapısını doğruluyoruz, onboarding'i değil.
+          onboardingSeenProvider.overrideWith((ref) async => true),
           sessionStoreProvider.overrideWithValue(store),
           apiClientProvider.overrideWithValue(failClient),
         ],

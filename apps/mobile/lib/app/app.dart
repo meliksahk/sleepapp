@@ -5,6 +5,8 @@ import '../core/design_system/nocta_theme.dart';
 import '../features/analytics/analytics_flusher.dart';
 import '../features/analytics/analytics_providers.dart';
 import '../features/auth/auth_providers.dart';
+import '../features/onboarding/onboarding_store.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
 import 'router.dart';
 
 /// Kök uygulama widget'ı — dark-first (uygulama gece yaşar, docs/06).
@@ -25,7 +27,28 @@ class NoctaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bootstrap = ref.watch(sessionBootstrapProvider);
+    final seenOnboarding = ref.watch(onboardingSeenProvider);
     final theme = buildNoctaDarkTheme();
+
+    // İLK AÇILIŞ KAPISI (Faz 0 cila): karşılama akışı görülmediyse önce o gösterilir.
+    // Oturum bootstrap'i ARKA PLANDA paralel ilerler — kullanıcı okurken hazır olur.
+    // Flag okunamazsa (hata) akış ATLANIR: onboarding uygulamayı asla kilitlememeli.
+    if (seenOnboarding.isLoading) {
+      return _SplashApp(theme: theme);
+    }
+    final needsOnboarding = seenOnboarding.maybeWhen(
+      data: (seen) => !seen,
+      orElse: () => false,
+    );
+    if (needsOnboarding) {
+      return _OnboardingApp(
+        theme: theme,
+        onDone: () async {
+          await ref.read(onboardingStoreProvider).markSeen();
+          ref.invalidate(onboardingSeenProvider);
+        },
+      );
+    }
 
     return bootstrap.when(
       data: (_) => _AppRoot(theme: theme),
@@ -121,6 +144,27 @@ class _AppRootState extends ConsumerState<_AppRoot> {
           ],
         );
       },
+    );
+  }
+}
+
+/// İlk açılış karşılaması için kök — router YOK (akış tek ekran, geri yığını gereksiz).
+/// l10n delegeleri şart: onboarding metinleri arb'den gelir (CLAUDE.md §4).
+class _OnboardingApp extends StatelessWidget {
+  const _OnboardingApp({required this.theme, required this.onDone});
+
+  final ThemeData theme;
+  final Future<void> Function() onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'NOCTA',
+      debugShowCheckedModeBanner: false,
+      theme: theme,
+      localizationsDelegates: AppL10n.localizationsDelegates,
+      supportedLocales: AppL10n.supportedLocales,
+      home: OnboardingScreen(onDone: onDone),
     );
   }
 }

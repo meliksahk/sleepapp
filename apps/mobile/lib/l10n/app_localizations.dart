@@ -828,6 +828,60 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Could not share'**
   String get shareFailed;
+
+  /// Karşılama akışını atla
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// Karşılama akışında sonraki sayfa
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// Karşılama akışını bitir ve uygulamaya gir
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get onboardingStart;
+
+  /// Karşılama 1 — kimlik
+  ///
+  /// In en, this message translates to:
+  /// **'Your night has an identity'**
+  String get onboardingIdentityTitle;
+
+  /// Karşılama 1 gövde
+  ///
+  /// In en, this message translates to:
+  /// **'Take the free sleep archetype test and see how your nights actually work. No account needed.'**
+  String get onboardingIdentityBody;
+
+  /// Karşılama 2 — ritüel/ses
+  ///
+  /// In en, this message translates to:
+  /// **'Build your night ritual'**
+  String get onboardingRitualTitle;
+
+  /// Karşılama 2 gövde
+  ///
+  /// In en, this message translates to:
+  /// **'Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.'**
+  String get onboardingRitualBody;
+
+  /// Karşılama 3 — alarm + mikrofon izni priming
+  ///
+  /// In en, this message translates to:
+  /// **'Wake up gently'**
+  String get onboardingAlarmTitle;
+
+  /// Karşılama 3 gövde — gizlilik açıkça belirtilir (§6)
+  ///
+  /// In en, this message translates to:
+  /// **'With your permission, NOCTA listens for lighter sleep to time your alarm. The analysis happens on your phone — raw audio never leaves it.'**
+  String get onboardingAlarmBody;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

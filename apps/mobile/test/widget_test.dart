@@ -9,6 +9,7 @@ import 'package:nocta/core/api/nocta_api_client.dart';
 import 'package:nocta/core/storage/key_value_store.dart';
 import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
+import 'package:nocta/features/onboarding/onboarding_store.dart';
 
 NoctaApiClient _registerClient() {
   final mock = MockClient(
@@ -41,6 +42,9 @@ void main() {
           keyValueStoreProvider.overrideWithValue(InMemoryKeyValueStore()),
           sessionStoreProvider.overrideWithValue(InMemorySessionStore()),
           apiClientProvider.overrideWithValue(_registerClient()),
+          // Bu test onboarding'i DEĞİL, oturum sonrası ana ekranı doğruluyor →
+          // karşılama akışı görülmüş sayılır (aksi halde ilk açılış kapısı önce gelir).
+          onboardingSeenProvider.overrideWith((ref) async => true),
         ],
         child: const NoctaApp(),
       ),
