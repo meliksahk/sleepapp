@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                                                                          |
-| Mobil       | ~76%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-doğrulama gated — gerçek cihaz+kulak) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). ✓ **native graf slice 1+2** #172/#173 (Kotlin AudioTrack per-blok mikser + canlı kazanç — emülatörde derlen+koş+dumpsys tek-track; Android otonom + anlık slider KANITLANDI) · ✓ **alarm native handler** #174 (AlarmManager setAlarmClock + receiver + tam-ekran bildirim — emülatörde DERLENDİ + FİİLEN ATEŞLENDİ + OS'a RTC_WAKEUP kayıtlı; backstop artık ÇALIŞIYOR) · ~~mikser döngü tıkı~~ ✓ #170 · ~~alarm dikiş~~ ✓ #169 · ~~paywall~~ ✓ #161 |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                                                                               |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                                                 |
+| Mobil       | ~77%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated — gerçek cihaz+kulak) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ **native graf slice 1+2** #172/#173 (per-blok mikser + canlı kazanç — Android otonom + anlık slider KANITLANDI) · ✓ **alarm TAM** #169+#174+#175 (backstop dikiş + AlarmManager handler FİİLEN ATEŞLER + **reboot-reschedule** cihazda kanıtlı: `adb reboot`→app açmadan dumpsys yeniden-kurulmuş alarmı gösterdi) · ~~mikser döngü tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak/haftalık ✓ |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                                                      |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
-> **Hesap:** `0.40·76 + 0.30·74 + 0.15·39 + 0.15·33 = 63.40` → **≈63%**
+> **Hesap:** `0.40·77 + 0.30·74 + 0.15·39 + 0.15·33 = 63.80` → **≈64%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,30 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #175 — alarm reboot-reschedule: cihaz yeniden başlarsa alarm YAŞAR (PR #175)
+
+✅ **Yapıldı ve DOĞRULANDI (adb reboot → app açmadan dumpsys — müdürün pazarlıksız kriteri)**
+
+- **Kapatılan boşluk (müdür yakaladı, "niş" değil):** `AlarmManager` kayıtları reboot'ta
+  SİLİNİR. Kullanıcı gece alarm kurup uyurken telefon gündüz (OTA/güç) reboot atarsa alarm
+  sessizce kaybolurdu — shipped alarm özelliğinin (0.40) güvenilirlik deliği.
+- **Yapıldı:** `NightAlarm.schedule/cancel` son-tarihi native SharedPreferences'a yazar/siler
+  (boot'ta Flutter engine çalışmaz → native okunmalı); ateşlemede kalıcı kayıt silinir.
+  `BootReceiver` (manifest: BOOT_COMPLETED + OEM QUICKBOOT_POWERON) boot'ta persist'i okur,
+  gelecekteyse `setAlarmClock` ile yeniden kurar, geçmişse temizler.
+- **DOĞRULAMA (kanıtlı, çıxış kriteri):** APK kalıcı kuruldu + launcher'dan açıldı (stopped-state
+  temiz) + prefs +1sa tohumlandı → **`adb reboot`** → boot sonrası **app AÇILMADAN**: logcat
+  `boot received: BOOT_COMPLETED` → `rescheduled after boot`; **dumpsys alarm:
+  `tag=*walarm*:com.nocta.nocta/.NightAlarmReceiver` yeniden kayıtlı.** Kotlin derlendi,
+  manifest testi (+1) yeşil, tam mobil süit **412 yeşil**, analyze temiz.
+- 📌 Süreç dürüstlüğü: ilk denemem geçersizdi — `flutter test integration_test` app'i
+  test sonrası KALDIRIYOR (app yoktu → BootReceiver ateşleyemezdi). Kök nedeni bulup kalıcı
+  kurulum + tohumlu prefs ile temiz kanıt aldım. Yanlış pozitifi (eski logcat "fired" match)
+  fark edip düzelttim.
+- 🔥 Sınır: BOOT_COMPLETED app en az bir kez çalıştıktan sonra gelir (Android stopped-state);
+  alarm kurmak zaten app'i açtığından gerçek kullanımda sağlanır (deftere yazıldı). Alarm
+  özelliği artık uçtan uca sağlam: ateşler (#174) + reboot'ta yaşar (#175). Mobil 76→77. Bar 63→64%.
 
 ### #174 — alarm native handler: AlarmManager, emülatörde FİİLEN ateşlendi (PR #174)
 
