@@ -60,8 +60,8 @@ export function CampaignForm() {
       )}
       {state.result !== undefined && (
         <p role="status" className="text-body text-accent-aurora">
-          Gönderildi: {state.result.recipients} kullanıcı segmentte, {state.result.sent} cihaza
-          ulaştı{state.result.failed > 0 ? `, ${state.result.failed} başarısız` : ''}.
+          Kuyruğa alındı: {state.result.recipients} kullanıcı segmentte, {state.result.queued}{' '}
+          teslim işi sıraya kondu. Teslim arka planda yapılıyor.
         </p>
       )}
 

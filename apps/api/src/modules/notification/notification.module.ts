@@ -2,14 +2,18 @@ import { Module, type Provider } from '@nestjs/common';
 import { IdentityModule } from '../identity';
 import { ProfileModule, GetProfileUseCase } from '../profile';
 import { PrismaService } from '../../shared/infra/prisma.service';
+import { loadEnv } from '../../shared/config/env';
 import { DEVICE_TOKEN_REPOSITORY, type DeviceTokenRepository } from './domain/device-token';
 import {
   NOTIFICATION_PREFERENCE_READER,
   type NotificationPreferenceReader,
 } from './domain/notification-preference';
 import { PUSH_SENDER, type PushSender } from './domain/push-sender';
+import { PUSH_QUEUE, type PushQueue } from './domain/push-queue';
 import { PrismaDeviceTokenRepository } from './infrastructure/prisma-device-token.repository';
 import { LogPushSender } from './infrastructure/log-push-sender';
+import { InlinePushQueue } from './infrastructure/inline-push-queue';
+import { BullMqPushQueue } from './infrastructure/bullmq-push-queue';
 import { RegisterDeviceTokenUseCase } from './application/register-device-token.usecase';
 import { SendNotificationUseCase } from './application/send-notification.usecase';
 import { SendCampaignUseCase } from './application/send-campaign.usecase';
@@ -49,11 +53,22 @@ const providers: Provider[] = [
       preferences: NotificationPreferenceReader,
     ): SendNotificationUseCase => new SendNotificationUseCase(repo, sender, preferences),
   },
+  // Push kuyruğu: REDIS_URL varsa BullMQ (asenkron, worker + retry), yoksa inline (senkron —
+  // dev/test). Cache modülüyle aynı env-gate deseni. BullMqPushQueue.onModuleDestroy'u NestJS
+  // otomatik çağırır (RedisCache gibi) → açık Redis soketleri süreçte asılı kalmaz.
+  {
+    provide: PUSH_QUEUE,
+    inject: [SendNotificationUseCase],
+    useFactory: (send: SendNotificationUseCase): PushQueue => {
+      const { REDIS_URL } = loadEnv();
+      return REDIS_URL ? new BullMqPushQueue(REDIS_URL, send) : new InlinePushQueue(send);
+    },
+  },
   {
     provide: SendCampaignUseCase,
-    inject: [DEVICE_TOKEN_REPOSITORY, SendNotificationUseCase],
-    useFactory: (repo: DeviceTokenRepository, send: SendNotificationUseCase): SendCampaignUseCase =>
-      new SendCampaignUseCase(repo, send),
+    inject: [DEVICE_TOKEN_REPOSITORY, PUSH_QUEUE],
+    useFactory: (repo: DeviceTokenRepository, queue: PushQueue): SendCampaignUseCase =>
+      new SendCampaignUseCase(repo, queue),
   },
   {
     provide: CountPushAudienceUseCase,

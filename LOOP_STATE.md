@@ -54,10 +54,10 @@
 > **Ders (D-12'ye eklenir):** "emülatörde duydum" ≠ "kullanıcı duyar". Ses/izin
 > doğrulaması bundan sonra **release (veya profile-dışı) build**'de yapılır.
 
-## 🚧 İlerleme: **%67** — formül 67.3 (tablodan, #137 kuralı)
+## 🚧 İlerleme: **%68** — formül 68.05 (tablodan, #137 kuralı)
 
 ```
-[███████████████████████████░░░░░░░░░░░░░] 67%
+[███████████████████████████░░░░░░░░░░░░░] 68%
 ```
 
 > ⚠️ Bu üst-bar #167 civarında 59.15'te BAYAT kalmıştı (tablonun altındaki Hesap satırı
@@ -93,12 +93,12 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                                                   |
+| Backend/API | ~76%     | 0.30    | ~~BullMQ kurulu~~ ✓ #190 (async kampanya fan-out — senkron→kuyruk, gerçek-Redis entegrasyon testli, CI'da redis servisi); **outbox** (transactional domain event + tüketici) sırada. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                             |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓                                 |
 | Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                  |
 | Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·46 + 0.15·45 = 67.45` → **≈67%**
+> **Hesap:** `0.40·79 + 0.30·76 + 0.15·46 + 0.15·45 = 68.05` → **≈68%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -219,6 +219,29 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #190 — backend BullMQ async kampanya fan-out: kuyruk + gerçek-Redis testi (PR #190)
+
+✅ **Yapıldı ve DOĞRULANDI (gerçek Redis + tam süit + üretim yolu)** — müdür hükmü (C): BullMQ+outbox, gözlemlenebilir tüketiciye bağla
+
+- **Müdür (C) + SERT KISIT:** soyut altyapı yazma → gözlemlenebilir tüketiciye bağla; boş kuyruk→LogPushSender olursa DUR. Bağladım: kampanya fan-out'u senkron→async kuyruk; worker GERÇEK Redis üzerinden teslim eder. #183'te "async BullMQ ertelendi (bilinçli)" diye bırakılan parça — yeni kapsam değil.
+- **Yapıldı:** `PushQueue` port + 2 adaptör (cache modülü REDIS_URL-gate deseni): `BullMqPushQueue`
+  (Queue producer + Worker consumer, ayrı bağlantı, retry, temiz onModuleDestroy) ve `InlinePushQueue`
+  (Redis'siz senkron fallback — dev/test). `SendCampaignUseCase` artık her alıcı için iş kuyruğa alır,
+  `{recipients, queued}` döner (asenkron → sent/failed istek anında yok). Sözleşme değişikliği admin
+  panele yayıldı (#184 CampaignForm: "kuyruğa alındı, teslim arka planda"; types {recipients, queued}).
+- **DOĞRULAMA:** (1) unit — SendCampaignUseCase her alıcı için tek iş + platform filtre; InlinePushQueue
+  hemen teslim. (2) **GERÇEK Redis entegrasyonu** — enqueue 3 iş → worker Redis'ten çeker → sahte
+  SendNotification 3 kez çağrılır (kuyruk ölü kod DEĞİL). (3) e2e inline yolla (CI aynası). (4) **üretim
+  yolu** — REDIS_URL set iken app BullMQ worker'ıyla açılır+teslim eder+temiz kapanır (`--detectOpenHandles`,
+  sızıntı yok). **Tam api süiti 78 suite/480 test yeşil + coverage eşiği tuttu.** typecheck+lint+build 0.
+  CI'ya redis servisi + izole `REDIS_TEST_URL` eklendi (REDIS_URL değil → e2e worker CI'da ayağa kalkmaz).
+- 🔥 Sınır (dürüstlük): (a) gerçek APNs/FCM teslimi hâlâ anahtar-kapılı (LogPushSender loglar) — kuyruk
+  ALTYAPISI kanıtlı, dış teslim gated. (b) **outbox** (transactional domain event + tüketici) bu PR'da
+  YOK — müdürün (C) ikinci yarısı, sıradaki iterasyon (PR-boyut disiplini; bu parça observability gate'ini
+  tek başına karşılıyor). (c) `apps/api/openapi.json` ~433 satır bayat (bu PR'dan ÖNCE, #151'den beri) —
+  yeniden üretimi ayrı temizlik işi olarak flag'lendi (bu PR'a katmak kapsam-kayması olurdu).
+- 📌 Backend 74→76 (+2; §3.2 zorunlu mimari, gerçek-Redis testli gözlemlenebilir iş). Bar 68.05 ≈ **68%**.
 
 ### #189 — web metadataBase/OG düzeltmesi: paylaşım kartları localhost→nocta.app (PR #189)
 

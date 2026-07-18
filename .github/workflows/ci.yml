@@ -33,9 +33,23 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
+      # BullMQ push kuyruğu entegrasyon testi (#190) gerçek Redis'e karşı koşar — Postgres
+      # ile aynı sözleşme. Yalnız test bağlantısı; DI'ı BullMQ'ya çevirmez (REDIS_URL değil).
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       # integration testleri (Prisma) gerçek Postgres'e karşı koşar
       DATABASE_URL: postgres://nocta:nocta_local_dev@localhost:5432/nocta?sslmode=disable
+      # BullMqPushQueue entegrasyon testinin bağlanacağı Redis (yalnız o test okur).
+      # REDIS_URL DEĞİL: e2e'lerin push kuyruğu inline kalır (worker CI'da ayağa kalkmaz).
+      REDIS_TEST_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
         with:

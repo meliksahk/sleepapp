@@ -85,13 +85,15 @@ describe('Admin campaign e2e (HTTP)', () => {
     await sendCampaign('', { title: 't', body: 'b' }).expect(401);
   });
 
-  it('ÇEKİRDEK: owner kampanya gönderir, segment fan-out edilir (seed edilenler dahil)', async () => {
+  it('ÇEKİRDEK: owner kampanya gönderir, segment kuyruğa alınır (seed edilenler dahil)', async () => {
     const token = await tokenFor(['owner']);
     const res = await sendCampaign(token, { title: 'Haftalık ses', body: 'Yayında.' }).expect(200);
     // İki seed kullanıcı + token'ı; başka token'lar da olabilir → >=.
     expect(res.body.recipients).toBeGreaterThanOrEqual(2);
-    expect(res.body.sent).toBeGreaterThanOrEqual(2);
-    expect(res.body.failed).toBe(0); // LogPushSender hep başarır
+    // Asenkron (#190): her alıcı kuyruğa alınır. Fiili sent/failed worker'da → yanıtta YOK.
+    expect(res.body.queued).toBe(res.body.recipients);
+    expect(res.body.sent).toBeUndefined();
+    expect(res.body.failed).toBeUndefined();
   });
 
   it('ÇEKİRDEK: platform filtresi ALT KÜME (all ⊇ ios), ios seed edilenleri içerir', async () => {
