@@ -23,8 +23,18 @@ import 'dart:typed_data';
 /// Çanlar arası süre. 2 sn: ısrarcı ama telaşsız.
 const Duration chimeInterval = Duration(seconds: 2);
 
-/// Çanın temel frekansı (Hz). 528: telefon hoparlöründe rahat duyulur ve tiz değil.
-const double chimeFundamentalHz = 528;
+/// Çanın temel frekansı (Hz) — **C5, eşit tampere** (A440 sistemi).
+///
+/// **Neden 528'den çekildi (uyum kararı, ses kararı değil):** 528 Hz duyulabilirlik
+/// açısından iyiydi ama aynı zamanda "şifa frekansı / mucize tonu" pazarlamasının
+/// İMZA SAYISIDIR ve doğrudan rakibimiz orada konumlanıyor ("science-backed",
+/// "tinnitus relief"). O sayıyı kullanmak, hiçbir iddiada bulunmasak bile bizi o
+/// söylemin yanına koyar — CLAUDE.md §1.1'in kapatmak istediği yüzey tam bu.
+///
+/// 523.25 kulakla ayırt edilemeyecek kadar yakın (~15 cent) ama gerekçesi
+/// tamamen müzikal: C5, ve açılış imzasının (`nocta_signature.dart`, f0=130.81 C3)
+/// tam 4. harmoniği → alarm ile marka sesi aynı armonik ailede.
+const double chimeFundamentalHz = 523.25;
 
 /// [seconds] saniyelik alarm sesi (Float32, [-1, 1], mono).
 ///
