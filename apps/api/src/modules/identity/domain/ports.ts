@@ -115,6 +115,12 @@ export interface UserRepository {
 
   /** Girişte kullanılan sayacı işaretler (aynı kod bir daha geçmesin). */
   recordTotpCounter(userId: string, counter: number): Promise<void>;
+
+  /**
+   * 2FA'yı tamamen KALDIRIR (anahtar + onay + sayaç null): parola-doğrulamalı sıfırlama
+   * sonrası (#186) kullanıcı yeni cihazda yeniden kurabilsin diye.
+   */
+  clearTotp(userId: string): Promise<void>;
 }
 
 /** one_time_tokens erişimi — magic link / e-posta doğrulama. */

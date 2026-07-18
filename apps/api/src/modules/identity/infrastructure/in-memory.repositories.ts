@@ -104,6 +104,11 @@ export class InMemoryUserRepository implements UserRepository {
     this.totpByUserId.set(userId, { ...current, confirmedAt, lastCounter: counter });
   }
 
+  async clearTotp(userId: string): Promise<void> {
+    // 2FA'yı tamamen kaldır (Prisma ile aynı davranış): yeniden kurulum baştan başlar.
+    this.totpByUserId.delete(userId);
+  }
+
   async recordTotpCounter(userId: string, counter: number): Promise<void> {
     const current = this.totpByUserId.get(userId);
     if (!current) return;

@@ -338,4 +338,50 @@ describe('Admin TOTP 2FA e2e (HTTP)', () => {
       totpCode: totpCode(acc.secret, Date.now() + TOTP_STEP_SECONDS * 1000),
     }).expect(200);
   });
+
+  describe('2FA sıfırlama — parola doğrulamalı (#186, cihaz rotasyonu)', () => {
+    const reset = (token: string, body: Record<string, unknown>) =>
+      request(app.getHttpServer())
+        .post('/v1/auth/admin/totp/reset')
+        .set('Authorization', `Bearer ${token}`)
+        .send(body);
+
+    it('ÇEKİRDEK: DOĞRU parola ile reset → 2FA kalkar ve YENİDEN kurulabilir', async () => {
+      const acc = await enrolledAccount();
+      await reset(acc.token, { password: PASSWORD }).expect(204);
+
+      // 2FA kalktı: status enabled=false, kodsuz giriş yeniden geçer.
+      const status = await request(app.getHttpServer())
+        .get('/v1/auth/admin/totp')
+        .set('Authorization', `Bearer ${acc.token}`)
+        .expect(200);
+      expect(status.body).toEqual({ enabled: false, pending: false });
+      // Enroll artık 409 DEĞİL (yeniden kurulabilir) — asıl kapatılan boşluk bu.
+      await request(app.getHttpServer())
+        .post('/v1/auth/admin/totp/enroll')
+        .set('Authorization', `Bearer ${acc.token}`)
+        .expect(200);
+    });
+
+    it('ÇEKİRDEK: YANLIŞ parola ile reset 401 → 2FA KORUNUR', async () => {
+      const acc = await enrolledAccount();
+      const res = await reset(acc.token, { password: 'wrong-password' }).expect(401);
+      expect(res.body.code).toBe('invalid_credentials');
+      // Koruma yerinde: hâlâ etkin.
+      const row = await prisma.users.findUnique({ where: { id: acc.userId } });
+      expect(row?.totp_confirmed_at).not.toBeNull();
+    });
+
+    it('reset kimlik doğrulaması ister (401)', async () => {
+      await request(app.getHttpServer())
+        .post('/v1/auth/admin/totp/reset')
+        .send({ password: PASSWORD })
+        .expect(401);
+    });
+
+    it('boş parola doğrulama katmanında elenir (400)', async () => {
+      const acc = await enrolledAccount();
+      await reset(acc.token, { password: '' }).expect(400);
+    });
+  });
 });
