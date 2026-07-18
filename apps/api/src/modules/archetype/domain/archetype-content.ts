@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, type Locale } from '../../../shared/locale';
 import { ARCHETYPES, type ArchetypeSlug } from './archetype';
 
 /**
@@ -39,8 +40,51 @@ export const ARCHETYPE_INFO: readonly ArchetypeInfo[] = [
   },
 ];
 
-export function getArchetypeInfo(slug: string): ArchetypeInfo | undefined {
-  return ARCHETYPE_INFO.find((a) => a.slug === slug);
+/**
+ * Türkçe tanıtım içeriği. **İsimler ÇEVRİLMEZ** — "Deep Ocean" bir marka/kimlik
+ * etiketidir ve paylaşım kartında, `/a/{slug}` linkinde, sohbetlerde aynı kalmalı;
+ * çevirmek viral kancanın tanınırlığını böler. Yalnızca ANLATIM çevrilir.
+ *
+ * SAĞLIK İDDİASI YASAK (CLAUDE.md §1.1): "rahatlama ve uyku ritüeli" dili.
+ */
+const ARCHETYPE_INFO_TR: Readonly<Record<ArchetypeSlug, Omit<ArchetypeInfo, 'slug' | 'name'>>> = {
+  'deep-ocean': {
+    tagline: 'Başını yastığa koyduğun an durulup dibe çökersin.',
+    summary: 'Hızla derin ve sessiz bir dinlenmeye geçer, sabaha kadar pek kıpırdamazsın.',
+  },
+  overthinker: {
+    tagline: 'Bedenin yorgun, ama zihnin hâlâ yarının listesini yazıyor.',
+    summary:
+      'Günü baştan oynatarak uyanık yatarsın; yumuşak, örtücü bir ses dokusu bu gürültüyü susturur.',
+  },
+  'delta-drifter': {
+    tagline: 'Uzun, canlı, yarı rüya gecelerde süzülürsün.',
+    summary:
+      'Uzun uyur, canlı rüyalar görürsün; istikrarlı bir ses dokusu bu akışı pürüzsüz tutar.',
+  },
+  'dawn-chaser': {
+    tagline: 'İlk ışıkla kalkmaya programlısın.',
+    summary: 'Erken ve diri uyanırsın; sakin bir yavaşlama ritüeli akşam saatlerini korur.',
+  },
+};
+
+/**
+ * Tanıtım içeriğini verilen dilde döner. Çevirisi olmayan dil → İngilizce (sessiz
+ * düşüş: eksik çeviri yüzünden sonuç ekranı BOŞ kalmamalı).
+ */
+export function getArchetypeInfo(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE,
+): ArchetypeInfo | undefined {
+  const base = ARCHETYPE_INFO.find((a) => a.slug === slug);
+  if (!base || locale === DEFAULT_LOCALE) return base;
+  const tr = ARCHETYPE_INFO_TR[base.slug];
+  return tr ? { ...base, ...tr } : base;
+}
+
+/** Tüm arketiplerin içeriği, verilen dilde. */
+export function listArchetypeInfo(locale: Locale = DEFAULT_LOCALE): readonly ArchetypeInfo[] {
+  return ARCHETYPE_INFO.map((a) => getArchetypeInfo(a.slug, locale) ?? a);
 }
 
 /** Tüm slug'ların içeriği tanımlı mı? (derleme-zamanı güvence + test). */

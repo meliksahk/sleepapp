@@ -3,13 +3,15 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   NotFoundException,
   Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { resolveLocale } from '../../../shared/locale';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ScoreWebUseCase } from '../application/score-web.usecase';
 import { GetWebResultUseCase } from '../application/get-web-result.usecase';
@@ -36,9 +38,10 @@ export class WebArchetypeController {
 
   @Get('questions')
   @ApiOperation({ summary: 'Public archetype soru matrisi (web testi render eder)' })
+  @ApiHeader({ name: 'Accept-Language', required: false, description: 'en (varsayilan) | tr' })
   @ApiOkResponse({ type: QuestionsResponseDto })
-  questions(): QuestionMatrix {
-    return this.getQuestions.execute();
+  questions(@Headers('accept-language') acceptLanguage?: string): QuestionMatrix {
+    return this.getQuestions.execute(resolveLocale(acceptLanguage));
   }
 
   @Post()

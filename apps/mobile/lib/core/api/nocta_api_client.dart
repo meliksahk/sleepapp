@@ -5,10 +5,37 @@ import 'session.dart';
 /// İnce interim API istemcisi (docs/04 M0 auth akışı). baseUrl flavor'dan gelir.
 /// Auth interceptor + offline kuyruk üstüne eklenecek; generated client B-3'te.
 class NoctaApiClient {
-  NoctaApiClient({required this.baseUrl, http.Client? client}) : _client = client ?? http.Client();
+  NoctaApiClient({
+    required this.baseUrl,
+    http.Client? client,
+    this.resolveLanguage,
+  }) : _client = client ?? http.Client();
 
   final String baseUrl;
   final http.Client _client;
+
+  /// Sunucudan içeriğin hangi dilde isteneceğini **İSTEK ANINDA** çözer
+  /// (`'tr'`, `'en'`, ya da null → sunucu varsayılanı EN).
+  ///
+  /// **Neden istemci gönderiyor:** arketip soruları ve sonuç anlatımı SUNUCUDA
+  /// yaşıyor (tek kaynak — web ve mobil aynı matrisi kullanır, CLAUDE.md §2).
+  /// Bu başlık olmadan Türkçe arayüzde İngilizce sorular çıkıyordu.
+  ///
+  /// **NEDEN SABİT STRING DEĞİL — GERÇEK BİR HATA:** dil başta sabit bir alandı ve
+  /// `apiClientProvider` dili `watch` ediyordu. Kullanıcı ayarlardan dili değiştirince
+  /// provider yeniden kuruluyor, `onDispose` eski `http.Client`'ı KAPATIYOR, ama
+  /// `AuthController` onu `ref.read` ile tuttuğu için kapanmış client'la istek atmaya
+  /// çalışıyordu → dil değiştiren kullanıcıda TÜM API çağrıları sessizce ölüyordu
+  /// (emülatörde yakalandı: değişimden sonra sunucuya tek istek ulaşmadı).
+  /// Çözüm: client ÖMÜR BOYU tek; dil her istekte yeniden okunur.
+  final String? Function()? resolveLanguage;
+
+  /// Dil başlığı — her istekte (auth'lu ya da değil) aynı şekilde eklenir.
+  Map<String, String> get _localeHeaders {
+    final language = resolveLanguage?.call();
+    if (language == null || language.isEmpty) return const {};
+    return {'Accept-Language': language};
+  }
 
   /// Anonim cihaz kaydı → access + refresh token.
   Future<Session> registerDevice({
@@ -17,7 +44,7 @@ class NoctaApiClient {
   }) async {
     final res = await _client.post(
       Uri.parse('$baseUrl/v1/auth/device'),
-      headers: const {'Content-Type': 'application/json'},
+      headers: {..._localeHeaders, 'Content-Type': 'application/json'},
       body: jsonEncode({'fingerprint': fingerprint, 'platform': platform}),
     );
     if (res.statusCode != 201) {
@@ -31,7 +58,7 @@ class NoctaApiClient {
   Future<Session> refresh(String refreshToken) async {
     final res = await _client.post(
       Uri.parse('$baseUrl/v1/auth/refresh'),
-      headers: const {'Content-Type': 'application/json'},
+      headers: {..._localeHeaders, 'Content-Type': 'application/json'},
       body: jsonEncode({'refreshToken': refreshToken}),
     );
     if (res.statusCode != 200) {
@@ -65,6 +92,7 @@ class NoctaApiClient {
   }
 
   Map<String, String> _authHeaders(String accessToken) => {
+        ..._localeHeaders,
         'Authorization': 'Bearer $accessToken',
       };
 

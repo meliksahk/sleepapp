@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../settings/locale_store.dart';
 import '../../core/share/sharer.dart';
 import '../auth/auth_providers.dart';
 import 'archetype_controller.dart';
@@ -15,7 +16,20 @@ final archetypeControllerProvider = Provider<ArchetypeController>((ref) {
 final sharerProvider = Provider<Sharer>((ref) => PlatformSharer());
 
 /// Archetype tanıtım içeriği slug→info haritası (sonuç ekranı açıklaması).
+///
+/// **DİLİ İZLER.** Bu içerik SUNUCUDAN yerelleşmiş gelir (`Accept-Language`), yani
+/// dil değişince önbellekteki kopya YANLIŞ dilde kalır. Gerçekten yaşandı: kullanıcı
+/// Türkçeye geçtiğinde sorular Türkçe geldi (ekran açılırken taze çekiliyor) ama
+/// sonuç açıklaması İngilizce kaldı — çünkü içerik açılışta bir kez çekilip
+/// önbelleğe alınmıştı. `watch` sayesinde dil değişimi bu provider'ı geçersiz kılar
+/// ve içerik yeni dille yeniden çekilir.
+///
+/// **`watch(...)` değil `watch(....future)`:** dil provider'ı önce `loading` sonra
+/// `data` yayınlar. Sadece `watch` etmek içeriği İKİ KEZ çektirir (ilk istek daha
+/// yanıt gelmeden terk edilir). Future'ı beklemek, dil çözülene kadar sabreder ve
+/// tek istek atar.
 final archetypeContentProvider = FutureProvider<Map<String, ArchetypeInfo>>((ref) async {
+  await ref.watch(appLocaleProvider.future);
   final list = await ref.read(archetypeControllerProvider).fetchContent();
   return {for (final info in list) info.slug: info};
 });

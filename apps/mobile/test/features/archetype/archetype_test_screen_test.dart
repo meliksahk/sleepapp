@@ -12,6 +12,7 @@ import 'package:nocta/features/analytics/analytics.dart';
 import 'package:nocta/features/analytics/analytics_providers.dart';
 import 'package:nocta/features/archetype/archetype_controller.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
+import 'package:nocta/features/settings/locale_store.dart';
 import 'package:nocta/features/archetype/presentation/archetype_test_screen.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
 import 'package:nocta/l10n/app_localizations.dart';
@@ -133,6 +134,10 @@ Future<void> _pump(
     ProviderScope(
       overrides: <Override>[
         archetypeControllerProvider.overrideWithValue(controller),
+        // İçerik provider'ı artık dili BEKLİYOR (yerelleşmiş sunucu içeriği).
+        // Testte SharedPreferences yok → çözülmeyen dil, içeriği sonsuza dek
+        // loading'de bırakır ve tagline hiç render edilmezdi.
+        appLocaleProvider.overrideWith((ref) async => null),
         // Analytics override — default'u apiClientProvider→FlavorConfig okur (testte yok).
         analyticsProvider.overrideWithValue(analytics ?? RecordingAnalytics()),
         if (sharer != null) sharerProvider.overrideWithValue(sharer),
@@ -182,6 +187,7 @@ void main() {
         ProviderScope(
           overrides: <Override>[
             archetypeControllerProvider.overrideWithValue(await _controller()),
+            appLocaleProvider.overrideWith((ref) async => null),
             analyticsProvider.overrideWithValue(analytics),
           ],
           child: MaterialApp(

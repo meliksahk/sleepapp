@@ -3,12 +3,14 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   NotFoundException,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { resolveLocale } from '../../../shared/locale';
 import { AuthGuard, CurrentUser, type AccessTokenClaims } from '../../identity';
 import type { QuestionMatrix } from '../domain/archetype';
 import { GetQuestionsUseCase } from '../application/get-questions.usecase';
@@ -32,9 +34,10 @@ export class ArchetypeController {
 
   @Get('questions')
   @ApiOperation({ summary: 'Geçerli archetype soru matrisi' })
+  @ApiHeader({ name: 'Accept-Language', required: false, description: 'en (varsayılan) | tr' })
   @ApiOkResponse({ type: QuestionsResponseDto })
-  questions(): QuestionMatrix {
-    return this.getQuestions.execute();
+  questions(@Headers('accept-language') acceptLanguage?: string): QuestionMatrix {
+    return this.getQuestions.execute(resolveLocale(acceptLanguage));
   }
 
   @Post('answers')
