@@ -13,6 +13,7 @@ import { LogPushSender } from './infrastructure/log-push-sender';
 import { RegisterDeviceTokenUseCase } from './application/register-device-token.usecase';
 import { SendNotificationUseCase } from './application/send-notification.usecase';
 import { SendCampaignUseCase } from './application/send-campaign.usecase';
+import { CountPushAudienceUseCase } from './application/count-push-audience.usecase';
 import { NotificationController } from './presentation/notification.controller';
 
 const providers: Provider[] = [
@@ -54,6 +55,12 @@ const providers: Provider[] = [
     useFactory: (repo: DeviceTokenRepository, send: SendNotificationUseCase): SendCampaignUseCase =>
       new SendCampaignUseCase(repo, send),
   },
+  {
+    provide: CountPushAudienceUseCase,
+    inject: [DEVICE_TOKEN_REPOSITORY],
+    useFactory: (repo: DeviceTokenRepository): CountPushAudienceUseCase =>
+      new CountPushAudienceUseCase(repo),
+  },
 ];
 
 @Module({
@@ -61,6 +68,6 @@ const providers: Provider[] = [
   controllers: [NotificationController],
   providers,
   // Fan-out use case modül-dışı tetikleyiciler (admin kampanya / domain-event) için dışa açık.
-  exports: [SendNotificationUseCase, SendCampaignUseCase],
+  exports: [SendNotificationUseCase, SendCampaignUseCase, CountPushAudienceUseCase],
 })
 export class NotificationModule {}

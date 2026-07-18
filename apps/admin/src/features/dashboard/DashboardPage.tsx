@@ -9,6 +9,7 @@ import { AuditFeed, type AuditEntry } from './AuditFeed';
 interface Overview {
   soundscapes: { draft: number; scheduled: number; published: number };
   waitlist: number;
+  pushAudience: number;
   shareFunnel: { completed: number; shared: number; rate: number | null };
 }
 
@@ -45,6 +46,11 @@ export async function DashboardPage() {
         />
         <StatCard label="Taslak" value={String(o.soundscapes.draft)} hint="yayınlanmamış" />
         <StatCard label="Bekleme listesi" value={String(o.waitlist)} hint="ön-lansman kaydı" />
+        <StatCard
+          label="Push kitlesi"
+          value={String(o.pushAudience)}
+          hint="kampanyayla ulaşılabilir"
+        />
         {/* Viral kancanın sağlığı (CLAUDE.md §1.1: "viral kancalar süs değil
             çekirdek özelliktir"). Ürünün bahsi buysa ölçülmeli. */}
         <StatCard

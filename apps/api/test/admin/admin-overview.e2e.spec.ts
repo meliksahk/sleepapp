@@ -105,6 +105,9 @@ describe('Admin pano e2e (HTTP)', () => {
     expect(typeof res.body.soundscapes.scheduled).toBe('number');
     expect(typeof res.body.soundscapes.draft).toBe('number');
     expect(typeof res.body.soundscapes.published).toBe('number');
+    // Push kitlesi (#185): kayıtlı cihazı olan benzersiz kullanıcı — canlı computable sayı.
+    expect(typeof res.body.pushAudience).toBe('number');
+    expect(res.body.pushAudience).toBeGreaterThanOrEqual(0);
   });
 
   it('bekleme listesi sayısı DOĞRU (katılım sayıya yansır)', async () => {
@@ -141,7 +144,13 @@ describe('Admin pano e2e (HTTP)', () => {
     const res = await overview(await tokenFor(['owner'])).expect(200);
     expect(res.body).not.toHaveProperty('d7Retention');
     expect(res.body).not.toHaveProperty('trialConversion');
-    expect(Object.keys(res.body).sort()).toEqual(['shareFunnel', 'soundscapes', 'waitlist']);
+    // pushAudience (#185) MEŞRU computable metrik → kümede; d7/trial UYDURULMAZ (yok).
+    expect(Object.keys(res.body).sort()).toEqual([
+      'pushAudience',
+      'shareFunnel',
+      'soundscapes',
+      'waitlist',
+    ]);
   });
 
   describe('paylaşım hunisi (viral kanca sağlığı)', () => {

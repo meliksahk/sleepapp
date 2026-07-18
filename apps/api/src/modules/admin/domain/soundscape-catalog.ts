@@ -64,6 +64,8 @@ export interface Overview {
     readonly published: number;
   };
   readonly waitlist: number;
+  /** Erişilebilir push kitlesi (#185): kayıtlı cihazı olan benzersiz kullanıcı = kampanya reach üst sınırı. */
+  readonly pushAudience: number;
   /**
    * Viral kancanın sağlığı: kartını paylaşan / testi tamamlayan BENZERSİZ kullanıcı.
    * `rate` null olabilir — kimse testi tamamlamadıysa oran TANIMSIZDIR; 0 göstermek
