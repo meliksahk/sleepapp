@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                    |
 | Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~38%     | 0.15    | flag düzenleme **PANEL FORMU** (API #167 hazır, UI formu sırada), kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ #163+#164 · flag görünürlük ✓ #165+#166 (API+`/flags` UI) · flag upsert **API'si** ✓ #167. 5 özelliğin ~2.5'i                                                                                                                                                                                          |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                         |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
-> **Hesap:** `0.40·71 + 0.30·74 + 0.15·38 + 0.15·33 = 61.25` → **≈61%**
+> **Hesap:** `0.40·71 + 0.30·74 + 0.15·39 + 0.15·33 = 61.40` → **≈61%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,22 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #168 — flag panel düzenleme FORMU — owner-only `/flags` upsert UI (PR #168)
+
+✅ **Yapıldı ve doğrulandı** — flag zinciri (#165→#168) TAMAMLANDI
+
+- `/flags` sayfası owner'a **düzenleme formu** gösterir: anahtar + durum (aç/kapat) +
+  rollout% + platformlar + asgari sürüm. Server Action `apiPut('/v1/admin/flags/:key')`
+  (#167 API'si). Boş opsiyonel alanlar GÖNDERİLMEZ (herkes/segment yok anlamı).
+- `canEditFlags` (owner-only, API `@Roles('owner')` ile ayna) + `flagErrorMessage`
+  (403/400/geçersiz-anahtar ayırt edici) — ikisi de saf + test'li (8 unit test).
+- Doğrulama: admin typecheck 0, lint 0, **vitest 18 dosya / 121 test yeşil**,
+  **Next prod build yeşil** (`/flags` route + client form derleniyor).
+- 🔥 Sınır yok bu iş için — flag özelliği artık uçtan uca: görünürlük + owner düzenleme.
+  Kalan admin: kampanya + metrik panoları.
+- 📌 Admin 38→39: yazma-UI yarısı kapandı (okuma+API zaten sayılıydı); flag özelliği
+  tümü bitti. Bar ≈61 (dürüst artış).
 
 ### #167 — feature flag DÜZENLEME (upsert) — owner-kapılı PUT + audit (PR #167)
 
