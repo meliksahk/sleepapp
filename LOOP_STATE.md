@@ -92,9 +92,9 @@
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                                                 |
 | Mobil       | ~77%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated — gerçek cihaz+kulak) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ **native graf slice 1+2** #172/#173 (per-blok mikser + canlı kazanç — Android otonom + anlık slider KANITLANDI) · ✓ **alarm TAM** #169+#174+#175 (backstop dikiş + AlarmManager handler FİİLEN ATEŞLER + **reboot-reschedule** cihazda kanıtlı: `adb reboot`→app açmadan dumpsys yeniden-kurulmuş alarmı gösterdi) · ~~mikser döngü tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak/haftalık ✓ |
 | Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                                                      |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Web         | ~35%     | 0.15    | LCP/CLS (lighthouse-ci), long-tail, blog. ✓ **W0 paylaşım kartı** #176 (client-side canvas 9:16, archetype-özel gradyan token'dan, indir/paylaş — TARAYICIDA doğrulandı: 2.1MB dataURL, metin+gradyan, per-archetype hex eşleşti; "ölçülemiyor" varsayımı tarayıcı aracıyla çürütüldü) · test→sonuç→link→OG zinciri zaten çalışıyor                                                                                                                                                                                                                                                       |
 
-> **Hesap:** `0.40·77 + 0.30·74 + 0.15·39 + 0.15·33 = 63.80` → **≈64%**
+> **Hesap:** `0.40·77 + 0.30·74 + 0.15·39 + 0.15·35 = 64.10` → **≈64%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,29 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #176 — web canvas paylaşım kartı: tarayıcıda doğrulandı (PR #176)
+
+✅ **Yapıldı ve DOĞRULANDI (gerçek tarayıcıda — "ölçülemiyor" varsayımı çürütüldü)**
+
+- **Müdür reframe'i (emülatörün native'i açtığı gibi):** web W0 kartı defterde "çıxış
+  kriteri ÖLÇÜLEMİYOR (canvas/gerçek tarayıcı)" idi. Tarayıcı aracımla (Claude Browser)
+  otonom kurup-doğrulanabilir oldu. İncelemede: `ShareButton` yalnızca link paylaşıyordu,
+  indirilebilir canvas görseli yoktu — docs/05 viral kancasının eksik dilimi.
+- **Yapıldı:** `ShareCard` (client component) — 9:16 (1080×1920, IG story) canvas kart:
+  archetype gradyanı + isim + tagline + "sounds that suit you" + NOCTA filigranı. Renkler
+  tasarım tokenlarından `getComputedStyle` ile (hex hard-code YOK, §2; her archetype kendi
+  gradyanı). Kaydet/paylaş (Web Share files → indir fallback). Sağlık iddiası yok (§1.1).
+  Saf yardımcılar (`wrapText`, `cardFileName`) 8 unit test.
+- **DOĞRULAMA (tarayıcı):** dev server → `/a/deep-ocean`: canvas 1080×1920 (aspect 0.5625=9:16),
+  dataURL **2.1MB** (boş değil), **9046 parlak metin pikseli** (8 metin bandı: etiket/isim üstte,
+  sesler ortada, filigran altta). `/a/overthinker`: topLeft [74,44,112] = tam `#4A2C6F`
+  (overthinker `from`) → **per-archetype token okuma doğru**, deep-ocean mavisinden farklı.
+  typecheck+lint temiz, web süiti 35 test, Next build ✓, bundle 107≤115kB.
+- 🔥 Sınır (dürüstlük): canvas fontu sistem sans (marka display fontu canvas'a yüklenmedi —
+  polish). "Viral-kalite güzel mi" son estetik yargı insana ait; ama RENDER + düzen + gradyan
+  - metin tarayıcıda kanıtlı. Müdür notu: bu link+OG zinciri çalışan kancanın ARTIMLI dilimi;
+    0.15 yüzeyde ölçülü bump (33→35, +2), abartılmadı.
 
 ### #175 — alarm reboot-reschedule: cihaz yeniden başlarsa alarm YAŞAR (PR #175)
 

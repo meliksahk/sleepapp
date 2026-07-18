@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ARCHETYPES, type ArchetypeContent as Archetype } from '@/content/archetypes';
 import { ShareButton } from '@/components/ShareButton';
+import { ShareCard } from '@/components/ShareCard';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://nocta.app';
 
@@ -38,6 +39,18 @@ export function ArchetypeContent({ archetype }: { archetype: Archetype }) {
         </a>
         <ShareButton title={`My sleep identity is ${archetype.name}`} url={shareUrl} />
       </div>
+
+      {/* Viral kanca (docs/05): indirilebilir paylaşım kartı */}
+      <section className="mt-8" aria-label="Shareable card">
+        <h2 className="text-h2 font-display">Share your identity</h2>
+        <p className="mt-1 mb-4 text-body text-ink-secondary">Save a 9:16 card for stories.</p>
+        <ShareCard
+          slug={archetype.slug}
+          name={archetype.name}
+          tagline={archetype.tagline}
+          sounds={archetype.soundsThatHelp}
+        />
+      </section>
 
       {/* İç bağlantı (SEO): diğer sleep identity'leri */}
       <nav aria-label="Other sleep identities" className="mt-10 border-t border-ink-faint/20 pt-6">
