@@ -11,6 +11,7 @@ import { PrismaFlagRepository } from './infrastructure/prisma-flag.repository';
 import { CryptoBucketHasher } from './infrastructure/crypto-bucket-hasher';
 import { GetFlagsUseCase } from './application/get-flags.usecase';
 import { ListAllFlagsUseCase } from './application/list-all-flags.usecase';
+import { UpsertFlagUseCase } from './application/upsert-flag.usecase';
 import { FlagsController } from './presentation/flags.controller';
 
 const providers: Provider[] = [
@@ -31,13 +32,18 @@ const providers: Provider[] = [
     inject: [FLAG_REPOSITORY],
     useFactory: (repo: FlagRepository): ListAllFlagsUseCase => new ListAllFlagsUseCase(repo),
   },
+  {
+    provide: UpsertFlagUseCase,
+    inject: [FLAG_REPOSITORY],
+    useFactory: (repo: FlagRepository): UpsertFlagUseCase => new UpsertFlagUseCase(repo),
+  },
 ];
 
 @Module({
   imports: [IdentityModule],
   controllers: [FlagsController],
   providers,
-  // Admin paneli ham flag tanımlarını buradan okur (docs/03 A4).
-  exports: [ListAllFlagsUseCase],
+  // Admin paneli ham flag tanımlarını okur (list) ve düzenler (upsert) — docs/03 A4.
+  exports: [ListAllFlagsUseCase, UpsertFlagUseCase],
 })
 export class FlagsModule {}

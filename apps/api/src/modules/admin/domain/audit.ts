@@ -12,6 +12,7 @@ export const AUDIT_ACTIONS = [
   'soundscape.publish',
   'soundscape.unpublish',
   'soundscape.recipe',
+  'flag.upsert',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
