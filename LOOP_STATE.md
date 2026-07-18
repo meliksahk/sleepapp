@@ -92,9 +92,9 @@
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
 | Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                        |
-| Web         | ~42%     | 0.15    | **hreflang EN/TR** (sıradaki dilim — sıfırdan i18n refactor, çok-PR), LCP/CLS lighthouse-ci. ✓ W0 paylaşım kartı #176 · ✓ blog motoru #179 + long-tail #180 (6 indekslenebilir yazı) · ✓ **VİRAL DÖNGÜ kapatıldı** #181 (test sonuç ekranı artık paylaşım kartını ORADA gösteriyor — edinim döngüsü tek ekranda: test→sonuç→paylaş; docs/05 web'in çekirdek amacı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
+| Web         | ~43%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ **blog OG görselleri** #182 (7 sosyal önizleme PNG'si — 6 yazı + dizin; paylaşılınca kart çıkar, satori/archetype-OG deseni; HTTP'de geçerli PNG kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·42 = 65.95` → **≈66%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·43 = 66.10` → **≈66%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,25 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #182 — web blog OG görselleri: sosyal önizleme kartları (PR #182)
+
+✅ **Yapıldı ve DOĞRULANDI (HTTP/tarayıcı — geçerli PNG)** — web içerik motoru paylaşılabilirliği
+
+- **Boşluk:** blog yazıları sosyalde (Twitter/FB/WhatsApp) paylaşılınca ÖNİZLEME KARTI yoktu
+  (archetype sayfalarının OG'si var, blog'un yok) → çıplak link, düşük tıklama/erişim.
+- **Yapıldı:** `blog/[slug]/opengraph-image.tsx` (yazı başlığı+açıklama) + `blog/opengraph-image.tsx`
+  (dizin) — satori/`ImageResponse`, archetype OG deseniyle birebir (1200×630, marka renkleri).
+  Next dosya-konvansiyonu OG'yi metadata'ya OTOMATİK bağlar. 7 OG görseli (6 yazı + dizin).
+- **DOĞRULAMA:** typecheck+lint temiz, Next build 32 statik sayfa (7 yeni OG route). HTTP:
+  `/blog/wind-down-ritual/opengraph-image` → content-type image/png, 43KB, `\x89PNG` imzası;
+  dizin OG PNG 24KB; yazı HTML'inde `og:image` meta otomatik bağlı. 🔥 Sınır: OG satori bileşeni
+  unit-test'lenmez (archetype OG'si de öyle) — build + HTTP-PNG ile kanıtlı.
+- 📌 hreflang yerine yine bunu seçtim (3. erteleme): doğru hreflang `[locale]` ROOT refactor
+  ister → mevcut `/a/[slug]` URL'lerini değiştirir, #176 paylaşım zincirini/sitemap'i kırma
+  riski, 17-PR bağlamında çalışan viral zinciri riske atmak. **Risk-yönetimi, dodge değil** —
+  hreflang taze/özel oturum ister (kendi çok-dilimli planı). Blog OG düşük-risk + reuse + gerçek
+  paylaşılabilirlik değeri. Web 42→43 (+1). Bar 66.1 ≈ **66%**.
 
 ### #181 — web viral döngü kapatıldı: test sonucunda paylaşım kartı (PR #181)
 
