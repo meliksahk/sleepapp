@@ -7,9 +7,13 @@ import { AppModule } from './app.module';
 import { loadEnv } from './shared/config/env';
 import { ProblemDetailsFilter } from './shared/http/problem-details.filter';
 import { IdempotencyInterceptor } from './shared/http/idempotency.interceptor';
+import { initSentry } from './shared/observability/sentry';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv();
+
+  // Hata izleme mümkün olan en erken noktada (§4). SENTRY_DSN yoksa no-op.
+  initSentry(env.SENTRY_DSN, env.NODE_ENV);
   // bodyParser: false → limitli parser'ları elle kaydederiz (DoS sertleşme).
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],

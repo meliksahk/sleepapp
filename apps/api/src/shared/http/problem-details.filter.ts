@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import type { Response } from 'express';
 
 interface ProblemDetails {
@@ -81,6 +82,13 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     } else {
       // Beklenmeyen hata — teknik detay loglanır, istemciye sızmaz.
       this.logger.error(exception instanceof Error ? exception.stack : String(exception));
+    }
+
+    // 5xx = beklenmeyen sunucu hatası → Sentry'ye raporla (§4). Yalnız SENTRY_DSN varken
+    // init edilmiştir; aksi halde captureException no-op. 4xx istemci hataları RAPORLANMAZ
+    // (beklenen: doğrulama, yetki, bulunamadı — Sentry'yi gürültüyle boğardı).
+    if (status >= 500) {
+      Sentry.captureException(exception);
     }
 
     const problem: ProblemDetails = {
