@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                                                                                                 |
 | Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~32%     | 0.15    | kullanıcı yönetimi, feature flag, kampanya, metrik panoları — 5 özelliğin 2'si var                                                                                                                                                                                                                                                                                                                                           |
+| Admin       | ~33%     | 0.15    | kullanıcı yönetimi UI'ı, feature flag, kampanya, metrik panoları. **Kullanıcı arama API'si** ✓ #163 (`GET /v1/admin/users`, owner/support rol-daraltmalı, PII korumalı, e2e) — UI yarısı zincirle sırada                                                                                                                                                                                                                     |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
-> **Hesap:** `0.40·71 + 0.30·74 + 0.15·32 + 0.15·33 = 60.35` → **≈60%**
+> **Hesap:** `0.40·71 + 0.30·74 + 0.15·33 + 0.15·33 = 60.50` → **≈60%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,28 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #163 — admin kullanıcı arama API'si + LOOP AKIŞ DÜZELTMESİ (PR #163)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `GET /v1/admin/users?q=` — destek senaryosu (docs/02 §165): e-posta alt-dizesi veya
+  tam id ile kullanıcı arama. **owner/support rol-daraltmalı** (analyst/editor 403 —
+  e-posta PII), ≥2 karakter kapısı (tüm tabanı dökmez), silinmişler hariç.
+  Sınır-temiz: identity `SearchUsersUseCase` sunar, admin tüketir (GDPR export deseni).
+- **6 e2e (gerçek Postgres):** owner e-posta/id ile bulur + PII sızmaz, analyst 403,
+  non-admin 403, token'sız 401, kısa sorgu boş. **Tüm api süit: 72/451 yeşil.**
+- 🔥 **Admin'in API yarısı; UI yarısı zincirle sırada** (dürüst kısmi).
+
+> ## 🔧 LOOP AKIŞ DÜZELTMESİ (kullanıcı: "sürekli duruyorsun")
+>
+> Kök neden: cron watchdog (15dk) yalnızca boştayken ateşliyor; loop her iterasyonda
+> "bitir→PR→merge→rapor→**turu bitir**" yapıp cron'u bekliyordu → 15dk boşluk = "durma".
+> **Düzeltme (bundan sonra):** (1) tek iterasyonda DURMA — biteni bitir, hemen sıradakini
+> al, gerçek insan/para kapısına çarpana dek aralıksız; (2) müdüre her seferinde SORMA
+> (o "sırayı sen seç, takıldığında sor" dedi); (3) **defteri feature PR'ına KAT** —
+> iterasyon başına 2 PR+2 CI yerine 1 → yarı yarıya hız. Bu iterasyon o düzeltmeyle
+> (defter dahil tek PR) yapıldı.
 
 ### #161 — paywall + ilk premium kapısı (müdür kararı) (PR #161)
 

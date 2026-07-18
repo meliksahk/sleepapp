@@ -36,10 +36,12 @@ import {
   CurrentUser,
   Roles,
   RolesGuard,
+  SearchUsersUseCase,
   isAdminRole,
   type AccessTokenClaims,
 } from '../../identity';
-import { Inject } from '@nestjs/common';
+import { Inject, Query } from '@nestjs/common';
+import { AdminUserDto } from './admin-user.dto';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { OverviewDto } from './overview.dto';
@@ -73,7 +75,32 @@ export class AdminController {
     @Inject(SOUNDSCAPE_CATALOG) private readonly catalog: SoundscapeCatalog,
     @Inject(OVERVIEW_SOURCE) private readonly overviewSource: OverviewSource,
     @Inject(AUDIT_LOG) private readonly audit: AuditLog,
+    private readonly userSearch: SearchUsersUseCase,
   ) {}
+
+  /**
+   * Kullanıcı arama (docs/02 §165 destek senaryosu): e-posta alt-dizesi veya tam id.
+   *
+   * **ROL DARALTMASI:** yalnızca `owner` + `support` — kullanıcı e-postası PII'dir;
+   * içerik editörü (`editor`) ve salt-okunur `analyst` görmemeli. Sınıf `@Roles`ını
+   * bilinçli daraltıyoruz (soundscape mutasyonlarındaki desenle aynı).
+   *
+   * Salt OKUMA → audit_log YOK (audit mutasyonlar için). ≥2 karakter (use case kapısı):
+   * boş sorgu tüm tabanı dökmez.
+   */
+  @Get('users')
+  @Roles('owner', 'support')
+  @ApiOperation({ summary: 'E-posta veya id ile kullanıcı ara (destek)' })
+  @ApiOkResponse({ type: [AdminUserDto] })
+  async searchUsers(@Query('q') q?: string): Promise<AdminUserDto[]> {
+    const rows = await this.userSearch.execute(q ?? '');
+    return rows.map((u) => ({
+      id: u.id,
+      kind: u.kind,
+      email: u.email,
+      createdAt: u.createdAt.toISOString(),
+    }));
+  }
 
   @Get('me')
   @ApiOperation({ summary: "Admin oturumunu ve rolleri doğrular (panel auth guard'ı)" })

@@ -8,3 +8,5 @@ export { ADMIN_ROLES, isAdminRole, type AdminRole } from './domain/roles';
 export type { AccessTokenClaims } from './domain/user.entity';
 export { GetActiveSessionsUseCase } from './application/get-active-sessions.usecase';
 export type { ActiveSessionInfo } from './domain/user.entity';
+export { SearchUsersUseCase } from './application/search-users.usecase';
+export type { AdminUserSummary } from './domain/ports';

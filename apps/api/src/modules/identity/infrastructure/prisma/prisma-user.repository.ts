@@ -1,7 +1,9 @@
 import type { users as UserRow } from '@prisma/client';
-import type { DeviceRegistration, User } from '../../domain/user.entity';
-import type { AdminCredentials, UserRepository } from '../../domain/ports';
+import type { DeviceRegistration, User, UserKind } from '../../domain/user.entity';
+import type { AdminCredentials, AdminUserSummary, UserRepository } from '../../domain/ports';
 import type { PrismaService } from '../../../../shared/infra/prisma.service';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** users + auth_devices erişimi (Prisma). userId scope'u domain akışında zorunlu. */
 export class PrismaUserRepository implements UserRepository {
@@ -27,6 +29,28 @@ export class PrismaUserRepository implements UserRepository {
   async findById(id: string): Promise<User | null> {
     const row = await this.prisma.users.findUnique({ where: { id } });
     return row ? toUser(row) : null;
+  }
+
+  async searchUsers(query: string, limit: number): Promise<AdminUserSummary[]> {
+    // id UUID kolonu: geçersiz bir metni `id: query` olarak sorgulamak Prisma'da
+    // ATAR → yalnızca tam UUID ise id koşulunu ekle. Aksi hâlde e-posta alt-dizesi.
+    const rows = await this.prisma.users.findMany({
+      where: {
+        deleted_at: null,
+        OR: [
+          { email: { contains: query, mode: 'insensitive' } },
+          ...(UUID_RE.test(query) ? [{ id: query }] : []),
+        ],
+      },
+      take: limit,
+      orderBy: { created_at: 'desc' },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      kind: r.kind as UserKind,
+      email: r.email,
+      createdAt: r.created_at,
+    }));
   }
 
   async findByDeviceFingerprint(fingerprint: string): Promise<User | null> {
