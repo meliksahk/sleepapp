@@ -48,9 +48,9 @@ describe('rolloutSummary', () => {
   it('ondalık rollout YUVARLANMAZ (elle girilen değer gerçek veridir)', () => {
     // Regresyon kilidi: formatPercent varsayılanı 0 ondalık ve rollout onu
     // kullansaydı %12,5 panelde %13 görünürdü — operatöre yanlış değer.
-    expect(rolloutSummary('tr', { rolloutPercentage: 12.5 })).toContain('%12,5');
-    expect(rolloutSummary('en', { rolloutPercentage: 12.5 })).toContain('12.5%');
+    expect(rolloutSummary('tr', { enabled: true, rolloutPercentage: 12.5 })).toContain('%12,5');
+    expect(rolloutSummary('en', { enabled: true, rolloutPercentage: 12.5 })).toContain('12.5%');
     // Tam sayıda gereksiz ondalık ÇIKMAZ.
-    expect(rolloutSummary('tr', { rolloutPercentage: 25 })).toContain('%25');
+    expect(rolloutSummary('tr', { enabled: true, rolloutPercentage: 25 })).toContain('%25');
   });
 });
