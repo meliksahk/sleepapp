@@ -117,12 +117,15 @@ class HomeScreen extends ConsumerWidget {
                           : _WeeklyCard(release: w),
                       orElse: () => const SizedBox.shrink(),
                     ),
-                    NCard(
-                      child: Text(
-                        'flavor: ${FlavorConfig.current.name}',
-                        style: TextStyle(color: NoctaColors.inkSecondary),
+                    // Build flavor rozeti YALNIZCA dev/staging'de (test için). Prod
+                    // kullanıcısı "flavor: PROD" gibi bir dev artığı görmemeli.
+                    if (FlavorConfig.current.flavor != Flavor.prod)
+                      NCard(
+                        child: Text(
+                          'flavor: ${FlavorConfig.current.name}',
+                          style: TextStyle(color: NoctaColors.inkSecondary),
+                        ),
                       ),
-                    ),
                     const SizedBox(height: NoctaSpace.s5),
                     NButton(
                       key: const Key('archetype-cta'),
