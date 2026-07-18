@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { loadEnv } from './shared/config/env';
+import { RedisThrottlerStorage } from './shared/throttler/redis-throttler-storage';
 import { PrismaModule } from './shared/infra/prisma.module';
 import { CacheModule } from './shared/cache/cache.module';
 import { RequestIdMiddleware } from './shared/http/request-id.middleware';
@@ -23,13 +24,18 @@ import { PrivacyModule } from './modules/privacy/privacy.module';
 
 @Module({
   imports: [
-    // In-memory IP rate-limit. Limitler env'den (test tek IP'den yüzlerce istek atar).
+    // IP rate-limit. Limitler env'den (test tek IP'den yüzlerce istek atar).
     // forRootAsync: fabrika HER app kurulumunda çalışır → testler limiti env ile ayarlayabilir.
-    // Dağıtık/Redis tabanlı storage B4 sertleşmede.
+    // **REDIS_URL varsa dağıtık (Redis) depo** (#190 sonrası B4 sertleşme): çok-instance'da
+    // limit tek sayılır — yoksa in-memory (tek instance / test). ThrottlerModule, verilen
+    // storage'ı provider olarak kaydeder → onModuleDestroy'u çağrılır (bağlantı sızmaz).
     ThrottlerModule.forRootAsync({
       useFactory: () => {
         const env = loadEnv();
-        return [{ ttl: env.THROTTLE_TTL_MS, limit: env.THROTTLE_LIMIT }];
+        const throttlers = [{ ttl: env.THROTTLE_TTL_MS, limit: env.THROTTLE_LIMIT }];
+        return env.REDIS_URL
+          ? { throttlers, storage: new RedisThrottlerStorage(env.REDIS_URL) }
+          : { throttlers };
       },
     }),
     PrismaModule,

@@ -93,12 +93,12 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~76%     | 0.30    | ~~BullMQ kurulu~~ ✓ #190 (async kampanya fan-out — senkron→kuyruk, gerçek-Redis entegrasyon testli, CI'da redis servisi); **outbox** (transactional domain event + tüketici) sırada. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                             |
+| Backend/API | ~77%     | 0.30    | ~~BullMQ kurulu~~ ✓ #190 (async kampanya fan-out, gerçek-Redis testli) · ~~rate-limit Redis'e~~ ✓ #191 (dağıtık throttler — çok-instance login brute-force tek sayılır, atomik Lua fixed-window, gerçek-Redis testli); **outbox** (transactional domain event + tüketici) MIGRATION-GATED (§8, yeni `outbox` tablosu → kullanıcı onayı bekliyor). ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · ~~flag upsert~~ ✓ #167. IAP hâlâ en son faz                                                                                            |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓                                 |
 | Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                  |
 | Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı |
 
-> **Hesap:** `0.40·79 + 0.30·76 + 0.15·46 + 0.15·45 = 68.05` → **≈68%**
+> **Hesap:** `0.40·79 + 0.30·77 + 0.15·46 + 0.15·45 = 68.35` → **≈68%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -219,6 +219,32 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #191 — backend dağıtık rate-limit: Redis throttler + otonom-stok envanteri (PR #191)
+
+✅ **Yapıldı ve DOĞRULANDI (gerçek Redis + üretim yolu + tam süit)** — müdür (C) 2. yarı MIGRATION-GATED → mimari sertleştirme
+
+- **Neden bu iş:** müdür (C)'nin 2. yarısı = outbox, ama outbox doğası gereği **yeni `outbox` tablosu**
+  ister → §8 migration-gate (sormadan yapılmaz). Doğruladım: reuse edilebilir events/outbox tablosu
+  YOK (`analytics_events` farklı amaç). Loop non-stop olmalı (soru sorup bloklamak "durma") → migration-
+  gate'i rapora taşıdım, migration GEREKTİRMEYEN gerçek B4 sertleştirmeyi yaptım. main.ts'te body-limit
+  ZATEN var (make-work olurdu) → kalan tek gerçek dilim: kodda ertelenmiş "Redis tabanlı dağıtık limit B4".
+- **Yapıldı:** `RedisThrottlerStorage` (ThrottlerStorage impl) — atomik Lua fixed-window (INCR + ilk
+  vuruşta PEXPIRE), cache #157 REDIS_URL-gate deseni (yoksa in-memory). app.module.ts: REDIS_URL varsa
+  Redis depo. **Neden güvenlik:** login brute-force limiti in-memory'de her instance'ta AYRI sayılıyordu
+  → çok-instance (Dockerfile #151) = N kat deneme. Redis tek sayar. Birimler varsayılan depoyla eşleşti
+  (ttl ms girdi, timeToExpire saniye çıktı — kaynak okundu).
+- **DOĞRULAMA:** (1) **gerçek Redis entegrasyonu** — limit-aşımı blok + IP izolasyonu + pencere sıfırlama.
+  (2) in-memory e2e regresyonsuz (throttler + admin-login-throttle). (3) **üretim yolu** — REDIS_URL set
+  iken app Redis depoyla açılır, "limit aşılınca 429" GERÇEK guard'dan geçer, temiz kapanır (detectOpenHandles,
+  sızıntı yok). **Tam api süiti 79 suite/483 test + coverage tuttu.** typecheck+lint+build 0. CI redis
+  servisi + REDIS_TEST_URL #190'da eklenmişti → CI değişikliği gerekmedi.
+- 📌 **OTONOM-STOK ENVANTERİ (müdür ön-uyarısı):** bu iş müdürün öngördüğü sınırı doğruluyor — otonom
+  kullanıcı-değer stoğu büyük ölçüde tükendi. Kalan **otonom** iş: outbox (MIGRATION-GATED, kullanıcı onayı),
+  admin total-users metriği (küçük cila), hreflang (lansman-öncesi son web işi). Kalan **her şey insan/onay-
+  kapılı**: outbox migration (§8), native ses default (kulak), iOS (Mac), IAP (Apple $99), VPS/Sentry/SMTP
+  (D-serisi), gerçek gece testi, App Store, canlı domain. **"Otonom faz bitiyor, lansman kapısı insanda" —
+  başarısızlık değil, sinyal (müdür).** Backend 76→77 (+1, sertleştirme). Bar 68.35 ≈ **68%**.
 
 ### #190 — backend BullMQ async kampanya fan-out: kuyruk + gerçek-Redis testi (PR #190)
 
