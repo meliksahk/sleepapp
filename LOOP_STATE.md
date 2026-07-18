@@ -220,6 +220,21 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #204 — alarm çanı 528 Hz'den çekildi: uyum sızıntısı kapandı (PR #204)
+
+✅ **Yapıldı ve doğrulandı (451 test)** — sonik jürinin işaretlediği §1.1 riski
+
+- **Kapatılan risk:** alarm çanı **528 Hz** kullanıyordu. Ses açısından sorun yoktu AMA 528,
+  "şifa frekansı / mucize tonu" pazarlamasının **imza sayısıdır** ve doğrudan rakibimiz (Anima)
+  orada konumlanıyor ("science-backed", "tinnitus relief"). O sayıyı kullanmak, biz hiçbir iddiada
+  bulunmasak bile bizi o söylemin yanına koyar — CLAUDE.md §1.1'in kapatmak istediği yüzey tam bu.
+  Bu bir estetik tercih değil, **uyum/konumlandırma kararı**.
+- **Yapıldı:** 523.25 Hz (C5, eşit tampere). Kulakla ayırt edilemez (~15 cent) ama gerekçesi
+  tamamen müzikal — ve açılış imzasının (f0=130.81 C3) **tam 4. harmoniği** → alarm ile marka
+  sesi artık aynı armonik ailede (bonus marka tutarlılığı).
+- **DOĞRULAMA:** 451 test yeşil (alarm testleri frekansa bağlı değil), analyze temiz.
+- 📌 Yüzde değişmedi (risk kapatma + marka tutarlılığı).
+
 ### #203 — aura ilk açılışta da çalıyor + çift-çalma koruması (PR #203)
 
 ✅ **Yapıldı ve DOĞRULANDI (temiz kurulum, release APK)** — kullanıcı isteğiyle kodun uyuşmazlığı
