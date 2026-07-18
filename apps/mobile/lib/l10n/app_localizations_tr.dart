@@ -456,4 +456,34 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get shareFailed => 'Paylaşılamadı';
+
+  @override
+  String get onboardingSkip => 'Atla';
+
+  @override
+  String get onboardingNext => 'Devam';
+
+  @override
+  String get onboardingStart => 'Başla';
+
+  @override
+  String get onboardingIdentityTitle => 'Gecenin bir kimliği var';
+
+  @override
+  String get onboardingIdentityBody =>
+      'Ücretsiz uyku arketipi testini çöz, gecelerinin gerçekte nasıl işlediğini gör. Hesap gerekmez.';
+
+  @override
+  String get onboardingRitualTitle => 'Gece ritüelini kur';
+
+  @override
+  String get onboardingRitualBody =>
+      'Jeneratif sesleri kendin miksle — yağmur, drone, yumuşak gürültü. Her şey telefonunda üretilir ve internetsiz çalışır.';
+
+  @override
+  String get onboardingAlarmTitle => 'Nazikçe uyan';
+
+  @override
+  String get onboardingAlarmBody =>
+      'İzin verirsen NOCTA alarmı zamanlamak için hafif uykuyu dinler. Analiz telefonunda yapılır — ham ses hiçbir yere gitmez.';
 }

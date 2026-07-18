@@ -418,5 +418,27 @@
   "@sleepHistoryEmpty": { "description": "Hic uyku kaydi yokken bos durum" },
 
   "shareFailed": "Could not share",
-  "@shareFailed": { "description": "Paylaşım hatası" }
+  "@shareFailed": { "description": "Paylaşım hatası" },
+
+  "onboardingSkip": "Skip",
+  "@onboardingSkip": { "description": "Karşılama akışını atla" },
+  "onboardingNext": "Next",
+  "@onboardingNext": { "description": "Karşılama akışında sonraki sayfa" },
+  "onboardingStart": "Start",
+  "@onboardingStart": { "description": "Karşılama akışını bitir ve uygulamaya gir" },
+
+  "onboardingIdentityTitle": "Your night has an identity",
+  "@onboardingIdentityTitle": { "description": "Karşılama 1 — kimlik" },
+  "onboardingIdentityBody": "Take the free sleep archetype test and see how your nights actually work. No account needed.",
+  "@onboardingIdentityBody": { "description": "Karşılama 1 gövde" },
+
+  "onboardingRitualTitle": "Build your night ritual",
+  "@onboardingRitualTitle": { "description": "Karşılama 2 — ritüel/ses" },
+  "onboardingRitualBody": "Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.",
+  "@onboardingRitualBody": { "description": "Karşılama 2 gövde" },
+
+  "onboardingAlarmTitle": "Wake up gently",
+  "@onboardingAlarmTitle": { "description": "Karşılama 3 — alarm + mikrofon izni priming" },
+  "onboardingAlarmBody": "With your permission, NOCTA listens for lighter sleep to time your alarm. The analysis happens on your phone — raw audio never leaves it.",
+  "@onboardingAlarmBody": { "description": "Karşılama 3 gövde — gizlilik açıkça belirtilir (§6)" }
 }

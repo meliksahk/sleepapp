@@ -138,5 +138,18 @@
   "sleepHistoryStats": "{count, plural, =1{1 gece · ort {avg}} other{{count} gece · ort {avg}}}",
   "sleepHistoryEmpty": "Henüz uyku kaydı yok",
 
-  "shareFailed": "Paylaşılamadı"
+  "shareFailed": "Paylaşılamadı",
+
+  "onboardingSkip": "Atla",
+  "onboardingNext": "Devam",
+  "onboardingStart": "Başla",
+
+  "onboardingIdentityTitle": "Gecenin bir kimliği var",
+  "onboardingIdentityBody": "Ücretsiz uyku arketipi testini çöz, gecelerinin gerçekte nasıl işlediğini gör. Hesap gerekmez.",
+
+  "onboardingRitualTitle": "Gece ritüelini kur",
+  "onboardingRitualBody": "Jeneratif sesleri kendin miksle — yağmur, drone, yumuşak gürültü. Her şey telefonunda üretilir ve internetsiz çalışır.",
+
+  "onboardingAlarmTitle": "Nazikçe uyan",
+  "onboardingAlarmBody": "İzin verirsen NOCTA alarmı zamanlamak için hafif uykuyu dinler. Analiz telefonunda yapılır — ham ses hiçbir yere gitmez."
 }

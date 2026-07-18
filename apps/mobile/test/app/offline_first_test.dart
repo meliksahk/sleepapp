@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nocta/app/app.dart';
 import 'package:nocta/app/flavor.dart';
+import 'package:nocta/features/onboarding/onboarding_store.dart';
 import 'package:nocta/app/router.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
 
@@ -33,6 +34,9 @@ void main() {
   Widget appWith(AsyncValue<void> bootstrap) {
     return ProviderScope(
       overrides: [
+        // Bu dosya ÇEVRİMDIŞI davranışını doğruluyor, onboarding'i değil →
+        // karşılama akışı görülmüş sayılır (ilk açılış kapısı öne geçmesin).
+        onboardingSeenProvider.overrideWith((ref) async => true),
         sessionBootstrapProvider.overrideWith((ref) {
           return bootstrap.when(
             data: (_) => Future<void>.value(),
