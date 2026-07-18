@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                               |
-| Mobil       | ~72%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi hazır #169), **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI~~ ✓ #161 · ~~entitlement~~ ✓ #159 · **alarm süreç-ölüm backstop dikişi** ✓ #169 (port+manifest+wiring+11 test) · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                    |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                |
+| Mobil       | ~73%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac ÇALIŞTIRMAK için), **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi #169), **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI~~ ✓ #161 · ~~entitlement~~ ✓ #159 · **alarm backstop dikişi** ✓ #169 · **mikser döngü dikişi (tık) ÇÖZÜLDÜ** ✓ #170 (eşit-güç crossfade, 8 istatistik testi) · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                     |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                              |
 
-> **Hesap:** `0.40·72 + 0.30·74 + 0.15·39 + 0.15·33 = 61.80` → **≈62%**
+> **Hesap:** `0.40·73 + 0.30·74 + 0.15·39 + 0.15·33 = 62.20` → **≈62%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,31 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #170 — mikser döngü dikişi (tık) çözüldü: eşit-güç crossfade (PR #170)
+
+✅ **Yapıldı ve doğrulandı** (müdürün ikinci seçeneği — canlı ses yolunda gerçek kusur)
+
+- **Sorun (kodun kendi yazarı belgelemiş, doğruladım):** `MixPlayer` 30 sn buffer'ı
+  `LoopMode.one` ile döngülüyordu; `pcm[son]→pcm[0]` süreksizliği her döngüde
+  DUYULABİLİR TIK. Bir uyku app'inde periyodik tık hafif uykudakini uyandırır. Müdürün
+  "olmayan sorunu düzeltme" uyarısı gereği önce GERÇEKLİĞİNİ kanıtladım.
+- **Çözüm:** `renderSeamlessLoop` — N+X üretip kuyruğu başa **eşit-güç (sin/cos)**
+  crossfade'ler; dikiş kurgusal olarak sürekli olur (L[N-1]=s[N-1], L[0]=s[N], orijinalde
+  ardışık). Eşit-güç seçildi çünkü katmanlar korelasyonsuz gürültü — lineer crossfade
+  harmanda ~3 dB güç düşürürdü. `renderMix` (native grafın referansı) dokunulmadı;
+  döngü bir OYNATMA kaygısı olarak ayrı dosyada.
+- **Doğrulama (cihazsız, istatistiksel):** 8 test — kahverengi dikiş sıçraması ham
+  render'a göre >5× çöküyor ve iç-adım profiline oturuyor; pembe için de; eşit-güç RMS
+  düşüşü <%20 (lineer olsa ~%30); crossfade bölgesi [-1,1] (√2 clamp); yeni tepe yok;
+  belirlenimci; crossfade=0 düz render'a düşer. **Tam mobil süit 407 test yeşil**,
+  analyze temiz, MixPlayer regresyonsuz.
+- 📌 Bu, cihaz-kapılı OLMAYAN, tek PR'da KAPANAN, canlı yolu iyileştiren bir işti —
+  native graf'a (çok-iterasyonluk, kulak-gated) tercih edildi. Belgelenmiş "çözülmedi"
+  sınırı artık kapalı. Mobil 72→73.
+- 🔥 Sınır: "tık DUYULMUYOR" nihai olarak kulakla doğrulanır; testler süreksizliğin
+  SAYISAL yokluğunu kanıtlar (uyku app'inde doğru vekil). Clamp nadir bir iç-harman
+  örneğini bağlar (mikserin clamp felsefesiyle aynı).
 
 ### #169 — alarm süreç-ölümüne dayanıklı: sistem backstop dikişi (PR #169)
 
