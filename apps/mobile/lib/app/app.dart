@@ -169,21 +169,54 @@ class _AppRootState extends ConsumerState<_AppRoot> {
 
 /// İlk açılış karşılaması için kök — router YOK (akış tek ekran, geri yığını gereksiz).
 /// l10n delegeleri şart: onboarding metinleri arb'den gelir (CLAUDE.md §4).
-class _OnboardingApp extends StatelessWidget {
+class _OnboardingApp extends ConsumerStatefulWidget {
   const _OnboardingApp({required this.theme, required this.onDone});
 
   final ThemeData theme;
   final Future<void> Function() onDone;
 
   @override
+  ConsumerState<_OnboardingApp> createState() => _OnboardingAppState();
+}
+
+class _OnboardingAppState extends ConsumerState<_OnboardingApp> {
+  final SignaturePlayer _signature = SignaturePlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    // AURA İLK AÇILIŞTA DA ÇALAR. Önceden yalnız `_AppRoot`'a bağlıydı; yani
+    // kullanıcının uygulamayı gördüğü İLK an sessizdi — oysa istenen tam olarak
+    // "açılışta atmosfer". SignaturePlayer'ın süreç-düzeyi bayrağı, onboarding
+    // bitip ana kök kurulunca sesin İKİNCİ kez çalmasını engeller.
+    unawaited(_maybePlay());
+  }
+
+  Future<void> _maybePlay() async {
+    try {
+      if (await ref.read(signatureSoundStoreProvider).isEnabled() && mounted) {
+        await _signature.play();
+      }
+    } catch (_) {
+      // Karşılama akışı sesten bağımsız çalışmalı.
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_signature.dispose());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'NOCTA',
       debugShowCheckedModeBanner: false,
-      theme: theme,
+      theme: widget.theme,
       localizationsDelegates: AppL10n.localizationsDelegates,
       supportedLocales: AppL10n.supportedLocales,
-      home: OnboardingScreen(onDone: onDone),
+      home: OnboardingScreen(onDone: widget.onDone),
     );
   }
 }

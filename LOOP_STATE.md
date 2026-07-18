@@ -220,6 +220,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #203 — aura ilk açılışta da çalıyor + çift-çalma koruması (PR #203)
+
+✅ **Yapıldı ve DOĞRULANDI (temiz kurulum, release APK)** — kullanıcı isteğiyle kodun uyuşmazlığı
+
+- **Kapatılan uyuşmazlık:** istek "**açılışta** arkada melodik efekt" idi; oysa aura yalnız
+  `_AppRoot`'a bağlıydı → kullanıcının uygulamayı gördüğü **İLK an (onboarding) SESSİZDİ**.
+  Bu estetik bir tercih değil, istekle kodun ayrışmasıydı.
+- **Yapıldı:** onboarding kökü de aurayı tetikler. Akışın iki kökü olduğu için (onboarding →
+  ana kök) **süreç-düzeyi koruma** eklendi: onboarding'i biten kullanıcı sesi İKİ KEZ duymaz.
+- **DOĞRULAMA:** 2 yeni test (ikinci çağrı oynatmaz / reset sonrası tekrar çalabilir) →
+  **451 test yeşil**. Emülatörde **tamamen temiz kurulumla** (uninstall→install) ilk açılışta
+  `AudioTrack state:started usage=USAGE_MEDIA 48kHz` yakalandı.
+- 📌 Yüzde değişmedi (istek-kod uyumsuzluğunun düzeltilmesi).
+
 ### #202 — hata ekranları: çıplak refresh ikonu → açıklamalı durum (PR #202)
 
 ✅ **Yapıldı ve doğrulandı (449 test)** — Faz 0 cila
