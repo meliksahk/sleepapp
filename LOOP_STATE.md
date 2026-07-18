@@ -205,6 +205,17 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 
 ## İterasyon geçmişi
 
+### #171 — mix_player belgesi #170 ile tutarlandı (yalnızca doküman) (PR #171)
+
+✅ **Yapıldı ve doğrulandı** — %değişmez (yetenek değil, belge doğruluğu; §0.7)
+
+- #170 döngü dikişini çözdü ama `mix_player.dart` başlığındaki "Bilinen sınırlar"
+  listesi hâlâ "döngü dikişi... çözülmedi" diyordu — dosya kendiyle çelişiyordu.
+  Eski madde "✓ ÇÖZÜLDÜ (#170)" olarak düzeltildi, ayrı güncelleme bölümü içine
+  katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
+- Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
+  şişirilmedi.
+
 ### #170 — mikser döngü dikişi (tık) çözüldü: eşit-güç crossfade (PR #170)
 
 ✅ **Yapıldı ve doğrulandı** (müdürün ikinci seçeneği — canlı ses yolunda gerçek kusur)

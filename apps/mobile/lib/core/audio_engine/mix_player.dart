@@ -18,23 +18,17 @@
 /// CLAUDE.md §3.1 native ses grafı (iOS: AVAudioEngine, Android: Oboe) şart koşuyor.
 /// Bu katman **önceden render edilmiş buffer'ı döngüler**. Bilinen sınırları:
 ///
-/// - **Döngü dikişi duyulabilir:** buffer'ın sonu ile başı arasında süreklilik yok.
-///   `_loopSeconds` uzun tutularak seyrekleştirildi, çözülmedi.
+/// - **✓ Döngü dikişi (ÇÖZÜLDÜ, #170):** eskiden buffer'ın sonu ile başı arasında
+///   süreklilik yoktu → her döngüde tık. Artık katman buffer'ı `renderSeamlessLoop`
+///   ile üretiliyor (kuyruk başa eşit-güç crossfade) → `LoopMode.one` dikişi sürekli.
 /// - **Referans mikserin kompresörü devrede değil:** `renderMix` katmanları toplayıp
 ///   sıkıştırıyordu; burada toplama işletim sistemi mikserinde oluyor → yüksek
 ///   kazançlarda OS seviyesinde kırpma olabilir.
 /// - **Gerçek zamanlı kazanç rampası yok:** `setVolume` platformun rampasına bağlı.
 /// - **RAM:** katman başına ~2.8 MB (30 sn @48kHz, 16-bit).
 ///
-/// Bunlar native graf gelince çözülür; o zaman bu sınıf `AudioEngineFacade`'in
-/// arkasındaki bir implementasyona dönüşür. Şimdilik amacı tek: **ses çıksın.**
-///
-/// ## Güncelleme (#170): döngü dikişi ÇÖZÜLDÜ
-///
-/// Yukarıdaki "döngü dikişi duyulabilir" sınırı artık geçerli DEĞİL. Katman buffer'ı
-/// `renderSeamlessLoop` ile üretiliyor: kuyruk başa eşit-güç crossfade'leniyor →
-/// `LoopMode.one` dikişi sürekli (periyodik tık yok). Diğer sınırlar (OS mikseri
-/// kompresörsüz, rampa, RAM) native graf işidir; onlar duruyor.
+/// Kalan sınırlar (kompresör, rampa, RAM) native graf gelince çözülür; o zaman bu
+/// sınıf `AudioEngineFacade`'in arkasındaki bir implementasyona dönüşür.
 library;
 
 import 'dart:typed_data';
