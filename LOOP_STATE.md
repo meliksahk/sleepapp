@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                                                                                                 |
 | Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~37%     | 0.15    | feature flag **düzenleme (upsert)** + UI, kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ #163+#164 · **flag GÖRÜNÜRLÜK API'si** ✓ #165 (`GET /v1/admin/flags`, e2e; upsert+UI zincirle sırada). 5 özelliğin ~2.5'i                                                                                                                                                                                                      |
+| Admin       | ~38%     | 0.15    | feature flag **düzenleme (upsert)**, kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ #163+#164 · **flag görünürlük API'si** ✓ #165 + **UI `/flags`** ✓ #166 (rollout tablosu: durum rozeti + hedefleme özeti; upsert owner-kapılı sırada). 5 özelliğin ~2.5'i                                                                                                                                                            |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
-> **Hesap:** `0.40·71 + 0.30·74 + 0.15·37 + 0.15·33 = 61.10` → **≈61%**
+> **Hesap:** `0.40·71 + 0.30·74 + 0.15·38 + 0.15·33 = 61.25` → **≈61%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,19 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #166 — admin feature flag UI'ı `/flags` (zincirin ikinci yarısı) (PR #166)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `/flags` sunucu sayfası — `GET /v1/admin/flags` SSR çekilir, rollout tablosu:
+  her flag için durum rozeti (Açık/Kapalı) + hedefleme özeti (yüzde · platform ·
+  sürüm). AppShell nav'ında Flags linklendi.
+- `rolloutSummary()` saf fonksiyon (görünmez segment kısıtı YOK — platform/sürüm
+  kuralları görünür yazılır) + 5 unit test. Yüzde 0-100 kırpma → bozuk veri UI kırmaz.
+- Doğrulama: admin typecheck 0, **lint 0, 16 dosya / 113 test yeşil**.
+- 🔥 **Sınır:** salt görünürlük. **Flag DÜZENLEME (upsert) owner-kapılı** hâlâ sırada
+  (API'de PUT + audit-action tipi + owner @Roles ister). Dürüst kısmi.
 
 ### #165 — admin feature flag görünürlük API'si (PR #165)
 
