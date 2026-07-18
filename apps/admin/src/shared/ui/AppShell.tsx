@@ -8,7 +8,7 @@ const NAV: ReadonlyArray<{ label: string; href?: string }> = [
   { label: 'Users', href: '/users' },
   { label: 'Analytics' },
   { label: 'Flags', href: '/flags' },
-  { label: 'Campaigns' },
+  { label: 'Campaigns', href: '/campaigns' },
 ];
 
 /**
