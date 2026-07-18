@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                       |
-| Mobil       | ~74%     | 0.40    | **native graf slice 2+**: canlı yola bağla (per-blok kazanç → anlık slider korunur) + iOS AVAudioEngine (Mac-gated). **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi #169), **gerçek IAP** (en son faz). ✓ **native graf slice 1** #172 (Kotlin AudioTrack — emülatörde DERLENDİ+KOŞTU+dumpsys tek-track; "native gated" varsayımı → OLGU: Android OTONOM) · ~~mikser döngü tıkı~~ ✓ #170 · ~~alarm backstop dikişi~~ ✓ #169 · ~~paywall~~ ✓ #161 · streak/haftalık ✓ |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                            |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                              |
+| Mobil       | ~75%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-doğrulama gated — gerçek cihaz+kulak) + iOS AVAudioEngine (Mac-gated). **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi #169), **gerçek IAP** (en son faz). ✓ **native graf slice 1+2** #172/#173 (Kotlin AudioTrack per-blok mikser + canlı kazanç — emülatörde DERLENDİ+KOŞTU+dumpsys TEK-aktif-track; iki büyük bilinmeyen KANITLANDI: Android otonom + anlık slider korunur) · ~~mikser döngü tıkı~~ ✓ #170 · ~~alarm backstop~~ ✓ #169 · ~~paywall~~ ✓ #161 · streak/haftalık ✓ |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                                   |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
-> **Hesap:** `0.40·74 + 0.30·74 + 0.15·39 + 0.15·33 = 62.60` → **≈63%**
+> **Hesap:** `0.40·75 + 0.30·74 + 0.15·39 + 0.15·33 = 63.00` → **≈63%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,31 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #173 — native ses grafı SLICE 2: per-blok mikser + canlı kazanç (anlık slider) (PR #173)
+
+✅ **Yapıldı ve DOĞRULANDI (emülatörde derlendi+koştu+dumpsys tek-aktif-track)**
+
+- **En zor teknik soru:** native tek-track, slice 1'de tek-buffer'dı → kazanç değişimi
+  yeniden miks ister, ANINDA olmaz. Canlı yola aday olmak için slider anında değişmeli
+  (yetenek #1, müdürün pazarlıksız kısıtı). Slice 2 bunu çözer.
+- **Yapıldı:** `NativeMixPlayer` per-blok mikser'e çıkarıldı — katmanlar AYRI buffer
+  (gain 1.0), yazıcı thread her blokta (~21 ms) güncel kazançları okuyup toplar + [-1,1]
+  clamp (Dart `Mixer`'ı aynalar → algoritma zaten mixer_test.dart'ta test'li). `setGain`
+  copy-on-write volatile dizi ile kilitsiz canlı güncelleme. Dart `playLayers`+`setGain`.
+- **DOĞRULAMA:** (1) `flutter build apk` → per-blok mikser DERLENDİ; (2) integration_test
+  emülatör-5554'te GEÇTİ (çok katman çal → ÇALARKEN setGain × ikisi → stop, uçtan uca
+  hatasız); (3) `dumpsys media.audio_flinger` → **2 katman, TEK aktif track** (Id 68:
+  mono/48kHz/USAGE_MEDIA). + Dart headless 4 unit test. Tam mobil süit **411 yeşil**,
+  analyze temiz.
+- 🔥 **Sınır (dürüstlük):** slice 2 native'in anlık slider'ı KORUYABİLDİĞİNİ kanıtlar;
+  **DEFAULT canlı yola BAĞLAMAZ** — `MixPlayer` (just_audio) hâlâ aktif (sıfır regresyon).
+  Default swap sesin KULAKLA temiz olmasını gerektirir (§1.1, gerçek cihaz+kulak) → slice 3.
+  Miks matematiği Dart Mixer aynası (test'li) ama Kotlin'in kulak-kalitesi (underrun/tık)
+  cihaz+kulak yargısı.
+- 📌 İki büyük native bilinmeyen artık OLGU: (a) Android otonom+derlenir (#172), (b) anlık
+  slider korunur (#173). Kalan: default swap (kulak-gated) + iOS (Mac-gated). Mobil 74→75
+  (+1: cihazda doğrulanmış temel, default değil).
 
 ### #172 — native ses grafı SLICE 1: Kotlin AudioTrack, emülatörde doğrulandı (PR #172)
 

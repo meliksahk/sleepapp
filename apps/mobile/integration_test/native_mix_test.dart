@@ -3,19 +3,19 @@ import 'package:integration_test/integration_test.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/native_mix_player.dart';
 
-/// Native ses grafı slice 1 (#172) — **EMÜLATÖR/CİHAZ e2e**.
+/// Native ses grafı slice 1+2 (#172/#173) — **EMÜLATÖR/CİHAZ e2e**.
 ///
-/// Bu, #169'un düştüğü tuzağı (yazıldı ama native derlenmedi/koşmadı) kapatır:
-/// gerçek `AudioTrack` yolunu gerçek Android üstünde çalıştırır. Geçerse:
-/// (a) Kotlin DERLENDİ (uygulama build edildi), (b) `nocta/native_mix` kanalı uçtan
-/// uca çalıştı (MissingPluginException yok), (c) `AudioTrack.play()` hata atmadı.
+/// #169'un tuzağını (yazıldı ama native derlenmedi/koşmadı) kapatır: gerçek per-blok
+/// native mikser yolunu gerçek Android üstünde çalıştırır. Geçerse: (a) Kotlin DERLENDİ,
+/// (b) `nocta/native_mix` kanalı uçtan uca çalıştı, (c) çok katman + ÇALARKEN kazanç
+/// değişimi `AudioTrack`'te hata atmadı (anlık slider'ın native karşılığı).
 ///
 /// Koşum: `flutter test integration_test/native_mix_test.dart -d <emülatör>`
-/// (Flutter CI bunu koşmaz — yalnızca `flutter test` = unit. Yerel/cihaz kapısı.)
+/// (Flutter CI bunu koşmaz — yalnızca `flutter test` = unit. Cihaz kapısı.)
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('ÇEKİRDEK: native mikser tek buffer\'ı emülatörde çalar ve durur',
+  testWidgets('ÇEKİRDEK: native mikser çok katmanı çalar, kazanç CANLI değişir, durur',
       (tester) async {
     final player = NativeMixPlayer(sampleRate: 48000, loopSeconds: 2);
     const spec = MixSpec([
@@ -23,14 +23,20 @@ void main() {
       MixLayer(id: 'b', type: NoiseType.brown, gain: 0.4),
     ]);
 
-    // Native AudioTrack başlar — kanal + track kurulumu hata atmamalı.
-    await player.playSpec(spec);
-    // Birkaç saniye çalsın: yazıcı thread döngü dikişini de en az bir kez geçer,
-    // ve bu pencerede `adb shell dumpsys audio` TEK track görebilir.
-    await Future<void>.delayed(const Duration(seconds: 3));
+    // Çok katmanı native mikser'e ver — kanal + track kurulumu hata atmamalı.
+    await player.playLayers(spec);
+    await Future<void>.delayed(const Duration(seconds: 2));
+
+    // ÇALARKEN kazançları değiştir (anlık slider'ın native yolu) — hata atmamalı,
+    // native yazıcı thread bir sonraki blokta yeni kazancı okur.
+    await player.setGain(0, 0.2);
+    await player.setGain(1, 0.9);
+    await Future<void>.delayed(const Duration(seconds: 2));
+
     await player.stop();
 
-    // Buraya hatasız gelmek çekirdek kanıt: native yol gerçek cihazda koştu.
+    // Hatasız buraya gelmek çekirdek kanıt: per-blok native mikser + canlı kazanç
+    // gerçek cihazda koştu. (Bu pencerede `dumpsys media.audio_flinger` TEK track görür.)
     expect(true, isTrue);
   });
 }
