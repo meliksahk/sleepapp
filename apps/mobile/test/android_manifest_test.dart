@@ -77,6 +77,15 @@ void main() {
     expect(hasPermission('RECEIVE_BOOT_COMPLETED'), isTrue);
   });
 
+  test('ÇEKİRDEK: reboot alarmı yeniden kuran BootReceiver kayıtlı (#175)', () {
+    // AlarmManager kayıtları reboot'ta silinir; BootReceiver BOOT_COMPLETED'te alarmı
+    // yeniden kurar. Bu satır silinirse: gece reboot atan telefonda alarm sessizce ölür.
+    expect(manifest.contains('.BootReceiver'), isTrue,
+        reason: 'BootReceiver manifestte kayıtlı OLMALI');
+    expect(manifest.contains('android.intent.action.BOOT_COMPLETED'), isTrue,
+        reason: 'BootReceiver BOOT_COMPLETED dinlemeli');
+  });
+
   test('gizlilik: manifest ham ses/konum izni İSTEMİYOR', () {
     // Uyku takibi on-device (CLAUDE.md §6). Bu izinlerden biri sızarsa mağaza
     // incelemesinde ve kullanıcı güveninde bedeli olur.

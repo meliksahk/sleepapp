@@ -34,6 +34,11 @@ object NightAlarm {
     private const val CHANNEL_ID = "nocta_night_alarm"
     private const val NOTIFICATION_ID = 4173
 
+    // Son-tarih native tarafta KALICI tutulur: cihaz yeniden başlarsa (#175) Flutter
+    // engine ÇALIŞMAZ → boot'ta alarmı yeniden kuran BootReceiver bunu buradan okur.
+    private const val PREFS = "nocta_night_alarm"
+    private const val KEY_EPOCH = "epoch_millis"
+
     /** [epochMillis] anına sistemde kesin (Doze'da bile) uyandırma alarmı kurar. */
     fun schedule(context: Context, epochMillis: Long) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -41,6 +46,8 @@ object NightAlarm {
             AlarmManager.AlarmClockInfo(epochMillis, activityIntent(context)),
             alarmIntent(context),
         )
+        // Reboot dayanıklılığı: son-tarihi kalıcı yaz (boot'ta yeniden kurulur).
+        prefs(context).edit().putLong(KEY_EPOCH, epochMillis).apply()
         Log.i(TAG, "scheduled at $epochMillis")
     }
 
@@ -48,12 +55,33 @@ object NightAlarm {
     fun cancel(context: Context) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         am.cancel(alarmIntent(context))
+        prefs(context).edit().remove(KEY_EPOCH).apply() // kalıcı kaydı da sil
         Log.i(TAG, "cancelled")
+    }
+
+    /**
+     * Cihaz yeniden başladığında (BootReceiver'dan) kalıcı son-tarihi okur: gelecekteyse
+     * alarmı YENİDEN kurar, geçmişse temizler. AlarmManager kayıtları reboot'ta silinir;
+     * bu, "gece alarm kur → telefon gündüz reboot atar → alarm hâlâ çalar" boşluğunu kapatır.
+     */
+    fun reschedulePersisted(context: Context) {
+        val epoch = prefs(context).getLong(KEY_EPOCH, 0L)
+        if (epoch <= 0L) return
+        if (epoch > System.currentTimeMillis()) {
+            schedule(context, epoch) // yeniden kur (prefs'i de tazeler — zararsız)
+            Log.i(TAG, "rescheduled after boot at $epoch")
+        } else {
+            prefs(context).edit().remove(KEY_EPOCH).apply() // geçmiş alarm → temizle
+            Log.i(TAG, "persisted alarm in past, cleared")
+        }
     }
 
     /** Alarm ateşlendiğinde (receiver'dan) tam-ekran uyandırma bildirimi gösterir. */
     fun fire(context: Context) {
         Log.i(TAG, "fired")
+        // Tek-atışlık alarm tüketildi → kalıcı kaydı sil (reboot sonrası geçmiş alarmı
+        // yeniden kurmaya çalışmasın).
+        prefs(context).edit().remove(KEY_EPOCH).apply()
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         ensureChannel(nm)
         val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -111,4 +139,7 @@ object NightAlarm {
         }
         return flags
     }
+
+    private fun prefs(context: Context) =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 }
