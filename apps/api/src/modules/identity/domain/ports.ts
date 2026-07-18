@@ -5,6 +5,7 @@ import type {
   OneTimeTokenRecord,
   RefreshTokenRecord,
   User,
+  UserKind,
 } from './user.entity';
 
 /** Zaman kaynağı — test edilebilirlik için soyutlanır. */
@@ -70,10 +71,27 @@ export interface AdminCredentials {
   readonly totpLastCounter: number | null;
 }
 
+/**
+ * Admin panelinin kullanıcı arama görünümü — destek senaryosu (docs/02 §165).
+ * Kişisel içerik DEĞİL: yalnızca kimlik/tür/oluşturma. E-posta destek için gerekli
+ * (kullanıcıyı bulmak), ama parola/token/gizli anahtar ASLA dönmez.
+ */
+export interface AdminUserSummary {
+  readonly id: string;
+  readonly kind: UserKind;
+  readonly email: string | null;
+  readonly createdAt: Date;
+}
+
 /** users + auth_devices erişimi. Repository userId scope'unu zorunlu kılar (docs/02 §2.1). */
 export interface UserRepository {
   createWithDevice(user: User, device: DeviceRegistration): Promise<void>;
   findById(id: string): Promise<User | null>;
+  /**
+   * Admin kullanıcı araması: e-posta alt-dizesi (case-insensitive) veya tam id.
+   * Silinmiş (deleted_at) kullanıcılar hariç. `limit` ile sınırlı (DoS/veri sızıntısı).
+   */
+  searchUsers(query: string, limit: number): Promise<AdminUserSummary[]>;
   findByDeviceFingerprint(fingerprint: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   /** kind='admin' + parolası kurulu + silinmemiş kullanıcı; yoksa null. */

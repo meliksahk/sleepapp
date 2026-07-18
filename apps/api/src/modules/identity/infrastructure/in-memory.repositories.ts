@@ -7,6 +7,7 @@ import type {
 } from '../domain/user.entity';
 import type {
   AdminCredentials,
+  AdminUserSummary,
   OneTimeTokenRepository,
   RefreshTokenRepository,
   UserRepository,
@@ -34,6 +35,18 @@ export class InMemoryUserRepository implements UserRepository {
 
   async findById(id: string): Promise<User | null> {
     return this.usersById.get(id) ?? null;
+  }
+
+  async searchUsers(query: string, limit: number): Promise<AdminUserSummary[]> {
+    const q = query.toLowerCase();
+    const out: AdminUserSummary[] = [];
+    for (const user of this.usersById.values()) {
+      const email = this.emailByUserId.get(user.id) ?? null;
+      if (user.id === query || (email !== null && email.toLowerCase().includes(q))) {
+        out.push({ id: user.id, kind: user.kind, email, createdAt: user.createdAt });
+      }
+    }
+    return out.slice(0, limit);
   }
 
   async findByDeviceFingerprint(fingerprint: string): Promise<User | null> {

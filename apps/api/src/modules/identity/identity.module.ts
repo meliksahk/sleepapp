@@ -49,6 +49,7 @@ import { LogoutUseCase } from './application/logout.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
 import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
 import { GetActiveSessionsUseCase } from './application/get-active-sessions.usecase';
+import { SearchUsersUseCase } from './application/search-users.usecase';
 import { AuthorizeUseCase } from './application/authorize.usecase';
 import { AuthController } from './presentation/auth.controller';
 import { AuthGuard } from './presentation/auth.guard';
@@ -198,6 +199,11 @@ const providers: Provider[] = [
       new GetActiveSessionsUseCase(refreshTokens, clock),
   },
   {
+    provide: SearchUsersUseCase,
+    inject: [USER_REPOSITORY],
+    useFactory: (users: UserRepository): SearchUsersUseCase => new SearchUsersUseCase(users),
+  },
+  {
     provide: ONE_TIME_TOKEN_REPOSITORY,
     inject: [PrismaService],
     useFactory: (prisma: PrismaService): OneTimeTokenRepository =>
@@ -261,6 +267,6 @@ const providers: Provider[] = [
 @Module({
   controllers: [AuthController],
   providers,
-  exports: [AuthGuard, AuthorizeUseCase, GetActiveSessionsUseCase],
+  exports: [AuthGuard, AuthorizeUseCase, GetActiveSessionsUseCase, SearchUsersUseCase],
 })
 export class IdentityModule {}
