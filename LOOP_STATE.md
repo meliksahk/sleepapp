@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 (dağıtık cache adaptörü, gerçek Redis'e karşı; jest-asılması + izolasyon hataları yakalanıp düzeltildi). IAP hâlâ en son faz                                                                                                                                                                 |
 | Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~33%     | 0.15    | kullanıcı yönetimi UI'ı, feature flag, kampanya, metrik panoları. **Kullanıcı arama API'si** ✓ #163 (`GET /v1/admin/users`, owner/support rol-daraltmalı, PII korumalı, e2e) — UI yarısı zincirle sırada                                                                                                                                                                                                                     |
+| Admin       | ~36%     | 0.15    | feature flag, kampanya, metrik panoları. ~~kullanıcı yönetimi~~ ✓ API #163 + **UI #164** (`/users` arama sayfası, rol-görünürlük owner/support, nav linklendi; typecheck+vitest+lint). 5 özelliğin ~2.5'i                                                                                                                                                                                                                    |
 | Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
 
-> **Hesap:** `0.40·71 + 0.30·74 + 0.15·33 + 0.15·33 = 60.50` → **≈60%**
+> **Hesap:** `0.40·71 + 0.30·74 + 0.15·36 + 0.15·33 = 60.95` → **≈61%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #164 — admin kullanıcı yönetimi UI'ı (zincirin ikinci yarısı) (PR #164)
+
+✅ **Yapıldı ve doğrulandı**
+
+- `/users` sayfası: e-posta/id ile arama (SSR, form GET → `?q=`), sonuç tablosu.
+  **Rol görünürlüğü** owner/support (analyst/editor "yetkiniz yok" görür — API zaten
+  403; §3.3 "UI gizleme yeterli değil"). AppShell nav artık gerçek linkler.
+- #163'ün (API) UI yarısı → **kullanıcı yönetimi özelliği tamam** (API+UI). Bar 33→36.
+- typecheck + eslint temiz, **vitest 108 test yeşil** (can-view-users 4 dahil). Defter
+  bu PR'a katıldı (tek-PR akışı).
+- 🔥 **Sınır (dürüstlük):** page render'ı **browser'da doğrulanmadı** (admin auth
+  bariyeri); repo'nun admin rigoru zaten typecheck+vitest (page-level e2e yok) — ona
+  uydum. Mantık (rol/tablo) test edildi, SSR kompozisyonu typecheck ile.
 
 ### #163 — admin kullanıcı arama API'si + LOOP AKIŞ DÜZELTMESİ (PR #163)
 
