@@ -85,7 +85,7 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <Input
-        label="E-posta"
+        label={t('login.email')}
         type="email"
         autoComplete="username"
         required
@@ -93,7 +93,7 @@ export function LoginForm({ next }: { next: string }) {
         onChange={(e) => setEmail(e.target.value)}
       />
       <Input
-        label="Parola"
+        label={t('login.password')}
         type="password"
         autoComplete="current-password"
         required
@@ -102,7 +102,7 @@ export function LoginForm({ next }: { next: string }) {
       />
       {totpNeeded && (
         <Input
-          label="Doğrulama kodu"
+          label={t('login.totpCode')}
           // inputMode=numeric: mobilde sayı tuş takımı açılır. autoComplete
           // one-time-code: iOS/Android kodu klavyeden önerir.
           inputMode="numeric"

@@ -23,6 +23,22 @@ const EnvSchema = z.object({
   // İstek gövdesi boyut limiti (DoS sertleşme). Payload'larımız küçük (auth/profil/cevaplar).
   MAX_REQUEST_BODY_BYTES: z.coerce.number().int().positive().default(65_536), // 64kb
 
+  /**
+   * Tarayıcıdan API'ye erişebilecek kaynaklar (virgülle ayrık).
+   *
+   * **NEDEN GEREKLİ — GERÇEK KIRIK:** tanıtım sitesi public uçları TARAYICIDAN çağırır
+   * (`/v1/archetype/web/questions`, `/v1/waitlist`). CORS hiç yapılandırılmamıştı, bu
+   * yüzden web arketip testi tarayıcıda `net::ERR_FAILED` alıyor ve "Sorular yüklenemedi"
+   * gösteriyordu. Üretimde de aynı şey olurdu: nocta.app → api.nocta.app farklı kaynaktır.
+   *
+   * **NEDEN JOKER (`*`) DEĞİL:** joker, kimlik bilgisi taşıyan istekleri imkânsız kılar ve
+   * herhangi bir sitenin API'mizi kullanıcının tarayıcısından çağırmasına izin verir.
+   * İzin listesi açık ve denetlenebilir olsun.
+   *
+   * Varsayılan yalnızca LOKAL portlar — üretimde env ile gerçek alan adları verilir.
+   */
+  CORS_ORIGINS: z.string().default('http://localhost:3003,http://localhost:3002'),
+
   // IP rate-limit (throttler). Env'den gelir çünkü e2e testleri tek IP'den yüzlerce
   // istek atar → testte yüksek, üretimde sıkı. Dağıtık (Redis) storage B4'te.
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(60), // pencere başına istek

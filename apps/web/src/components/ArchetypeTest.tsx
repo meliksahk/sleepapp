@@ -2,10 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { fetchQuestions, submitAnswers, type QuestionMatrix, type WebResult } from '@/lib/api';
-import { getArchetype } from '@/content/archetypes';
+import { getArchetypeIn } from '@/content/archetypes';
 import { ShareCard } from '@/components/ShareCard';
+import { t, type Locale } from '@/lib/i18n';
+import { localePath } from '@/lib/routes';
 
-export function ArchetypeTest() {
+/**
+ * Web arketip testi (viral ön-lansman aracı, docs/05).
+ *
+ * Sorular SUNUCUDAN gelir ve dil `Accept-Language` başlığıyla taşınır (api.ts) —
+ * query parametresi kullanılmaz, API kontratı öyle diyor.
+ */
+export function ArchetypeTest({ locale = 'en' }: { locale?: Locale }) {
   const [matrix, setMatrix] = useState<QuestionMatrix | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<WebResult | null>(null);
@@ -13,10 +21,10 @@ export function ArchetypeTest() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchQuestions()
+    fetchQuestions(locale)
       .then(setMatrix)
-      .catch(() => setError('Sorular yüklenemedi.'));
-  }, []);
+      .catch(() => setError(t(locale, 'test.errorQuestions')));
+  }, [locale]);
 
   if (error) {
     return (
@@ -27,12 +35,12 @@ export function ArchetypeTest() {
   }
 
   if (result) {
-    const data = getArchetype(result.archetypeSlug);
+    const data = getArchetypeIn(locale, result.archetypeSlug);
     // Viral döngü (docs/05): sonucu görme anı = paylaşma anı. Kartı BURADA göster —
     // /a/[slug]'a ekstra tıklama beklemeden. Bilinmeyen slug'da kart atlanır (çökmez).
     return (
       <div className="rounded-card bg-bg-raised p-5">
-        <p className="text-ink-secondary text-caption">Your sleep identity</p>
+        <p className="text-ink-secondary text-caption">{t(locale, 'test.resultLabel')}</p>
         <h2 className="text-h1 font-display capitalize">
           {data?.name ?? result.archetypeSlug.replace(/-/g, ' ')}
         </h2>
@@ -45,22 +53,23 @@ export function ArchetypeTest() {
               name={data.name}
               tagline={data.tagline}
               sounds={data.soundsThatHelp}
+              locale={locale}
             />
           </div>
         )}
 
         <a
           className="mt-5 inline-block rounded-button bg-accent-aurora px-5 py-3 text-bg-base"
-          href={`/a/${result.archetypeSlug}`}
+          href={localePath(locale, `/a/${result.archetypeSlug}`)}
         >
-          Read about your archetype
+          {t(locale, 'test.readMore')}
         </a>
       </div>
     );
   }
 
   if (!matrix) {
-    return <p className="text-ink-secondary">Yükleniyor…</p>;
+    return <p className="text-ink-secondary">{t(locale, 'test.loading')}</p>;
   }
 
   const allAnswered = matrix.questions.every((q) => answers[q.id]);
@@ -68,9 +77,9 @@ export function ArchetypeTest() {
   const onSubmit = async () => {
     setSubmitting(true);
     try {
-      setResult(await submitAnswers(matrix.version, answers));
+      setResult(await submitAnswers(matrix.version, answers, locale));
     } catch {
-      setError('Sonuç hesaplanamadı.');
+      setError(t(locale, 'test.errorSubmit'));
     } finally {
       setSubmitting(false);
     }
@@ -103,7 +112,7 @@ export function ArchetypeTest() {
         onClick={onSubmit}
         className="rounded-button bg-accent-aurora px-5 py-3 text-bg-base disabled:opacity-50"
       >
-        {submitting ? 'Hesaplanıyor…' : 'Sonucu gör'}
+        {submitting ? t(locale, 'test.submitting') : t(locale, 'test.submit')}
       </button>
     </div>
   );

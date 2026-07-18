@@ -1,12 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { t, type Locale } from '@/lib/i18n';
 
 /**
  * Paylaşım butonu — Web Share API (mobil OS paylaşım sayfası) varsa onu kullanır,
  * yoksa link'i panoya kopyalar (masaüstü fallback). Viral kanca (docs/05).
  */
-export function ShareButton({ title, url }: { title: string; url: string }) {
+export function ShareButton({
+  title,
+  url,
+  locale = 'en',
+}: {
+  title: string;
+  url: string;
+  locale?: Locale;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function onShare(): Promise<void> {
@@ -32,7 +41,7 @@ export function ShareButton({ title, url }: { title: string; url: string }) {
       onClick={onShare}
       className="inline-block rounded-button border border-ink-faint/40 px-5 py-3 text-ink-primary"
     >
-      {copied ? 'Link copied' : 'Share this identity'}
+      {copied ? t(locale, 'share.copied') : t(locale, 'share.action')}
     </button>
   );
 }

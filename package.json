@@ -21,6 +21,7 @@
     "db:migrate": "dbmate up",
     "db:new": "dbmate new",
     "db:rollback": "dbmate down",
+    "db:seed": "node tooling/db-seed.mjs",
     "prepare": "husky",
     "check:health-claims": "node tooling/check-health-claims.mjs",
     "check:i18n": "node tooling/check-hardcoded-strings.mjs",

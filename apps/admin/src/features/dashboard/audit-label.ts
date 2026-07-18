@@ -1,10 +1,12 @@
+import { translate, type Locale, type MessageKey } from '@/shared/i18n/dictionaries';
+
 /** Denetim eylemlerinin okunur karşılığı. */
-const ACTION_LABELS: Record<string, string> = {
-  'soundscape.create': 'oluşturdu',
-  'soundscape.update': 'güncelledi',
-  'soundscape.publish': 'yayınladı',
-  'soundscape.unpublish': 'yayından kaldırdı',
-  'soundscape.recipe': 'ses tarifini değiştirdi',
+const ACTION_KEYS: Record<string, MessageKey> = {
+  'soundscape.create': 'audit.soundscapeCreate',
+  'soundscape.update': 'audit.soundscapeUpdate',
+  'soundscape.publish': 'audit.soundscapePublish',
+  'soundscape.unpublish': 'audit.soundscapeUnpublish',
+  'soundscape.recipe': 'audit.soundscapeRecipe',
 };
 
 /**
@@ -12,6 +14,7 @@ const ACTION_LABELS: Record<string, string> = {
  * izinde "burada bir şey oldu ama tanımıyorum" görmek, hiçbir şey görmemekten iyidir.
  * (statusLabel'daki aynı ilke.)
  */
-export function auditActionLabel(action: string): string {
-  return ACTION_LABELS[action] ?? action;
+export function auditActionLabel(locale: Locale, action: string): string {
+  const key = ACTION_KEYS[action];
+  return key === undefined ? action : translate(locale, key);
 }

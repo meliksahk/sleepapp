@@ -2,37 +2,49 @@
 
 import { useActionState } from 'react';
 import { Button, Input } from '@nocta/ui';
+import { useT } from '@/shared/i18n/I18nProvider';
 import { createSoundscapeAction, type CreateState } from './actions';
 
 const INITIAL: CreateState = {};
 
 /** Yeni taslak formu (docs/03 A1). Yalnızca yazma yetkisi olan rollere gösterilir. */
 export function NewSoundscapeForm() {
+  const t = useT();
   const [state, action, pending] = useActionState(createSoundscapeAction, INITIAL);
 
   return (
     <form action={action} className="flex flex-col gap-3 md:max-w-md">
-      <Input name="slug" label="Slug" placeholder="deep-ocean-drift" required />
-      <Input name="titleEn" label="Başlık (EN)" placeholder="Deep Ocean Drift" required />
+      <Input
+        name="slug"
+        label={t('content.fieldSlug')}
+        placeholder={t('content.placeholderSlug')}
+        required
+      />
+      <Input
+        name="titleEn"
+        label={t('content.fieldTitleEn')}
+        placeholder={t('content.placeholderTitle')}
+        required
+      />
       <Input
         name="archetypeAffinity"
-        label="Uyku kimlikleri (virgülle)"
-        placeholder="deep-ocean, night-owl"
+        label={t('content.fieldAffinity')}
+        placeholder={t('content.placeholderAffinity')}
       />
 
       {state.error !== undefined && (
         <p role="alert" className="text-body text-accent-ember">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
       {state.createdSlug !== undefined && (
         <p role="status" className="text-body text-accent-aurora">
-          Taslak oluşturuldu: {state.createdSlug}
+          {t('content.created', { slug: state.createdSlug })}
         </p>
       )}
 
       <Button type="submit" disabled={pending}>
-        {pending ? 'Kaydediliyor…' : 'Taslak oluştur'}
+        {pending ? t('common.saving') : t('content.createSubmit')}
       </Button>
     </form>
   );

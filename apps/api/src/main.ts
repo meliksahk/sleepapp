@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 import { loadEnv } from './shared/config/env';
 import { ProblemDetailsFilter } from './shared/http/problem-details.filter';
 import { IdempotencyInterceptor } from './shared/http/idempotency.interceptor';
+import { isOriginAllowed, parseCorsOrigins } from './shared/http/cors';
 import { initSentry } from './shared/observability/sentry';
 
 async function bootstrap(): Promise<void> {
@@ -22,6 +23,30 @@ async function bootstrap(): Promise<void> {
 
   // Framework parmak izini gizle (X-Powered-By: Express başlığını kaldır).
   app.getHttpAdapter().getInstance().disable('x-powered-by');
+
+  // CORS — tanıtım sitesi public uçları TARAYICIDAN çağırır. Bu olmadan web
+  // arketip testi ve bekleme listesi tarayıcıda ERR_FAILED alır (yakalandı).
+  const corsOrigins = parseCorsOrigins(env.CORS_ORIGINS);
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (isOriginAllowed(origin, corsOrigins)) {
+        callback(null, true);
+        return;
+      }
+      // SESSİZ REDDETME YOK: engellenen kaynak logda görünsün, yoksa yanlış
+      // yapılandırma "site bozuk ama sunucu sağlıklı" gibi görünür.
+      // eslint-disable-next-line no-console
+      console.warn(`[api] CORS reddedildi: ${origin} (izinli: ${corsOrigins.join(', ')})`);
+      callback(null, false);
+    },
+    credentials: true,
+    // Dil başlığı ŞART: arketip içeriği Accept-Language ile yerelleşiyor.
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'Idempotency-Key'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
 
   const bodyLimit = env.MAX_REQUEST_BODY_BYTES;
   app.use(json({ limit: bodyLimit }));

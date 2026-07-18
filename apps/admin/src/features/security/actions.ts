@@ -3,9 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { toString as qrToString } from 'qrcode';
 import { apiPost } from '@/shared/api/server-client';
+import type { MessageKey } from '@/shared/i18n/dictionaries';
 
+/**
+ * Hata alanları MESAJ ANAHTARI taşır (dizge değil): eylem sunucuda çalışır, sonuç
+ * istemcide gösterilir — dizge metni o anki dile çakardı (bkz. content/actions.ts).
+ */
 export interface EnrollState {
-  error?: string;
+  error?: MessageKey;
   /** QR'a gömülecek URI — yalnızca kurulum başladığında dolar. */
   otpauthUri?: string;
   /** Elle giriş için base32 anahtar. Yalnızca bu ekranda, bir kez gösterilir. */
@@ -15,7 +20,7 @@ export interface EnrollState {
 }
 
 export interface ConfirmState {
-  error?: string;
+  error?: MessageKey;
   enabled?: boolean;
 }
 
@@ -77,7 +82,7 @@ export async function confirmEnrollment(
 
   // Sunucuda da doğrulanır: istemci kontrolü atlanabilir (curl, devre dışı JS).
   if (!/^\d{6}$/.test(code)) {
-    return { error: 'Kod 6 haneli olmalı.' };
+    return { error: 'security.errorCodeFormat' };
   }
 
   const res = await apiPost<undefined>('/v1/auth/admin/totp/confirm', { code });
@@ -92,7 +97,7 @@ export async function confirmEnrollment(
 }
 
 export interface ResetState {
-  error?: string;
+  error?: MessageKey;
   /** 2FA kaldırıldı → kullanıcı yeniden kurabilir (cihaz rotasyonu). */
   done?: boolean;
 }
@@ -106,7 +111,7 @@ export async function resetTotp(_previous: ResetState, formData: FormData): Prom
   const password = String(formData.get('password') ?? '');
   // Sunucuda da doğrulanır (boş parola 400); burada erken geri bildirim.
   if (password.length === 0) {
-    return { error: 'Parola gerekli.' };
+    return { error: 'security.errorPasswordRequired' };
   }
 
   const res = await apiPost<undefined>('/v1/auth/admin/totp/reset', { password });
@@ -119,30 +124,30 @@ export async function resetTotp(_previous: ResetState, formData: FormData): Prom
   return { done: true };
 }
 
-function enrollError(status: number, code?: string): string {
+function enrollError(status: number, code?: string): MessageKey {
   if (code === 'totp_already_enabled') {
     // Bilinçli 409: onaylı 2FA'nın üstüne yazmak, oturumu ele geçirenin 2FA'yı
     // kendi cihazına taşımasına izin verirdi.
-    return 'Bu hesapta iki adımlı doğrulama zaten etkin.';
+    return 'security.errorAlreadyEnabled';
   }
-  if (status === 401) return 'Oturumunuz sona ermiş. Yeniden giriş yapın.';
-  if (status === 429) return 'Çok fazla deneme yapıldı. Bir dakika bekleyin.';
-  return 'Kurulum başlatılamadı. Lütfen tekrar deneyin.';
+  if (status === 401) return 'security.errorSession';
+  if (status === 429) return 'security.errorRate';
+  return 'security.errorEnrollGeneric';
 }
 
-function resetError(status: number, code?: string): string {
+function resetError(status: number, code?: string): MessageKey {
   // Reset ucunda 401: parola hatası (invalid_credentials) VEYA oturum bitti — code ayırır.
-  if (code === 'invalid_credentials') return 'Parola hatalı.';
-  if (status === 401) return 'Oturumunuz sona ermiş. Yeniden giriş yapın.';
-  if (status === 429) return 'Çok fazla deneme yapıldı. Bir dakika bekleyin.';
-  return 'Sıfırlanamadı. Lütfen tekrar deneyin.';
+  if (code === 'invalid_credentials') return 'security.errorInvalidPassword';
+  if (status === 401) return 'security.errorSession';
+  if (status === 429) return 'security.errorRate';
+  return 'security.errorResetGeneric';
 }
 
-function confirmError(status: number, code?: string): string {
-  if (code === 'totp_already_enabled') return 'İki adımlı doğrulama zaten etkin.';
+function confirmError(status: number, code?: string): MessageKey {
+  if (code === 'totp_already_enabled') return 'security.errorAlreadyEnabledShort';
   // 401 burada "oturum bitti" değil "kod tutmadı" demek: uç kimlik doğrulamalı ve
   // buraya ancak geçerli oturumla gelinir.
-  if (status === 401) return 'Kod hatalı veya süresi doldu. Uygulamadaki yeni kodu girin.';
-  if (status === 429) return 'Çok fazla deneme yapıldı. Bir dakika bekleyin.';
-  return 'Kod doğrulanamadı. Lütfen tekrar deneyin.';
+  if (status === 401) return 'security.errorCodeInvalid';
+  if (status === 429) return 'security.errorRate';
+  return 'security.errorConfirmGeneric';
 }

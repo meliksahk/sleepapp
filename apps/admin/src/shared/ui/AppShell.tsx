@@ -8,7 +8,11 @@ import { useT } from '../i18n/I18nProvider';
 
 // Mevcut route → link; henüz yapılmamışlar (href yok) sönük span kalır (B3).
 /** Navigasyon: etiketler ARTIK anahtar (dile göre çözülür). Nav İngilizce,
- * gövde Türkçeydi — panel karışık dildeydi; bu onu da düzeltir. */
+ * gövde Türkçeydi — panel karışık dildeydi; bu onu da düzeltir.
+ *
+ * `nav.security` sözlükte vardı ama HİÇBİR YERE bağlı değildi: /security sayfası
+ * mevcut ama panelde ona giden tek bir link yoktu (yalnızca URL'i elle yazarak
+ * ulaşılıyordu). Ölü anahtarı silmek yerine eksik linki eklemek doğru düzeltme. */
 const NAV: ReadonlyArray<{ key: MessageKey; href?: string }> = [
   { key: 'nav.dashboard', href: '/' },
   { key: 'nav.content', href: '/content' },
@@ -16,6 +20,7 @@ const NAV: ReadonlyArray<{ key: MessageKey; href?: string }> = [
   { key: 'nav.analytics' },
   { key: 'nav.flags', href: '/flags' },
   { key: 'nav.campaigns', href: '/campaigns' },
+  { key: 'nav.security', href: '/security' },
 ];
 
 /**
@@ -54,7 +59,7 @@ export function AppShell({ children, actions }: { children: ReactNode; actions?:
       </aside>
       <div className="flex-1">
         <header className="flex items-center justify-between border-b border-ink-faint/20 px-6 py-4">
-          <h1 className="text-h2 font-display">Admin</h1>
+          <h1 className="text-h2 font-display">{t('common.admin')}</h1>
           <div className="flex items-center gap-4">
             <LocaleSwitcher />
             {actions}

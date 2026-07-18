@@ -53,9 +53,31 @@ const BANNED = [
   /\bclinical(ly)?\b/i,
   /\bmedical(ly)?\b/i,
   /\bdiseases?\b/i,
-  /\btedavi\b/i,
   /science[- ]backed/i,
   /doctor[- ]approved/i,
+  // — Türkçe —
+  // Site ve panel Türkçeleşince kapı fiilen TEK KELİMEYE ("tedavi") düşmüştü:
+  // "terapi", "klinik olarak kanıtlanmış", "uykunu iyileştirir" gibi ifadeler
+  // taramadan geçiyordu. Aşağıdaki desenler EN listesinin Türkçe karşılığıdır —
+  // yeni bir yasak KAVRAM eklenmedi, var olanlar ikinci dilde kapatıldı.
+  //
+  // NEDEN `\b` DEĞİL: JS'te `\b` ASCII kelime sınırıdır; "şifa" gibi ASCII-dışı
+  // harfle başlayan sözcüklerde `\bşifa` HİÇ eşleşmez (sessizce hep geçer).
+  // Unicode lookbehind/lookahead ile gerçek harf sınırı kullanılır.
+  //
+  // NEDEN KÖK EŞLEŞMESİ: Türkçe sondan eklemeli — "iyileştirir", "tedavisi",
+  // "klinikte", "şifalı" tek kökten türer; sonek serbest bırakılır.
+  /(?<![\p{L}])tedavi/iu,
+  /(?<![\p{L}])terapi/iu,
+  /(?<![\p{L}])terapötik/iu,
+  /(?<![\p{L}])klinik/iu,
+  /(?<![\p{L}])tıbb/iu,
+  /(?<![\p{L}])tıbbi/iu,
+  /(?<![\p{L}])hastalık/iu,
+  /(?<![\p{L}])iyileştir/iu,
+  /(?<![\p{L}])şifa/iu,
+  /bilimsel olarak kanıtlanmış/iu,
+  /doktor onaylı/iu,
 ];
 
 /**

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { CARD_HEIGHT, CARD_WIDTH, cardFileName, wrapText } from '@/lib/share-card';
+import { t, type Locale } from '@/lib/i18n';
+import { localePath } from '@/lib/routes';
 
 /**
  * Archetype sonucunun İNDİRİLEBİLİR paylaşım kartı (docs/05 viral kanca). Client-side
@@ -16,11 +18,13 @@ export function ShareCard({
   name,
   tagline,
   sounds,
+  locale = 'en',
 }: {
   slug: string;
   name: string;
   tagline: string;
   sounds: readonly string[];
+  locale?: Locale;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +40,9 @@ export function ShareCard({
     } catch {
       // no-op: kart çizilemedi (canvas yok) — ama sonuç ekranı yaşamaya devam eder.
     }
-  }, [slug, name, tagline, sounds]);
+    // `locale` de bağımlılık: kart üzerindeki metin dile göre değişir (yoksa TR
+    // sayfada kart İngilizce çizilirdi).
+  }, [slug, name, tagline, sounds, locale]);
 
   function draw(canvas: HTMLCanvasElement): void {
     const ctx = canvas.getContext('2d');
@@ -78,7 +84,7 @@ export function ShareCard({
     }
     ctx.fillStyle = inkDim;
     ctx.font = "600 34px 'Segoe UI', system-ui, -apple-system, sans-serif";
-    ctx.fillText('SLEEP IDENTITY', pad, 200);
+    ctx.fillText(t(locale, 'card.eyebrow'), pad, 200);
     try {
       ctx.letterSpacing = '0px';
     } catch {
@@ -110,7 +116,7 @@ export function ShareCard({
     const soundsTop = CARD_HEIGHT - 560;
     ctx.fillStyle = ink;
     ctx.font = "600 40px 'Segoe UI', system-ui, -apple-system, sans-serif";
-    ctx.fillText('Sounds that suit you', pad, soundsTop);
+    ctx.fillText(t(locale, 'card.soundsHeading'), pad, soundsTop);
     ctx.fillStyle = inkDim;
     ctx.font = "400 42px 'Segoe UI', system-ui, -apple-system, sans-serif";
     sounds.slice(0, 3).forEach((s, i) => {
@@ -123,7 +129,8 @@ export function ShareCard({
     ctx.fillText('NOCTA', pad, CARD_HEIGHT - 110);
     ctx.fillStyle = inkDim;
     ctx.font = "400 36px 'Segoe UI', system-ui, -apple-system, sans-serif";
-    ctx.fillText(`nocta.app/a/${slug}`, pad, CARD_HEIGHT - 60);
+    // Filigrandaki URL dil sürümünü gösterir; slug ÇEVRİLMEZ (paylaşım linkleri sabit).
+    ctx.fillText(`nocta.app${localePath(locale, `/a/${slug}`)}`, pad, CARD_HEIGHT - 60);
   }
 
   async function onSave(): Promise<void> {
@@ -134,7 +141,7 @@ export function ShareCard({
     try {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (!blob) {
-        setStatus('Could not create image. Try again.');
+        setStatus(t(locale, 'card.error'));
         return;
       }
       const fileName = cardFileName(slug);
@@ -146,7 +153,7 @@ export function ShareCard({
       // Mobil: görseli doğrudan paylaş (IG/mesaj). Masaüstü/desteksiz: indir.
       if (nav.canShare?.({ files: [file] }) && typeof nav.share === 'function') {
         const shared = await nav
-          .share({ files: [file], title: `My sleep identity is ${name}` })
+          .share({ files: [file], title: t(locale, 'card.shareTitle', { name }) })
           .then(
             () => true,
             () => false,
@@ -159,7 +166,7 @@ export function ShareCard({
       a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
-      setStatus('Card saved.');
+      setStatus(t(locale, 'card.saved'));
     } finally {
       setBusy(false);
     }
@@ -171,7 +178,7 @@ export function ShareCard({
         ref={canvasRef}
         width={CARD_WIDTH}
         height={CARD_HEIGHT}
-        aria-label={`${name} share card preview`}
+        aria-label={t(locale, 'card.previewAlt', { name })}
         className="w-full max-w-[280px] rounded-card border border-ink-faint/20"
         style={{ height: 'auto' }}
       />
@@ -181,7 +188,7 @@ export function ShareCard({
         disabled={busy}
         className="rounded-button bg-accent-aurora px-5 py-3 text-bg-base disabled:opacity-60"
       >
-        {busy ? 'Preparing…' : 'Save your card'}
+        {busy ? t(locale, 'card.preparing') : t(locale, 'card.save')}
       </button>
       {status !== null && (
         <p role="status" className="text-caption text-ink-secondary">

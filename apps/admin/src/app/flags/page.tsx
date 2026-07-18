@@ -4,6 +4,8 @@ import { LogoutButton } from '@/features/auth/LogoutButton';
 import { FlagTable } from '@/features/flags/FlagTable';
 import { FlagForm } from '@/features/flags/FlagForm';
 import { canEditFlags } from '@/features/flags/can-edit-flags';
+import { translator } from '@/shared/i18n/dictionaries';
+import { getLocale } from '@/shared/i18n/locale';
 import type { AdminFlag } from '@/features/flags/types';
 
 /**
@@ -12,6 +14,9 @@ import type { AdminFlag } from '@/features/flags/types';
  * yalnızca owner'a — form owner'a gösterilir, gerçek kapı sunucuda (#167 → 403).
  */
 export default async function FlagsPage() {
+  const locale = await getLocale();
+  const t = translator(locale);
+
   const [flags, me] = await Promise.all([
     apiGet<AdminFlag[]>('/v1/admin/flags'),
     apiGet<{ userId: string; roles: string[] }>('/v1/admin/me'),
@@ -20,17 +25,16 @@ export default async function FlagsPage() {
 
   return (
     <AppShell actions={<LogoutButton />}>
-      <h2 className="text-h2 font-display">Feature Flags</h2>
+      <h2 className="text-h2 font-display">{t('flags.title')}</h2>
       <p className="mt-1 mb-6 text-body text-ink-secondary">
-        Rollout görünürlüğü — hangi özellik kime açık.
-        {editable ? ' Owner olarak düzenleyebilirsiniz.' : ' Düzenleme yalnızca owner.'}
+        {t('flags.subtitle')} {editable ? t('flags.canEdit') : t('flags.readOnly')}
       </p>
 
-      <FlagTable flags={flags} />
+      <FlagTable flags={flags} locale={locale} />
 
       {editable && (
         <section className="mt-8 border-t border-ink-faint/20 pt-6">
-          <h3 className="text-body font-display">Flag oluştur / değiştir</h3>
+          <h3 className="text-body font-display">{t('flags.formHeading')}</h3>
           <FlagForm />
         </section>
       )}

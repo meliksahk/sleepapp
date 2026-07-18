@@ -1,23 +1,26 @@
+import type { MessageKey } from '@/shared/i18n/dictionaries';
+
 /**
- * API yanıtını editörün anlayacağı tek cümleye çevirir.
+ * API yanıtını editörün anlayacağı tek cümlenin ANAHTARINA çevirir.
  *
  * Saf fonksiyon: asıl derdimiz her hata yolunun DOĞRU ve AYIRT EDİCİ bir mesaj
  * vermesi. "Bir şeyler ters gitti" demek, slug'ı dolu olan editörü çaresiz bırakır.
+ *
+ * **Neden dizge değil anahtar:** mesaj SUNUCU eyleminde üretiliyor ama İSTEMCİDE
+ * gösteriliyor. Dizge döndürseydik metin, eylemin çalıştığı andaki dile çakılırdı;
+ * kullanıcı dili değiştirince ekrandaki hata eski dilde kalırdı. (LoginForm'un
+ * `messageFor` deseni.)
  */
-export function createErrorMessage(status: number, code?: string): string {
-  if (code === 'slug_taken') return 'Bu slug zaten kullanımda. Başka bir slug deneyin.';
+export function createErrorMessage(status: number, code?: string): MessageKey {
+  if (code === 'slug_taken') return 'content.errorSlugTaken';
   // Yayınlama kapısı: editörün ne yapması gerektiğini SÖYLE, "409" deme.
-  if (code === 'empty_recipe') {
-    return 'Ses tarifi boş — yayınlanamaz. Önce sesi tanımlayın (tarif editörü henüz yok).';
-  }
-  if (code === 'soundscape_not_found') return 'Kayıt bulunamadı. Liste güncel olmayabilir.';
-  if (code === 'empty_title') return 'Başlık boş olamaz.';
-  if (code === 'invalid_slug') {
-    return 'Slug yalnızca küçük harf, rakam ve tire içerebilir (ör. deep-ocean-drift).';
-  }
+  if (code === 'empty_recipe') return 'content.errorEmptyRecipe';
+  if (code === 'soundscape_not_found') return 'content.errorNotFound';
+  if (code === 'empty_title') return 'content.errorEmptyTitle';
+  if (code === 'invalid_slug') return 'content.errorInvalidSlug';
   // 403: rol daraltması (analyst/support yazamaz). UI butonu gizlese de sunucu
   // reddedebilir — kullanıcı sebebi bilmeli, sessizce başarısız olmamalı.
-  if (status === 403) return 'Bu işlem için yetkiniz yok.';
-  if (status === 400) return 'Girdiler geçersiz. Slug ve başlığı kontrol edin.';
-  return 'Kaydedilemedi. Lütfen tekrar deneyin.';
+  if (status === 403) return 'content.errorForbidden';
+  if (status === 400) return 'content.errorBadInput';
+  return 'content.errorGeneric';
 }

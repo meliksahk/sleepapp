@@ -39,6 +39,12 @@ export function buildLlmsTxt(): string {
 - /archetypes — every sleep identity, with a page for each
 - /blog — sleep ritual and soundscape guides
 
+## Languages
+- English is the primary language and lives at the site root (/, /test, /a/{slug}).
+- Turkish lives under /tr (/tr, /tr/test, /tr/a/{slug}). Archetype slugs are identical
+  in both languages, so /a/deep-ocean and /tr/a/deep-ocean are the same identity.
+- The blog is English only for now.
+
 ## Sleep archetypes
 ${archetypeLines.join('\n')}
 

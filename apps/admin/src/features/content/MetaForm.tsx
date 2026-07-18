@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { Button, Input } from '@nocta/ui';
+import { useT } from '@/shared/i18n/I18nProvider';
 import { updateMetaAction, type MetaState } from './actions';
 
 const INITIAL: MetaState = {};
@@ -21,29 +22,30 @@ export function MetaForm({
   title: string;
   affinity: string[];
 }) {
+  const t = useT();
   const [state, action, pending] = useActionState(updateMetaAction, INITIAL);
 
   return (
     <form action={action} className="flex flex-col gap-3 md:max-w-md">
       <input type="hidden" name="slug" value={slug} />
-      <Input name="titleEn" label="Başlık (EN)" defaultValue={title} required />
+      <Input name="titleEn" label={t('content.fieldTitleEn')} defaultValue={title} required />
       <Input
         name="archetypeAffinity"
-        label="Uyku kimlikleri (virgülle)"
+        label={t('content.fieldAffinity')}
         defaultValue={affinity.join(', ')}
       />
       {state.error !== undefined && (
         <p role="alert" className="text-body text-accent-ember">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
       {state.saved === true && (
         <p role="status" className="text-body text-accent-aurora">
-          Kaydedildi.
+          {t('common.saved')}
         </p>
       )}
       <Button type="submit" disabled={pending}>
-        {pending ? 'Kaydediliyor…' : 'Bilgileri kaydet'}
+        {pending ? t('common.saving') : t('content.metaSubmit')}
       </Button>
     </form>
   );

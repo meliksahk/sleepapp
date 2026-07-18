@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { Button, Input } from '@nocta/ui';
+import { useT } from '@/shared/i18n/I18nProvider';
 import { setRecipeAction, type RecipeState } from './actions';
 import { MAX_LAYERS, NOISE_TYPES, type NoiseType, type RecipeLayer } from './recipe-form';
 
@@ -21,6 +22,7 @@ export function RecipeForm({
   slug: string;
   initialLayers: RecipeLayer[];
 }) {
+  const t = useT();
   const [state, action, pending] = useActionState(setRecipeAction, INITIAL);
   const [layers, setLayers] = useState<RecipeLayer[]>(initialLayers);
 
@@ -44,34 +46,33 @@ export function RecipeForm({
       <input type="hidden" name="layers" value={JSON.stringify(layers)} />
 
       {layers.length === 0 && (
-        <p className="text-body text-ink-secondary">
-          Katman yok — bu kayıt yayınlanamaz. En az bir katman ekleyin.
-        </p>
+        <p className="text-body text-ink-secondary">{t('content.noLayers')}</p>
       )}
 
       {layers.map((layer, i) => (
         <div key={i} className="flex flex-wrap items-end gap-3 border-b border-ink-faint/20 pb-3">
           <Input
-            label="Katman adı"
+            label={t('content.layerName')}
             value={layer.id}
             onChange={(e) => update(i, { id: e.target.value })}
           />
           <label className="flex flex-col gap-1">
-            <span className="text-caption text-ink-secondary">Tür</span>
+            <span className="text-caption text-ink-secondary">{t('content.layerType')}</span>
             <select
               value={layer.type}
               onChange={(e) => update(i, { type: e.target.value as NoiseType })}
               className="min-h-11 rounded-chip border border-ink-faint/40 bg-bg-base px-3 text-body text-ink-primary"
             >
-              {NOISE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {/* `noise` olarak adlandırıldı: `t` çeviri fonksiyonunu gölgelerdi. */}
+              {NOISE_TYPES.map((noise) => (
+                <option key={noise} value={noise}>
+                  {noise}
                 </option>
               ))}
             </select>
           </label>
           <Input
-            label={`Kazanç (${layer.gain.toFixed(2)})`}
+            label={t('content.layerGain', { gain: layer.gain.toFixed(2) })}
             type="number"
             min="0"
             max="1"
@@ -80,28 +81,28 @@ export function RecipeForm({
             onChange={(e) => update(i, { gain: Number(e.target.value) })}
           />
           <Button type="button" variant="ghost" onClick={() => remove(i)}>
-            Sil
+            {t('content.layerRemove')}
           </Button>
         </div>
       ))}
 
       <div className="flex gap-3">
         <Button type="button" variant="ghost" onClick={add} disabled={layers.length >= MAX_LAYERS}>
-          Katman ekle
+          {t('content.layerAdd')}
         </Button>
         <Button type="submit" disabled={pending || layers.length === 0}>
-          {pending ? 'Kaydediliyor…' : 'Tarifi kaydet'}
+          {pending ? t('common.saving') : t('content.recipeSubmit')}
         </Button>
       </div>
 
       {state.error !== undefined && (
         <p role="alert" className="text-body text-accent-ember">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
       {state.saved === true && (
         <p role="status" className="text-body text-accent-aurora">
-          Tarif kaydedildi.
+          {t('content.recipeSaved')}
         </p>
       )}
     </form>

@@ -388,6 +388,18 @@ class AppL10nTr extends AppL10n {
   String get archetypeYourSleepIdentity => 'Uyku kimliğin';
 
   @override
+  String get archetypeTestIntro =>
+      'Doğru cevap yok. Gecelerine en yakın geleni seç.';
+
+  @override
+  String archetypeTestProgress(int answered, int total) {
+    return '$total sorudan $answered tanesi cevaplandı';
+  }
+
+  @override
+  String get archetypeTestPreparing => 'Soruların hazırlanıyor…';
+
+  @override
   String get archetypeShareCopied => 'Bağlantı kopyalandı';
 
   @override

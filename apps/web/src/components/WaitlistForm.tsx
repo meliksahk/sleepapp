@@ -2,8 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import { joinWaitlist } from '@/lib/api';
+import { t, type Locale } from '@/lib/i18n';
 
-export function WaitlistForm() {
+/**
+ * Bekleme listesi formu. Metinler sözlükten gelir (CLAUDE.md §4: hard-code string yasak).
+ * NOT: bu bileşen bir süre `lang="en"` altında TÜRKÇE metin render ediyordu ("Katıl",
+ * "E-posta"); o karışıklık burada kapandı — EN sürümü artık gerçekten İngilizce.
+ */
+export function WaitlistForm({ locale = 'en' }: { locale?: Locale }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
 
@@ -21,7 +27,7 @@ export function WaitlistForm() {
   if (status === 'done') {
     return (
       <p role="status" className="text-accent-deep">
-        Teşekkürler — listedesin. Lansmanda haber vereceğiz.
+        {t(locale, 'waitlist.success')}
       </p>
     );
   }
@@ -30,8 +36,8 @@ export function WaitlistForm() {
     <form onSubmit={onSubmit} className="flex gap-2">
       <input
         type="email"
-        aria-label="E-posta"
-        placeholder="you@example.com"
+        aria-label={t(locale, 'waitlist.emailLabel')}
+        placeholder={t(locale, 'waitlist.emailPlaceholder')}
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -42,11 +48,11 @@ export function WaitlistForm() {
         disabled={status === 'sending'}
         className="rounded-button bg-accent-aurora px-5 py-3 text-bg-base disabled:opacity-50"
       >
-        Katıl
+        {t(locale, 'waitlist.submit')}
       </button>
       {status === 'error' && (
         <p role="alert" className="text-danger">
-          Bir hata oldu.
+          {t(locale, 'waitlist.error')}
         </p>
       )}
     </form>

@@ -386,6 +386,18 @@ class AppL10nEn extends AppL10n {
   String get archetypeYourSleepIdentity => 'Your sleep identity';
 
   @override
+  String get archetypeTestIntro =>
+      'There are no right answers. Pick whichever feels closest to your nights.';
+
+  @override
+  String archetypeTestProgress(int answered, int total) {
+    return '$answered of $total answered';
+  }
+
+  @override
+  String get archetypeTestPreparing => 'Preparing your questions…';
+
+  @override
   String get archetypeShareCopied => 'Link copied';
 
   @override
