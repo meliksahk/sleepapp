@@ -88,6 +88,12 @@
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="microphone"
             android:exported="false" />
+
+        <!-- Süreç-ölümüne dayanıklı alarm receiver'ı (#174). exported=false: yalnızca
+             OS'un kurduğumuz AlarmManager alarmı tetikler; başka uygulama çağıramaz. -->
+        <receiver
+            android:name=".NightAlarmReceiver"
+            android:exported="false" />
 </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

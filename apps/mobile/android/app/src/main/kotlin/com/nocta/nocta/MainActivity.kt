@@ -37,6 +37,8 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler(::onMethodCall)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "nocta/native_mix")
             .setMethodCallHandler(::onNativeMixCall)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "nocta/night_alarm")
+            .setMethodCallHandler(::onNightAlarmCall)
     }
 
     override fun onDestroy() {
@@ -86,6 +88,35 @@ class MainActivity : FlutterActivity() {
         } catch (e: Throwable) {
             // Yutulmaz: çağıran bir cevap almalı (CLAUDE.md §4).
             result.error("native_mix_failed", e.message, null)
+        }
+    }
+
+    /**
+     * `nocta/night_alarm` kanalı — sözleşme `lib/core/sleep_tracking/night_alarm_scheduler.dart`
+     * (#169) ile eşleşir. Süreç-ölümüne dayanıklı alarmı `AlarmManager`'a kaydeder.
+     *
+     * **`applicationContext` kullanılır, `this` değil:** alarm activity yok edildikten sonra
+     * da yaşamalı; activity context'i PendingIntent'i etkinliğe bağlar ve sızıntı üretirdi.
+     */
+    private fun onNightAlarmCall(call: MethodCall, result: MethodChannel.Result) {
+        try {
+            when (call.method) {
+                "schedule" -> {
+                    // Dart `millisecondsSinceEpoch` 32-bit'i aşar → Long gelir; güvenli çevir.
+                    val epochMillis = (call.argument<Number>("epochMillis")!!).toLong()
+                    NightAlarm.schedule(applicationContext, epochMillis)
+                    result.success(null)
+                }
+
+                "cancel" -> {
+                    NightAlarm.cancel(applicationContext)
+                    result.success(null)
+                }
+
+                else -> result.notImplemented()
+            }
+        } catch (e: Throwable) {
+            result.error("night_alarm_failed", e.message, null)
         }
     }
 
