@@ -21,7 +21,16 @@ class MixerScreen extends ConsumerStatefulWidget {
     this.canExportVideo,
     this.spec,
     this.recipeUnavailable = false,
+    this.title,
   });
+
+  /// AppBar başlığı — açılan sesin ADI.
+  ///
+  /// **Neden:** kullanıcı kütüphaneden belirli bir soundscape'e dokunup mikseri
+  /// açıyordu ama başlık jenerik "Mikser" olarak kalıyordu; hangi sesin çaldığını
+  /// söyleyen tek işaret yoktu. null → jenerik başlık (doğrudan `/mixer`, yani
+  /// gerçekten bir ses seçilmemiş).
+  final String? title;
 
   /// Test sahte controller enjekte edebilsin diye (cihazsız widget testi).
   final MixerController? controller;
@@ -91,7 +100,12 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     final s = _c.state;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.mixerTitle)),
+      appBar: AppBar(
+        title: Text(
+          widget.title?.isNotEmpty == true ? widget.title! : l10n.mixerTitle,
+          key: const Key('mixer-title'),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),

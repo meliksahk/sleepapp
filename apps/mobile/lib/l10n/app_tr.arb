@@ -83,7 +83,7 @@
   "homeWeeklyCount": "{count, plural, =1{Bu hafta 1 soundscape} other{Bu hafta {count} soundscape}}",
   "homeFindIdentity": "Uyku kimliğini keşfet",
   "homeRetakeTest": "Testi tekrar yap",
-  "homeBrowseSoundscapes": "Soundscape’lere göz at",
+  "homeBrowseSoundscapes": "Ses kitaplığı",
 
   "sleepHistoryTitle": "Uyku geçmişi",
 

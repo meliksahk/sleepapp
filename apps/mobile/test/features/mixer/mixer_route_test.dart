@@ -131,6 +131,13 @@ void main() {
 
     // Kendi tarifi çalıyor → dipnot yok.
     expect(find.byKey(const Key('mixer-recipe-fallback')), findsNothing);
+
+    // Başlık AÇILAN SESİN ADI — jenerik "Mixer" değil. Kullanıcı belirli bir
+    // sesi seçip geliyordu ama hangisini duyduğunu söyleyen tek işaret yoktu.
+    expect(
+      tester.widget<Text>(find.byKey(const Key('mixer-title'))).data,
+      'Deep Ocean Hush',
+    );
   });
 
   testWidgets('slug yoksa varsayılan mikser (içerik isteği YOK)', (
@@ -152,6 +159,12 @@ void main() {
     expect(requested, isFalse, reason: 'slug yokken ağa çıkılmamalı');
     expect(find.byKey(const Key('gain-brown')), findsOneWidget);
     expect(find.byKey(const Key('mixer-recipe-fallback')), findsNothing);
+
+    // Ses seçilmemiş → jenerik başlık (uydurma bir ad yazmak yanıltıcı olurdu).
+    expect(
+      tester.widget<Text>(find.byKey(const Key('mixer-title'))).data,
+      'Mixer',
+    );
   });
 
   testWidgets('bilinmeyen slug (null) → varsayılan tarif + nazik dipnot', (

@@ -108,10 +108,24 @@ class ArchetypeResult {
   final String createdAt;
 
   factory ArchetypeResult.fromJson(Map<String, dynamic> json) => ArchetypeResult(
-        userId: json['userId'] as String,
+        // `userId` yerelde puanlanan sonuçta BOŞTUR: cihaz testi sunucusuz da
+        // çalışır ve o anda bir kullanıcı kimliği olmayabilir. Alan sunucu
+        // sözleşmesinin parçası olduğu için korunur, ama hiçbir yerde
+        // gösterilmez — bu yüzden eksikliği `?? ''` ile tolere edilir.
+        userId: json['userId'] as String? ?? '',
         archetypeSlug: json['archetypeSlug'] as String,
         scores: (json['scores'] as Map<String, dynamic>).map((k, v) => MapEntry(k, v as num)),
         version: json['version'] as int,
         createdAt: json['createdAt'] as String,
       );
+
+  /// Yerel kalıcılık için (shared_preferences JSON dizisi). Sunucu sözleşmesiyle
+  /// AYNI alan adları: aynı `fromJson` iki kaynağı da okur.
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'userId': userId,
+        'archetypeSlug': archetypeSlug,
+        'scores': scores,
+        'version': version,
+        'createdAt': createdAt,
+      };
 }

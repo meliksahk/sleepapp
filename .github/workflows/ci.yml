@@ -85,6 +85,13 @@ jobs:
       - name: .env.example drift scan (CLAUDE.md §6)
         run: pnpm check:env-example
 
+      # Mobil, arketip testini (viral kanca #1) BACKEND OLMADAN koşuyor: soru
+      # matrisi API domain'inden üretilip asset olarak gömülüyor. O dosya
+      # bayatlarsa AYNI cevaplar sunucuda ve cihazda FARKLI arketip üretir —
+      # kullanıcı için felaket, geliştirici için görünmez. Bayt bayt karşılaştırır.
+      - name: Archetype matrix drift scan
+        run: pnpm check:archetype-drift
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest

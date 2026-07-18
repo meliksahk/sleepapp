@@ -9,10 +9,30 @@ class NoctaApiClient {
     required this.baseUrl,
     http.Client? client,
     this.resolveLanguage,
+    this.timeout = defaultTimeout,
   }) : _client = client ?? http.Client();
 
   final String baseUrl;
   final http.Client _client;
+
+  /// Her isteğe uygulanan azami süre.
+  ///
+  /// **NEDEN VAR — GERÇEK BİR ARIZA:** istemcide HİÇ timeout yoktu. Backend
+  /// ayakta değilken (bağlantı reddi değil, YANIT VERMEYEN bir adres — DNS'te
+  /// kaydı olmayan `api.nocta.app` kaptif portal ardında tam olarak böyle
+  /// davranır) her istek işletim sisteminin varsayılanına, yani DAKİKALARA kadar
+  /// asılı kalıyordu. Kullanıcının gördüğü şey donmuş bir ekrandı.
+  ///
+  /// Bu, `mixer_route.dart`'ta ekran BAŞINA sarmalanmıştı (3 sn'lik bütçe) —
+  /// semptomun sarılması. Kök burası: hangi ekran olursa olsun bir istek 5
+  /// saniyeden fazla asılı kalamaz.
+  ///
+  /// **NEDEN 5 SANİYE:** mobil şebekede yavaş ama sağlıklı bir istek tipik
+  /// olarak 1-2 sn; 5 sn ona rahat yer bırakır. Daha kısası gerçek isteği keser,
+  /// daha uzunu ölü sunucuda kullanıcıyı bekletir.
+  final Duration timeout;
+
+  static const Duration defaultTimeout = Duration(seconds: 5);
 
   /// Sunucudan içeriğin hangi dilde isteneceğini **İSTEK ANINDA** çözer
   /// (`'tr'`, `'en'`, ya da null → sunucu varsayılanı EN).
@@ -37,15 +57,26 @@ class NoctaApiClient {
     return {'Accept-Language': language};
   }
 
+  /// Her isteğin geçtiği tek kapı — timeout burada uygulanır ki yeni bir metot
+  /// eklerken UNUTULAMASIN (eklenmesi gereken yer değil, geçilmesi gereken yer).
+  ///
+  /// Süre dolarsa `TimeoutException` fırlar; çağıranlar (auth, archetype servisi)
+  /// bunu diğer ağ hatalarıyla aynı şekilde ele alır — sessizce yedeğe düşülür.
+  Future<http.Response> _send(Future<http.Response> Function() request) {
+    return request().timeout(timeout);
+  }
+
   /// Anonim cihaz kaydı → access + refresh token.
   Future<Session> registerDevice({
     required String fingerprint,
     required String platform,
   }) async {
-    final res = await _client.post(
-      Uri.parse('$baseUrl/v1/auth/device'),
-      headers: {..._localeHeaders, 'Content-Type': 'application/json'},
-      body: jsonEncode({'fingerprint': fingerprint, 'platform': platform}),
+    final res = await _send(
+      () => _client.post(
+        Uri.parse('$baseUrl/v1/auth/device'),
+        headers: {..._localeHeaders, 'Content-Type': 'application/json'},
+        body: jsonEncode({'fingerprint': fingerprint, 'platform': platform}),
+      ),
     );
     if (res.statusCode != 201) {
       throw ApiException(res.statusCode, res.body);
@@ -56,10 +87,12 @@ class NoctaApiClient {
   /// Refresh token rotasyonu → yeni access + refresh (eski geçersizleşir).
   /// Reuse/geçersiz token'da 401 → ApiException.
   Future<Session> refresh(String refreshToken) async {
-    final res = await _client.post(
-      Uri.parse('$baseUrl/v1/auth/refresh'),
-      headers: {..._localeHeaders, 'Content-Type': 'application/json'},
-      body: jsonEncode({'refreshToken': refreshToken}),
+    final res = await _send(
+      () => _client.post(
+        Uri.parse('$baseUrl/v1/auth/refresh'),
+        headers: {..._localeHeaders, 'Content-Type': 'application/json'},
+        body: jsonEncode({'refreshToken': refreshToken}),
+      ),
     );
     if (res.statusCode != 200) {
       throw ApiException(res.statusCode, res.body);
@@ -70,24 +103,30 @@ class NoctaApiClient {
   /// Kimlik doğrulamalı GET — ham yanıt döner (401 refresh akışı çağırana ait).
   /// AuthController.authorizedRequest ile sarılır (401→refresh→retry).
   Future<http.Response> getAuthed(String path, String accessToken) {
-    return _client.get(Uri.parse('$baseUrl$path'), headers: _authHeaders(accessToken));
+    return _send(
+      () => _client.get(Uri.parse('$baseUrl$path'), headers: _authHeaders(accessToken)),
+    );
   }
 
   /// Kimlik doğrulamalı POST (JSON gövde) — ham yanıt döner.
   Future<http.Response> postAuthed(String path, String accessToken, Object body) {
-    return _client.post(
-      Uri.parse('$baseUrl$path'),
-      headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
-      body: jsonEncode(body),
+    return _send(
+      () => _client.post(
+        Uri.parse('$baseUrl$path'),
+        headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      ),
     );
   }
 
   /// Kimlik doğrulamalı PATCH (JSON gövde) — ham yanıt döner (kısmi güncelleme).
   Future<http.Response> patchAuthed(String path, String accessToken, Object body) {
-    return _client.patch(
-      Uri.parse('$baseUrl$path'),
-      headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
-      body: jsonEncode(body),
+    return _send(
+      () => _client.patch(
+        Uri.parse('$baseUrl$path'),
+        headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      ),
     );
   }
 
