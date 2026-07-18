@@ -464,5 +464,14 @@
   "@settingsSoundSection": { "description": "Ayarlar ses bolumu basligi" },
 
   "loadFailed": "Could not load this. Check your connection and try again.",
-  "@loadFailed": { "description": "Genel veri yukleme hatasi metni" }
+  "@loadFailed": { "description": "Genel veri yukleme hatasi metni" },
+
+  "settingsLanguageSection": "Language",
+  "@settingsLanguageSection": { "description": "Ayarlar dil bolumu basligi" },
+  "settingsLanguageSystem": "System",
+  "@settingsLanguageSystem": { "description": "Cihaz dilini kullan" },
+  "settingsLanguageEnglish": "English",
+  "@settingsLanguageEnglish": { "description": "Ingilizce secenegi" },
+  "settingsLanguageTurkish": "Türkçe",
+  "@settingsLanguageTurkish": { "description": "Turkce secenegi (kendi dilinde yazilir)" }
 }

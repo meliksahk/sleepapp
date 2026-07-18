@@ -5,6 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../auth/auth_providers.dart';
 import '../../entitlement/entitlement_providers.dart';
 import '../../profile/profile_providers.dart';
+import '../locale_store.dart';
 import '../signature_sound_store.dart';
 
 /// Ayarlar (docs/06 hesap güvenliği). "Diğer cihazlardan çık" akışı.
@@ -104,6 +105,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   value: p.notificationsEnabled,
                   onChanged: _savingNotifications ? null : _setNotifications,
+                ),
+                orElse: () => const SizedBox.shrink(),
+              ),
+              const SizedBox(height: NoctaSpace.s5),
+              Text(
+                l10n.settingsLanguageSection,
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
+              // DİL SEÇİCİ: çeviriler baştan beri tamdı ama yalnızca cihaz diline
+              // uyuluyordu — yani var olan bir yetenek erişilemezdi. Sistem/EN/TR.
+              ref.watch(appLocaleProvider).maybeWhen(
+                data: (current) => Column(
+                  children: <Widget>[
+                    for (final option in <(Locale?, String)>[
+                      (null, l10n.settingsLanguageSystem),
+                      (const Locale('en'), l10n.settingsLanguageEnglish),
+                      (const Locale('tr'), l10n.settingsLanguageTurkish),
+                    ])
+                      ListTile(
+                        key: Key('locale-${option.$1?.languageCode ?? 'system'}'),
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        title: Text(
+                          option.$2,
+                          style: TextStyle(
+                            fontSize: NoctaFontSize.body,
+                            color: NoctaColors.inkPrimary,
+                          ),
+                        ),
+                        trailing:
+                            (current?.languageCode ?? 'system') ==
+                                (option.$1?.languageCode ?? 'system')
+                            ? Icon(Icons.check, color: NoctaColors.accentAurora)
+                            : null,
+                        onTap: () async {
+                          await ref.read(localeStoreProvider).write(option.$1);
+                          ref.invalidate(appLocaleProvider);
+                        },
+                      ),
+                  ],
                 ),
                 orElse: () => const SizedBox.shrink(),
               ),

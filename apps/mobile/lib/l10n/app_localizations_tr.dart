@@ -520,4 +520,16 @@ class AppL10nTr extends AppL10n {
   @override
   String get loadFailed =>
       'Bu yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+
+  @override
+  String get settingsLanguageSection => 'Dil';
+
+  @override
+  String get settingsLanguageSystem => 'Sistem';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get settingsLanguageTurkish => 'Türkçe';
 }

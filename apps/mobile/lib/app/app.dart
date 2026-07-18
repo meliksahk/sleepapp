@@ -10,6 +10,7 @@ import '../features/analytics/analytics_providers.dart';
 import '../features/auth/auth_providers.dart';
 import '../features/onboarding/onboarding_store.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
+import '../features/settings/locale_store.dart';
 import '../features/settings/signature_sound_store.dart';
 import 'router.dart';
 
@@ -32,6 +33,9 @@ class NoctaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bootstrap = ref.watch(sessionBootstrapProvider);
     final seenOnboarding = ref.watch(onboardingSeenProvider);
+    // Dil tercihi: null -> sistem dili. Coz&uuml;lene dek splash beklemeye gerek yok;
+    // null zaten dogru varsayilan.
+    final locale = ref.watch(appLocaleProvider).maybeWhen(data: (l) => l, orElse: () => null);
     final theme = buildNoctaDarkTheme();
 
     // İLK AÇILIŞ KAPISI (Faz 0 cila): karşılama akışı görülmediyse önce o gösterilir.
@@ -47,6 +51,7 @@ class NoctaApp extends ConsumerWidget {
     if (needsOnboarding) {
       return _OnboardingApp(
         theme: theme,
+        locale: locale,
         onDone: () async {
           await ref.read(onboardingStoreProvider).markSeen();
           ref.invalidate(onboardingSeenProvider);
@@ -55,21 +60,24 @@ class NoctaApp extends ConsumerWidget {
     }
 
     return bootstrap.when(
-      data: (_) => _AppRoot(theme: theme),
+      data: (_) => _AppRoot(theme: theme, locale: locale),
       // Yükleme KISA ve belirleyici: oturum ya kurulur ya hata verir. Splash burada
       // kalır çünkü henüz hangi durumda olduğumuzu bilmiyoruz.
       loading: () => _SplashApp(theme: theme),
       // Hata = ÇEVRİMDIŞI MOD, kilit değil.
-      error: (error, stack) => _AppRoot(theme: theme, offline: true),
+      error: (error, stack) => _AppRoot(theme: theme, locale: locale, offline: true),
     );
   }
 }
 
 /// Oturum kurulduktan sonraki kök — router + analitik lifecycle flush observer'ı.
 class _AppRoot extends ConsumerStatefulWidget {
-  const _AppRoot({required this.theme, this.offline = false});
+  const _AppRoot({required this.theme, this.locale, this.offline = false});
 
   final ThemeData theme;
+
+  /// Secili dil; null ise sistem dili.
+  final Locale? locale;
 
   /// Oturum kurulamadı → çevrimdışı mod. Uygulama AÇILIR; API isteyen ekranlar
   /// kendi hatalarını gösterir, mikser gibi yerel olanlar çalışır.
@@ -116,6 +124,8 @@ class _AppRootState extends ConsumerState<_AppRoot> {
       title: 'NOCTA',
       debugShowCheckedModeBanner: false,
       theme: widget.theme,
+      // Kullanıcının seçtiği dil; null ise cihaz dili (Flutter'ın kendi çözümü).
+      locale: widget.locale,
       // i18n (CLAUDE.md §4). Kaynak dil EN; TR arb eklenince kod değişmez.
       localizationsDelegates: AppL10n.localizationsDelegates,
       supportedLocales: AppL10n.supportedLocales,
@@ -170,9 +180,10 @@ class _AppRootState extends ConsumerState<_AppRoot> {
 /// İlk açılış karşılaması için kök — router YOK (akış tek ekran, geri yığını gereksiz).
 /// l10n delegeleri şart: onboarding metinleri arb'den gelir (CLAUDE.md §4).
 class _OnboardingApp extends ConsumerStatefulWidget {
-  const _OnboardingApp({required this.theme, required this.onDone});
+  const _OnboardingApp({required this.theme, required this.onDone, this.locale});
 
   final ThemeData theme;
+  final Locale? locale;
   final Future<void> Function() onDone;
 
   @override
@@ -214,6 +225,7 @@ class _OnboardingAppState extends ConsumerState<_OnboardingApp> {
       title: 'NOCTA',
       debugShowCheckedModeBanner: false,
       theme: widget.theme,
+      locale: widget.locale,
       localizationsDelegates: AppL10n.localizationsDelegates,
       supportedLocales: AppL10n.supportedLocales,
       home: OnboardingScreen(onDone: widget.onDone),
