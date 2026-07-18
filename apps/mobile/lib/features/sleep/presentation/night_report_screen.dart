@@ -5,6 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/media/card_renderer.dart';
 import '../../../core/share/sharer.dart';
 import 'night_report_card.dart';
+import '../../archetype/archetype_gradient.dart';
 import '../../analytics/analytics_providers.dart';
 import '../../archetype/archetype_providers.dart'
     show
@@ -80,7 +81,9 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
             calmScore: r.calmScore,
             streak: _streak,
             archetypeName: _archetypeName,
-            gradient: NoctaArchetypeGradient.overthinker,
+            // Viral kanca #2: kart kullanıcının KENDİ arketip gradyanını gösterir
+            // (#178). `_archetypeName` slug'dır; test yapılmadıysa null → nötr varsayılan.
+            gradient: archetypeGradientForSlug(_archetypeName),
             labels: NightReportCardLabels(
               header: l10n.reportCardHeader,
               duration: l10n.reportCardDuration(

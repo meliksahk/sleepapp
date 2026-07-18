@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
 import 'package:nocta/core/share/sharer.dart';
+import 'package:nocta/features/archetype/archetype_models.dart';
+import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/mixer/mix_video_exporter.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
@@ -85,17 +88,24 @@ void main() {
     );
   }
 
-  Future<void> pump(WidgetTester t, {bool canExport = true}) async {
+  Future<void> pump(WidgetTester t, {bool canExport = true, ArchetypeResult? archetype}) async {
     sharer = _RecordingSharer();
     frameGate = null;
     await t.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppL10n.localizationsDelegates,
-        supportedLocales: AppL10n.supportedLocales,
-        home: MixerScreen(
-          controller: build(),
-          sharer: sharer,
-          canExportVideo: canExport,
+      // MixerScreen artık ConsumerStatefulWidget (#178: export kullanıcının arketip
+      // gradyanını okur) → ProviderScope şart. Arketip override'ı ağı vurmaz.
+      ProviderScope(
+        overrides: [
+          latestArchetypeResultProvider.overrideWith((ref) async => archetype),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          home: MixerScreen(
+            controller: build(),
+            sharer: sharer,
+            canExportVideo: canExport,
+          ),
         ),
       ),
     );
@@ -120,6 +130,27 @@ void main() {
     await pump(t, canExport: false);
     // Buton görünse basınca MissingPluginException atardı.
     expect(find.byKey(const Key('mixer-export-video')), findsNothing);
+  });
+
+  testWidgets('#178: kullanıcı arketipi varken export arketip-yolundan geçer (paylaşır)',
+      (t) async {
+    // Kullanıcı deep-ocean → export video onun gradyanını taşımalı. Burada gradyanın
+    // ID'sini render'dan okuyamayız (PNG'ye gidiyor); ama arketip-okuma yolunun
+    // hatasız çalışıp videoyu ürettiğini kanıtlıyoruz (mapping doğruluğu ayrı unit'te).
+    await pump(
+      t,
+      archetype: const ArchetypeResult(
+        userId: 'u1',
+        archetypeSlug: 'deep-ocean',
+        scores: {},
+        version: 1,
+        createdAt: '2026-07-18T00:00:00Z',
+      ),
+    );
+    await t.tap(find.byKey(const Key('mixer-export-video')));
+    await t.pumpAndSettle();
+    expect(sharer.shared, hasLength(1));
+    expect(sharer.shared.single.file!.mimeType, 'video/mp4');
   });
 
   testWidgets('export patlarsa VİDEO hatası gösterilir, ses hatası değil', (t) async {

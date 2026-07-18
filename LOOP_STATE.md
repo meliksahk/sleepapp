@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                               |
-| Mobil       | ~78%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 (Android otonom + anlık slider KANITLI) · ✓ alarm TAM #169+#174+#175 (ateşler + reboot-reschedule cihazda kanıtlı) · ✓ **çevrimdışı gece kuyruğu** #177 (uçak-modu/DND'de biten gece KAYBOLMAZ — KeyValueStore persist + CANLI DRAIN açılış+başarı sonrası; 11 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                    |
-| Web         | ~35%     | 0.15    | LCP/CLS (lighthouse-ci), long-tail, blog. ✓ **W0 paylaşım kartı** #176 (client-side canvas 9:16, archetype-özel gradyan token'dan, indir/paylaş — TARAYICIDA doğrulandı: 2.1MB dataURL, metin+gradyan, per-archetype hex eşleşti; "ölçülemiyor" varsayımı tarayıcı aracıyla çürütüldü) · test→sonuç→link→OG zinciri zaten çalışıyor                                                                                                                                                                                                     |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
+| Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                        |
+| Web         | ~35%     | 0.15    | LCP/CLS (lighthouse-ci), long-tail, blog. ✓ **W0 paylaşım kartı** #176 (client-side canvas 9:16, archetype-özel gradyan token'dan, indir/paylaş — TARAYICIDA doğrulandı: 2.1MB dataURL, metin+gradyan, per-archetype hex eşleşti; "ölçülemiyor" varsayımı tarayıcı aracıyla çürütüldü) · test→sonuç→link→OG zinciri zaten çalışıyor                                                                                                                                                                                                                         |
 
-> **Hesap:** `0.40·78 + 0.30·74 + 0.15·39 + 0.15·35 = 64.50` → **≈64%** (sınırda; muhafazakâr aşağı)
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·35 = 64.90` → **≈65%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,25 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #178 — viral kanca kişiselleştirme: kullanıcının KENDİ arketip gradyanı (PR #178)
+
+✅ **Yapıldı ve doğrulandı (5 test)** — titiz repo-taramasıyla bulunan gerçek defect
+
+- **Kapatılan defect (`mixer_screen.dart:170` + `night_report_screen.dart:83`, kodda "❌ EKSİK"
+  notluydu):** İki viral kanca — gece raporu kartı (#2) + mix-to-video export (#3) — sabit
+  `NoctaArchetypeGradient.overthinker` kodluyordu. Her kullanıcının paylaştığı içerik, gerçek
+  arketipinden BAĞIMSIZ aynı görünüyordu → "sleep identity" markasının çekirdeğini baltalıyordu.
+- **Yapıldı:** `archetypeGradientForSlug(slug)` tek-kaynak helper (`identity_share_card`'ın
+  eşlemesi buraya çıkarıldı; o da delege ediyor). night_report zaten `latestArchetypeResultProvider`
+  okuyordu → gradyan aynı slug'dan. mixer_screen `StatefulWidget`→`ConsumerStatefulWidget`,
+  export'ta arketip okunur. Test yapılmadıysa slug null → nötr varsayılan (çökmez).
+- **DOĞRULAMA:** 4 gradient unit testi (her arketip kendi gradyanı + farklılar FARKLI + bilinmeyen/null
+  varsayılan) + mixer arketip-yolu widget testi (ProviderScope override). Tam mobil süit **428 yeşil**,
+  analyze temiz. (Tam gradyan render'a PNG'ye gidiyor → mapping unit'te, wiring widget'ta kanıtlı.)
+- 📌 Süreç: müdür danışmadan, öğrettiği örüntüyle (repo-geneli "kabul edilmiş boşluk" taraması)
+  buldum; 0.40 + iki viral kanca + otonom + testli olduğu için kendim seçtim (müdür "sıralama senin").
+  Mobil 78→79. Bar 64.9% ≈ **65%**.
 
 ### #177 — sleep oturumu çevrimdışı kuyruğu: gece kaybolmaz (PR #177)
 
