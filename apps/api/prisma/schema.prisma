@@ -209,6 +209,15 @@ model admin_audit_log {
   @@index([created_at(sort: Desc)], map: "admin_audit_log_time_idx")
 }
 
+model outbox {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  aggregate_type String
+  event_type     String
+  payload        Json
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  published_at   DateTime? @db.Timestamptz(6)
+}
+
 enum ott_purpose {
   magic_link
   email_verify

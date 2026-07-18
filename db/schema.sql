@@ -151,6 +151,20 @@ CREATE TABLE public.one_time_tokens (
 
 
 --
+-- Name: outbox; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.outbox (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    aggregate_type text NOT NULL,
+    event_type text NOT NULL,
+    payload jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    published_at timestamp with time zone
+);
+
+
+--
 -- Name: presets; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -377,6 +391,14 @@ ALTER TABLE ONLY public.one_time_tokens
 
 
 --
+-- Name: outbox outbox_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.outbox
+    ADD CONSTRAINT outbox_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: presets presets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -561,6 +583,13 @@ CREATE INDEX idx_ott_user ON public.one_time_tokens USING btree (user_id);
 
 
 --
+-- Name: idx_outbox_unpublished; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_outbox_unpublished ON public.outbox USING btree (created_at) WHERE (published_at IS NULL);
+
+
+--
 -- Name: idx_presets_soundscape; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -701,4 +730,5 @@ INSERT INTO public.schema_migrations (version) VALUES
     ('20260715120012'),
     ('20260715120013'),
     ('20260717000001'),
-    ('20260718000001');
+    ('20260718000001'),
+    ('20260718000002');

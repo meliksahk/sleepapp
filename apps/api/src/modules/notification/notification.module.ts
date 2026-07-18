@@ -10,6 +10,7 @@ import {
 } from './domain/notification-preference';
 import { PUSH_SENDER, type PushSender } from './domain/push-sender';
 import { PUSH_QUEUE, type PushQueue } from './domain/push-queue';
+import { OUTBOX_REPOSITORY, type OutboxRepository } from '../../shared/outbox/outbox.types';
 import { PrismaDeviceTokenRepository } from './infrastructure/prisma-device-token.repository';
 import { LogPushSender } from './infrastructure/log-push-sender';
 import { InlinePushQueue } from './infrastructure/inline-push-queue';
@@ -18,6 +19,7 @@ import { RegisterDeviceTokenUseCase } from './application/register-device-token.
 import { SendNotificationUseCase } from './application/send-notification.usecase';
 import { SendCampaignUseCase } from './application/send-campaign.usecase';
 import { CountPushAudienceUseCase } from './application/count-push-audience.usecase';
+import { OutboxRelay } from './application/outbox-relay';
 import { NotificationController } from './presentation/notification.controller';
 
 const providers: Provider[] = [
@@ -75,6 +77,14 @@ const providers: Provider[] = [
     inject: [DEVICE_TOKEN_REPOSITORY],
     useFactory: (repo: DeviceTokenRepository): CountPushAudienceUseCase =>
       new CountPushAudienceUseCase(repo),
+  },
+  // Outbox relay: domain olaylarını (uyku oturumu kaydı) push bildirimine çevirir. Gözlemlenebilir
+  // tüketici — outbox ölü kod değil (olay → gerçek kuyruk → worker → sender). Prod'da poll eder.
+  {
+    provide: OutboxRelay,
+    inject: [OUTBOX_REPOSITORY, PUSH_QUEUE],
+    useFactory: (outbox: OutboxRepository, queue: PushQueue): OutboxRelay =>
+      new OutboxRelay(outbox, queue),
   },
 ];
 

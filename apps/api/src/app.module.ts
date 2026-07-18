@@ -5,6 +5,7 @@ import { loadEnv } from './shared/config/env';
 import { RedisThrottlerStorage } from './shared/throttler/redis-throttler-storage';
 import { PrismaModule } from './shared/infra/prisma.module';
 import { CacheModule } from './shared/cache/cache.module';
+import { OutboxModule } from './shared/outbox/outbox.module';
 import { RequestIdMiddleware } from './shared/http/request-id.middleware';
 import { SecurityHeadersMiddleware } from './shared/http/security-headers.middleware';
 import { HealthModule } from './shared/health/health.module';
@@ -40,6 +41,7 @@ import { PrivacyModule } from './modules/privacy/privacy.module';
     }),
     PrismaModule,
     CacheModule,
+    OutboxModule,
     HealthModule,
     IdentityModule,
     ProfileModule,

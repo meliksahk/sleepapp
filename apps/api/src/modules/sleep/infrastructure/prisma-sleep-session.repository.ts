@@ -1,4 +1,5 @@
 import type { PrismaService } from '../../../shared/infra/prisma.service';
+import type { OutboxWriter } from '../../../shared/outbox/outbox-writer';
 import type { SleepSessionRepository } from '../domain/ports';
 import type { NewSleepSession, SleepSession } from '../domain/sleep-session.entity';
 import type { SleepAggregate } from '../domain/stats';
@@ -31,19 +32,33 @@ function toDomain(row: Row): SleepSession {
 }
 
 export class PrismaSleepSessionRepository implements SleepSessionRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly outbox: OutboxWriter,
+  ) {}
 
   async save(userId: string, session: NewSleepSession): Promise<SleepSession> {
-    const row = await this.prisma.sleep_sessions.create({
-      data: {
-        user_id: userId,
-        started_at: session.startedAt,
-        ended_at: session.endedAt,
-        night_date: new Date(`${session.nightDate}T00:00:00.000Z`),
-        duration_minutes: session.durationMinutes,
-        movement_events: session.movementEvents,
-        sound_events: session.soundEvents,
-      },
+    // Oturum insert'i + outbox olayı AYNI transaction'da (atomik). Böylece "oturum yazıldı
+    // ama bildirim olayı kayboldu" durumu imkânsız: ikisi birlikte commit olur ya da hiç.
+    // Olay ham veri taşımaz (§6) — yalnız id/gece referansı.
+    const row = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.sleep_sessions.create({
+        data: {
+          user_id: userId,
+          started_at: session.startedAt,
+          ended_at: session.endedAt,
+          night_date: new Date(`${session.nightDate}T00:00:00.000Z`),
+          duration_minutes: session.durationMinutes,
+          movement_events: session.movementEvents,
+          sound_events: session.soundEvents,
+        },
+      });
+      await this.outbox.append(tx, {
+        aggregateType: 'sleep_session',
+        eventType: 'sleep.session_recorded',
+        payload: { userId, sessionId: created.id, nightDate: session.nightDate },
+      });
+      return created;
     });
     return toDomain(row);
   }
