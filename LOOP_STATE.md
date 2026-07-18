@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
-| Admin       | ~41%     | 0.15    | **kampanya UI** (API ✓ #183, panel formu sırada) · **metrik panoları** (D7 veri; total-users/sessions computable) · **2FA/davet/parola-sıfırlama** (rule #11 açtı). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ✓ **kampanya API** #183 (owner-kapılı push bestele+segment+fan-out → mevcut notification substratı; opt-out dışlanır, audit `campaign.send`, 7 e2e; teslim LogPushSender=anahtar-gated). Müdür (C): admin'i bitir                                                                                                   |
+| Admin       | ~43%     | 0.15    | **metrik panoları** (D7 veri-gated; total-users/sessions computable) · **2FA/davet/parola-sıfırlama** (rule #11 açtı). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~**kampanya TAM**~~ ✓ #183+#184 (owner-kapılı push bestele+segment+fan-out API + `/campaigns` panel formu: başlık/gövde/platform → sonuç recipients/sent/failed; opt-out dışlanır, audit; teslim LogPushSender=anahtar-gated). Müdür (C): admin'i bitir                                                                                                         |
 | Web         | ~43%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ **blog OG görselleri** #182 (7 sosyal önizleme PNG'si — 6 yazı + dizin; paylaşılınca kart çıkar, satori/archetype-OG deseni; HTTP'de geçerli PNG kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·41 + 0.15·43 = 66.40` → **≈66%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·43 + 0.15·43 = 66.70` → **≈67%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,21 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #184 — admin kampanya PANEL UI'ı: owner-kapılı /campaigns formu (PR #184)
+
+✅ **Yapıldı ve doğrulandı** — kampanya özelliği TAM (API #183 + UI #184), müdür (C) admin'i bitir
+
+- **Yapıldı:** `/campaigns` sunucu sayfası owner'a besteleme formu gösterir: başlık + gövde
+  (textarea) + hedef (tümü/iOS/Android) → Server Action `apiPost('/v1/admin/campaigns')` (#183) →
+  sonuç (recipients/sent/failed). `canSendCampaigns` owner-only (API ile ayna), `campaignErrorMessage`
+  ayırt edici. AppShell nav'ında Campaigns linklendi. Reach UI'da açık ("tüm segment, opt-out hariç").
+- **DOĞRULAMA:** `canSendCampaigns`+`campaignErrorMessage` saf+test'li (7 unit). admin typecheck 0,
+  lint 0, **vitest 20 dosya/128 test yeşil**, **Next prod build ✓** (`/campaigns` route + client form).
+- 🔥 Sınır yok bu iş için — flags deseninin (API→UI) aynısı; kampanya artık uçtan uca: owner panelde
+  besteleyip gönderiyor, API segmenti fan-out ediyor (gerçek APNs/FCM teslimi anahtar-gated, docs/10).
+- 📌 Admin 41→43 (+2; kampanya UI yarısı). Kalan admin: D7/metrik (veri-gated) + 2FA/davet/parola-
+  sıfırlama (rule #11 otonom). Bar 66.7 ≈ **67%**.
 
 ### #183 — admin push kampanyası API'si: owner-kapılı fan-out (PR #183)
 
