@@ -504,4 +504,11 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get homeSectionExplore => 'Explore';
+
+  @override
+  String get settingsSignatureSound => 'Opening sound';
+
+  @override
+  String get settingsSignatureSoundHint =>
+      'A short ambience when the app opens.';
 }

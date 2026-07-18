@@ -918,6 +918,18 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Explore'**
   String get homeSectionExplore;
+
+  /// Acilis aurasi anahtari
+  ///
+  /// In en, this message translates to:
+  /// **'Opening sound'**
+  String get settingsSignatureSound;
+
+  /// Acilis sesi aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'A short ambience when the app opens.'**
+  String get settingsSignatureSoundHint;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

@@ -220,6 +220,20 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #199 — aura kapatma anahtarı: ayarlarda "Açılış sesi" (PR #199)
+
+✅ **Yapıldı ve doğrulandı (448 test)** — spec'in BLOKLAYICI şartı kapandı
+
+- **Kapatılan boşluk:** #197'de `SignatureSoundStore` yazılmıştı ama **ayarlarda UI YOKTU** —
+  yani kullanıcı açılış sesini KAPATAMIYORDU. Sonik spec bunu bloklayıcı saymıştı:
+  "kapatılamayan açılış sesi bir uyku uygulamasında garantili tek yıldızdır." Haklıydı: ses
+  gece 23:00'te, yanında biri uyurken çalabilir.
+- **Yapıldı:** ayarlarda `SwitchListTile` (mevcut bildirim-toggle deseniyle), EN/TR metinler,
+  varsayılan AÇIK, kapatma kalıcı (secure storage).
+- **DOĞRULAMA:** 3 yeni test (varsayılan açık, kapatma kalıcı, tekrar açılabilir) →
+  **448 test yeşil**, analyze temiz, l10n EN/TR paritesi korundu.
+- 📌 Yüzde değişmedi (bloklayıcı bir eksiğin tamamlanması, yeni yetenek değil).
+
 ### #198 — aura ÖLÜ KODDU: bağlantı düzeltildi, release'de çaldığı kanıtlandı (PR #198)
 
 🔴 **Kendi hatamı buldum ve düzelttim** — #197'de aura ölü kod olarak merge edilmişti
