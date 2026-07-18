@@ -113,6 +113,18 @@ class AppL10nTr extends AppL10n {
   String get mixerLayerBrown => 'Kahverengi gürültü';
 
   @override
+  String get mixerLayerWaves => 'Okyanus dalgaları';
+
+  @override
+  String get mixerLayerFire => 'Çıtırdayan ateş';
+
+  @override
+  String get mixerLayerRain => 'Yağmur';
+
+  @override
+  String get mixerLayerPad => 'Sıcak pad';
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }

@@ -4,7 +4,7 @@ import { useActionState, useState } from 'react';
 import { Button, Input } from '@nocta/ui';
 import { useT } from '@/shared/i18n/I18nProvider';
 import { setRecipeAction, type RecipeState } from './actions';
-import { MAX_LAYERS, NOISE_TYPES, type NoiseType, type RecipeLayer } from './recipe-form';
+import { MAX_LAYERS, LAYER_SOURCES, type LayerSource, type RecipeLayer } from './recipe-form';
 
 const INITIAL: RecipeState = {};
 
@@ -60,11 +60,11 @@ export function RecipeForm({
             <span className="text-caption text-ink-secondary">{t('content.layerType')}</span>
             <select
               value={layer.type}
-              onChange={(e) => update(i, { type: e.target.value as NoiseType })}
+              onChange={(e) => update(i, { type: e.target.value as LayerSource })}
               className="min-h-11 rounded-chip border border-ink-faint/40 bg-bg-base px-3 text-body text-ink-primary"
             >
               {/* `noise` olarak adlandırıldı: `t` çeviri fonksiyonunu gölgelerdi. */}
-              {NOISE_TYPES.map((noise) => (
+              {LAYER_SOURCES.map((noise) => (
                 <option key={noise} value={noise}>
                   {noise}
                 </option>

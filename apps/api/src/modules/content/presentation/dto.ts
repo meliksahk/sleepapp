@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { MAX_MIXER_LAYERS, NOISE_TYPES, type NoiseType } from '../domain/mixer-state';
+import { MAX_MIXER_LAYERS, LAYER_SOURCES, type LayerSource } from '../domain/mixer-state';
 
 export class SoundscapeDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -18,8 +18,8 @@ export class MixerLayerDto {
   @ApiProperty({ example: 'rain', description: 'Katman kimliği (preset içinde benzersiz)' })
   id!: string;
 
-  @ApiProperty({ enum: NOISE_TYPES, example: 'pink' })
-  type!: NoiseType;
+  @ApiProperty({ enum: LAYER_SOURCES, example: 'pink' })
+  type!: LayerSource;
 
   @ApiProperty({ example: 0.5, minimum: 0, maximum: 1 })
   gain!: number;

@@ -19,8 +19,8 @@ void main() {
       (tester) async {
     final player = NativeMixPlayer(sampleRate: 48000, loopSeconds: 2);
     const spec = MixSpec([
-      MixLayer(id: 'a', type: NoiseType.pink, gain: 0.6),
-      MixLayer(id: 'b', type: NoiseType.brown, gain: 0.4),
+      MixLayer(id: 'a', type: LayerSource.pink, gain: 0.6),
+      MixLayer(id: 'b', type: LayerSource.brown, gain: 0.4),
     ]);
 
     // Çok katmanı native mikser'e ver — kanal + track kurulumu hata atmamalı.

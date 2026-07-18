@@ -1,10 +1,13 @@
-export const NOISE_TYPES = ['white', 'pink', 'brown'] as const;
-export type NoiseType = (typeof NOISE_TYPES)[number];
+// apps/* birbirini import EDEMEZ (CLAUDE.md §2) → bu liste sunucudakinin zorunlu
+// kopyasıdır. Kopyanın sessizce eskimesini `tooling/check-layer-source-drift.mjs`
+// engeller: sıra dahil sunucu + mobil ile karşılaştırılır.
+export const LAYER_SOURCES = ['white', 'pink', 'brown', 'waves', 'fire', 'rain', 'pad'] as const;
+export type LayerSource = (typeof LAYER_SOURCES)[number];
 export const MAX_LAYERS = 8;
 
 export interface RecipeLayer {
   id: string;
-  type: NoiseType;
+  type: LayerSource;
   gain: number;
 }
 
@@ -33,15 +36,15 @@ export function toFormLayers(raw: unknown): RecipeLayer[] {
     if (typeof id !== 'string' || id.length === 0) continue;
     out.push({
       id,
-      type: isNoiseType(type) ? type : 'pink',
+      type: isLayerSource(type) ? type : 'pink',
       gain: typeof gain === 'number' && Number.isFinite(gain) ? clamp01(gain) : 0.5,
     });
   }
   return out;
 }
 
-function isNoiseType(v: unknown): v is NoiseType {
-  return typeof v === 'string' && (NOISE_TYPES as readonly string[]).includes(v);
+function isLayerSource(v: unknown): v is LayerSource {
+  return typeof v === 'string' && (LAYER_SOURCES as readonly string[]).includes(v);
 }
 
 function clamp01(n: number): number {

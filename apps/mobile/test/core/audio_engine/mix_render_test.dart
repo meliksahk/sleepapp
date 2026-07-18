@@ -7,8 +7,8 @@ import 'package:nocta/core/audio_engine/dsp/noise.dart';
 
 /// Tipik uyku mix'i: yağmur (pembe) + derin (kahverengi).
 const _sleepMix = MixSpec([
-  MixLayer(id: 'rain', type: NoiseType.pink, gain: 0.5),
-  MixLayer(id: 'deep', type: NoiseType.brown, gain: 0.4),
+  MixLayer(id: 'rain', type: LayerSource.pink, gain: 0.5),
+  MixLayer(id: 'deep', type: LayerSource.brown, gain: 0.4),
 ]);
 
 void main() {
@@ -33,14 +33,14 @@ void main() {
     // Tüm katmanlar aynı seed'i kullansaydı iki pembe katman BİREBİR aynı olur,
     // toplama sesi zenginleştirmek yerine sadece yükseltirdi. Asal çarpanla ayrışıyor.
     final soloIndex0 = renderMix(
-      const MixSpec([MixLayer(id: 'a', type: NoiseType.pink, gain: 1.0)]),
+      const MixSpec([MixLayer(id: 'a', type: LayerSource.pink, gain: 1.0)]),
       seconds: 1,
       seed: 42,
     );
     final atIndex1 = renderMix(
       const MixSpec([
-        MixLayer(id: 'x', type: NoiseType.pink, gain: 0.0), // indeks 0 (sessiz)
-        MixLayer(id: 'a', type: NoiseType.pink, gain: 1.0), // indeks 1
+        MixLayer(id: 'x', type: LayerSource.pink, gain: 0.0), // indeks 0 (sessiz)
+        MixLayer(id: 'a', type: LayerSource.pink, gain: 1.0), // indeks 1
       ]),
       seconds: 1,
       seed: 42,
@@ -57,7 +57,7 @@ void main() {
   test('DC zincirde temizleniyor: pembe katmanın artık DC’si çıkışta yok', () {
     // Ham pembe dc≈-0.036 (#95); zincirin sonundaki DcBlocker onu siler (#96).
     final out = renderMix(
-      const MixSpec([MixLayer(id: 'p', type: NoiseType.pink, gain: 1.0)]),
+      const MixSpec([MixLayer(id: 'p', type: LayerSource.pink, gain: 1.0)]),
       seconds: 5,
       seed: 42,
     );
@@ -66,14 +66,14 @@ void main() {
 
   test('kazanç 0 olan katman çıkışa hiç katkı vermez', () {
     final withoutSilent = renderMix(
-      const MixSpec([MixLayer(id: 'p', type: NoiseType.pink, gain: 1.0)]),
+      const MixSpec([MixLayer(id: 'p', type: LayerSource.pink, gain: 1.0)]),
       seconds: 1,
       seed: 5,
     );
     final withSilent = renderMix(
       const MixSpec([
-        MixLayer(id: 'p', type: NoiseType.pink, gain: 1.0), // indeks 0 — aynı seed
-        MixLayer(id: 'w', type: NoiseType.white, gain: 0.0), // sessiz
+        MixLayer(id: 'p', type: LayerSource.pink, gain: 1.0), // indeks 0 — aynı seed
+        MixLayer(id: 'w', type: LayerSource.white, gain: 0.0), // sessiz
       ]),
       seconds: 1,
       seed: 5,
@@ -91,9 +91,9 @@ void main() {
     var clipped = -1;
     renderMix(
       const MixSpec([
-        MixLayer(id: 'a', type: NoiseType.white, gain: 1.0),
-        MixLayer(id: 'b', type: NoiseType.white, gain: 1.0),
-        MixLayer(id: 'c', type: NoiseType.white, gain: 1.0),
+        MixLayer(id: 'a', type: LayerSource.white, gain: 1.0),
+        MixLayer(id: 'b', type: LayerSource.white, gain: 1.0),
+        MixLayer(id: 'c', type: LayerSource.white, gain: 1.0),
       ]),
       seconds: 1,
       seed: 1,

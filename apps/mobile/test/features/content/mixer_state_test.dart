@@ -19,9 +19,9 @@ void main() {
       expect(s, isNotNull);
       expect(s!.layers, hasLength(2));
       expect(s.layers[0].id, 'rain');
-      expect(s.layers[0].type, NoiseType.pink);
+      expect(s.layers[0].type, LayerSource.pink);
       expect(s.layers[0].gain, 0.7);
-      expect(s.layers[1].type, NoiseType.brown);
+      expect(s.layers[1].type, LayerSource.brown);
     });
 
     test('int kazanç (JSON 0/1) double’a çevrilir', () {
@@ -107,7 +107,7 @@ void main() {
       final spec = MixerState.tryParse(_serverJson)!.toMixSpec();
       expect(spec.layers, hasLength(2));
       expect(spec.layers[0].id, 'rain');
-      expect(spec.layers[0].type, NoiseType.pink);
+      expect(spec.layers[0].type, LayerSource.pink);
       expect(spec.layers[0].gain, 0.7);
     });
 

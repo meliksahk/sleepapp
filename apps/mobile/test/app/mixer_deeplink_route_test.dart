@@ -27,8 +27,8 @@ void main() {
           archetypeAffinity: const ['deep-ocean'],
           version: 1,
           mixSpec: MixSpec(const [
-            MixLayer(id: 'deep', type: NoiseType.brown, gain: 0.5),
-            MixLayer(id: 'surf', type: NoiseType.pink, gain: 0.25),
+            MixLayer(id: 'deep', type: LayerSource.brown, gain: 0.5),
+            MixLayer(id: 'surf', type: LayerSource.pink, gain: 0.25),
           ]),
         ),
         presets: const [],

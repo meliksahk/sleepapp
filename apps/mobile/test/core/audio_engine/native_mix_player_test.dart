@@ -11,8 +11,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const spec = MixSpec([
-    MixLayer(id: 'a', type: NoiseType.pink, gain: 0.6),
-    MixLayer(id: 'b', type: NoiseType.brown, gain: 0.4),
+    MixLayer(id: 'a', type: LayerSource.pink, gain: 0.6),
+    MixLayer(id: 'b', type: LayerSource.brown, gain: 0.4),
   ]);
 
   late List<MethodCall> calls;

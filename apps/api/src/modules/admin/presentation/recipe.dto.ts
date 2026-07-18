@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt } from 'class-validator';
-import { ENGINE_PARAMS_SCHEMA_VERSION, MAX_MIXER_LAYERS, NOISE_TYPES } from '../../content';
+import { ENGINE_PARAMS_SCHEMA_VERSION, MAX_MIXER_LAYERS, LAYER_SOURCES } from '../../content';
 
 /**
  * Ses tarifi girdisi.
@@ -19,7 +19,7 @@ export class SetRecipeDto {
   schemaVersion!: number;
 
   @ApiProperty({
-    description: `Mikser katmanları (1–${MAX_MIXER_LAYERS}); type: ${NOISE_TYPES.join('|')}, gain 0–1`,
+    description: `Mikser katmanları (1–${MAX_MIXER_LAYERS}); type: ${LAYER_SOURCES.join('|')}, gain 0–1`,
     example: [{ id: 'base', type: 'pink', gain: 0.5 }],
     type: 'array',
     items: { type: 'object', additionalProperties: true },
@@ -32,7 +32,7 @@ export class SetRecipeDto {
 
 export class RecipeLayerDto {
   @ApiProperty() id!: string;
-  @ApiProperty({ enum: NOISE_TYPES }) type!: string;
+  @ApiProperty({ enum: LAYER_SOURCES }) type!: string;
   @ApiProperty({ description: '[0,1] mikser kazancı' }) gain!: number;
 }
 

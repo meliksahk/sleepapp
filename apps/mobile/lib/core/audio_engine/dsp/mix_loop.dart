@@ -30,6 +30,24 @@ import 'mix_render.dart';
 /// Lineer crossfade'de harman bölgesinde güç ~3 dB düşer (duyulur bir ses azalması);
 /// sin²+cos²=1 olduğu için eşit-güç, korelasyonsuz sinyallerde gücü SABİT tutar.
 ///
+/// ## İSTİSNA — döngüye KİLİTLİ kaynaklar (#213)
+///
+/// Eşit-güç crossfade'in dayandığı varsayım "kuyruk ile baş KORELASYONSUZ"dur.
+/// `LayerSource.pad` bu varsayımı bilerek çiğner: tamamen tonaldir ve her frekansı
+/// döngüde tam sayıda periyot tamamlar → `s[n+i] = s[i]`, yani kuyruk ile baş
+/// BİREBİR AYNIdır. Böyle bir sinyalde eşit-güç harmanı `s[i]·(sinθ + cosθ)`
+/// verir; θ=π/4'te çarpan √2, yani **her döngü başında 50 ms boyunca +3 dB**.
+/// Uyku uygulamasında 30 saniyede bir gelen bu kabarma tam da gizlemeye
+/// çalıştığımız türden bir düzenliliktir.
+///
+/// Çözüm crossfade'i "düzeltmek" değil, GEREKSİZ olduğunu fark etmektir: kilitli
+/// kaynakta `s[n] = s[0]` ve `s[n+1] = s[1]` zaten sağlanır → dikiş hem değerde
+/// hem türevde süreklidir. Bu yüzden kilitli katman ham kopyalanır.
+///
+/// Karar KATMAN BAŞINAdır (`isLoopPeriodic`), spec başına değil: gürültü + pad
+/// karışık bir mix'te gürültü crossfade'lenirken pad'in ham kalması gerekir.
+/// (`MixPlayer` zaten katman başına ayrı çağırır; bu yol karışık spec'ler için.)
+///
 /// Bu bir OYNATMA (döngü) kaygısıdır; `renderMix` (native grafın eşleşeceği referans
 /// offline render) BİLEREK dokunulmadan bırakıldı.
 Float32List renderSeamlessLoop(
@@ -50,6 +68,17 @@ Float32List renderSeamlessLoop(
     // bilerek istemiş; sessiz bir "sorunsuz" yalanı üretmeyiz).
     return renderMix(spec,
         seconds: loopSeconds, sampleRate: sampleRate, seed: seed, onClipReport: onClipReport);
+  }
+
+  if (spec.layers.any((l) => isLoopPeriodic(l.type))) {
+    return _renderPerLayerLoop(
+      spec,
+      n: n,
+      x: x,
+      sampleRate: sampleRate,
+      seed: seed,
+      onClipReport: onClipReport,
+    );
   }
 
   // N+X üret: aynı deterministik dizinin devamı (kuyruk = döngü sonrası ne gelirdi).
@@ -83,4 +112,61 @@ Float32List renderSeamlessLoop(
     out[i] = s[i];
   }
   return out;
+}
+
+/// Katman başına crossfade yolu — spec'te en az bir **döngüye kilitli** kaynak
+/// varsa kullanılır (bkz. dosya başındaki "İSTİSNA" notu).
+///
+/// Kilitli olmayan katmanlar tam olarak yukarıdaki eşit-güç harmanından geçer;
+/// kilitli katmanlar ham kopyalanır. Toplama ve DC zinciri `mixLayerBuffers` ile
+/// ortaktır → iki yolun mikser semantiği ayrışamaz.
+///
+/// ⚠️ Sıra farkı (bilinçli): burada DC engelleyici crossfade'den SONRA, düz yolda
+/// ÖNCE çalışır. Düz yol bilerek bit-bit korundu (mevcut testler onu kilitliyor);
+/// bu yol yalnız pad içeren spec'lerde devreye girer.
+Float32List _renderPerLayerLoop(
+  MixSpec spec, {
+  required int n,
+  required int x,
+  required int sampleRate,
+  required int seed,
+  void Function(int clipped)? onClipReport,
+}) {
+  final scale = (math.pi / 2) / x;
+  final buffers = <String, Float32List>{};
+
+  for (var i = 0; i < spec.layers.length; i++) {
+    final layer = spec.layers[i];
+    final periodic = isLoopPeriodic(layer.type);
+    // Kilitli katmanda kuyruğa hiç ihtiyaç yok (kuyruk = başın kopyası).
+    final full = renderSource(
+      layer.type,
+      periodic ? n : n + x,
+      seed: layerSeed(seed, i),
+      sampleRate: sampleRate,
+      loopSamples: n,
+    );
+
+    final lay = Float32List(n);
+    if (periodic) {
+      lay.setRange(0, n, full);
+    } else {
+      for (var k = 0; k < x; k++) {
+        final theta = k * scale;
+        lay[k] = full[k] * math.sin(theta) + full[n + k] * math.cos(theta);
+      }
+      for (var k = x; k < n; k++) {
+        lay[k] = full[k];
+      }
+    }
+    buffers[layer.id] = lay;
+  }
+
+  return mixLayerBuffers(
+    spec,
+    buffers,
+    samples: n,
+    sampleRate: sampleRate,
+    onClipReport: onClipReport,
+  );
 }

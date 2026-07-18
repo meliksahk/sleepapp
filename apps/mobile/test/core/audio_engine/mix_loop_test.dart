@@ -13,7 +13,7 @@ void main() {
   const loopSeconds = 2;
   const n = sr * loopSeconds;
 
-  MixSpec spec(NoiseType t) => MixSpec([MixLayer(id: 'a', type: t, gain: 1.0)]);
+  MixSpec spec(LayerSource t) => MixSpec([MixLayer(id: 'a', type: t, gain: 1.0)]);
 
   /// Döngü dikişindeki adım: son örnekten ilk örneğe (buffer kendine eklenince).
   double seamStep(Float32List b) => (b[0] - b[b.length - 1]).abs();
@@ -40,9 +40,9 @@ void main() {
     test('ÇEKİRDEK: KAHVERENGİ gürültüde dikiş sıçraması ham render\'a göre ÇÖKER', () {
       // Kahverengi gürültü integre edilmiş (rastgele yürüyüş) → düz render'da
       // buffer'ın iki ucu birbirinden UZAK; dikiş = büyük bir sıçrama (tık).
-      final plain = renderMix(spec(NoiseType.brown),
+      final plain = renderMix(spec(LayerSource.brown),
           seconds: loopSeconds, sampleRate: sr, seed: 3);
-      final seamless = renderSeamlessLoop(spec(NoiseType.brown),
+      final seamless = renderSeamlessLoop(spec(LayerSource.brown),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 3);
 
       final plainSeam = seamStep(plain);
@@ -57,7 +57,7 @@ void main() {
     });
 
     test('ÇEKİRDEK: PEMBE gürültüde de dikiş iç adım profiline oturur', () {
-      final seamless = renderSeamlessLoop(spec(NoiseType.pink),
+      final seamless = renderSeamlessLoop(spec(LayerSource.pink),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 7);
       expect(seamStep(seamless), lessThanOrEqualTo(interiorPercentile(seamless, 0.999)));
     });
@@ -65,7 +65,7 @@ void main() {
 
   group('eşit-güç: ses seviyesi harman bölgesinde DÜŞMEZ', () {
     test('ÇEKİRDEK: crossfade bölgesi RMS\'i düz bölge RMS\'ine yakın (lineer olsa ~3dB düşerdi)', () {
-      final b = renderSeamlessLoop(spec(NoiseType.white),
+      final b = renderSeamlessLoop(spec(LayerSource.white),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 11);
       final x = (0.050 * sr).round(); // varsayılan 50ms crossfade
       final blendRms = rms(b, 0, x);
@@ -79,7 +79,7 @@ void main() {
 
   group('güvenlik ve belirlenimcilik', () {
     test('uzunluk tam olarak loopSeconds×sampleRate', () {
-      final b = renderSeamlessLoop(spec(NoiseType.pink),
+      final b = renderSeamlessLoop(spec(LayerSource.pink),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 1);
       expect(b.length, n);
     });
@@ -87,7 +87,7 @@ void main() {
     test('ÇEKİRDEK: crossfade bölgesi [-1,1] içinde (√2 toplam taşması clamp\'lenir)', () {
       // Eşit-güç toplamı √2'ye çıkabilir; clamp yalnızca HARMAN bölgesini bağlar.
       final x = (0.050 * sr).round();
-      for (final t in NoiseType.values) {
+      for (final t in LayerSource.values) {
         final b = renderSeamlessLoop(spec(t),
             loopSeconds: loopSeconds, sampleRate: sr, seed: 42);
         for (var i = 0; i < x; i++) {
@@ -109,7 +109,7 @@ void main() {
         return m;
       }
 
-      for (final t in NoiseType.values) {
+      for (final t in LayerSource.values) {
         final raw = renderMix(spec(t),
             seconds: loopSeconds, sampleRate: sr, seed: 42, extraSamples: x);
         final seamless = renderSeamlessLoop(spec(t),
@@ -120,18 +120,18 @@ void main() {
     });
 
     test('aynı seed → birebir aynı buffer (belirlenimci)', () {
-      final a = renderSeamlessLoop(spec(NoiseType.brown),
+      final a = renderSeamlessLoop(spec(LayerSource.brown),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 9);
-      final b = renderSeamlessLoop(spec(NoiseType.brown),
+      final b = renderSeamlessLoop(spec(LayerSource.brown),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 9);
       expect(a, equals(b));
     });
 
     test('crossfade=0 → düz render\'a düşer (sessiz "sorunsuz" yalanı yok)', () {
-      final seamless = renderSeamlessLoop(spec(NoiseType.white),
+      final seamless = renderSeamlessLoop(spec(LayerSource.white),
           loopSeconds: loopSeconds, sampleRate: sr, seed: 5, crossfade: Duration.zero);
       final plain =
-          renderMix(spec(NoiseType.white), seconds: loopSeconds, sampleRate: sr, seed: 5);
+          renderMix(spec(LayerSource.white), seconds: loopSeconds, sampleRate: sr, seed: 5);
       expect(seamless, equals(plain));
     });
   });

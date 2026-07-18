@@ -3,7 +3,7 @@ import 'dsp/mix_render.dart';
 /// `soundscapes.engine_params` → [MixSpec] ayrıştırıcısı.
 ///
 /// **Sözleşme sunucuyla AYNIDIR** (apps/api content/domain/engine-params.ts):
-/// `{ schemaVersion: 1, layers: [{id, type: white|pink|brown, gain: 0..1}] }`.
+/// `{ schemaVersion: 1, layers: [{id, type: LayerSource adı, gain: 0..1}] }`.
 /// İki taraf ayrı dilde olduğu için sözleşme iki yerde yazılı; **değişirse İKİSİ
 /// birlikte değişmelidir** (mixer-state.ts'teki aynı not).
 ///
@@ -48,7 +48,7 @@ MixLayer? _parseLayer(Object? input) {
   final id = input['id'];
   if (id is! String || id.isEmpty) return null;
 
-  final type = _parseNoiseType(input['type']);
+  final type = _parseLayerSource(input['type']);
   if (type == null) return null;
 
   // `num` kabul edilir: JSON'da 1 (int) ile 1.0 (double) aynı şeydir ve sunucu
@@ -59,18 +59,20 @@ MixLayer? _parseLayer(Object? input) {
   return MixLayer(id: id, type: type, gain: gain.toDouble());
 }
 
-NoiseType? _parseNoiseType(Object? value) {
-  switch (value) {
-    case 'white':
-      return NoiseType.white;
-    case 'pink':
-      return NoiseType.pink;
-    case 'brown':
-      return NoiseType.brown;
-    default:
-      // Sunucu yeni bir kaynak ekleyip bu uygulamayı güncellemeyen kullanıcıya
-      // yollarsa: bilmediğimiz kaynağı "yaklaşık" bir şeyle değiştirmek YANLIŞ
-      // ses çalmak olurdu. Tarif komple reddedilir.
-      return null;
+/// Tel üzerindeki dizgi → enum. Tek kaynak `LayerSource.values`: elle yazılmış bir
+/// switch, enum'a yeni kaynak eklenince SESSİZCE eksik kalırdı (yeni tip "tanınmadı"
+/// diye tarifi reddederdi ve bu, kullanıcıda "ses çalmıyor" olarak görünürdü).
+final Map<String, LayerSource> _layerSourceByName = {
+  for (final s in LayerSource.values) s.name: s,
+};
+
+LayerSource? _parseLayerSource(Object? value) {
+  if (value is String) {
+    final match = _layerSourceByName[value];
+    if (match != null) return match;
   }
+  // Sunucu yeni bir kaynak ekleyip bu uygulamayı güncellemeyen kullanıcıya
+  // yollarsa: bilmediğimiz kaynağı "yaklaşık" bir şeyle değiştirmek YANLIŞ
+  // ses çalmak olurdu. Tarif komple reddedilir.
+  return null;
 }

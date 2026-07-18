@@ -27,7 +27,8 @@
     "check:health-claims": "node tooling/check-health-claims.mjs",
     "check:i18n": "node tooling/check-hardcoded-strings.mjs",
     "check:env-example": "node tooling/check-env-example.mjs",
-    "check:archetype-drift": "node tooling/check-archetype-drift.mjs"
+    "check:archetype-drift": "node tooling/check-archetype-drift.mjs",
+    "check:layer-source-drift": "node tooling/check-layer-source-drift.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
