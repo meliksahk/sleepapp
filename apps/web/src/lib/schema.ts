@@ -87,6 +87,37 @@ export function buildFaqJsonLd(
   };
 }
 
+/** Blog yazısı — Article (docs/05 long-tail; datePublished ile tazelik sinyali). */
+export function buildBlogPostJsonLd(input: {
+  slug: string;
+  title: string;
+  description: string;
+  publishedAt: string;
+}): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: input.title,
+    description: input.description,
+    datePublished: input.publishedAt,
+    url: `${SITE_URL}/blog/${input.slug}`,
+    isPartOf: { '@type': 'WebSite', name: 'NOCTA', url: SITE_URL },
+    publisher: { '@type': 'Organization', name: 'NOCTA', url: SITE_URL },
+  };
+}
+
+/** Blog yazısı gezinti kırıntısı (Home → Blog → yazı). */
+export function buildBlogBreadcrumbJsonLd(input: {
+  slug: string;
+  title: string;
+}): Record<string, unknown> {
+  return buildBreadcrumbTrail([
+    { name: 'Home', path: '' },
+    { name: 'Blog', path: '/blog' },
+    { name: input.title, path: `/blog/${input.slug}` },
+  ]);
+}
+
 /** Site geneli Organization — her sayfada (root layout). */
 export function buildOrganizationJsonLd(): Record<string, unknown> {
   return {
