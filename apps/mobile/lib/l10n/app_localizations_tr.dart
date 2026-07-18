@@ -79,6 +79,12 @@ class AppL10nTr extends AppL10n {
       'Telefonuna kaydedildi ama sunucuya ulaşılamadı.';
 
   @override
+  String get sleepStripActive => 'Gecen takip ediliyor';
+
+  @override
+  String get sleepStripOpen => 'Uyku modunu aç';
+
+  @override
   String get homeSleepMode => 'Uyku modu';
 
   @override
@@ -102,6 +108,18 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get mixerPreparing => 'Ses hazırlanıyor…';
+
+  @override
+  String get mixerSoundLabel => 'Bu gecenin sesi';
+
+  @override
+  String get mixerStatusPlaying => 'Çalıyor';
+
+  @override
+  String get mixerStatusPaused => 'Duraklatıldı';
+
+  @override
+  String get mixerLayersLabel => 'Katmanlar';
 
   @override
   String get mixerLayerWhite => 'Beyaz gürültü';

@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/audio_engine/signature_player.dart';
 import '../core/design_system/nocta_theme.dart';
+import '../core/launch/launch_moment.dart';
 import '../features/analytics/analytics_flusher.dart';
 import '../features/analytics/analytics_providers.dart';
 import '../features/auth/auth_providers.dart';
@@ -12,6 +13,7 @@ import '../features/onboarding/onboarding_store.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/settings/locale_store.dart';
 import '../features/settings/signature_sound_store.dart';
+import '../features/sleep/presentation/sleep_session_strip.dart';
 import 'router.dart';
 
 /// Kök uygulama widget'ı — dark-first (uygulama gece yaşar, docs/06).
@@ -26,11 +28,51 @@ import 'router.dart';
 ///
 /// Artık hata durumunda da router açılır: API isteyen ekranlar kendi hatalarını
 /// gösterir, internetsiz çalışabilenler (mikser) çalışır.
-class NoctaApp extends ConsumerWidget {
+class NoctaApp extends ConsumerStatefulWidget {
   const NoctaApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NoctaApp> createState() => _NoctaAppState();
+}
+
+class _NoctaAppState extends ConsumerState<NoctaApp> {
+  /// Açılış aurası ARTIK BURADA tetikleniyor — `_AppRoot`/`_OnboardingApp`'ta
+  /// değil.
+  ///
+  /// **Neden taşındı:** o iki kök ancak açılış anı BİTTİKTEN sonra ağaca giriyor
+  /// (bkz. [LaunchMoment.ready]). Ses orada tetiklenseydi, ay çoktan doğup
+  /// sönerken çalmaya başlardı — yani "görsel sesle senkron" fikri tam olarak
+  /// çöpe giderdi. Bu State açılışın İLK karesinde kuruluyor ve uygulama boyunca
+  /// yaşıyor; ses 3.6 sn boyunca kesintisiz çalabiliyor.
+  final SignaturePlayer _signature = SignaturePlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    // Üretim `compute()` ile ayrı isolate'te olduğu için UI donmaz.
+    unawaited(_maybePlaySignature());
+  }
+
+  Future<void> _maybePlaySignature() async {
+    try {
+      final enabled = await ref.read(signatureSoundStoreProvider).isEnabled();
+      if (!enabled || !mounted) return;
+      await _signature.play();
+    } catch (e, st) {
+      // Açılış sesi uygulamanın açılmasını asla engellemez — ama sessizce de
+      // yutulmaz (CLAUDE.md §4).
+      debugPrint('nocta.aura: açılış sesi tetiklenemedi: $e\n$st');
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_signature.dispose());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bootstrap = ref.watch(sessionBootstrapProvider);
     final seenOnboarding = ref.watch(onboardingSeenProvider);
     // Dil tercihi: null -> sistem dili. Coz&uuml;lene dek splash beklemeye gerek yok;
@@ -41,15 +83,27 @@ class NoctaApp extends ConsumerWidget {
     // İLK AÇILIŞ KAPISI (Faz 0 cila): karşılama akışı görülmediyse önce o gösterilir.
     // Oturum bootstrap'i ARKA PLANDA paralel ilerler — kullanıcı okurken hazır olur.
     // Flag okunamazsa (hata) akış ATLANIR: onboarding uygulamayı asla kilitlememeli.
-    if (seenOnboarding.isLoading) {
-      return _SplashApp(theme: theme);
-    }
     final needsOnboarding = seenOnboarding.maybeWhen(
       data: (seen) => !seen,
       orElse: () => false,
     );
-    if (needsOnboarding) {
-      return _OnboardingApp(
+
+    // Açılış anı splash'ın ARKASINDAN kalkacak içeriği burada seçiyoruz.
+    // `ready`, "bu içerik gösterilebilir mi" sorusunun cevabı.
+    final Widget content;
+    final bool ready;
+    if (seenOnboarding.isLoading) {
+      // Hangi kapıya gideceğimizi HENÜZ bilmiyoruz (yerel bayrak okuması, ~ms).
+      //
+      // **Dürüst köşe durumu:** bu okuma üst sınırı (2.2 sn) aşarsa kullanıcı ana
+      // köke düşer ve ilk açılış karşılamasını O AÇILIŞTA görmez. Kabul edildi:
+      // `markSeen()` çağrılmadığı için karşılama BİR SONRAKİ açılışta yine
+      // gösterilir, yani akış kaybolmaz — sadece ertelenir. Alternatif (splash'ta
+      // beklemek) uygulamayı kilitlerdi.
+      content = _AppRoot(theme: theme, locale: locale, offline: true);
+      ready = false;
+    } else if (needsOnboarding) {
+      content = _OnboardingApp(
         theme: theme,
         locale: locale,
         onDone: () async {
@@ -57,16 +111,18 @@ class NoctaApp extends ConsumerWidget {
           ref.invalidate(onboardingSeenProvider);
         },
       );
+      ready = true;
+    } else {
+      // Oturum HENÜZ çözülmediyse çevrimdışı kabuk hazır tutulur: üst sınır
+      // dolduğunda kullanıcı sonsuz splash'ta kalmaz, çalışan bir uygulamaya
+      // (yerel mikser + yeniden dene çubuğu) girer. Bootstrap sonradan
+      // başarırsa bu widget `offline: false` ile yeniden kurulur.
+      // Hata = ÇEVRİMDIŞI MOD, kilit değil (bkz. sınıf notu).
+      content = _AppRoot(theme: theme, locale: locale, offline: !bootstrap.hasValue);
+      ready = !bootstrap.isLoading;
     }
 
-    return bootstrap.when(
-      data: (_) => _AppRoot(theme: theme, locale: locale),
-      // Yükleme KISA ve belirleyici: oturum ya kurulur ya hata verir. Splash burada
-      // kalır çünkü henüz hangi durumda olduğumuzu bilmiyoruz.
-      loading: () => _SplashApp(theme: theme),
-      // Hata = ÇEVRİMDIŞI MOD, kilit değil.
-      error: (error, stack) => _AppRoot(theme: theme, locale: locale, offline: true),
-    );
+    return LaunchMoment(ready: ready, child: content);
   }
 }
 
@@ -89,32 +145,20 @@ class _AppRoot extends ConsumerStatefulWidget {
 
 class _AppRootState extends ConsumerState<_AppRoot> {
   late final AnalyticsFlusher _flusher;
-  final SignaturePlayer _signature = SignaturePlayer();
 
   @override
   void initState() {
     super.initState();
     _flusher = AnalyticsFlusher(ref.read(analyticsProvider));
     WidgetsBinding.instance.addObserver(_flusher);
-    // AÇILIŞ AURASI — yalnızca COLD START'ta (bu State bir kez kurulur) ve ayar
-    // açıkken. Üretim `compute()` ile ayrı isolate'te olduğu için UI donmaz.
-    unawaited(_maybePlaySignature());
-  }
-
-  Future<void> _maybePlaySignature() async {
-    try {
-      final enabled = await ref.read(signatureSoundStoreProvider).isEnabled();
-      if (!enabled || !mounted) return;
-      await _signature.play();
-    } catch (_) {
-      // Açılış sesi uygulamanın açılmasını asla engellemez.
-    }
+    // AÇILIŞ AURASI ARTIK BURADA DEĞİL: `NoctaApp` açılışın ilk karesinde
+    // tetikliyor (bkz. `_NoctaAppState._signature`). Bu kök splash kalktıktan
+    // SONRA kuruluyor; ses burada başlasaydı animasyonun gerisinde kalırdı.
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(_flusher);
-    unawaited(_signature.dispose());
     super.dispose();
   }
 
@@ -130,118 +174,80 @@ class _AppRootState extends ConsumerState<_AppRoot> {
       localizationsDelegates: AppL10n.localizationsDelegates,
       supportedLocales: AppL10n.supportedLocales,
       routerConfig: appRouter,
+      // KABUK KATMANI: her ekranın ÜSTÜNDE duran bantlar burada yaşar. Ekran
+      // başına eklemek yasak — yeni bir ekran geldiğinde unutulur ve kullanıcı
+      // ekrandan ekrana geçerken bilgi kaybolur.
       builder: (context, child) {
-        if (!widget.offline || child == null) {
-          return child ?? const SizedBox.shrink();
+        if (child == null) return const SizedBox.shrink();
+        // Süren gece: sayaç HER ekranda. Oturum yokken sıfır boyutludur — yani
+        // çevrimdışı olmayan normal durumda düzen eskisiyle birebir aynı.
+        Widget strip = SleepSessionStrip(router: appRouter);
+        if (widget.offline) {
+          // İki bant üst üste gelirse çentik boşluğunu ÜSTTEKİ tüketir. Şeridin
+          // kendi `SafeArea`'sı ikinci kez uygulasaydı aralarında koca bir
+          // boşluk kalırdı (kardeş widget'lar aynı MediaQuery'yi görür).
+          strip = MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: strip,
+          );
         }
-        // Çevrimdışıyken kullanıcı NEDEN bazı şeylerin boş olduğunu bilmeli —
-        // sessizce boş ekran göstermek "uygulama bozuk" izlenimi verirdi.
         return Column(
           children: [
-            Material(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.cloud_off, size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          AppL10n.of(context).offlineBanner,
-                          key: const Key('offline-banner'),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
-                      TextButton(
-                        key: const Key('offline-retry'),
-                        onPressed: () =>
-                            ref.invalidate(sessionBootstrapProvider),
-                        child: Text(AppL10n.of(context).offlineRetry),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // Çevrimdışıyken kullanıcı NEDEN bazı şeylerin boş olduğunu bilmeli —
+            // sessizce boş ekran göstermek "uygulama bozuk" izlenimi verirdi.
+            if (widget.offline) _offlineBanner(context),
+            strip,
             Expanded(child: child),
           ],
         );
       },
     );
   }
+
+  Widget _offlineBanner(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.cloud_off, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  AppL10n.of(context).offlineBanner,
+                  key: const Key('offline-banner'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              TextButton(
+                key: const Key('offline-retry'),
+                onPressed: () => ref.invalidate(sessionBootstrapProvider),
+                child: Text(AppL10n.of(context).offlineRetry),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// İlk açılış karşılaması için kök — router YOK (akış tek ekran, geri yığını gereksiz).
 /// l10n delegeleri şart: onboarding metinleri arb'den gelir (CLAUDE.md §4).
-class _OnboardingApp extends ConsumerStatefulWidget {
+class _OnboardingApp extends StatelessWidget {
   const _OnboardingApp({required this.theme, required this.onDone, this.locale});
 
   final ThemeData theme;
   final Locale? locale;
   final Future<void> Function() onDone;
 
-  @override
-  ConsumerState<_OnboardingApp> createState() => _OnboardingAppState();
-}
-
-class _OnboardingAppState extends ConsumerState<_OnboardingApp> {
-  final SignaturePlayer _signature = SignaturePlayer();
-
-  @override
-  void initState() {
-    super.initState();
-    // AURA İLK AÇILIŞTA DA ÇALAR. Önceden yalnız `_AppRoot`'a bağlıydı; yani
-    // kullanıcının uygulamayı gördüğü İLK an sessizdi — oysa istenen tam olarak
-    // "açılışta atmosfer". SignaturePlayer'ın süreç-düzeyi bayrağı, onboarding
-    // bitip ana kök kurulunca sesin İKİNCİ kez çalmasını engeller.
-    unawaited(_maybePlay());
-  }
-
-  Future<void> _maybePlay() async {
-    try {
-      if (await ref.read(signatureSoundStoreProvider).isEnabled() && mounted) {
-        await _signature.play();
-      }
-    } catch (_) {
-      // Karşılama akışı sesten bağımsız çalışmalı.
-    }
-  }
-
-  @override
-  void dispose() {
-    unawaited(_signature.dispose());
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NOCTA',
-      debugShowCheckedModeBanner: false,
-      theme: widget.theme,
-      locale: widget.locale,
-      localizationsDelegates: AppL10n.localizationsDelegates,
-      supportedLocales: AppL10n.supportedLocales,
-      home: OnboardingScreen(onDone: widget.onDone),
-    );
-  }
-}
-
-/// Metinsiz açılış ekranı: yalnızca oturum ÇÖZÜLENE KADAR görünür.
-///
-/// Artık "yeniden dene" yolu YOK — hata durumunda uygulama bu ekranda kalmıyor,
-/// çevrimdışı moda geçip router'ı açıyor (bkz. [NoctaApp]). Yeniden deneme,
-/// çevrimdışı çubuğundaki butonda.
-class _SplashApp extends StatelessWidget {
-  const _SplashApp({required this.theme});
-
-  final ThemeData theme;
+  // AURA İLK AÇILIŞTA DA ÇALAR — ama tetikleyici artık `NoctaApp` (tek yer).
+  // Önceden hem burası hem `_AppRoot` tetikliyordu ve çift çalmayı yalnızca
+  // SignaturePlayer'ın süreç-düzeyi bayrağı engelliyordu; artık tek çağıran var.
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +255,10 @@ class _SplashApp extends StatelessWidget {
       title: 'NOCTA',
       debugShowCheckedModeBanner: false,
       theme: theme,
-      home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      locale: locale,
+      localizationsDelegates: AppL10n.localizationsDelegates,
+      supportedLocales: AppL10n.supportedLocales,
+      home: OnboardingScreen(onDone: onDone),
     );
   }
 }

@@ -14,6 +14,11 @@ import '../features/sleep/presentation/sleep_mode_screen.dart';
 import '../features/sleep/presentation/sleep_history_screen.dart';
 import '../features/sleep/sleep_providers.dart';
 
+/// Uyku modu rotası — kabuk şeridi (bkz. `SleepSessionStrip`) hem oraya gitmek
+/// hem de "zaten oradayım, çift sayaç gösterme" kararı için bunu okur. Sabit
+/// olmasa iki yerde elle yazılırdı ve biri değişince sessizce bozulurdu.
+const String sleepModeRoutePath = '/sleep-mode';
+
 /// Uygulama route'ları — tek dosyada tip güvenli (docs/04). M1'de büyür.
 final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
@@ -32,7 +37,7 @@ final GoRouter appRouter = GoRouter(
           ArchetypeDetailScreen(slug: state.pathParameters['slug'] ?? ''),
     ),
     GoRoute(
-      path: '/sleep-mode',
+      path: sleepModeRoutePath,
       builder: (context, state) => Consumer(
         builder: (context, ref, _) =>
             SleepModeScreen(controller: ref.read(sleepModeControllerProvider)),

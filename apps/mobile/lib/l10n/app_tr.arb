@@ -20,6 +20,9 @@
   "sleepModeSaved": "Gece kaydedildi: {hours}sa {minutes}dk",
   "sleepModeSaveFailed": "Telefonuna kaydedildi ama sunucuya ulaşılamadı.",
 
+  "sleepStripActive": "Gecen takip ediliyor",
+  "sleepStripOpen": "Uyku modunu aç",
+
   "homeSleepMode": "Uyku modu",
   "offlineBanner": "Çevrimdışı — bazı özellikler bağlantı gerektirir",
   "offlineRetry": "Yeniden dene",
@@ -29,6 +32,10 @@
   "mixerPlay": "Çal",
   "mixerPause": "Duraklat",
   "mixerPreparing": "Ses hazırlanıyor…",
+  "mixerSoundLabel": "Bu gecenin sesi",
+  "mixerStatusPlaying": "Çalıyor",
+  "mixerStatusPaused": "Duraklatıldı",
+  "mixerLayersLabel": "Katmanlar",
   "mixerLayerWhite": "Beyaz gürültü",
   "mixerLayerPink": "Pembe gürültü",
   "mixerLayerBrown": "Kahverengi gürültü",

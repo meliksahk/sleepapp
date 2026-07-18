@@ -61,6 +61,12 @@
   "sleepModeSaveFailed": "Saved on your phone, but could not reach the server.",
   "@sleepModeSaveFailed": { "description": "Sunucuya yazılamadı ama gece yok sayılmadı" },
 
+  "sleepStripActive": "Tracking your night",
+  "@sleepStripActive": { "description": "Kabuk şeridi — süren gece HER ekranda görünür. 'Dinliyor…' tek başına mikser ekranında çalan sesle karışırdı" },
+
+  "sleepStripOpen": "Open sleep mode",
+  "@sleepStripOpen": { "description": "Kabuk şeridinin erişilebilirlik etiketi — şerit dokunulabilir bir kısayoldur" },
+
   "homeSleepMode": "Sleep mode",
   "@homeSleepMode": { "description": "Ana ekrandan uyku moduna giden buton" },
 
@@ -84,6 +90,18 @@
 
   "mixerPreparing": "Preparing sound…",
   "@mixerPreparing": { "description": "Katmanlar render edilirken" },
+
+  "mixerSoundLabel": "Tonight's sound",
+  "@mixerSoundLabel": { "description": "Player hero'sunda adın üstündeki etiket. 'Now playing' DEĞİL: ses duraklatılmışken yalan olurdu" },
+
+  "mixerStatusPlaying": "Playing",
+  "@mixerStatusPlaying": { "description": "Player durum satırı — ses çalıyor" },
+
+  "mixerStatusPaused": "Paused",
+  "@mixerStatusPaused": { "description": "Player durum satırı — ses duraklatıldı" },
+
+  "mixerLayersLabel": "Layers",
+  "@mixerLayersLabel": { "description": "Kontrol sayfasındaki sürgü listesinin başlığı" },
 
   "mixerLayerWhite": "White noise",
   "@mixerLayerWhite": { "description": "Beyaz gürültü katmanı adı" },

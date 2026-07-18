@@ -79,6 +79,12 @@ class AppL10nEn extends AppL10n {
       'Saved on your phone, but could not reach the server.';
 
   @override
+  String get sleepStripActive => 'Tracking your night';
+
+  @override
+  String get sleepStripOpen => 'Open sleep mode';
+
+  @override
   String get homeSleepMode => 'Sleep mode';
 
   @override
@@ -101,6 +107,18 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get mixerPreparing => 'Preparing sound…';
+
+  @override
+  String get mixerSoundLabel => 'Tonight\'s sound';
+
+  @override
+  String get mixerStatusPlaying => 'Playing';
+
+  @override
+  String get mixerStatusPaused => 'Paused';
+
+  @override
+  String get mixerLayersLabel => 'Layers';
 
   @override
   String get mixerLayerWhite => 'White noise';

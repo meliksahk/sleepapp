@@ -38,7 +38,10 @@ void main() {
     );
   });
 
-  testWidgets('açılışta önce splash (spinner), oturum kurulunca home gelir', (tester) async {
+  // NOT: bu test eskiden `CircularProgressIndicator` arıyordu. Splash artık
+  // çıplak bir spinner değil, sesle senkron açılış anı (`LaunchMoment`) —
+  // sözleşme aynı kaldı, yalnızca splash'ın KİMLİĞİ değişti.
+  testWidgets('açılışta önce splash (ay), oturum kurulunca home gelir', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: <Override>[
@@ -54,14 +57,14 @@ void main() {
       ),
     );
 
-    // İlk kare: FutureProvider henüz çözülmedi (register gecikmeli) → spinner.
+    // İlk kare: FutureProvider henüz çözülmedi (register gecikmeli) → açılış anı.
     await tester.pump();
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byKey(const Key('launch-moon')), findsOneWidget);
     expect(find.text('NOCTA'), findsNothing);
 
     // Çözülünce home.
     await tester.pumpAndSettle();
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byKey(const Key('launch-moon')), findsNothing);
     expect(find.text('NOCTA'), findsOneWidget);
   });
 
