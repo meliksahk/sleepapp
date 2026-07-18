@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { translate, type MessageKey } from '@/shared/i18n/dictionaries';
 
 const apiPost = vi.fn();
 const apiPut = vi.fn();
@@ -14,6 +15,16 @@ vi.mock('next/cache', () => ({ revalidatePath: (...a: unknown[]) => revalidatePa
 
 const { createSoundscapeAction, setStatusAction, setRecipeAction, updateMetaAction } =
   await import('./actions');
+
+/**
+ * Eylemler artık MESAJ ANAHTARI döndürüyor (dizge değil) — gösterim istemcide, dil
+ * orada belli. Testler yine METNİ doğruluyor: derdimiz "hangi anahtar" değil,
+ * kullanıcının AYIRT EDİCİ bir cümle görmesi.
+ */
+const message = (key: MessageKey | undefined): string => {
+  if (key === undefined) throw new Error('hata anahtarı bekleniyordu, undefined geldi');
+  return translate('tr', key);
+};
 
 const form = (fields: Record<string, string>): FormData => {
   const fd = new FormData();
@@ -64,7 +75,7 @@ describe('createSoundscapeAction', () => {
 
     const state = await createSoundscapeAction({}, form({ slug: 'dolu', titleEn: 'X' }));
 
-    expect(state.error).toContain('zaten kullanımda');
+    expect(message(state.error)).toContain('zaten kullanımda');
     expect(state.createdSlug).toBeUndefined();
     expect(revalidatePath).not.toHaveBeenCalled();
   });
@@ -72,7 +83,7 @@ describe('createSoundscapeAction', () => {
   it('403 sessizce yutulmaz — sunucu reddederse editör sebebini görür', async () => {
     apiPost.mockResolvedValue({ ok: false, status: 403 });
     const state = await createSoundscapeAction({}, form({ slug: 'x', titleEn: 'X' }));
-    expect(state.error).toContain('yetkiniz yok');
+    expect(message(state.error)).toContain('yetkiniz yok');
   });
 });
 
@@ -106,14 +117,14 @@ describe('setStatusAction', () => {
 
     const state = await setStatusAction({}, form({ slug: 'x', action: 'publish' }));
 
-    expect(state.error).toContain('Ses tarifi boş');
+    expect(message(state.error)).toContain('Ses tarifi boş');
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it('403 sessizce yutulmaz', async () => {
     apiPost.mockResolvedValue({ ok: false, status: 403 });
     const state = await setStatusAction({}, form({ slug: 'x', action: 'publish' }));
-    expect(state.error).toContain('yetkiniz yok');
+    expect(message(state.error)).toContain('yetkiniz yok');
   });
 });
 
@@ -148,13 +159,13 @@ describe('setRecipeAction', () => {
   it('403 sessizce yutulmaz', async () => {
     apiPut.mockResolvedValue({ ok: false, status: 403 });
     const state = await setRecipeAction({}, form({ slug: 'x', layers: JSON.stringify(layers) }));
-    expect(state.error).toContain('yetkiniz yok');
+    expect(message(state.error)).toContain('yetkiniz yok');
   });
 
   it("bozuk JSON → API'ye HİÇ gidilmez (anlamsız istek atmayalım)", async () => {
     const state = await setRecipeAction({}, form({ slug: 'x', layers: 'bu json degil' }));
     expect(apiPut).not.toHaveBeenCalled();
-    expect(state.error).toContain('okunamadı');
+    expect(message(state.error)).toContain('okunamadı');
   });
 });
 
@@ -191,13 +202,13 @@ describe('updateMetaAction', () => {
   it('boş başlık reddi editörün diline çevrilir, tazeleme YAPILMAZ', async () => {
     apiPatch.mockResolvedValue({ ok: false, status: 400, code: 'empty_title' });
     const state = await updateMetaAction({}, form({ slug: 'x', titleEn: '' }));
-    expect(state.error).toContain('Başlık boş');
+    expect(message(state.error)).toContain('Başlık boş');
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it('403 sessizce yutulmaz', async () => {
     apiPatch.mockResolvedValue({ ok: false, status: 403 });
     const state = await updateMetaAction({}, form({ slug: 'x', titleEn: 'Y' }));
-    expect(state.error).toContain('yetkiniz yok');
+    expect(message(state.error)).toContain('yetkiniz yok');
   });
 });

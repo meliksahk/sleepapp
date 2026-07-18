@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@nocta/ui';
+import { useT } from '@/shared/i18n/I18nProvider';
 
 /** Çıkış — /api/session sunucudaki oturumu da iptal eder, sonra çerezleri siler. */
 export function LogoutButton() {
+  const t = useT();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -24,7 +26,7 @@ export function LogoutButton() {
 
   return (
     <Button variant="ghost" onClick={onClick} disabled={busy}>
-      {busy ? 'Çıkılıyor…' : 'Çıkış'}
+      {busy ? t('common.loggingOut') : t('common.logout')}
     </Button>
   );
 }

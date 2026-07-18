@@ -58,7 +58,9 @@ describe('ArchetypeTest', () => {
     expect(screen.getByText('Question two?')).toBeInTheDocument();
 
     // Tüm sorular cevaplanmadan buton disabled
-    const submit = screen.getByRole('button', { name: /sonucu gör/i });
+    // NOT: selector bilinçli değişti — buton daha önce lang="en" altında Türkçe
+    // ("Sonucu gör") yazıyordu; artık metin i18n sözlüğünden geliyor.
+    const submit = screen.getByRole('button', { name: /see your result/i });
     expect(submit).toBeDisabled();
 
     await user.click(screen.getByLabelText('Option B1'));
@@ -76,6 +78,18 @@ describe('ArchetypeTest', () => {
     // (kullanıcı /a/[slug]'a gitmeden paylaşabilsin — edinim döngüsü kapanır).
     expect(screen.getByRole('button', { name: /save your card/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/share card preview/i)).toBeInTheDocument();
+  });
+
+  it('dil Accept-Language BAŞLIĞIYLA taşınır (query parametresiyle değil)', async () => {
+    render(<ArchetypeTest locale="tr" />);
+    await screen.findByText('Question one?');
+
+    const call = vi.mocked(fetch).mock.calls[0];
+    const url = String(call?.[0]);
+    const init = call?.[1] as RequestInit | undefined;
+    expect(url).not.toContain('locale=');
+    expect(url).not.toContain('lang=');
+    expect(new Headers(init?.headers).get('Accept-Language')).toBe('tr');
   });
 
   it('sorular yüklenemezse hata gösterir', async () => {

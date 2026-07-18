@@ -3,6 +3,8 @@ import { StatCard, Button } from '@nocta/ui';
 import { AppShell } from '@/shared/ui/AppShell';
 import { apiGet } from '@/shared/api/server-client';
 import { LogoutButton } from '@/features/auth/LogoutButton';
+import { translator } from '@/shared/i18n/dictionaries';
+import { getLocale } from '@/shared/i18n/locale';
 import { shareRateLabel, shareRateHint } from './share-rate';
 import { AuditFeed, type AuditEntry } from './AuditFeed';
 
@@ -24,6 +26,9 @@ interface Overview {
  * #134'te iz gelince GERİ EKLENDİ — bu kez gerçek veriyle.
  */
 export async function DashboardPage() {
+  const locale = await getLocale();
+  const t = translator(locale);
+
   // Paralel: iki bağımsız okuma, biri diğerini beklemesin.
   const [o, audit] = await Promise.all([
     apiGet<Overview>('/v1/admin/overview'),
@@ -33,57 +38,64 @@ export async function DashboardPage() {
 
   return (
     <AppShell actions={<LogoutButton />}>
-      <h2 className="text-h2 font-display">Overview</h2>
-      <p className="mt-1 mb-5 text-body text-ink-secondary">
-        Canlı rakamlar. Henüz ölçülemeyenler aşağıda açıkça belirtilmiştir.
-      </p>
+      <h2 className="text-h2 font-display">{t('dashboard.title')}</h2>
+      <p className="mt-1 mb-5 text-body text-ink-secondary">{t('dashboard.subtitle')}</p>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
-          label="Yayında"
+          label={t('dashboard.published')}
           value={String(o.soundscapes.published)}
-          hint="kullanıcıların gördüğü"
+          hint={t('dashboard.publishedHint')}
         />
-        <StatCard label="Taslak" value={String(o.soundscapes.draft)} hint="yayınlanmamış" />
-        <StatCard label="Bekleme listesi" value={String(o.waitlist)} hint="ön-lansman kaydı" />
         <StatCard
-          label="Push kitlesi"
+          label={t('dashboard.draft')}
+          value={String(o.soundscapes.draft)}
+          hint={t('dashboard.draftHint')}
+        />
+        <StatCard
+          label={t('dashboard.waitlist')}
+          value={String(o.waitlist)}
+          hint={t('dashboard.waitlistHint')}
+        />
+        <StatCard
+          label={t('dashboard.pushAudience')}
           value={String(o.pushAudience)}
-          hint="kampanyayla ulaşılabilir"
+          hint={t('dashboard.pushAudienceHint')}
         />
         {/* Viral kancanın sağlığı (CLAUDE.md §1.1: "viral kancalar süs değil
             çekirdek özelliktir"). Ürünün bahsi buysa ölçülmeli. */}
         <StatCard
-          label="Kart paylaşım oranı"
-          value={shareRateLabel(o.shareFunnel.rate)}
-          hint={shareRateHint(o.shareFunnel.completed, o.shareFunnel.shared)}
+          label={t('dashboard.shareRate')}
+          value={shareRateLabel(locale, o.shareFunnel.rate)}
+          hint={shareRateHint(locale, o.shareFunnel.completed, o.shareFunnel.shared)}
         />
         {/* Sahte sayı YOK: ölçülemeyeni ölçülüyormuş gibi göstermek, insanın ona
             güvenip yanlış karar vermesi demektir. */}
-        <StatCard label="Deneme→ücretli" value="—" hint="ödeme F6'da" />
+        <StatCard
+          label={t('dashboard.trialToPaid')}
+          value="—"
+          hint={t('dashboard.trialToPaidHint')}
+        />
       </div>
 
       <section className="mt-8">
-        <h3 className="text-body font-display">Soundscapes</h3>
+        <h3 className="text-body font-display">{t('dashboard.soundscapes')}</h3>
         <p className="mt-1 mb-3 text-body text-ink-secondary">
-          {total} kayıt · {o.soundscapes.scheduled} planlı
+          {t('dashboard.soundscapeCounts', { total, scheduled: o.soundscapes.scheduled })}
         </p>
         <Link href="/content">
-          <Button>İçeriği yönet</Button>
+          <Button>{t('dashboard.manageContent')}</Button>
         </Link>
       </section>
 
       <section className="mt-8">
-        <h3 className="mb-3 text-body font-display">Son etkinlik</h3>
-        <AuditFeed entries={audit} />
+        <h3 className="mb-3 text-body font-display">{t('dashboard.recentActivity')}</h3>
+        <AuditFeed entries={audit} locale={locale} />
       </section>
 
       <section className="mt-8">
-        <h3 className="text-body font-display">Henüz ölçülmeyenler</h3>
-        <p className="mt-1 text-body text-ink-secondary">
-          D7 retention kohort analizi gerektiriyor (A3). Deneme→ücretli ödeme entegrasyonuna bağlı
-          (F6).
-        </p>
+        <h3 className="text-body font-display">{t('dashboard.notMeasured')}</h3>
+        <p className="mt-1 text-body text-ink-secondary">{t('dashboard.notMeasuredBody')}</p>
       </section>
     </AppShell>
   );

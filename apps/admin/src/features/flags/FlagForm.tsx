@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { Button, Input } from '@nocta/ui';
+import { useT } from '@/shared/i18n/I18nProvider';
 import { upsertFlagAction, type UpsertFlagState } from './actions';
 
 const INITIAL: UpsertFlagState = {};
@@ -12,57 +13,62 @@ const INITIAL: UpsertFlagState = {};
  * reddi gösterir. Kapalı = hiç kimseye gitmez; yüzde boş = herkes.
  */
 export function FlagForm() {
+  const t = useT();
   const [state, action, pending] = useActionState(upsertFlagAction, INITIAL);
 
   return (
     <form action={action} className="mt-4 flex flex-col gap-3 md:max-w-md">
       <Input
         name="key"
-        label="Anahtar (küçük-harf-kebab, ör. smart-alarm)"
-        placeholder="smart-alarm"
+        label={t('flags.fieldKey')}
+        placeholder={t('flags.placeholderKey')}
         required
       />
 
       <label className="flex flex-col gap-1">
-        <span className="text-caption text-ink-secondary">Durum</span>
+        <span className="text-caption text-ink-secondary">{t('flags.fieldStatus')}</span>
         <select
           name="enabled"
           defaultValue="false"
           className="rounded-button bg-bg-raised px-4 py-2 text-ink-primary"
         >
-          <option value="true">Açık</option>
-          <option value="false">Kapalı</option>
+          <option value="true">{t('flags.on')}</option>
+          <option value="false">{t('flags.off')}</option>
         </select>
       </label>
 
       <Input
         name="rolloutPercentage"
-        label="Rollout % (boş = herkes)"
+        label={t('flags.fieldRollout')}
         type="number"
         min={0}
         max={100}
-        placeholder="ör. 25"
+        placeholder={t('flags.placeholderRollout')}
       />
       <Input
         name="platforms"
-        label="Platformlar (virgülle, boş = hepsi)"
-        placeholder="ios, android"
+        label={t('flags.fieldPlatforms')}
+        placeholder={t('flags.placeholderPlatforms')}
       />
-      <Input name="minAppVersion" label="Asgari sürüm (boş = yok)" placeholder="1.4.0" />
+      <Input
+        name="minAppVersion"
+        label={t('flags.fieldMinVersion')}
+        placeholder={t('flags.placeholderVersion')}
+      />
 
       {state.error !== undefined && (
         <p role="alert" className="text-body text-accent-ember">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
       {state.savedKey !== undefined && (
         <p role="status" className="text-body text-accent-aurora">
-          “{state.savedKey}” kaydedildi.
+          {t('flags.savedKey', { key: state.savedKey })}
         </p>
       )}
 
       <Button type="submit" disabled={pending}>
-        {pending ? 'Kaydediliyor…' : 'Flag kaydet'}
+        {pending ? t('common.saving') : t('flags.submit')}
       </Button>
     </form>
   );

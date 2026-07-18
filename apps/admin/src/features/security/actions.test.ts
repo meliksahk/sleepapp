@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { translate, type MessageKey } from '@/shared/i18n/dictionaries';
 
 const apiPost = vi.fn();
 vi.mock('@/shared/api/server-client', () => ({ apiPost }));
@@ -7,6 +8,16 @@ const revalidatePath = vi.fn();
 vi.mock('next/cache', () => ({ revalidatePath }));
 
 const { startEnrollment, confirmEnrollment, resetTotp } = await import('./actions');
+
+/**
+ * Eylemler artık MESAJ ANAHTARI döndürüyor (dizge değil) — gösterim istemcide, dil
+ * orada belli. Testler yine METNİ doğruluyor: derdimiz "hangi anahtar" değil,
+ * kullanıcının AYIRT EDİCİ bir cümle görmesi.
+ */
+const message = (key: MessageKey | undefined): string => {
+  if (key === undefined) throw new Error('hata anahtarı bekleniyordu, undefined geldi');
+  return translate('tr', key);
+};
 
 /**
  * 2FA kurulum akışının panel tarafı.
@@ -57,16 +68,16 @@ describe('security actions', () => {
       apiPost.mockResolvedValue({ ok: false, status: 409, code: 'totp_already_enabled' });
 
       const state = await startEnrollment();
-      expect(state.error).toContain('zaten etkin');
+      expect(message(state.error)).toContain('zaten etkin');
       expect(state.secret).toBeUndefined();
     });
 
     it('401 → oturum mesajı; 429 → limit mesajı (ayrı ayrı)', async () => {
       apiPost.mockResolvedValue({ ok: false, status: 401 });
-      expect((await startEnrollment()).error).toContain('Oturumunuz');
+      expect(message((await startEnrollment()).error)).toContain('Oturumunuz');
 
       apiPost.mockResolvedValue({ ok: false, status: 429 });
-      expect((await startEnrollment()).error).toContain('Çok fazla');
+      expect(message((await startEnrollment()).error)).toContain('Çok fazla');
     });
   });
 
@@ -84,7 +95,7 @@ describe('security actions', () => {
     it("biçimsiz kod API'ye HİÇ gitmez", async () => {
       const state = await confirmEnrollment({}, formWith('12'));
 
-      expect(state.error).toContain('6 haneli');
+      expect(message(state.error)).toContain('6 haneli');
       expect(apiPost).not.toHaveBeenCalled();
     });
 
@@ -93,7 +104,7 @@ describe('security actions', () => {
       apiPost.mockResolvedValue({ ok: false, status: 401, code: 'invalid_totp' });
 
       const state = await confirmEnrollment({}, formWith('000000'));
-      expect(state.error).toContain('Kod hatalı');
+      expect(message(state.error)).toContain('Kod hatalı');
       expect(state.enabled).toBeUndefined();
     });
 
@@ -106,7 +117,7 @@ describe('security actions', () => {
 
     it("kod boşsa API'ye gitmez (form gönderilmiş olabilir)", async () => {
       const state = await confirmEnrollment({}, new FormData());
-      expect(state.error).toContain('6 haneli');
+      expect(message(state.error)).toContain('6 haneli');
       expect(apiPost).not.toHaveBeenCalled();
     });
   });
@@ -120,7 +131,7 @@ describe('security actions', () => {
 
     it("ÇEKİRDEK: parola boşsa API'ye gitmez", async () => {
       const state = await resetTotp({}, new FormData());
-      expect(state.error).toContain('Parola');
+      expect(message(state.error)).toContain('Parola');
       expect(apiPost).not.toHaveBeenCalled();
     });
 
@@ -135,7 +146,7 @@ describe('security actions', () => {
     it('yanlış parola (401 invalid_credentials) AYIRT EDİCİ mesaj', async () => {
       apiPost.mockResolvedValue({ ok: false, status: 401, code: 'invalid_credentials' });
       const state = await resetTotp({}, formWithPassword('wrong'));
-      expect(state.error).toBe('Parola hatalı.');
+      expect(message(state.error)).toBe('Parola hatalı.');
       expect(state.done).toBeUndefined();
     });
   });

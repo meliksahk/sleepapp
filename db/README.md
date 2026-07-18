@@ -28,8 +28,12 @@ docker compose up -d db        # Postgres'i ayağa kaldır
 pnpm db:migrate                # bekleyen migration'ları uygula (dbmate up)
 pnpm db:rollback               # son migration'ı geri al (dbmate down)
 pnpm db:new add_something      # yeni migration dosyası aç
-psql "$DATABASE_URL" -f db/seed.sql   # lokal seed
+pnpm db:seed                   # lokal seed (idempotent — tekrar çalıştırmak güvenli)
 ```
+
+`pnpm db:seed`, PATH'te `psql` varsa onu `DATABASE_URL` ile kullanır; yoksa
+`docker exec nocta-local-db-1 psql` yoluna düşer (Windows'ta host'a psql client
+kurmaya gerek kalmasın diye). Container adı `NOCTA_DB_CONTAINER` ile değiştirilir.
 
 ## Durum
 

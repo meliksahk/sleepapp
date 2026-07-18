@@ -67,8 +67,89 @@ export const ARCHETYPES: readonly ArchetypeContent[] = [
   },
 ];
 
+/**
+ * Türkçe archetype içeriği (/tr/a/{slug}).
+ *
+ * SLUG'LAR ÇEVRİLMEZ — bilinçli karar. Slug'lar paylaşım kartlarında, derin
+ * linklerde (`nocta://a/deep-ocean`) ve mobil tarafta dokümante edilmiş durumda;
+ * çevirmek 301 zinciri ve kırık paylaşım linki demek olurdu. Yalnızca GÖRÜNEN
+ * metin çevrilir.
+ *
+ * Sağlık iddiası YASAK (CLAUDE.md §1.1): tedavi/terapi/klinik/şifa dili yok —
+ * konumlandırma "rahatlama ve uyku ritüeli".
+ */
+export const ARCHETYPES_TR: readonly ArchetypeContent[] = [
+  {
+    slug: 'deep-ocean',
+    name: 'Derin Okyanus',
+    tagline: 'Başını yastığa koyar koymaz durgunluğa gömülürsün.',
+    summary:
+      'Derin Okyanus uyuyanı hızla derin ve sessiz bir dinlenmeye geçer, sabaha kadar pek kıpırdamaz.',
+    paragraphs: [
+      'Derin Okyanus uyuyanıysan uyku sana kolay gelir. Zihnin yatışır, gün elinden bırakılır ve yüzeyin altına, kesintisiz bir dinlenmeye süzülürsün.',
+      'Bu her gecenin kusursuz geçtiği anlamına gelmiyor. Yolculuk, yoğun bir gün ya da gürültülü bir oda suyu yine dalgalandırabilir. Sakin, alçak ve sarmalayan bir ses dokusu, doğal olarak aradığın o durgunluğu korumanı kolaylaştırır.',
+      'Basit bir gece ritüeli kur: kısık ışık, tek bir yavaş ses katmanı ve sabit bir yatış saati. Derin Okyanus uyuyanları yoğunlukla değil, ritimle iyi gider.',
+    ],
+    soundsThatHelp: ['Derin okyanus uğultusu', 'Kahverengi gürültü', 'Yavaş alçak droneler'],
+  },
+  {
+    slug: 'overthinker',
+    name: 'Gece 3 Düşünürü',
+    tagline: 'Bedenin yorgun ama zihnin hâlâ yarının listesini yazıyor.',
+    summary:
+      'Gece 3 Düşünürü günü kafasında tekrar oynatarak uyanık kalır; yumuşak, maskeleyen bir ses dokusu zihindeki gürültüyü geri plana atar.',
+    paragraphs: [
+      'Düşünürsen, uykuya dalmak yorgunluktan çok kapanabilmekle ilgilidir. Işıklar sönünce düşüncelerin sesi yükselir — günün konuşmaları, yarının planları, küçük endişeler.',
+      'Yumuşak ve sürekli bir ses, dikkatine üzerine yaslanacağı sakin bir zemin verir; böylece döngünün koşacak yeri azalır. Yağmur ve hafif dokular iyi gider, çünkü ilgi çekmeden istikrarlıdırlar.',
+      'Senin için asıl mesele yavaşlama ritüeli: ekranlara sabit bir saat sınırı, birkaç yavaş nefes ve zihnin hızlanmadan önce başlayan bir ses.',
+    ],
+    soundsThatHelp: ['Hafif yağmur', 'Pembe gürültü', 'Uzaktan gök gürültüsü'],
+  },
+  {
+    slug: 'delta-drifter',
+    name: 'Delta Gezgini',
+    tagline: 'Uzun, canlı, yarı rüya gecelerde süzülürsün.',
+    summary:
+      'Delta Gezgini derin ve rüya dolu bir uykuda süzülür; döngünün ortasında uyandırıldığında kendini ağır hisseder.',
+    paragraphs: [
+      'Delta Gezginiysen gecelerin uzun ve katmanlıdır. Derin uykuya kolayca ulaşır, çoğu sabah canlı rüya parçalarıyla uyanırsın.',
+      'Senin için püf nokta uyanış, dalış değil. Sert bir alarmla derin döngüden çekilip çıkarılmak seni sisli bırakır. Sabaha doğru yavaşça yükselen bir ses dokusu ritmine daha çok yakışır.',
+      'Geceleri akışkan ambiyans katmanlarına yaslan; sabahları gün doğumu gibi yumuşak yükselen bir uyanışa.',
+    ],
+    soundsThatHelp: ['Ambiyans dalgalar', 'Yavaş padler', 'Akan su'],
+  },
+  {
+    slug: 'dawn-chaser',
+    name: 'Şafak Kovalayan',
+    tagline: 'İlk ışıkla kalkmaya programlısın.',
+    summary:
+      'Şafak Kovalayan erken ve kendiliğinden uyanır; sessiz, sade bir gece ve aydınlık bir sabah bu ritme iyi oturur.',
+    paragraphs: [
+      'Şafak Kovalayansan sabahlar senin alanın. Çoğu zaman alarmdan önce uyanır, günün ilk saatlerinde kendini en iyi hissedersin.',
+      'Zorlandığın yer akşam: o erken başlangıcı koruyacak kadar erken yavaşlayabilmek. Sade, az uyarımlı bir gece ritüeli daha geç değil, daha erken uykuya dalmanı kolaylaştırır.',
+      'Geceleri basit ve sessiz tut; sabahları aydınlık, yumuşak bir işaret vücudunun zaten tercih ettiği ritmi pekiştirsin.',
+    ],
+    soundsThatHelp: ['Sessiz sıcaklık', 'Sade drone', 'Yumuşak sabah kuşları'],
+  },
+];
+
+export const ARCHETYPES_BY_LOCALE = {
+  en: ARCHETYPES,
+  tr: ARCHETYPES_TR,
+} as const;
+
 export const ARCHETYPE_SLUGS: readonly string[] = ARCHETYPES.map((a) => a.slug);
 
 export function getArchetype(slug: string): ArchetypeContent | undefined {
   return ARCHETYPES.find((a) => a.slug === slug);
+}
+
+/** Dile göre archetype listesi — slug seti her dilde AYNIDIR (parity testli). */
+export function getArchetypes(locale: 'en' | 'tr'): readonly ArchetypeContent[] {
+  return ARCHETYPES_BY_LOCALE[locale];
+}
+
+/** Dile göre tek archetype; bilinmeyen slug'da `undefined`. */
+export function getArchetypeIn(locale: 'en' | 'tr', slug: string): ArchetypeContent | undefined {
+  return ARCHETYPES_BY_LOCALE[locale].find((a) => a.slug === slug);
 }

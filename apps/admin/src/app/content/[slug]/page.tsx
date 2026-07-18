@@ -7,6 +7,8 @@ import { MetaForm } from '@/features/content/MetaForm';
 import { toFormLayers } from '@/features/content/recipe-form';
 import { canWriteContent } from '@/features/content/can-write';
 import { statusLabel } from '@/features/content/status-label';
+import { translator } from '@/shared/i18n/dictionaries';
+import { getLocale } from '@/shared/i18n/locale';
 import type { AdminSoundscape } from '@/features/content/types';
 
 interface Detail extends AdminSoundscape {
@@ -19,6 +21,8 @@ export default async function SoundscapeDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const locale = await getLocale();
+  const t = translator(locale);
   const { slug } = await params;
   // Paralel: ikisi de bağımsız okuma, biri diğerini beklemesin.
   const [detail, me] = await Promise.all([
@@ -30,27 +34,25 @@ export default async function SoundscapeDetailPage({
   return (
     <AppShell actions={<LogoutButton />}>
       <Link href="/content" className="text-caption text-ink-secondary">
-        ← Soundscapes
+        ← {t('content.backToList')}
       </Link>
       <h2 className="mt-2 text-h2 font-display">{detail.title}</h2>
       <p className="mt-1 mb-6 text-body text-ink-secondary">
-        {detail.slug} · {statusLabel(detail.status)}
+        {detail.slug} · {statusLabel(locale, detail.status)}
       </p>
 
       {canWrite && (
         <section className="mb-8">
-          <h3 className="mb-3 text-body font-display">Bilgiler</h3>
+          <h3 className="mb-3 text-body font-display">{t('content.metaHeading')}</h3>
           <MetaForm slug={detail.slug} title={detail.title} affinity={detail.archetypeAffinity} />
         </section>
       )}
 
-      <h3 className="mb-3 text-body font-display">Ses tarifi</h3>
+      <h3 className="mb-3 text-body font-display">{t('content.recipeHeading')}</h3>
       {canWrite ? (
         <RecipeForm slug={detail.slug} initialLayers={toFormLayers(detail.recipe)} />
       ) : (
-        <p className="text-body text-ink-secondary">
-          Tarifi düzenlemek için editör yetkisi gerekir.
-        </p>
+        <p className="text-body text-ink-secondary">{t('content.recipeNoPermission')}</p>
       )}
     </AppShell>
   );

@@ -1,24 +1,17 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ARCHETYPES } from '@/content/archetypes';
+import { getArchetypes } from '@/content/archetypes';
+import { t, type Locale } from '@/lib/i18n';
+import { localePath } from '@/lib/routes';
 import { buildArchetypeListJsonLd, buildBreadcrumbTrail } from '@/lib/schema';
 
-export const metadata: Metadata = {
-  title: 'Sleep Identities — All Archetypes | NOCTA',
-  description:
-    'Explore every NOCTA sleep identity. Find the one that fits your nights and the sounds that suit it.',
-  openGraph: {
-    title: 'Sleep Identities — All Archetypes',
-    description: 'Explore every NOCTA sleep identity and the sounds that suit it.',
-  },
-};
-
-export default function ArchetypesIndexPage() {
+/** Archetype dizini — `/archetypes` ve `/tr/archetypes` ortak bileşeni. */
+export function ArchetypesIndexView({ locale }: { locale: Locale }) {
+  const archetypes = getArchetypes(locale);
   const jsonLd = [
-    buildArchetypeListJsonLd(ARCHETYPES),
+    buildArchetypeListJsonLd(archetypes, locale),
     buildBreadcrumbTrail([
-      { name: 'Home', path: '' },
-      { name: 'Sleep identities', path: '/archetypes' },
+      { name: t(locale, 'crumb.home'), path: locale === 'en' ? '' : '/tr' },
+      { name: t(locale, 'archetypes.listName'), path: localePath(locale, '/archetypes') },
     ]),
   ];
   return (
@@ -29,18 +22,16 @@ export default function ArchetypesIndexPage() {
       />
       <main className="mx-auto max-w-2xl p-5">
         <p className="text-caption uppercase tracking-widest text-ink-secondary">
-          Sleep Identities
+          {t(locale, 'archetypes.eyebrow')}
         </p>
-        <h1 className="mt-1 text-display font-display">Which one are you?</h1>
-        <p className="mt-2 text-body text-ink-secondary">
-          Every sleeper has a rhythm. Explore the identities, then take the test to find yours.
-        </p>
+        <h1 className="mt-1 text-display font-display">{t(locale, 'archetypes.h1')}</h1>
+        <p className="mt-2 text-body text-ink-secondary">{t(locale, 'archetypes.intro')}</p>
 
         <ul className="mt-8 flex flex-col gap-4">
-          {ARCHETYPES.map((a) => (
+          {archetypes.map((a) => (
             <li key={a.slug}>
               <Link
-                href={`/a/${a.slug}`}
+                href={localePath(locale, `/a/${a.slug}`)}
                 className="block rounded-card border border-ink-faint/20 p-4 hover:border-ink-faint/40"
               >
                 <h2 className="text-h2 font-display">{a.name}</h2>
@@ -51,10 +42,10 @@ export default function ArchetypesIndexPage() {
         </ul>
 
         <Link
-          href="/test"
+          href={localePath(locale, '/test')}
           className="mt-8 inline-block rounded-button bg-accent-aurora px-5 py-3 text-bg-base"
         >
-          Take the sleep identity test
+          {t(locale, 'archetype.ctaTest')}
         </Link>
       </main>
     </>

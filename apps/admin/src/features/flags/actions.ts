@@ -2,11 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { apiPut } from '@/shared/api/server-client';
+import type { MessageKey } from '@/shared/i18n/dictionaries';
 import { flagErrorMessage } from './flag-error-message';
 import type { AdminFlag } from './types';
 
+/** `error` MESAJ ANAHTARI: eylem sunucuda, gösterim istemcide (bkz. content/actions.ts). */
 export interface UpsertFlagState {
-  error?: string;
+  error?: MessageKey;
   savedKey?: string;
 }
 

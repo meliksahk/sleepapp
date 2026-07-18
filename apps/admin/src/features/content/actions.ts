@@ -2,25 +2,31 @@
 
 import { revalidatePath } from 'next/cache';
 import { apiPatch, apiPost, apiPut } from '@/shared/api/server-client';
+import type { MessageKey } from '@/shared/i18n/dictionaries';
 import { createErrorMessage } from './error-message';
 import type { AdminSoundscape } from './types';
 
+/**
+ * `error` bir MESAJ ANAHTARI (dizge değil): eylem sunucuda çalışır, sonuç istemcide
+ * gösterilir. Dizge taşısaydık metin eylemin çalıştığı andaki dile çakılır, kullanıcı
+ * dili değiştirince ekrandaki hata eski dilde kalırdı.
+ */
 export interface CreateState {
-  error?: string;
+  error?: MessageKey;
   createdSlug?: string;
 }
 
 export interface StatusState {
-  error?: string;
+  error?: MessageKey;
 }
 
 export interface RecipeState {
-  error?: string;
+  error?: MessageKey;
   saved?: boolean;
 }
 
 export interface MetaState {
-  error?: string;
+  error?: MessageKey;
   saved?: boolean;
 }
 
@@ -101,7 +107,7 @@ export async function setRecipeAction(
   try {
     layers = JSON.parse(layersJson);
   } catch {
-    return { error: 'Katmanlar okunamadı. Sayfayı yenileyip tekrar deneyin.' };
+    return { error: 'content.errorLayersUnreadable' };
   }
 
   const res = await apiPut<AdminSoundscape>(`/v1/admin/soundscapes/${slug}/recipe`, {

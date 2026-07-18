@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { Button } from '@nocta/ui';
+import { useT } from '@/shared/i18n/I18nProvider';
 import { setStatusAction, type StatusState } from './actions';
 import type { SoundscapeStatus } from './types';
 
@@ -9,6 +10,7 @@ const INITIAL: StatusState = {};
 
 /** Yayınla / yayından kaldır düğmesi (satır başına). */
 export function StatusButton({ slug, status }: { slug: string; status: SoundscapeStatus }) {
+  const t = useT();
   const [state, action, pending] = useActionState(setStatusAction, INITIAL);
   const isPublished = status === 'published';
 
@@ -22,11 +24,11 @@ export function StatusButton({ slug, status }: { slug: string; status: Soundscap
         disabled={pending}
         key={`status-${slug}`}
       >
-        {pending ? '…' : isPublished ? 'Yayından kaldır' : 'Yayınla'}
+        {pending ? '…' : isPublished ? t('content.unpublish') : t('content.publish')}
       </Button>
       {state.error !== undefined && (
         <span role="alert" className="text-caption text-accent-ember">
-          {state.error}
+          {t(state.error)}
         </span>
       )}
     </form>

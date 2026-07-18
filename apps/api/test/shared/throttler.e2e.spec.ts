@@ -21,8 +21,41 @@ describe('Global throttler e2e', () => {
   const originalLimit = process.env.THROTTLE_LIMIT;
   const LIMIT = 3;
 
+  /**
+   * SIRA BAĞIMSIZLIĞI (yoksa bu test kırılgandır).
+   *
+   * Rate-limit sayacı Redis'te ve TÜM testler arasında PAYLAŞILIR. Her e2e testi
+   * oturum açmak için `POST /v1/auth/device` çağırdığından, bu dosya paketin
+   * sonlarında çalıştığında kota çoktan tükenmiş olur ve döngünün ilk isteği
+   * 201 yerine 429 alır. Gerçekten yaşandı: alakasız bir birim test dosyası
+   * eklenince jest'in dosya sırası değişti ve test kırıldı — kod hiç değişmemişti.
+   *
+   * Bu yüzden sayaçları test BAŞINDA sıfırlıyoruz. Testler `--runInBand`
+   * (sıralı) koştuğu için başka bir testin sayacını yarıda silme riski yok.
+   */
+  async function resetThrottleCounters(): Promise<void> {
+    const url = process.env.REDIS_URL;
+    // REDIS_URL yoksa depolama bellek-içidir ve her app kurulumunda zaten sıfırdır.
+    if (!url) return;
+    const { default: IORedis } = await import('ioredis');
+    const redis = new IORedis(url, { maxRetriesPerRequest: null });
+    try {
+      const keys = await redis.keys('throttle:*');
+      if (keys.length > 0) await redis.del(...keys);
+    } finally {
+      await redis.quit();
+    }
+  }
+
+  // HER TESTTEN ÖNCE sıfırla, yalnızca dosya başında değil: iki test AYNI IP'yi
+  // kullanıyor ve sayaç pencereye (TTL) bağlı olduğu için ilk testin tükettiği
+  // kota ikinciyi zamanlamaya göre bazen düşürüyordu (arka arkaya iki koşuda
+  // biri geçip biri kalıyordu — klasik flake).
+  beforeEach(resetThrottleCounters);
+
   beforeAll(async () => {
     process.env.THROTTLE_LIMIT = String(LIMIT);
+    await resetThrottleCounters();
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix('v1', { exclude: ['health'] });

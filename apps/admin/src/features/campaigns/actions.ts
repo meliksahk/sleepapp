@@ -1,11 +1,13 @@
 'use server';
 
 import { apiPost } from '@/shared/api/server-client';
+import type { MessageKey } from '@/shared/i18n/dictionaries';
 import { campaignErrorMessage } from './campaign-error-message';
 import type { CampaignResult } from './types';
 
+/** `error` MESAJ ANAHTARI: eylem sunucuda, gösterim istemcide (bkz. content/actions.ts). */
 export interface SendCampaignState {
-  error?: string;
+  error?: MessageKey;
   result?: CampaignResult;
 }
 

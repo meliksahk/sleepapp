@@ -709,6 +709,24 @@ abstract class AppL10n {
   /// **'Your sleep identity'**
   String get archetypeYourSleepIdentity;
 
+  /// Test sihirbazi ust bilgi metni
+  ///
+  /// In en, this message translates to:
+  /// **'There are no right answers. Pick whichever feels closest to your nights.'**
+  String get archetypeTestIntro;
+
+  /// Kac sorudan kaci cevaplandi gostergesi
+  ///
+  /// In en, this message translates to:
+  /// **'{answered} of {total} answered'**
+  String archetypeTestProgress(int answered, int total);
+
+  /// Sorular yuklenirken gosterilen metin
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your questions…'**
+  String get archetypeTestPreparing;
+
   /// Paylasim linki panoya kopyalandi bildirimi
   ///
   /// In en, this message translates to:

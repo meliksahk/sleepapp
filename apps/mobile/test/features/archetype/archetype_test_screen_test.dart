@@ -11,6 +11,7 @@ import 'package:nocta/core/storage/session_store.dart';
 import 'package:nocta/features/analytics/analytics.dart';
 import 'package:nocta/features/analytics/analytics_providers.dart';
 import 'package:nocta/features/archetype/archetype_controller.dart';
+import 'package:nocta/features/archetype/archetype_gradient.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
 import 'package:nocta/features/settings/locale_store.dart';
 import 'package:nocta/features/archetype/presentation/archetype_test_screen.dart';
@@ -117,6 +118,32 @@ Future<ArchetypeController> _controller({bool existingResult = false}) async {
       );
     }
     return http.Response('not found', 404);
+  });
+  final api = NoctaApiClient(baseUrl: 'http://x', client: client);
+  final auth = AuthController(api, InMemorySessionStore());
+  await auth.registerAnonymously('fp');
+  return ArchetypeController(auth, api);
+}
+
+/// Sorular ucu patlayan controller — hata hali (NErrorState) için.
+Future<ArchetypeController> _failingController() async {
+  var authDone = false;
+  final client = MockClient((req) async {
+    if (req.url.path == '/v1/auth/device') {
+      authDone = true;
+      return http.Response(
+        jsonEncode(<String, dynamic>{
+          'accessToken': 'a',
+          'refreshToken': 'r',
+          'accessTokenExpiresIn': 900,
+          'userId': 'u-1',
+        }),
+        201,
+      );
+    }
+    if (!authDone) return http.Response('not found', 404);
+    // Kimlik alındıktan sonra her veri çağrısı sunucu hatasıyla döner.
+    return http.Response('boom', 500);
   });
   final api = NoctaApiClient(baseUrl: 'http://x', client: client);
   final auth = AuthController(api, InMemorySessionStore());
@@ -277,5 +304,101 @@ void main() {
     expect(find.text('How do you fall asleep?'), findsOneWidget);
     expect(find.byKey(const Key('archetype-submit')), findsOneWidget);
     expect(find.byKey(const Key('archetype-result')), findsNothing);
+  });
+
+  testWidgets('ilerleme göstergesi cevaplandıkça günceller', (tester) async {
+    await _pump(tester, await _controller());
+
+    // Tek soru var: başlangıçta 0/1.
+    expect(find.text('0 of 1 answered'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('opt-q1-q1a')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 of 1 answered'), findsOneWidget);
+    expect(find.text('0 of 1 answered'), findsNothing);
+  });
+
+  testWidgets('seçenek seçilince NSelectableOption seçili hale geçer', (
+    tester,
+  ) async {
+    await _pump(tester, await _controller());
+
+    NSelectableOption option(String key) => tester.widget<NSelectableOption>(
+      find.byKey(Key(key)),
+    );
+
+    expect(option('opt-q1-q1a').selected, isFalse);
+    expect(option('opt-q1-q1b').selected, isFalse);
+
+    await tester.tap(find.byKey(const Key('opt-q1-q1a')));
+    await tester.pumpAndSettle();
+
+    // Tek seçim: seçilen işaretlenir, diğeri boşalır.
+    expect(option('opt-q1-q1a').selected, isTrue);
+    expect(option('opt-q1-q1b').selected, isFalse);
+
+    await tester.tap(find.byKey(const Key('opt-q1-q1b')));
+    await tester.pumpAndSettle();
+
+    expect(option('opt-q1-q1a').selected, isFalse);
+    expect(option('opt-q1-q1b').selected, isTrue);
+  });
+
+  testWidgets(
+    'ÇEKİRDEK: sonuç ekranı kullanıcının KENDİ arketip gradyanını gösterir',
+    (tester) async {
+      await _pump(tester, await _controller());
+      await tester.tap(find.byKey(const Key('opt-q1-q1a')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('archetype-submit')));
+      await tester.pumpAndSettle();
+
+      // Sonuç deep-ocean; ekranda o slug'ın gradyanı çizilmiş olmalı — kimlik
+      // gradyanı ana ekranda ve paylaşılan PNG'de vardı, sonucun İLK görüldüğü
+      // anda yoktu (#tasarım). Gradyan tek kaynaktan gelir (#178).
+      final expected = archetypeGradientForSlug('deep-ocean');
+      final gradients = tester
+          .widgetList<Container>(find.byType(Container))
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .map((d) => d.gradient)
+          .whereType<LinearGradient>()
+          .toList();
+
+      expect(
+        gradients.any((g) => g.colors.toString() == expected.colors.toString()),
+        isTrue,
+        reason: 'deep-ocean gradyanı sonuç ekranında çizilmeli',
+      );
+    },
+  );
+
+  testWidgets('sonuç ekranı kaydırılabilir (uzun metinde taşma yok)', (
+    tester,
+  ) async {
+    // Küçük ekran + uzun içerik: eski Center+Column sessizce taşıyordu.
+    tester.view.physicalSize = const Size(360, 520);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await _pump(tester, await _controller(existingResult: true));
+
+    expect(find.byType(SingleChildScrollView), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hata halinde NErrorState çıkar (çıplak refresh ikonu değil)', (
+    tester,
+  ) async {
+    await _pump(tester, await _failingController());
+
+    expect(find.byType(NErrorState), findsOneWidget);
+    expect(find.byKey(const Key('archetype-retry')), findsOneWidget);
+    // Hata ekranı kullanıcıya NE olduğunu söylemeli.
+    expect(
+      find.text('Could not load this. Check your connection and try again.'),
+      findsOneWidget,
+    );
   });
 }

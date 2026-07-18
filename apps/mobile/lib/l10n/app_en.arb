@@ -354,6 +354,21 @@
   "archetypeYourSleepIdentity": "Your sleep identity",
   "@archetypeYourSleepIdentity": { "description": "Sonuc kartinin ustundeki etiket" },
 
+  "archetypeTestIntro": "There are no right answers. Pick whichever feels closest to your nights.",
+  "@archetypeTestIntro": { "description": "Test sihirbazi ust bilgi metni" },
+
+  "archetypeTestProgress": "{answered} of {total} answered",
+  "@archetypeTestProgress": {
+    "description": "Kac sorudan kaci cevaplandi gostergesi",
+    "placeholders": {
+      "answered": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "archetypeTestPreparing": "Preparing your questions…",
+  "@archetypeTestPreparing": { "description": "Sorular yuklenirken gosterilen metin" },
+
   "archetypeShareCopied": "Link copied",
   "@archetypeShareCopied": { "description": "Paylasim linki panoya kopyalandi bildirimi" },
 
