@@ -4,6 +4,7 @@ import { FlagsModule } from '../flags';
 import type { SoundscapeSummary } from '../content';
 import { WaitlistModule, CountWaitlistUseCase } from '../waitlist';
 import { AnalyticsModule, GetShareFunnelUseCase } from '../analytics';
+import { NotificationModule } from '../notification';
 import {
   ContentModule,
   CountSoundscapesUseCase,
@@ -114,7 +115,14 @@ const providers: Provider[] = [
  * application servislerinden tüketilir (repo/Prisma modeline dokunulmaz).
  */
 @Module({
-  imports: [IdentityModule, ContentModule, WaitlistModule, AnalyticsModule, FlagsModule],
+  imports: [
+    IdentityModule,
+    ContentModule,
+    WaitlistModule,
+    AnalyticsModule,
+    FlagsModule,
+    NotificationModule,
+  ],
   controllers: [AdminController],
   providers,
 })
