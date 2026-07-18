@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                    |
-| Mobil       | ~71%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), alarm bildirimi yok, **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI + ilk kapı~~ ✓ #161 (trend premium) · ~~entitlement tüketimi~~ ✓ #159 · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                         |
-| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                  |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                               |
+| Mobil       | ~72%     | 0.40    | **M2 native graf KODU** (AVAudioEngine/Oboe — mikser ÇALIYOR ama önceden render buffer; müdür: kod otonom yazılabilir, sadece kulak-yargısı gated), **iOS Swift kanal KODU** (0 satır; Mac sadece ÇALIŞTIRMAK için), **alarm native handler** (AlarmManager Kotlin — cihaz-kapılı, Dart dikişi hazır #169), **daha fazla gated özellik + gerçek IAP** (en son faz). ~~paywall UI~~ ✓ #161 · ~~entitlement~~ ✓ #159 · **alarm süreç-ölüm backstop dikişi** ✓ #169 (port+manifest+wiring+11 test) · streak/haftalık ✓ · ~~TR arb~~ ✓ #149 |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                    |
+| Web         | ~33%     | 0.15    | **W0 paylaşım kartı (çıkış kriteri ÖLÇÜLEMİYOR)**, LCP/CLS, long-tail, blog                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-> **Hesap:** `0.40·71 + 0.30·74 + 0.15·39 + 0.15·33 = 61.40` → **≈61%**
+> **Hesap:** `0.40·72 + 0.30·74 + 0.15·39 + 0.15·33 = 61.80` → **≈62%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -204,6 +204,33 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 > B1 backend modülleri TAMAM: identity(v1+v2+silme), profile, archetype(+web), flags, content(+MinIO). API 15 endpoint.
 
 ## İterasyon geçmişi
+
+### #169 — alarm süreç-ölümüne dayanıklı: sistem backstop dikişi (PR #169)
+
+✅ **Yapıldı ve doğrulandı** (müdür seçimi — ağırlık×kapatılabilirlik en yüksek otonom iş)
+
+- **Teşhis (müdür doğruladı):** in-app akıllı alarm ana izolatta `Timer.periodic`
+  ile tick'lenir; OS süreci öldürürse (Doze / OEM pil katili / OOM / swipe-kill)
+  sessizce ölür → "cebinde uygulama ölürse çalmayan alarm". Bir uyku app'inin en
+  pahalı hatası.
+- **Çözüm (bu PR):** `NightAlarmScheduler` portu + `PlatformNightAlarmScheduler`
+  (MethodChannel `nocta/night_alarm`, en-iyi-çaba: `MissingPluginException` yutulur).
+  Controller son-tarih anını `_armAlarm`'da kurar, `dismiss`/`stopAndSave`/`clear`'da
+  iptal eder. Manifest: USE_EXACT_ALARM + SCHEDULE_EXACT_ALARM + USE_FULL_SCREEN_INTENT
+  - RECEIVE_BOOT_COMPLETED.
+- **Doğrulama:** 11 yeni test (kurulur/iptal + kanal sözleşmesi + eksik-native yutma) +
+  manifest testi. Tam mobil süit **399 test yeşil**, `flutter analyze` temiz. Mevcut
+  alarm testleri regresyonsuz.
+- 🔥 **DÜRÜSTLÜK SINIRI:** yalnızca DART dikişi + manifest + kanal sözleşmesi doğrulandı.
+  **AlarmManager'ı gerçekten kuran Kotlin handler YAZILMADI** (cihaz-kapılı — Flutter
+  CI APK derlemez, ben de derleyemem). Native gelene kadar backstop en-iyi-çaba
+  sessizce atlanır → **çalışan in-app alarmı REGRESE ETMEZ** (saf ek katman).
+- 📌 Mekanizma seçimi (müdür bana bıraktı): `flutter_local_notifications` yerine
+  MethodChannel→native — (a) yeni pub bağımlılığı yok (maliyet disiplini), (b) repo'nun
+  kanıtlı `MixVideoChannel`+`setMockMethodCallHandler` deseni, (c) tam-ekran intent +
+  exact alarm üstünde tam kontrol. Gerekçe deftere yazıldı (müdür istedi).
+- 📌 Mobil 71→72: doğrulanan dikiş +1; native ateşleme cihaz-kapılı olduğu için
+  daha fazlası şişirme olurdu. Native handler landing'inde asıl kapanış gelir.
 
 ### #168 — flag panel düzenleme FORMU — owner-only `/flags` upsert UI (PR #168)
 

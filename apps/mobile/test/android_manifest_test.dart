@@ -63,6 +63,20 @@ void main() {
     expect(hasPermission('POST_NOTIFICATIONS'), isTrue);
   });
 
+  test('ÇEKİRDEK: süreç-ölümüne dayanıklı alarm izinleri (#169)', () {
+    // In-app Timer alarmı süreç öldürülünce sessizce ölür; native AlarmManager
+    // backstop bu izinlere bağlı. Biri düşerse backstop kurulamaz ve alarm yine
+    // "cebinde uygulama ölürse çalmayan alarm"a döner — sessizce.
+    expect(hasPermission('USE_EXACT_ALARM'), isTrue,
+        reason: 'kesin alarm (Android 14+ alarm-saati uygulaması) OLMALI');
+    expect(hasPermission('SCHEDULE_EXACT_ALARM'), isTrue,
+        reason: 'kesin alarm (Android 12/13 karşılığı) OLMALI');
+    // Ekran kilitliyken alarmı tam-ekran göstermek için.
+    expect(hasPermission('USE_FULL_SCREEN_INTENT'), isTrue);
+    // Cihaz gece yeniden başlarsa alarm yeniden zamanlanabilsin.
+    expect(hasPermission('RECEIVE_BOOT_COMPLETED'), isTrue);
+  });
+
   test('gizlilik: manifest ham ses/konum izni İSTEMİYOR', () {
     // Uyku takibi on-device (CLAUDE.md §6). Bu izinlerden biri sızarsa mağaza
     // incelemesinde ve kullanıcı güveninde bedeli olur.

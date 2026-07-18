@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../core/share/sharer.dart';
 import '../../core/sleep_tracking/alarm_sound.dart';
 import '../../core/sleep_tracking/envelope_log.dart';
+import '../../core/sleep_tracking/night_alarm_scheduler.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import '../../core/sleep_tracking/sleep_session_builder.dart';
@@ -95,6 +96,7 @@ class SleepModeController {
     required this.nightService,
     this.sharer,
     this.alarmSound,
+    this.alarmScheduler,
     this.alarmWindow = const Duration(minutes: 30),
     this.alarmLookback = const Duration(minutes: 5),
     this.alarmTick = const Duration(seconds: 10),
@@ -121,6 +123,11 @@ class SleepModeController {
   /// Alarmı duyulur yapan port. Null → alarm sessiz çalar (yalnızca UI değişir);
   /// testlerin çoğu bunu vermez.
   final AlarmSound? alarmSound;
+
+  /// Süreç ölse bile son-tarihte uyandıran **sistem backstop** portu. Null →
+  /// yalnızca in-app alarm (testlerin çoğu bunu vermez). EK güvence: in-app
+  /// alarmın lifecycle'ıyla birebir kurulur/iptal edilir, onu regrese ETMEZ.
+  final NightAlarmScheduler? alarmScheduler;
 
   /// Hedef saatten NE KADAR ÖNCE hafif uyku aranmaya başlanır.
   ///
@@ -170,6 +177,9 @@ class SleepModeController {
   /// dönebilir; geceyi bitirmek ayrı bir eylemdir (`stopAndSave`).
   Future<void> dismissAlarm() async {
     await alarmSound?.stop();
+    // Kullanıcı uyandı → bekleyen sistem backstop'u iptal et: aksi halde süreç
+    // ölürse OS son-tarihte İKİNCİ kez çalardı (kullanıcı zaten ayakta).
+    unawaited(alarmScheduler?.cancel());
     _emit(_state.copyWith(alarmRinging: false));
   }
 
@@ -181,8 +191,16 @@ class SleepModeController {
     final at = _state.alarmAt;
     if (at == null) {
       _alarm = null;
+      // Alarm kaldırıldı → sistem backstop'u da sök (yoksa ölü süreçte hayalet
+      // bir alarm son-tarihte çalardı).
+      unawaited(alarmScheduler?.cancel());
       return;
     }
+
+    // Sistem backstop SON-TARİHE (pencere sonuna) kurulur: in-app akıllı alarm
+    // hafif uykuda daha erken çalabilir, ama süreç ölürse OS garanti son-tarihte
+    // uyandırır. EK güvence — birincil in-app yolu değiştirmez.
+    unawaited(alarmScheduler?.schedule(at));
 
     _alarm = SmartAlarm(
       // Pencere geceden önce başlamaz — geçmişe uzanan bir pencere anlamsız olurdu.
@@ -289,6 +307,9 @@ class SleepModeController {
     _alarmTimer = null;
     _alarm = null;
     await alarmSound?.stop();
+    // Gece bitti → kurulu sistem backstop'u da sök: ekran kapandıktan sonra OS'un
+    // son-tarihte alarmı çalması kabul edilemez.
+    unawaited(alarmScheduler?.cancel());
 
     // Servis ÖNCE durdurulur: kayıt bittiyse bildirimin bir an bile fazladan
     // durması "hâlâ dinliyorum" izlenimi verirdi.
