@@ -17,6 +17,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
     "gen:tokens": "pnpm --filter @nocta/design-tokens gen",
     "gen:api-types": "node tooling/gen-api-types.mjs",
+    "gen:archetype": "node tooling/gen-archetype-matrix.mjs",
     "gen:api-dart": "echo 'Dart client: openapi-generator (Java gerekli) — bkz. apps/mobile/packages/api_client/README.md'",
     "db:migrate": "dbmate up",
     "db:new": "dbmate new",
@@ -25,7 +26,8 @@
     "prepare": "husky",
     "check:health-claims": "node tooling/check-health-claims.mjs",
     "check:i18n": "node tooling/check-hardcoded-strings.mjs",
-    "check:env-example": "node tooling/check-env-example.mjs"
+    "check:env-example": "node tooling/check-env-example.mjs",
+    "check:archetype-drift": "node tooling/check-archetype-drift.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

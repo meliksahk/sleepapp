@@ -1,0 +1,1394 @@
+{
+  "$generated": "ÜRETİLEN DOSYA — ELLE DÜZENLEMEYİN. Kaynak: apps/api/src/modules/archetype/domain/. Yeniden üretmek için: pnpm gen:archetype",
+  "version": 1,
+  "archetypes": [
+    "deep-ocean",
+    "overthinker",
+    "delta-drifter",
+    "dawn-chaser"
+  ],
+  "locales": [
+    "en",
+    "tr"
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "options": [
+        {
+          "id": "q1a",
+          "archetype": "deep-ocean"
+        },
+        {
+          "id": "q1b",
+          "archetype": "overthinker"
+        },
+        {
+          "id": "q1c",
+          "archetype": "delta-drifter"
+        },
+        {
+          "id": "q1d",
+          "archetype": "dawn-chaser"
+        }
+      ]
+    },
+    {
+      "id": "q2",
+      "options": [
+        {
+          "id": "q2a",
+          "archetype": "deep-ocean"
+        },
+        {
+          "id": "q2b",
+          "archetype": "overthinker"
+        },
+        {
+          "id": "q2c",
+          "archetype": "delta-drifter"
+        },
+        {
+          "id": "q2d",
+          "archetype": "dawn-chaser"
+        }
+      ]
+    },
+    {
+      "id": "q3",
+      "options": [
+        {
+          "id": "q3a",
+          "archetype": "deep-ocean"
+        },
+        {
+          "id": "q3b",
+          "archetype": "overthinker"
+        },
+        {
+          "id": "q3c",
+          "archetype": "delta-drifter"
+        },
+        {
+          "id": "q3d",
+          "archetype": "dawn-chaser"
+        }
+      ]
+    },
+    {
+      "id": "q4",
+      "options": [
+        {
+          "id": "q4a",
+          "archetype": "deep-ocean"
+        },
+        {
+          "id": "q4b",
+          "archetype": "overthinker"
+        },
+        {
+          "id": "q4c",
+          "archetype": "delta-drifter"
+        },
+        {
+          "id": "q4d",
+          "archetype": "dawn-chaser"
+        }
+      ]
+    },
+    {
+      "id": "q5",
+      "options": [
+        {
+          "id": "q5a",
+          "archetype": "deep-ocean"
+        },
+        {
+          "id": "q5b",
+          "archetype": "overthinker"
+        },
+        {
+          "id": "q5c",
+          "archetype": "delta-drifter"
+        },
+        {
+          "id": "q5d",
+          "archetype": "dawn-chaser"
+        }
+      ]
+    },
+    {
+      "id": "q6",
+      "options": [
+        {
+          "id": "q6a",
+          "archetype": "deep-ocean"
+        },
+        {
+          "id": "q6b",
+          "archetype": "overthinker"
+        },
+        {
+          "id": "q6c",
+          "archetype": "delta-drifter"
+        },
+        {
+          "id": "q6d",
+          "archetype": "dawn-chaser"
+        }
+      ]
+    }
+  ],
+  "text": {
+    "en": {
+      "questions": {
+        "q1": {
+          "prompt": "When your head hits the pillow, your mind…",
+          "options": {
+            "q1a": "sinks into stillness",
+            "q1b": "replays the whole day",
+            "q1c": "drifts somewhere far away",
+            "q1d": "is already planning tomorrow"
+          }
+        },
+        "q2": {
+          "prompt": "Your ideal bedroom sound is…",
+          "options": {
+            "q2a": "deep ocean hush",
+            "q2b": "soft rain to quiet my thoughts",
+            "q2c": "slow ambient waves",
+            "q2d": "nothing — I wake with the sun"
+          }
+        },
+        "q3": {
+          "prompt": "You wake at 3am. You…",
+          "options": {
+            "q3a": "roll over, gone again",
+            "q3b": "start a mental to-do list",
+            "q3c": "float in a half-dream",
+            "q3d": "check if it is nearly morning"
+          }
+        },
+        "q4": {
+          "prompt": "Mornings feel best when…",
+          "options": {
+            "q4a": "I slept like a stone",
+            "q4b": "my head finally went quiet",
+            "q4c": "I remember a vivid dream",
+            "q4d": "the first light wakes me gently"
+          }
+        },
+        "q5": {
+          "prompt": "Your relationship with your alarm is…",
+          "options": {
+            "q5a": "I rarely need it",
+            "q5b": "I beat it, lying awake",
+            "q5c": "it pulls me from deep sleep",
+            "q5d": "I am up before it rings"
+          }
+        },
+        "q6": {
+          "prompt": "A perfect night is…",
+          "options": {
+            "q6a": "deep and dreamless",
+            "q6b": "finally switching off",
+            "q6c": "long, drifting, surreal",
+            "q6d": "early to bed, early to rise"
+          }
+        }
+      },
+      "archetypes": {
+        "deep-ocean": {
+          "name": "Deep Ocean",
+          "tagline": "You sink into stillness the moment your head hits the pillow.",
+          "summary": "You drop into deep, quiet rest quickly and rarely stir before morning."
+        },
+        "overthinker": {
+          "name": "3AM Overthinker",
+          "tagline": "Your body is tired, but your mind is still writing tomorrow’s list.",
+          "summary": "You lie awake replaying the day; a gentle, masking soundscape quiets the chatter."
+        },
+        "delta-drifter": {
+          "name": "Delta Drifter",
+          "tagline": "You float through long, vivid, half-dream nights.",
+          "summary": "You sleep long and dream vividly; a steady soundscape keeps the drift smooth."
+        },
+        "dawn-chaser": {
+          "name": "Dawn Chaser",
+          "tagline": "You are wired to rise with the first light.",
+          "summary": "You wake early and bright; a calm wind-down ritual protects your evening hours."
+        }
+      }
+    },
+    "tr": {
+      "questions": {
+        "q1": {
+          "prompt": "Başını yastığa koyduğunda zihnin…",
+          "options": {
+            "q1a": "durulup dibe çöker",
+            "q1b": "bütün günü baştan oynatır",
+            "q1c": "uzaklarda bir yerlere süzülür",
+            "q1d": "çoktan yarını planlıyordur"
+          }
+        },
+        "q2": {
+          "prompt": "Yatak odandaki ideal ses…",
+          "options": {
+            "q2a": "derin okyanus sessizliği",
+            "q2b": "düşüncelerimi susturan hafif yağmur",
+            "q2c": "ağır ağır gelen ambiyans dalgaları",
+            "q2d": "hiçbir şey — güneşle uyanırım"
+          }
+        },
+        "q3": {
+          "prompt": "Gece 3’te uyandın. Sen…",
+          "options": {
+            "q3a": "dönüp yeniden dalarsın",
+            "q3b": "kafanda yapılacaklar listesi kurarsın",
+            "q3c": "yarı rüyada süzülürsün",
+            "q3d": "sabah olmuş mu diye bakarsın"
+          }
+        },
+        "q4": {
+          "prompt": "Sabahlar en iyi şöyleyken hissettirir…",
+          "options": {
+            "q4a": "taş gibi uyumuşsam",
+            "q4b": "kafam nihayet susmuşsa",
+            "q4c": "canlı bir rüya hatırlıyorsam",
+            "q4d": "ilk ışık beni usulca uyandırdıysa"
+          }
+        },
+        "q5": {
+          "prompt": "Alarmınla ilişkin…",
+          "options": {
+            "q5a": "ona nadiren ihtiyacım olur",
+            "q5b": "uyanık yatarken onu geçerim",
+            "q5c": "beni derin uykudan söker",
+            "q5d": "o çalmadan ayaktayım"
+          }
+        },
+        "q6": {
+          "prompt": "Kusursuz bir gece…",
+          "options": {
+            "q6a": "derin ve rüyasızdır",
+            "q6b": "nihayet kapanabilmektir",
+            "q6c": "uzun, savruk, gerçeküstüdür",
+            "q6d": "erken yatıp erken kalkmaktır"
+          }
+        }
+      },
+      "archetypes": {
+        "deep-ocean": {
+          "name": "Deep Ocean",
+          "tagline": "Başını yastığa koyduğun an durulup dibe çökersin.",
+          "summary": "Hızla derin ve sessiz bir dinlenmeye geçer, sabaha kadar pek kıpırdamazsın."
+        },
+        "overthinker": {
+          "name": "3AM Overthinker",
+          "tagline": "Bedenin yorgun, ama zihnin hâlâ yarının listesini yazıyor.",
+          "summary": "Günü baştan oynatarak uyanık yatarsın; yumuşak, örtücü bir ses dokusu bu gürültüyü susturur."
+        },
+        "delta-drifter": {
+          "name": "Delta Drifter",
+          "tagline": "Uzun, canlı, yarı rüya gecelerde süzülürsün.",
+          "summary": "Uzun uyur, canlı rüyalar görürsün; istikrarlı bir ses dokusu bu akışı pürüzsüz tutar."
+        },
+        "dawn-chaser": {
+          "name": "Dawn Chaser",
+          "tagline": "İlk ışıkla kalkmaya programlısın.",
+          "summary": "Erken ve diri uyanırsın; sakin bir yavaşlama ritüeli akşam saatlerini korur."
+        }
+      }
+    }
+  },
+  "vectors": [
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4a",
+        "q5": "q5a",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 6,
+        "overthinker": 0,
+        "delta-drifter": 0,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2b",
+        "q3": "q3b",
+        "q4": "q4b",
+        "q5": "q5b",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 6,
+        "delta-drifter": 0,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 0,
+        "delta-drifter": 6,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3d",
+        "q4": "q4d",
+        "q5": "q5d",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "dawn-chaser",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 0,
+        "delta-drifter": 0,
+        "dawn-chaser": 6
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3b",
+        "q4": "q4d",
+        "q5": "q5c",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2c",
+        "q3": "q3d",
+        "q4": "q4b",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2b",
+        "q3": "q3a",
+        "q4": "q4d",
+        "q5": "q5d",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2a",
+        "q3": "q3b",
+        "q4": "q4b",
+        "q5": "q5b",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 4,
+        "delta-drifter": 1,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 0,
+        "delta-drifter": 4,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2a",
+        "q3": "q3c",
+        "q4": "q4b",
+        "q5": "q5c",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4b",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 2,
+        "delta-drifter": 0,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3b",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2b",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 3,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2b",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2b",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4a",
+        "q5": "q5b",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 3,
+        "overthinker": 2,
+        "delta-drifter": 1,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2c",
+        "q3": "q3d",
+        "q4": "q4a",
+        "q5": "q5a",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2c",
+        "q3": "q3b",
+        "q4": "q4c",
+        "q5": "q5d",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2c",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 4,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4b",
+        "q5": "q5d",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2b",
+        "q3": "q3c",
+        "q4": "q4a",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3a",
+        "q4": "q4d",
+        "q5": "q5d",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2c",
+        "q3": "q3d",
+        "q4": "q4a",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "dawn-chaser",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 3
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4d",
+        "q5": "q5d",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2b",
+        "q3": "q3d",
+        "q4": "q4c",
+        "q5": "q5b",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "dawn-chaser",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 2,
+        "delta-drifter": 1,
+        "dawn-chaser": 3
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2d",
+        "q3": "q3d",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3b",
+        "q4": "q4a",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2d",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5b",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2b",
+        "q3": "q3c",
+        "q4": "q4a",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3b",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 2,
+        "delta-drifter": 3,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3a",
+        "q4": "q4a",
+        "q5": "q5a",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 3,
+        "overthinker": 0,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2c",
+        "q3": "q3b",
+        "q4": "q4a",
+        "q5": "q5b",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 2,
+        "delta-drifter": 1,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2c",
+        "q3": "q3a",
+        "q4": "q4a",
+        "q5": "q5b",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3d",
+        "q4": "q4b",
+        "q5": "q5b",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "dawn-chaser",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 2,
+        "delta-drifter": 0,
+        "dawn-chaser": 4
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2c",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5b",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2a",
+        "q3": "q3d",
+        "q4": "q4b",
+        "q5": "q5d",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2c",
+        "q3": "q3a",
+        "q4": "q4b",
+        "q5": "q5a",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2c",
+        "q3": "q3d",
+        "q4": "q4d",
+        "q5": "q5a",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5b",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4d",
+        "q5": "q5d",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 3,
+        "overthinker": 0,
+        "delta-drifter": 0,
+        "dawn-chaser": 3
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2b",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 4,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3d",
+        "q4": "q4b",
+        "q5": "q5b",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 3,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4b",
+        "q5": "q5c",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2a",
+        "q3": "q3c",
+        "q4": "q4a",
+        "q5": "q5d",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2a",
+        "q3": "q3b",
+        "q4": "q4d",
+        "q5": "q5d",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2b",
+        "q3": "q3a",
+        "q4": "q4a",
+        "q5": "q5a",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 4,
+        "overthinker": 1,
+        "delta-drifter": 0,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2a",
+        "q3": "q3b",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 1,
+        "delta-drifter": 5,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2a",
+        "q3": "q3c",
+        "q4": "q4d",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2d",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2d",
+        "q3": "q3a",
+        "q4": "q4b",
+        "q5": "q5a",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2b",
+        "q3": "q3b",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 3,
+        "overthinker": 2,
+        "delta-drifter": 1,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2b",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5a",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 3,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2a",
+        "q3": "q3c",
+        "q4": "q4a",
+        "q5": "q5c",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3b",
+        "q4": "q4d",
+        "q5": "q5a",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "dawn-chaser",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 3
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4a",
+        "q5": "q5d",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5d",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2d",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 2
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2d",
+        "q3": "q3a",
+        "q4": "q4d",
+        "q5": "q5a",
+        "q6": "q6d"
+      },
+      "archetypeSlug": "dawn-chaser",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 0,
+        "delta-drifter": 1,
+        "dawn-chaser": 3
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1c",
+        "q2": "q2a",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 2,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2c",
+        "q3": "q3c",
+        "q4": "q4c",
+        "q5": "q5d",
+        "q6": "q6b"
+      },
+      "archetypeSlug": "delta-drifter",
+      "scores": {
+        "deep-ocean": 0,
+        "overthinker": 2,
+        "delta-drifter": 3,
+        "dawn-chaser": 1
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1a",
+        "q2": "q2b",
+        "q3": "q3c",
+        "q4": "q4b",
+        "q5": "q5b",
+        "q6": "q6c"
+      },
+      "archetypeSlug": "overthinker",
+      "scores": {
+        "deep-ocean": 1,
+        "overthinker": 3,
+        "delta-drifter": 2,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1b",
+        "q2": "q2b",
+        "q3": "q3a",
+        "q4": "q4c",
+        "q5": "q5c",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 2,
+        "delta-drifter": 2,
+        "dawn-chaser": 0
+      }
+    },
+    {
+      "answers": {
+        "q1": "q1d",
+        "q2": "q2d",
+        "q3": "q3c",
+        "q4": "q4b",
+        "q5": "q5a",
+        "q6": "q6a"
+      },
+      "archetypeSlug": "deep-ocean",
+      "scores": {
+        "deep-ocean": 2,
+        "overthinker": 1,
+        "delta-drifter": 1,
+        "dawn-chaser": 2
+      }
+    }
+  ]
+}

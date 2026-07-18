@@ -12,11 +12,22 @@ import 'package:nocta/features/analytics/analytics.dart';
 import 'package:nocta/features/analytics/analytics_providers.dart';
 import 'package:nocta/features/archetype/archetype_controller.dart';
 import 'package:nocta/features/archetype/archetype_gradient.dart';
+import 'package:nocta/features/archetype/archetype_models.dart';
 import 'package:nocta/features/archetype/archetype_providers.dart';
+import 'package:nocta/features/archetype/archetype_service.dart';
+import 'package:nocta/features/archetype/data/archetype_matrix_source.dart';
+import 'package:nocta/features/archetype/data/local_archetype_store.dart';
 import 'package:nocta/features/settings/locale_store.dart';
 import 'package:nocta/features/archetype/presentation/archetype_test_screen.dart';
 import 'package:nocta/features/auth/auth_controller.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+
+import 'archetype_test_support.dart';
+
+/// Bu ekran artık **YEREL-ÖNCELİKLİ** (bkz. archetype_service.dart): sorular
+/// gömülü matristen, puanlama cihazda, sonuç cihazdaki kayıttan gelir. Testler
+/// bu yüzden sahte SORU JSON'u kurmaz — GERÇEK üretilmiş matrisi kullanır.
+/// Sunucu yalnızca paylaşım verisi ve arka plan senkronu için mock'lanır.
 
 class RecordingAnalytics implements Analytics {
   final List<String> events = [];
@@ -37,35 +48,10 @@ class RecordingSharer implements Sharer {
   Future<void> share(ShareContent content) async => last = content;
 }
 
-String _questions() => jsonEncode(<String, dynamic>{
-  'version': 1,
-  'questions': [
-    {
-      'id': 'q1',
-      'prompt': 'How do you fall asleep?',
-      'options': [
-        {'id': 'q1a', 'label': 'Fast', 'archetype': 'deep-ocean'},
-        {'id': 'q1b', 'label': 'Slowly', 'archetype': 'overthinker'},
-      ],
-    },
-  ],
-});
-
-Future<ArchetypeController> _controller({bool existingResult = false}) async {
+/// Paylaşım ucunu karşılayan sunucu istemcisi (diğer uçlar bu ekranda
+/// kullanılmıyor: sorular/puanlama/içerik cihazda).
+Future<ArchetypeController> _remote() async {
   final client = MockClient((req) async {
-    if (req.url.path == '/v1/archetype/result') {
-      if (!existingResult) return http.Response('not found', 404);
-      return http.Response(
-        jsonEncode(<String, dynamic>{
-          'userId': 'u-1',
-          'archetypeSlug': 'overthinker',
-          'scores': {'overthinker': 4},
-          'version': 1,
-          'createdAt': '2026-07-16T00:00:00.000Z',
-        }),
-        200,
-      );
-    }
     if (req.url.path == '/v1/auth/device') {
       return http.Response(
         jsonEncode(<String, dynamic>{
@@ -75,34 +61,6 @@ Future<ArchetypeController> _controller({bool existingResult = false}) async {
           'userId': 'u-1',
         }),
         201,
-      );
-    }
-    if (req.url.path == '/v1/archetype/questions') {
-      return http.Response(_questions(), 200);
-    }
-    if (req.url.path == '/v1/archetype/answers') {
-      return http.Response(
-        jsonEncode(<String, dynamic>{
-          'userId': 'u-1',
-          'archetypeSlug': 'deep-ocean',
-          'scores': {'deep-ocean': 3},
-          'version': 1,
-          'createdAt': '2026-07-16T00:00:00.000Z',
-        }),
-        201,
-      );
-    }
-    if (req.url.path == '/v1/archetype/content') {
-      return http.Response(
-        jsonEncode(<dynamic>[
-          {
-            'slug': 'deep-ocean',
-            'name': 'Deep Ocean',
-            'tagline': 'You sink into stillness.',
-            'summary': 'You drop into deep, quiet rest quickly.',
-          },
-        ]),
-        200,
       );
     }
     if (req.url.path == '/v1/sharing/archetype') {
@@ -117,6 +75,7 @@ Future<ArchetypeController> _controller({bool existingResult = false}) async {
         200,
       );
     }
+    // Arka plan senkronu dahil diğer her şey 404 — kullanıcı bunu GÖRMEMELİ.
     return http.Response('not found', 404);
   });
   final api = NoctaApiClient(baseUrl: 'http://x', client: client);
@@ -125,45 +84,39 @@ Future<ArchetypeController> _controller({bool existingResult = false}) async {
   return ArchetypeController(auth, api);
 }
 
-/// Sorular ucu patlayan controller — hata hali (NErrorState) için.
-Future<ArchetypeController> _failingController() async {
-  var authDone = false;
-  final client = MockClient((req) async {
-    if (req.url.path == '/v1/auth/device') {
-      authDone = true;
-      return http.Response(
-        jsonEncode(<String, dynamic>{
-          'accessToken': 'a',
-          'refreshToken': 'r',
-          'accessTokenExpiresIn': 900,
-          'userId': 'u-1',
-        }),
-        201,
-      );
-    }
-    if (!authDone) return http.Response('not found', 404);
-    // Kimlik alındıktan sonra her veri çağrısı sunucu hatasıyla döner.
-    return http.Response('boom', 500);
-  });
-  final api = NoctaApiClient(baseUrl: 'http://x', client: client);
-  final auth = AuthController(api, InMemorySessionStore());
-  await auth.registerAnonymously('fp');
-  return ArchetypeController(auth, api);
+ArchetypeResult _saved(String slug) => ArchetypeResult(
+      userId: '',
+      archetypeSlug: slug,
+      scores: <String, num>{slug: 4},
+      version: 1,
+      createdAt: '2026-07-16T00:00:00.000Z',
+    );
+
+Future<ArchetypeService> _service({
+  bool existingResult = false,
+  ArchetypeMatrixSource? matrixSource,
+}) async {
+  final store = InMemoryArchetypeStore();
+  if (existingResult) await store.save(_saved('overthinker'));
+  return ArchetypeService(
+    matrixSource: matrixSource ?? testMatrixSource(),
+    store: store,
+    remote: await _remote(),
+  );
 }
 
 Future<void> _pump(
   WidgetTester tester,
-  ArchetypeController controller, {
+  ArchetypeService service, {
   Sharer? sharer,
   RecordingAnalytics? analytics,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: <Override>[
-        archetypeControllerProvider.overrideWithValue(controller),
-        // İçerik provider'ı artık dili BEKLİYOR (yerelleşmiş sunucu içeriği).
-        // Testte SharedPreferences yok → çözülmeyen dil, içeriği sonsuza dek
-        // loading'de bırakır ve tagline hiç render edilmezdi.
+        archetypeServiceProvider.overrideWithValue(service),
+        // Dil provider'ı testte SharedPreferences'a uzanır; çözülmeyen dil
+        // soruları ve içeriği sonsuza dek loading'de bırakırdı.
         appLocaleProvider.overrideWith((ref) async => null),
         // Analytics override — default'u apiClientProvider→FlavorConfig okur (testte yok).
         analyticsProvider.overrideWithValue(analytics ?? RecordingAnalytics()),
@@ -180,59 +133,54 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
+/// Sihirbazdaki HER soruya `a` seçeneğini işaretler (hepsi deep-ocean).
+Future<void> _answerAll(WidgetTester tester) async {
+  for (var i = 1; i <= MatrixFixture.questionCount; i++) {
+    final key = Key('opt-q$i-q${i}a');
+    await tester.scrollUntilVisible(find.byKey(key), 120);
+    await tester.tap(find.byKey(key));
+    await tester.pumpAndSettle();
+  }
+}
+
+Future<void> _submit(WidgetTester tester) async {
+  await tester.scrollUntilVisible(find.byKey(const Key('archetype-submit')), 200);
+  await tester.tap(find.byKey(const Key('archetype-submit')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('soruları yükler, cevaplar, sonucu gösterir', (tester) async {
-    await _pump(tester, await _controller());
+    await _pump(tester, await _service());
 
-    // Soru yüklendi.
-    expect(find.text('How do you fall asleep?'), findsOneWidget);
+    // Sorular GÖMÜLÜ matristen geldi — ağ isteği yok.
+    expect(find.text(MatrixFixture.firstPromptEn), findsOneWidget);
     expect(find.byKey(const Key('archetype-result')), findsNothing);
 
-    // Cevaplamadan submit → hâlâ sonuç yok (gating).
-    await tester.tap(find.byKey(const Key('archetype-submit')));
-    await tester.pumpAndSettle();
+    // Hepsini cevaplamadan submit → hâlâ sonuç yok (gating).
+    await _submit(tester);
     expect(find.byKey(const Key('archetype-result')), findsNothing);
 
-    // Seçenek seç → submit → sonuç.
-    await tester.tap(find.byKey(const Key('opt-q1-q1a')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('archetype-submit')));
-    await tester.pumpAndSettle();
+    await _answerAll(tester);
+    await _submit(tester);
 
     expect(find.byKey(const Key('archetype-result')), findsOneWidget);
-    expect(find.text('Deep Ocean'), findsOneWidget); // slug → görünen ad
-    // Tanıtım içeriği (public uç) geldiyse tagline gösterilir.
+    expect(find.text(MatrixFixture.allAnswersName), findsOneWidget);
     expect(find.byKey(const Key('archetype-tagline')), findsOneWidget);
-    expect(find.text('You sink into stillness.'), findsOneWidget);
+    expect(find.text(MatrixFixture.allAnswersTagline), findsOneWidget);
   });
 
   testWidgets(
     'sonuç görüntülenince archetype_completed analitik olayı gönderilir',
     (tester) async {
       final analytics = RecordingAnalytics();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: <Override>[
-            archetypeControllerProvider.overrideWithValue(await _controller()),
-            appLocaleProvider.overrideWith((ref) async => null),
-            analyticsProvider.overrideWithValue(analytics),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppL10n.localizationsDelegates,
-            supportedLocales: AppL10n.supportedLocales,
-            theme: buildNoctaDarkTheme(),
-            home: const ArchetypeTestScreen(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('opt-q1-q1a')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('archetype-submit')));
-      await tester.pumpAndSettle();
+      await _pump(tester, await _service(), analytics: analytics);
+
+      await _answerAll(tester);
+      await _submit(tester);
 
       expect(analytics.events, contains('archetype_completed'));
-      expect(analytics.lastProps?['archetype'], 'deep-ocean');
+      expect(analytics.lastProps?['archetype'], MatrixFixture.allAnswersArchetype);
     },
   );
 
@@ -243,21 +191,17 @@ void main() {
       final analytics = RecordingAnalytics();
       await _pump(
         tester,
-        await _controller(),
+        await _service(),
         sharer: sharer,
         analytics: analytics,
       );
 
-      // Cevapla → sonuç.
-      await tester.tap(find.byKey(const Key('opt-q1-q1a')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('archetype-submit')));
-      await tester.pumpAndSettle();
+      await _answerAll(tester);
+      await _submit(tester);
 
-      // Paylaş → sharer'a paylaşım kartı iletilir + SnackBar.
       await tester.tap(find.byKey(const Key('archetype-share')));
 
-      // `runAsync` ŞART: paylaşım artık önce kimlik kartını PNG'ye render ediyor
+      // `runAsync` ŞART: paylaşım önce kimlik kartını PNG'ye render ediyor
       // (viral kanca #1) ve `toImage` motorun GERÇEK asenkron işi — sahte zaman
       // bölgesinde tamamlanmaz. `pumpAndSettle` tek başına yetmez ve iddia,
       // `share()` hiç çağrılmadan koşardı.
@@ -284,45 +228,44 @@ void main() {
   testWidgets(
     'kayıtlı sonuç varsa doğrudan sonucu gösterir (sihirbaz atlanır)',
     (tester) async {
-      await _pump(tester, await _controller(existingResult: true));
+      await _pump(tester, await _service(existingResult: true));
 
       expect(find.byKey(const Key('archetype-result')), findsOneWidget);
-      expect(find.text('Overthinker'), findsOneWidget);
+      expect(find.text('3AM Overthinker'), findsOneWidget);
       // Sihirbaz gösterilmez (soru/submit yok).
       expect(find.byKey(const Key('archetype-submit')), findsNothing);
     },
   );
 
   testWidgets('Retake → sonuçtan sihirbaza döner', (tester) async {
-    await _pump(tester, await _controller(existingResult: true));
+    await _pump(tester, await _service(existingResult: true));
     expect(find.byKey(const Key('archetype-result')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('archetype-retake')));
     await tester.pumpAndSettle();
 
     // Sihirbaz göründü: soru + submit var, sonuç yok.
-    expect(find.text('How do you fall asleep?'), findsOneWidget);
+    expect(find.text(MatrixFixture.firstPromptEn), findsOneWidget);
     expect(find.byKey(const Key('archetype-submit')), findsOneWidget);
     expect(find.byKey(const Key('archetype-result')), findsNothing);
   });
 
   testWidgets('ilerleme göstergesi cevaplandıkça günceller', (tester) async {
-    await _pump(tester, await _controller());
+    await _pump(tester, await _service());
 
-    // Tek soru var: başlangıçta 0/1.
-    expect(find.text('0 of 1 answered'), findsOneWidget);
+    expect(find.text('0 of 6 answered'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('opt-q1-q1a')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 of 1 answered'), findsOneWidget);
-    expect(find.text('0 of 1 answered'), findsNothing);
+    expect(find.text('1 of 6 answered'), findsOneWidget);
+    expect(find.text('0 of 6 answered'), findsNothing);
   });
 
   testWidgets('seçenek seçilince NSelectableOption seçili hale geçer', (
     tester,
   ) async {
-    await _pump(tester, await _controller());
+    await _pump(tester, await _service());
 
     NSelectableOption option(String key) => tester.widget<NSelectableOption>(
       find.byKey(Key(key)),
@@ -348,16 +291,14 @@ void main() {
   testWidgets(
     'ÇEKİRDEK: sonuç ekranı kullanıcının KENDİ arketip gradyanını gösterir',
     (tester) async {
-      await _pump(tester, await _controller());
-      await tester.tap(find.byKey(const Key('opt-q1-q1a')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('archetype-submit')));
-      await tester.pumpAndSettle();
+      await _pump(tester, await _service());
+      await _answerAll(tester);
+      await _submit(tester);
 
       // Sonuç deep-ocean; ekranda o slug'ın gradyanı çizilmiş olmalı — kimlik
       // gradyanı ana ekranda ve paylaşılan PNG'de vardı, sonucun İLK görüldüğü
       // anda yoktu (#tasarım). Gradyan tek kaynaktan gelir (#178).
-      final expected = archetypeGradientForSlug('deep-ocean');
+      final expected = archetypeGradientForSlug(MatrixFixture.allAnswersArchetype);
       final gradients = tester
           .widgetList<Container>(find.byType(Container))
           .map((c) => c.decoration)
@@ -382,7 +323,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await _pump(tester, await _controller(existingResult: true));
+    await _pump(tester, await _service(existingResult: true));
 
     expect(find.byType(SingleChildScrollView), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -391,7 +332,11 @@ void main() {
   testWidgets('hata halinde NErrorState çıkar (çıplak refresh ikonu değil)', (
     tester,
   ) async {
-    await _pump(tester, await _failingController());
+    // Artık tek gerçek hata kaynağı: gömülü matris okunamadı (asset bozuk/eksik).
+    await _pump(
+      tester,
+      await _service(matrixSource: brokenMatrixSource()),
+    );
 
     expect(find.byType(NErrorState), findsOneWidget);
     expect(find.byKey(const Key('archetype-retry')), findsOneWidget);

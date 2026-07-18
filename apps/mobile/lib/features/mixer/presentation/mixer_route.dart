@@ -106,10 +106,16 @@ class _MixerRouteState extends ConsumerState<MixerRoute> {
     _fellBackForGood = _fellBackForGood || resolved.usedFallback;
 
     _controller ??= widget.controllerFactory?.call(resolved.spec);
+    // Başlık: açılan sesin ADI (kullanıcının seçtiği şey). Tarif çözülemediyse
+    // null kalır ve ekran jenerik başlığa düşer — var olmayan bir sesin adını
+    // yazmaktansa "Mikser" demek dürüst olanı.
+    final locale = Localizations.localeOf(context).languageCode;
+    final title = detail.valueOrNull?.soundscape.title(locale);
     return MixerScreen(
       controller: _controller,
       spec: resolved.spec,
       recipeUnavailable: _fellBackForGood,
+      title: title,
     );
   }
 }

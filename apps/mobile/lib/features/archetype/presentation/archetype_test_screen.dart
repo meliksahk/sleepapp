@@ -48,15 +48,16 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
 
   /// Açılış: kayıtlı sonuç varsa doğrudan göster (dönen kullanıcı testi tekrar
   /// yapmaz), yoksa soru sihirbazını yükle.
+  ///
+  /// **AĞ YOK.** Sonuç cihazdaki kayıttan, sorular gömülü matristen gelir; ikisi
+  /// de backend olmadan çalışır (bkz. archetype_service.dart).
   Future<void> _load() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final existing = await ref
-          .read(archetypeControllerProvider)
-          .latestResult();
+      final existing = await ref.read(archetypeServiceProvider).latest();
       if (!mounted) return;
       if (existing != null) {
         setState(() {
@@ -76,7 +77,7 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
   }
 
   Future<void> _loadQuestions() async {
-    final q = await ref.read(archetypeControllerProvider).fetchQuestions();
+    final q = await ref.read(archetypeQuestionsProvider.future);
     if (!mounted) return;
     setState(() {
       _questions = q;
@@ -111,10 +112,13 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
     if (q == null || !_allAnswered || _submitting) return;
     setState(() => _submitting = true);
     try {
-      final r = await ref
-          .read(archetypeControllerProvider)
-          .submitAnswers(q.version, _answers);
+      // CİHAZDA puanlanır, CİHAZA yazılır, ANINDA döner. Sunucuya gönderim arka
+      // planda ve sessiz — patlarsa kullanıcı hiçbir şey görmez.
+      final r = await ref.read(archetypeServiceProvider).submit(_answers);
       if (!mounted) return;
+      // Ana ekran / geçmiş kimlik kartını yeni sonuçla tazelesin.
+      ref.invalidate(latestArchetypeResultProvider);
+      ref.invalidate(archetypeHistoryProvider);
       setState(() {
         _result = r;
         _submitting = false;
@@ -424,8 +428,11 @@ class _ResultViewState extends ConsumerState<_ResultView> {
     setState(() => _sharing = true);
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppL10n.of(context); // await'ten ONCE (context async gap)
+    final locale = Localizations.localeOf(context).languageCode;
     try {
-      final share = await ref.read(archetypeControllerProvider).fetchShare();
+      // Sunucu varsa kanonik paylaşım verisi ondan; yoksa yerelden kurulur —
+      // ağsız kullanıcı da paylaşabilmeli (viral kanca #1'in tüm anlamı bu).
+      final share = await ref.read(archetypeServiceProvider).share(locale);
       if (share == null) return;
 
       // Viral kanca #1: link DEĞİL, GÖRSEL paylaşılır (docs/04 §103).

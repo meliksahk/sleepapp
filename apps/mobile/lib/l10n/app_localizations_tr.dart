@@ -292,7 +292,7 @@ class AppL10nTr extends AppL10n {
   String get homeRetakeTest => 'Testi tekrar yap';
 
   @override
-  String get homeBrowseSoundscapes => 'Soundscape’lere göz at';
+  String get homeBrowseSoundscapes => 'Ses kitaplığı';
 
   @override
   String get sleepHistoryTitle => 'Uyku geçmişi';
