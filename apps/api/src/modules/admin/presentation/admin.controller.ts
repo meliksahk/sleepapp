@@ -42,9 +42,12 @@ import {
 } from '../../identity';
 import { Inject, Query } from '@nestjs/common';
 import { InvalidFlagKeyError, ListAllFlagsUseCase, UpsertFlagUseCase } from '../../flags';
+import { SendCampaignUseCase } from '../../notification';
 import { AdminUserDto } from './admin-user.dto';
 import { AdminFlagDto } from './admin-flag.dto';
 import { UpsertFlagDto } from './upsert-flag.dto';
+import { SendCampaignDto } from './send-campaign.dto';
+import { CampaignResultDto } from './campaign-result.dto';
 import { AdminMeDto } from './dto';
 import { AdminSoundscapeDetailDto, AdminSoundscapeDto } from './soundscape.dto';
 import { OverviewDto } from './overview.dto';
@@ -81,6 +84,7 @@ export class AdminController {
     private readonly userSearch: SearchUsersUseCase,
     private readonly flagsList: ListAllFlagsUseCase,
     private readonly flagUpsert: UpsertFlagUseCase,
+    private readonly campaign: SendCampaignUseCase,
   ) {}
 
   /**
@@ -143,6 +147,37 @@ export class AdminController {
       }
       throw err;
     }
+  }
+
+  /**
+   * Push kampanyası gönder (docs/03 A5). **ROL DARALTMASI: yalnızca `owner`.** Kampanya
+   * TÜM kullanıcı tabanına ulaşır — yanlış/spam bir gönderim itibar + opt-out dalgası
+   * yaratır; içerik editöründen (`editor`) dar bir yetki gerektirir. Segment = push token'ı
+   * olanlar (opt-out fan-out'ta zaten dışlanır). Denetim izi zorunlu (kim/kime/kaç).
+   *
+   * NOT: teslim LogPushSender ile loglanır (gerçek APNs/FCM anahtar-kapılı, docs/10);
+   * gönderim SENKRON (async kuyruk BullMQ docs/10'a ertelendi). Kampanya GEÇMİŞİ (persist)
+   * ayrı iş — yeni tablo/migration ister (§8), o dilimde sorulacak.
+   */
+  @Post('campaigns')
+  @HttpCode(200)
+  @Roles('owner')
+  @ApiOperation({ summary: 'Push kampanyası gönder (yalnızca owner)' })
+  @ApiOkResponse({ type: CampaignResultDto })
+  @ApiForbiddenResponse({ description: 'Yalnızca owner kampanya gönderir' })
+  async sendCampaign(
+    @Body() dto: SendCampaignDto,
+    @CurrentUser() user: AccessTokenClaims,
+  ): Promise<CampaignResultDto> {
+    const result = await this.campaign.execute(dto.title, dto.body, dto.platform);
+    // Denetim izi: kim gönderdi + kaç kişiye ulaştı (metin değil — gövde PII/spam taşımasın).
+    await this.audit.record({
+      actorId: user.sub,
+      action: 'campaign.send',
+      target: dto.platform ?? 'all',
+      details: { recipients: result.recipients, sent: result.sent, failed: result.failed },
+    });
+    return result;
   }
 
   /**

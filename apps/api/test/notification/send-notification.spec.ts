@@ -18,6 +18,9 @@ class FakeRepo implements DeviceTokenRepository {
   async findTokensByUser(): Promise<PushTarget[]> {
     return this.targets;
   }
+  async findUserIdsWithTokens(): Promise<string[]> {
+    return [];
+  }
 }
 
 const prefs = (enabled: boolean): NotificationPreferenceReader => ({
@@ -87,6 +90,7 @@ describe('SendNotificationUseCase (fan-out)', () => {
         queried = true;
         return [{ token: 't1', platform: 'ios' }];
       },
+      findUserIdsWithTokens: async () => [],
     };
     let called = false;
     const sender: PushSender = {

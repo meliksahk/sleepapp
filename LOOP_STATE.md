@@ -91,10 +91,10 @@
 | ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                   |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                        |
+| Admin       | ~41%     | 0.15    | **kampanya UI** (API ✓ #183, panel formu sırada) · **metrik panoları** (D7 veri; total-users/sessions computable) · **2FA/davet/parola-sıfırlama** (rule #11 açtı). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ✓ **kampanya API** #183 (owner-kapılı push bestele+segment+fan-out → mevcut notification substratı; opt-out dışlanır, audit `campaign.send`, 7 e2e; teslim LogPushSender=anahtar-gated). Müdür (C): admin'i bitir                                                                                                   |
 | Web         | ~43%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ **blog OG görselleri** #182 (7 sosyal önizleme PNG'si — 6 yazı + dizin; paylaşılınca kart çıkar, satori/archetype-OG deseni; HTTP'de geçerli PNG kanıtlı). Hepsi docs/05 viral ön-lansman kanalı                                                                                                                                                   |
 
-> **Hesap:** `0.40·79 + 0.30·74 + 0.15·39 + 0.15·43 = 66.10` → **≈66%**
+> **Hesap:** `0.40·79 + 0.30·74 + 0.15·41 + 0.15·43 = 66.40` → **≈66%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,34 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #183 — admin push kampanyası API'si: owner-kapılı fan-out (PR #183)
+
+✅ **Yapıldı ve doğrulandı (7 e2e)** — müdür hükmü (C): admin'i bitir (hreflang/B DEĞİL)
+
+- **Müdür sahte-ikilimi (A: dev hreflang / B: faz-bitti) reddetti:** A=kılık değiştirmiş make-work
+  (TR izleyicisi sıfır siteye i18n refactor); B=sinsi kapsam-daraltma (§0.6 — admin %39 gerçek
+  boşluk; rule #11 repo public → Sentry/SMTP/VPS artık KOD-engeli değil). Hüküm: admin'i bitir.
+- **Yapıldı:** `POST /v1/admin/campaigns` (owner-only — kampanya TÜM tabana ulaşır, editörden dar).
+  Mevcut `notification` substratı üstüne: `SendCampaignUseCase` segmenti (push token'lı kullanıcılar,
+  opsiyonel platform) çözer → her birine `SendNotificationUseCase` (opt-out'u zaten ele alır) →
+  {recipients, sent, failed}. Yeni audit-action `campaign.send`. notification public API (index.ts)
+  kuruldu (boştu). Ölü kod DEĞİL: owner CANLI olarak besteleyip gönderebiliyor.
+- **DOĞRULAMA:** 7 e2e (gerçek Postgres, seed device_tokens): owner gönderir+segment fan-out,
+  platform alt-küme (all ⊇ ios), audit görünür, editor 403, boş-başlık/geçersiz-platform 400, 401.
+  Tam api süit **75 suite/469 test yeşil**, typecheck+lint temiz (boundary dahil).
+- 🔥 **Sınır (dürüstlük):** gönderim SENKRON + LogPushSender (loglar) — gerçek APNs/FCM anahtar-gated
+  (docs/10), async kuyruk BullMQ ertelenmiş; ikisi de mevcut `SendNotificationUseCase` ile aynı
+  bilinçli sınır. Kampanya GEÇMİŞİ (persist) yapılmadı: yeni tablo/migration ister (§8 → sorulacak).
+  Kampanya panel UI'ı sırada (flags deseni: API→UI).
+- 📌 Admin 39→41 (+2, flags-slice presedanıyla tutarlı; UI + D7 + 2FA sonra). Bar ≈66%.
+
+> **GATED ENVANTERİ (müdür (B) borcu — yan-ürün, döngü durmadan):** İnsan/anahtar gerektiren,
+> loop'un KAPATAMAYACAĞI işler: gerçek APNs/FCM push anahtarları (kampanya fiili teslimi),
+> native ses graf DEFAULT swap (kulak-yargısı, gerçek cihaz+kulaklık), iOS ses+alarm (Mac),
+> gerçek IAP (Apple Developer $99, en son faz), VPS deploy (D-3 creds), Sentry DSN (D-2),
+> SMTP (D-5 davet/parola e-postası), gerçek 8-saatlik gece testi, App Store submission.
+> Otonom kalan (loop devam): admin kampanya UI + D7/metrik + 2FA/davet/parola-sıfırlama akışları.
 
 ### #182 — web blog OG görselleri: sosyal önizleme kartları (PR #182)
 

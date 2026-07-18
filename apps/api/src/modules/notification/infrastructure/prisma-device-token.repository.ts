@@ -22,4 +22,13 @@ export class PrismaDeviceTokenRepository implements DeviceTokenRepository {
     });
     return rows.map((r) => ({ token: r.token, platform: r.platform }));
   }
+
+  async findUserIdsWithTokens(platform?: string): Promise<string[]> {
+    const rows = await this.prisma.device_tokens.findMany({
+      where: platform ? { platform } : undefined,
+      select: { user_id: true },
+      distinct: ['user_id'],
+    });
+    return rows.map((r) => r.user_id);
+  }
 }

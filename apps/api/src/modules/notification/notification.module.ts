@@ -12,6 +12,7 @@ import { PrismaDeviceTokenRepository } from './infrastructure/prisma-device-toke
 import { LogPushSender } from './infrastructure/log-push-sender';
 import { RegisterDeviceTokenUseCase } from './application/register-device-token.usecase';
 import { SendNotificationUseCase } from './application/send-notification.usecase';
+import { SendCampaignUseCase } from './application/send-campaign.usecase';
 import { NotificationController } from './presentation/notification.controller';
 
 const providers: Provider[] = [
@@ -47,6 +48,12 @@ const providers: Provider[] = [
       preferences: NotificationPreferenceReader,
     ): SendNotificationUseCase => new SendNotificationUseCase(repo, sender, preferences),
   },
+  {
+    provide: SendCampaignUseCase,
+    inject: [DEVICE_TOKEN_REPOSITORY, SendNotificationUseCase],
+    useFactory: (repo: DeviceTokenRepository, send: SendNotificationUseCase): SendCampaignUseCase =>
+      new SendCampaignUseCase(repo, send),
+  },
 ];
 
 @Module({
@@ -54,6 +61,6 @@ const providers: Provider[] = [
   controllers: [NotificationController],
   providers,
   // Fan-out use case modül-dışı tetikleyiciler (admin kampanya / domain-event) için dışa açık.
-  exports: [SendNotificationUseCase],
+  exports: [SendNotificationUseCase, SendCampaignUseCase],
 })
 export class NotificationModule {}
