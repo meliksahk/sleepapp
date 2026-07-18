@@ -486,4 +486,24 @@ class AppL10nTr extends AppL10n {
   @override
   String get onboardingAlarmBody =>
       'İzin verirsen NOCTA alarmı zamanlamak için hafif uykuyu dinler. Analiz telefonunda yapılır — ham ses hiçbir yere gitmez.';
+
+  @override
+  String get homeTonightLabel => 'Bu gece';
+
+  @override
+  String get homeRitualTitle => 'Gece ritüelini başlat';
+
+  @override
+  String get homeRitualSubtitle =>
+      'Ses ve daha yumuşak bir uyanış. Bağlantı gerekmez.';
+
+  @override
+  String get homeStartRitual => 'Bu geceyi başlat';
+
+  @override
+  String get homeIdentityInviteBody =>
+      'İki dakika, hesap gerekmez. Gecelerini paylaşabileceğin bir karta dönüştür.';
+
+  @override
+  String get homeSectionExplore => 'Keşfet';
 }

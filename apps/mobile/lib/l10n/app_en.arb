@@ -440,5 +440,18 @@
   "onboardingAlarmTitle": "Wake up gently",
   "@onboardingAlarmTitle": { "description": "Karşılama 3 — alarm + mikrofon izni priming" },
   "onboardingAlarmBody": "With your permission, NOCTA listens for lighter sleep to time your alarm. The analysis happens on your phone — raw audio never leaves it.",
-  "@onboardingAlarmBody": { "description": "Karşılama 3 gövde — gizlilik açıkça belirtilir (§6)" }
+  "@onboardingAlarmBody": { "description": "Karşılama 3 gövde — gizlilik açıkça belirtilir (§6)" },
+
+  "homeTonightLabel": "Tonight",
+  "@homeTonightLabel": { "description": "Ana ekran birincil eylem bolumunun etiketi" },
+  "homeRitualTitle": "Start your night ritual",
+  "@homeRitualTitle": { "description": "Ana ekranin tek display basligi; ritual dili, saglik iddiasi yok" },
+  "homeRitualSubtitle": "Sound, and a gentler wake-up. Works with no connection.",
+  "@homeRitualSubtitle": { "description": "Ritualin ne oldugu + cevrimdisi calistigi; ozellik tarifi" },
+  "homeStartRitual": "Start tonight",
+  "@homeStartRitual": { "description": "Birincil buton etiketi -> /sleep-mode" },
+  "homeIdentityInviteBody": "Two minutes, no account. Turn your nights into a card you can share.",
+  "@homeIdentityInviteBody": { "description": "Test yapilmamisken davet karti govdesi" },
+  "homeSectionExplore": "Explore",
+  "@homeSectionExplore": { "description": "Ikincil navigasyon rafinin bolum etiketi" }
 }

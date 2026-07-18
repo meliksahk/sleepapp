@@ -151,5 +151,12 @@
   "onboardingRitualBody": "Jeneratif sesleri kendin miksle — yağmur, drone, yumuşak gürültü. Her şey telefonunda üretilir ve internetsiz çalışır.",
 
   "onboardingAlarmTitle": "Nazikçe uyan",
-  "onboardingAlarmBody": "İzin verirsen NOCTA alarmı zamanlamak için hafif uykuyu dinler. Analiz telefonunda yapılır — ham ses hiçbir yere gitmez."
+  "onboardingAlarmBody": "İzin verirsen NOCTA alarmı zamanlamak için hafif uykuyu dinler. Analiz telefonunda yapılır — ham ses hiçbir yere gitmez.",
+
+  "homeTonightLabel": "Bu gece",
+  "homeRitualTitle": "Gece ritüelini başlat",
+  "homeRitualSubtitle": "Ses ve daha yumuşak bir uyanış. Bağlantı gerekmez.",
+  "homeStartRitual": "Bu geceyi başlat",
+  "homeIdentityInviteBody": "İki dakika, hesap gerekmez. Gecelerini paylaşabileceğin bir karta dönüştür.",
+  "homeSectionExplore": "Keşfet"
 }
