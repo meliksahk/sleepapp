@@ -107,9 +107,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 orElse: () => const SizedBox.shrink(),
               ),
+              const SizedBox(height: NoctaSpace.s5),
+              Text(
+                l10n.settingsSoundSection,
+                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+              ),
               // AÇILIŞ SESİ (aura) — kapatılabilir olması ZORUNLU: bu bir uyku
               // uygulaması ve ses gece 23:00'te, yanında biri uyurken çalabilir.
-              // Kapatılamayan bir açılış sesi garantili tek yıldızdır.
+              // KENDİ bölümünde: "Notifications" altında görünmesi yanlıştı (bildirim
+              // toggle'ı çevrimdışıyken gizlenince ses ayarı bildirim gibi okunuyordu).
               ref.watch(signatureSoundEnabledProvider).maybeWhen(
                 data: (enabled) => SwitchListTile(
                   key: const Key('signature-sound-toggle'),

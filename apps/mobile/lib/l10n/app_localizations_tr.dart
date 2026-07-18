@@ -513,4 +513,7 @@ class AppL10nTr extends AppL10n {
   @override
   String get settingsSignatureSoundHint =>
       'Uygulama açılırken kısa bir atmosfer.';
+
+  @override
+  String get settingsSoundSection => 'Ses';
 }

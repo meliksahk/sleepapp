@@ -930,6 +930,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'A short ambience when the app opens.'**
   String get settingsSignatureSoundHint;
+
+  /// Ayarlar ses bolumu basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get settingsSoundSection;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
