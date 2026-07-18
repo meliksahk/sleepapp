@@ -45,6 +45,52 @@ describe('Archetype e2e (HTTP)', () => {
     expect(res.body.questions).toHaveLength(6);
   });
 
+  it('Accept-Language: tr → sorular TÜRKÇE gelir (HTTP katmanı başlığı okuyor)', async () => {
+    const { token: t } = await request(app.getHttpServer())
+      .post('/v1/auth/device')
+      .send({ fingerprint: `arch-i18n-${Date.now()}`, platform: 'android' })
+      .expect(201)
+      .then((r) => ({ token: r.body.accessToken as string }));
+
+    const tr = await request(app.getHttpServer())
+      .get('/v1/archetype/questions')
+      .set('Authorization', `Bearer ${t}`)
+      .set('Accept-Language', 'tr-TR,tr;q=0.9,en;q=0.8')
+      .expect(200);
+    expect(tr.body.questions[0].prompt).toBe('Başını yastığa koyduğunda zihnin…');
+
+    const en = await request(app.getHttpServer())
+      .get('/v1/archetype/questions')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(en.body.questions[0].prompt).toBe('When your head hits the pillow, your mind…');
+
+    // Yapı korunur → aynı cevaplar iki dilde de gönderilebilir.
+    expect(tr.body.questions.map((q: { id: string }) => q.id)).toEqual(
+      en.body.questions.map((q: { id: string }) => q.id),
+    );
+  });
+
+  it('DİL SONUCU DEĞİŞTİRMEZ: TR ile gönderilen cevaplar EN ile aynı arketipi verir', async () => {
+    const mk = async (lang?: string) => {
+      const t = await request(app.getHttpServer())
+        .post('/v1/auth/device')
+        .send({ fingerprint: `arch-i18n-score-${lang ?? 'en'}-${Date.now()}`, platform: 'android' })
+        .expect(201)
+        .then((r) => r.body.accessToken as string);
+      const req = request(app.getHttpServer())
+        .post('/v1/archetype/answers')
+        .set('Authorization', `Bearer ${t}`);
+      if (lang) req.set('Accept-Language', lang);
+      const res = await req.send({ version: 1, answers: allB }).expect(201);
+      return res.body;
+    };
+    const trResult = await mk('tr');
+    const enResult = await mk();
+    expect(trResult.archetypeSlug).toBe(enResult.archetypeSlug);
+    expect(trResult.scores).toEqual(enResult.scores);
+  });
+
   it('POST answers (tüm B) → overthinker, sonra GET result kalıcı', async () => {
     const { token: t, userId } = await token();
     const submit = await request(app.getHttpServer())

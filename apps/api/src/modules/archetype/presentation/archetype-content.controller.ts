@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ARCHETYPE_INFO } from '../domain/archetype-content';
+import { Controller, Get, Headers } from '@nestjs/common';
+import { ApiHeader, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { resolveLocale } from '../../../shared/locale';
+import { listArchetypeInfo } from '../domain/archetype-content';
 import { ArchetypeInfoDto } from './dto';
 
 /**
@@ -12,9 +13,10 @@ import { ArchetypeInfoDto } from './dto';
 export class ArchetypeContentController {
   @Get('content')
   @ApiOperation({ summary: 'Tüm archetype tanıtım içeriği (isim/tagline/özet)' })
+  @ApiHeader({ name: 'Accept-Language', required: false, description: 'en (varsayılan) | tr' })
   @ApiOkResponse({ type: [ArchetypeInfoDto] })
-  content(): ArchetypeInfoDto[] {
-    return ARCHETYPE_INFO.map((a) => ({
+  content(@Headers('accept-language') acceptLanguage?: string): ArchetypeInfoDto[] {
+    return listArchetypeInfo(resolveLocale(acceptLanguage)).map((a) => ({
       slug: a.slug,
       name: a.name,
       tagline: a.tagline,
