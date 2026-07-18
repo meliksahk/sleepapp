@@ -34,9 +34,19 @@ class SignaturePlayer {
 
   AudioPlayer? _player;
 
-  /// İmzayı bir kez çalar. Hata durumunda SESSİZCE geçilir: açılış sesi
-  /// uygulamanın açılmasını asla engellememeli.
+  /// Bu süreçte imza çalındı mı? **Süreç düzeyinde**, örnek düzeyinde değil:
+  /// açılış akışı iki ayrı köke sahip (onboarding → ana kök) ve her ikisi de
+  /// tetikler. Bu bayrak olmadan, onboarding'i bitiren kullanıcı sesi İKİ KEZ
+  /// duyardı. Cold start'ta süreç yeniden başlar → bayrak da sıfırlanır.
+  static bool _playedThisLaunch = false;
+
+  /// Test/edge durumları için sıfırlama.
+  static void resetLaunchGuard() => _playedThisLaunch = false;
+
+  /// İmzayı **açılış başına bir kez** çalar. Hata uygulamayı engellemez.
   Future<void> play() async {
+    if (_playedThisLaunch) return;
+    _playedThisLaunch = true;
     try {
       final bytes = await compute(_renderSignatureWav, seed);
       final player = _player ??= _newPlayer();
