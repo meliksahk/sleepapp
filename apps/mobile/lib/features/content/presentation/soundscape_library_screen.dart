@@ -20,13 +20,11 @@ class SoundscapeLibraryScreen extends ConsumerWidget {
         child: feed.when(
           data: (list) => _list(context, list),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: IconButton(
-              key: const Key('soundscape-retry'),
-              icon: const Icon(Icons.refresh),
-              iconSize: 40,
-              onPressed: () => ref.invalidate(soundscapeFeedProvider),
-            ),
+          error: (error, stack) => NErrorState(
+            retryKey: const Key('soundscape-retry'),
+            message: AppL10n.of(context).loadFailed,
+            retryLabel: AppL10n.of(context).offlineRetry,
+            onRetry: () => ref.invalidate(soundscapeFeedProvider),
           ),
         ),
       ),

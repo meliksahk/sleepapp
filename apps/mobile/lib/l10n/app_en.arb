@@ -461,5 +461,8 @@
   "@settingsSignatureSoundHint": { "description": "Acilis sesi aciklamasi" },
 
   "settingsSoundSection": "Sound",
-  "@settingsSoundSection": { "description": "Ayarlar ses bolumu basligi" }
+  "@settingsSoundSection": { "description": "Ayarlar ses bolumu basligi" },
+
+  "loadFailed": "Could not load this. Check your connection and try again.",
+  "@loadFailed": { "description": "Genel veri yukleme hatasi metni" }
 }

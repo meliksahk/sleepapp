@@ -220,6 +220,19 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #202 — hata ekranları: çıplak refresh ikonu → açıklamalı durum (PR #202)
+
+✅ **Yapıldı ve doğrulandı (449 test)** — Faz 0 cila
+
+- **Kapatılan kusur:** dört ekranda (arketip detay/geçmiş, soundscape detay/kütüphane) hata hali
+  **tek başına bir `IconButton(Icons.refresh)`** idi. Kullanıcı ne olduğunu, verinin neden
+  gelmediğini, tekrar denemenin işe yarayıp yaramayacağını bilmiyordu — "bitmemiş uygulama" hissi.
+- **Yapıldı:** paylaşılan `NErrorState` (ikon + açıklayıcı metin + tekrar-dene butonu),
+  design_system'den export. Metin çağırandan gelir (i18n; bileşen dizge tutmaz). EN/TR
+  `loadFailed` eklendi. Mevcut test key'leri `retryKey` ile KORUNDU.
+- **DOĞRULAMA:** 449 test yeşil, analyze temiz, l10n paritesi korundu.
+- 📌 Yüzde değişmedi (UX cilası).
+
 ### #201 — Inter fontu bundle edildi: tasarım niyeti nihayet uygulanıyor (PR #201)
 
 ✅ **Yapıldı ve doğrulandı (449 test)** — Faz 0 cila

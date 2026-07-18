@@ -71,13 +71,11 @@ class ArchetypeDetailScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: IconButton(
-              key: const Key('detail-retry'),
-              icon: const Icon(Icons.refresh),
-              iconSize: 40,
-              onPressed: () => ref.invalidate(archetypeContentProvider),
-            ),
+          error: (error, stack) => NErrorState(
+            retryKey: const Key('detail-retry'),
+            message: AppL10n.of(context).loadFailed,
+            retryLabel: AppL10n.of(context).offlineRetry,
+            onRetry: () => ref.invalidate(archetypeContentProvider),
           ),
         ),
       ),
