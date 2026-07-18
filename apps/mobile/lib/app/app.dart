@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/audio_engine/signature_player.dart';
 import '../core/design_system/nocta_theme.dart';
 import '../features/analytics/analytics_flusher.dart';
 import '../features/analytics/analytics_providers.dart';
 import '../features/auth/auth_providers.dart';
 import '../features/onboarding/onboarding_store.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
+import '../features/settings/signature_sound_store.dart';
 import 'router.dart';
 
 /// Kök uygulama widget'ı — dark-first (uygulama gece yaşar, docs/06).
@@ -77,17 +81,32 @@ class _AppRoot extends ConsumerStatefulWidget {
 
 class _AppRootState extends ConsumerState<_AppRoot> {
   late final AnalyticsFlusher _flusher;
+  final SignaturePlayer _signature = SignaturePlayer();
 
   @override
   void initState() {
     super.initState();
     _flusher = AnalyticsFlusher(ref.read(analyticsProvider));
     WidgetsBinding.instance.addObserver(_flusher);
+    // AÇILIŞ AURASI — yalnızca COLD START'ta (bu State bir kez kurulur) ve ayar
+    // açıkken. Üretim `compute()` ile ayrı isolate'te olduğu için UI donmaz.
+    unawaited(_maybePlaySignature());
+  }
+
+  Future<void> _maybePlaySignature() async {
+    try {
+      final enabled = await ref.read(signatureSoundStoreProvider).isEnabled();
+      if (!enabled || !mounted) return;
+      await _signature.play();
+    } catch (_) {
+      // Açılış sesi uygulamanın açılmasını asla engellemez.
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(_flusher);
+    unawaited(_signature.dispose());
     super.dispose();
   }
 

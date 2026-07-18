@@ -220,6 +220,25 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
 
+### #198 — aura ÖLÜ KODDU: bağlantı düzeltildi, release'de çaldığı kanıtlandı (PR #198)
+
+🔴 **Kendi hatamı buldum ve düzelttim** — #197'de aura ölü kod olarak merge edilmişti
+
+- **Ne oldu:** #197'de `app.dart` bağlantısını yazmıştım ama sonrasında çalıştırdığım
+  `git reset --hard origin/main` onu (commit edilmemiş olduğu için) SİLDİ. Commit'e yalnız
+  4 yeni dosya girdi → DSP + player + store vardı ama **hiçbir şey onları çağırmıyordu**.
+  Müdürün tam da uyardığı "ölü kod" tuzağı; emülatörde ses çıkmayınca yakalandı.
+- **Teşhisi geciktiren ikinci hata:** `SignaturePlayer`'daki `catch` hatayı SESSİZCE yutuyordu
+  (CLAUDE.md §4 "boş catch yasak" ihlali). Bir tur boyunca "neden çalmıyor" görünmedi.
+  Ayrıca teşhis için `dart:developer log()` kullandım — o logcat'e GİTMEZ, `debugPrint` gider.
+- **Düzeltildi:** `_AppRoot.initState` → `_maybePlaySignature()` (ayar açıksa, cold-start).
+  catch artık hatayı loglar.
+- **DOĞRULAMA (emülatör, RELEASE APK):** `AudioTrack ... state:started usage=USAGE_MEDIA
+sampleRate=48000` — ses gerçekten çıkıyor. Üretim logu: 345.644 bayt WAV (= 3.6 sn @48kHz,
+  spec'le birebir). Debug'da da doğrulandı. 445 test yeşil, analyze temiz.
+- 🔥 Sınır: "duyuluyor" kanıtlandı, "güzel" HÂLÂ kanıtlanmadı — kulaklıkla dinleme kullanıcıda.
+- 📌 Yüzde değişmedi (bu bir düzeltme, yeni yetenek değil): #197'nin iddiası ancak şimdi doğru.
+
 ### #197 — mobil sonik aura: açılış imzası (DSP + çalma) (PR #197)
 
 ✅ **Yapıldı ve DOĞRULANDI (12 DSP testi + 445 süit)** — kullanıcı isteği: "tematik hava, frekans ses, açılışta melodik efekt, aura"
