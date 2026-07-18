@@ -35,6 +35,13 @@ export class OverviewDto {
   @ApiProperty({ description: 'Bekleme listesi kayıt sayısı' })
   waitlist!: number;
 
+  @ApiProperty({
+    description:
+      'Erişilebilir push kitlesi — kayıtlı cihazı olan benzersiz kullanıcı ' +
+      "(kampanya reach üst sınırı; opt-out fan-out'ta düşülür)",
+  })
+  pushAudience!: number;
+
   @ApiProperty({ type: ShareFunnelDto, description: 'Viral kanca sağlığı' })
   shareFunnel!: ShareFunnelDto;
 }

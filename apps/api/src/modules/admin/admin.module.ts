@@ -4,7 +4,7 @@ import { FlagsModule } from '../flags';
 import type { SoundscapeSummary } from '../content';
 import { WaitlistModule, CountWaitlistUseCase } from '../waitlist';
 import { AnalyticsModule, GetShareFunnelUseCase } from '../analytics';
-import { NotificationModule } from '../notification';
+import { NotificationModule, CountPushAudienceUseCase } from '../notification';
 import {
   ContentModule,
   CountSoundscapesUseCase,
@@ -91,19 +91,26 @@ const providers: Provider[] = [
      * diğerini beklemesin.
      */
     provide: OVERVIEW_SOURCE,
-    inject: [CountSoundscapesUseCase, CountWaitlistUseCase, GetShareFunnelUseCase],
+    inject: [
+      CountSoundscapesUseCase,
+      CountWaitlistUseCase,
+      GetShareFunnelUseCase,
+      CountPushAudienceUseCase,
+    ],
     useFactory: (
       countSoundscapes: CountSoundscapesUseCase,
       countWaitlist: CountWaitlistUseCase,
       shareFunnel: GetShareFunnelUseCase,
+      countPushAudience: CountPushAudienceUseCase,
     ): OverviewSource => ({
       read: async () => {
-        const [soundscapes, waitlist, funnel] = await Promise.all([
+        const [soundscapes, waitlist, funnel, pushAudience] = await Promise.all([
           countSoundscapes.execute(),
           countWaitlist.execute(),
           shareFunnel.execute(),
+          countPushAudience.execute(),
         ]);
-        return { soundscapes, waitlist, shareFunnel: funnel };
+        return { soundscapes, waitlist, pushAudience, shareFunnel: funnel };
       },
     }),
   },
