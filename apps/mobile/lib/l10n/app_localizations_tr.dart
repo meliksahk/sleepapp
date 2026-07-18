@@ -506,4 +506,11 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get homeSectionExplore => 'Keşfet';
+
+  @override
+  String get settingsSignatureSound => 'Açılış sesi';
+
+  @override
+  String get settingsSignatureSoundHint =>
+      'Uygulama açılırken kısa bir atmosfer.';
 }

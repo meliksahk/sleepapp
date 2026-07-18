@@ -5,6 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../auth/auth_providers.dart';
 import '../../entitlement/entitlement_providers.dart';
 import '../../profile/profile_providers.dart';
+import '../signature_sound_store.dart';
 
 /// Ayarlar (docs/06 hesap güvenliği). "Diğer cihazlardan çık" akışı.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -103,6 +104,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   value: p.notificationsEnabled,
                   onChanged: _savingNotifications ? null : _setNotifications,
+                ),
+                orElse: () => const SizedBox.shrink(),
+              ),
+              // AÇILIŞ SESİ (aura) — kapatılabilir olması ZORUNLU: bu bir uyku
+              // uygulaması ve ses gece 23:00'te, yanında biri uyurken çalabilir.
+              // Kapatılamayan bir açılış sesi garantili tek yıldızdır.
+              ref.watch(signatureSoundEnabledProvider).maybeWhen(
+                data: (enabled) => SwitchListTile(
+                  key: const Key('signature-sound-toggle'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    l10n.settingsSignatureSound,
+                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                  ),
+                  subtitle: Text(
+                    l10n.settingsSignatureSoundHint,
+                    style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary),
+                  ),
+                  value: enabled,
+                  onChanged: (v) async {
+                    await ref.read(signatureSoundStoreProvider).setEnabled(v);
+                    ref.invalidate(signatureSoundEnabledProvider);
+                  },
                 ),
                 orElse: () => const SizedBox.shrink(),
               ),

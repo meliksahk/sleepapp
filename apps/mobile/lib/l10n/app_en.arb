@@ -453,5 +453,10 @@
   "homeIdentityInviteBody": "Two minutes, no account. Turn your nights into a card you can share.",
   "@homeIdentityInviteBody": { "description": "Test yapilmamisken davet karti govdesi" },
   "homeSectionExplore": "Explore",
-  "@homeSectionExplore": { "description": "Ikincil navigasyon rafinin bolum etiketi" }
+  "@homeSectionExplore": { "description": "Ikincil navigasyon rafinin bolum etiketi" },
+
+  "settingsSignatureSound": "Opening sound",
+  "@settingsSignatureSound": { "description": "Acilis aurasi anahtari" },
+  "settingsSignatureSoundHint": "A short ambience when the app opens.",
+  "@settingsSignatureSoundHint": { "description": "Acilis sesi aciklamasi" }
 }

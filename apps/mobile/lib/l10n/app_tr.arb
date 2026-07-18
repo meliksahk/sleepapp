@@ -158,5 +158,8 @@
   "homeRitualSubtitle": "Ses ve daha yumuşak bir uyanış. Bağlantı gerekmez.",
   "homeStartRitual": "Bu geceyi başlat",
   "homeIdentityInviteBody": "İki dakika, hesap gerekmez. Gecelerini paylaşabileceğin bir karta dönüştür.",
-  "homeSectionExplore": "Keşfet"
+  "homeSectionExplore": "Keşfet",
+
+  "settingsSignatureSound": "Açılış sesi",
+  "settingsSignatureSoundHint": "Uygulama açılırken kısa bir atmosfer."
 }
