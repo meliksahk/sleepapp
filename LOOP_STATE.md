@@ -93,12 +93,12 @@
 
 | Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~79%     | 0.30    | ~~BullMQ kurulu~~ ✓ #190 · ~~rate-limit Redis'e~~ ✓ #191 (dağıtık throttler) · ~~outbox~~ ✓ #192 (transactional outbox — uyku oturumu kaydı + olay AYNI tx'te atomik → relay → push kuyruğu; kullanıcı onaylı migration; gerçek-Postgres uçtan uca testli). **Müdür (C) TAM** (BullMQ+throttler+outbox). ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · ~~flag upsert~~ ✓ #167. IAP hâlâ en son faz                                                                                                                                     |
+| Backend/API | ~80%     | 0.30    | ~~BullMQ~~ ✓ #190 · ~~rate-limit Redis'e~~ ✓ #191 · ~~outbox~~ ✓ #192 (**Müdür (C) TAM**). ~~Sentry (API)~~ ✓ #193 (§4 zorunlu hata izleme — DSN-gated init + 5xx-only rapor; **kullanıcı deploy/infra kapısını açtı**). **Kalan infra-kapı otonom:** SMTP e-posta adaptörü (OTT teslimi: magic-link/parola-sıfırlama/e-posta-doğrulama) · admin/web/mobil Sentry · deploy scaffolding. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157. IAP en son faz                                                                                    |
 | Mobil       | ~79%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 · ✓ alarm TAM #169+#174+#175 (ateşler + reboot cihazda kanıtlı) · ✓ çevrimdışı gece kuyruğu #177 · ✓ **viral kanca kişiselleştirme** #178 (gece raporu #2 + mix-to-video #3 artık kullanıcının KENDİ arketip gradyanını taşır — önceden sabit `overthinker`; tek-kaynak helper + 5 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓                                 |
 | Admin       | ~46%     | 0.15    | **D7 metrik** (veri-gated, dürüst placeholder); total-users/sessions eklenebilir · **davet / parola-sıfırlama** (kod otonom, teslim SMTP-gated). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag~~ ✓ #165→#168 · ~~kampanya TAM~~ ✓ #183+#184 · ✓ push-kitlesi metriği #185 · ~~**2FA reset TAM**~~ ✓ #186+#187 (parola-doğrulamalı TOTP sıfırlama API + `/security` panel formu: cihaz rotasyonu; kayıp-cihaz uyarısı dürüstçe güncellendi). Müdür (C): admin'i bitir                                                                                                                  |
 | Web         | ~45%     | 0.15    | **hreflang EN/TR** (BÜYÜK dilim — `[locale]` root refactor, ayrı oturum; 3× ertelendi=risk-yönetimi; müdür markörü: 4. erteleme yok, sırada kendi iterasyonu), LCP/CLS lighthouse-ci. ✓ W0 kartı #176 · ✓ blog motoru #179+#180 (6 yazı) · ✓ viral döngü #181 · ✓ blog OG görselleri #182 · ✓ llms.txt üretilen #188 · ✓ **metadataBase/OG düzeltmesi #189** (og:image URL'leri localhost→nocta.app; #176/#182 OG görselleri paylaşımda artık çalışıyor + Twitter büyük-kart; üretilen HTML'de 3 sayfa tipinde kanıtlı; regresyon-kilit testi). Hepsi docs/05 viral ön-lansman + GEO kanalı |
 
-> **Hesap:** `0.40·79 + 0.30·79 + 0.15·46 + 0.15·45 = 68.95` → **≈69%**
+> **Hesap:** `0.40·79 + 0.30·80 + 0.15·46 + 0.15·45 = 69.25` → **≈69%**
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -219,6 +219,26 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #193 — API Sentry hata izleme: deploy/infra kapısı açıldı (PR #193)
+
+✅ **Yapıldı ve doğrulandı** — kullanıcı deploy/infra kapısını (VPS+Sentry+SMTP) AÇTI; ilk dilim
+
+- **Kavşak:** müdür (C) bitince otonom yüksek-değer stoğu tükendi (doğruladım: openapi churn make-work
+  testine takıldı, total-users müdür-flagged cila, hreflang prematüre). AskUserQuestion → kullanıcı
+  **"deploy/infra kapısı"** seçti. Bu, o infra parçalarını env'den tüketen KODU hazırlamam demek
+  (secret'lar chat'e değil .env/GitHub Environments'a — §6; raw secret ele almam).
+- **Kapatılan boşluk:** CLAUDE.md §4 "Tüm yüzeylerde Sentry aktif" ZORUNLU kılıyor ama API'de Sentry
+  YOKtu (yalnız env'de kullanılmayan SENTRY_DSN slotu). `initSentry(dsn, env)` — DSN varsa init, yoksa
+  no-op (dev/test sessiz). `ProblemDetailsFilter` (global @Catch) artık **5xx'i** Sentry'ye raporlar,
+  **4xx'i DEĞİL** (beklenen istemci hataları — gürültü olurdu). main.ts en erken noktada init eder.
+- **DOĞRULAMA:** 5 unit — init DSN-gate (yoksa init-yok/false, varsa dsn+env iletilir) + filter 5xx→rapor,
+  4xx→rapor-yok, non-HttpException→500→rapor. Tam api süiti **82 suite/494 test + coverage tuttu**.
+  typecheck+lint+build 0, env-example senkron.
+- 🔥 Sınır: gerçek "hatalar Sentry'ye ULAŞIYOR" yolu gerçek DSN + gerçek hata ister (deploy'da kullanıcı
+  verir) — KOD (init-gate + 5xx-capture) unit-testli; canlı akış deploy-gated (mevcut gated desenle aynı).
+- 📌 Backend 79→80 (+1). Kalan infra-kapı otonom dilimleri: SMTP e-posta adaptörü (OTT teslimi), admin/web/
+  mobil Sentry, deploy scaffolding. Bar 69.25 ≈ **69%**.
 
 ### #192 — backend transactional outbox: müdür (C) 2. yarı TAMAM (PR #192)
 
