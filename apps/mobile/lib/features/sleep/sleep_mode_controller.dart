@@ -7,6 +7,7 @@ import '../../core/sleep_tracking/night_alarm_scheduler.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import '../../core/sleep_tracking/sleep_session_builder.dart';
+import '../../core/sleep_tracking/sleep_session_queue.dart';
 import '../../core/sleep_tracking/smart_alarm.dart';
 import 'sleep_controller.dart';
 
@@ -97,6 +98,7 @@ class SleepModeController {
     this.sharer,
     this.alarmSound,
     this.alarmScheduler,
+    this.sessionQueue,
     this.alarmWindow = const Duration(minutes: 30),
     this.alarmLookback = const Duration(minutes: 5),
     this.alarmTick = const Duration(seconds: 10),
@@ -106,6 +108,9 @@ class SleepModeController {
       // Canlı sayaç: kullanıcı gece kalkarsa "çalışıyor mu?" sorusuna cevap görür.
       _emit(_state.copyWith(eventCount: recorder.eventCount));
     };
+    // CANLI DRAIN tetiği #1: açılışta bekleyen çevrimdışı geceleri boşaltmayı dene
+    // (bağlantı geri gelmiş olabilir). Kuyruğa yazıp hiç boşaltmama tuzağını önler.
+    unawaited(_drainQueue());
   }
 
   /// Kayıt motoru — test sahte mikrofonlu bir tane enjekte eder.
@@ -128,6 +133,11 @@ class SleepModeController {
   /// yalnızca in-app alarm (testlerin çoğu bunu vermez). EK güvence: in-app
   /// alarmın lifecycle'ıyla birebir kurulur/iptal edilir, onu regrese ETMEZ.
   final NightAlarmScheduler? alarmScheduler;
+
+  /// Çevrimdışı biten gecelerin kayıp-önleyici kuyruğu (#177). Null → kuyruk yok
+  /// (kayıt başarısızsa gece yalnızca gösterilir, eski davranış). Verilirse: kayıt
+  /// başarısızsa geceyi kuyruğa alır, açılışta ve her başarılı kayıttan sonra boşaltır.
+  final SleepSessionQueue? sessionQueue;
 
   /// Hedef saatten NE KADAR ÖNCE hafif uyku aranmaya başlanır.
   ///
@@ -326,11 +336,33 @@ class SleepModeController {
 
     try {
       await sleep.recordSession(draft);
+      // CANLI DRAIN tetiği #2: kayıt başarılı → bağlantı var; bekleyen çevrimdışı
+      // geceleri de şimdi boşaltmayı dene.
+      await _drainQueue();
     } catch (e) {
-      // Yutulmaz — ama kayıt YİNE de gösterilir: gece geçti, veri cihazda üretildi;
-      // sunucuya yazılamaması kullanıcının gecesini yok saymayı gerektirmez.
-      // (Çevrimdışı kuyruk ayrı bir iş — defterde.)
+      // Sunucuya yazılamadı → geceyi KAYBETME: çevrimdışı kuyruğa al (bağlantı gelince
+      // boşaltılır). Kuyruk yoksa eski davranış: yalnızca hata gösterilir.
+      // Yutulmaz — kayıt YİNE gösterilir: gece geçti, veri cihazda üretildi.
+      await sessionQueue?.enqueue(draft);
       _emit(_state.copyWith(error: e.toString()));
+    }
+  }
+
+  /// Bekleyen çevrimdışı geceleri sunucuya boşaltmayı dener. Controller kurulunca ve
+  /// her başarılı kayıttan sonra çağrılır — "kuyruğa yaz ama hiç boşaltma" (ölü kod)
+  /// tuzağını engeller. Uygulama ön plana dönünce de çağrılabilir (public).
+  Future<void> drainPending() => _drainQueue();
+
+  Future<void> _drainQueue() async {
+    final queue = sessionQueue;
+    if (queue == null) return;
+    try {
+      await queue.drain((draft) async {
+        await sleep.recordSession(draft);
+      });
+    } catch (_) {
+      // Drain hatası akışı KESMEZ: kalanlar kuyrukta korunur, bir sonraki tetikte
+      // (açılış / sonraki başarılı kayıt) tekrar denenir.
     }
   }
 

@@ -87,14 +87,14 @@
 > hesap satırı yazılır. Elle sayı artırmak yasak — bu, ilerlemeyi değil iterasyon
 > sayısını ölçmek olurdu.
 
-| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ----------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                                                                                 |
-| Mobil       | ~77%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated — gerçek cihaz+kulak) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ **native graf slice 1+2** #172/#173 (per-blok mikser + canlı kazanç — Android otonom + anlık slider KANITLANDI) · ✓ **alarm TAM** #169+#174+#175 (backstop dikiş + AlarmManager handler FİİLEN ATEŞLER + **reboot-reschedule** cihazda kanıtlı: `adb reboot`→app açmadan dumpsys yeniden-kurulmuş alarmı gösterdi) · ~~mikser döngü tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak/haftalık ✓ |
-| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                                                                      |
-| Web         | ~35%     | 0.15    | LCP/CLS (lighthouse-ci), long-tail, blog. ✓ **W0 paylaşım kartı** #176 (client-side canvas 9:16, archetype-özel gradyan token'dan, indir/paylaş — TARAYICIDA doğrulandı: 2.1MB dataURL, metin+gradyan, per-archetype hex eşleşti; "ölçülemiyor" varsayımı tarayıcı aracıyla çürütüldü) · test→sonuç→link→OG zinciri zaten çalışıyor                                                                                                                                                                                                                                                       |
+| Yüzey       | İlerleme | Ağırlık | Kalan çekirdek işler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend/API | ~74%     | 0.30    | BullMQ (kurulu değil), outbox. ~~Dockerfile~~ ✓ #151 · ~~entitlement~~ ✓ #153 · ~~veri export~~ ✓ #155 · ~~Redis cache~~ ✓ #157 · **flag upsert** (owner-kapılı PUT + audit `flag.upsert` + doğrulama, 7 e2e) ✓ #167. IAP hâlâ en son faz                                                                                                                                                                                                                                                                                               |
+| Mobil       | ~78%     | 0.40    | **native graf slice 3**: DEFAULT canlı yola bağla (kulak-gated) + iOS AVAudioEngine (Mac-gated). **gerçek IAP** (en son faz). Alarm dead-process kenarı (gerçek cihaz). ✓ native graf slice 1+2 #172/#173 (Android otonom + anlık slider KANITLI) · ✓ alarm TAM #169+#174+#175 (ateşler + reboot-reschedule cihazda kanıtlı) · ✓ **çevrimdışı gece kuyruğu** #177 (uçak-modu/DND'de biten gece KAYBOLMAZ — KeyValueStore persist + CANLI DRAIN açılış+başarı sonrası; 11 test) · ~~mikser tıkı~~ ✓ #170 · ~~paywall~~ ✓ #161 · streak ✓ |
+| Admin       | ~39%     | 0.15    | **kampanya, metrik panoları** (kalan 2 özellik). ~~kullanıcı yönetimi~~ ✓ #163+#164 · ~~feature flag TAM~~ ✓ #165→#168 (görünürlük API+UI, owner upsert API+panel FORMU: aç/kapat/rollout/segment). 5 özelliğin ~3'ü                                                                                                                                                                                                                                                                                                                    |
+| Web         | ~35%     | 0.15    | LCP/CLS (lighthouse-ci), long-tail, blog. ✓ **W0 paylaşım kartı** #176 (client-side canvas 9:16, archetype-özel gradyan token'dan, indir/paylaş — TARAYICIDA doğrulandı: 2.1MB dataURL, metin+gradyan, per-archetype hex eşleşti; "ölçülemiyor" varsayımı tarayıcı aracıyla çürütüldü) · test→sonuç→link→OG zinciri zaten çalışıyor                                                                                                                                                                                                     |
 
-> **Hesap:** `0.40·77 + 0.30·74 + 0.15·39 + 0.15·35 = 64.10` → **≈64%**
+> **Hesap:** `0.40·78 + 0.30·74 + 0.15·39 + 0.15·35 = 64.50` → **≈64%** (sınırda; muhafazakâr aşağı)
 >
 > Backend 70→72: iki B1 kalemi kapandı — Dockerfile (#151, build+Postgres'e karşı
 > çalıştırıldı) ve entitlement stub (#153, B1 çıkış kriteri). İkisi de somut kapanan
@@ -215,6 +215,30 @@ VPS sertleştirme + staging deploy, kullanıcı VPS kimlik bilgilerini verince y
   katıldı. Kalan sınırlar (kompresör/rampa/RAM) olduğu gibi bırakıldı.
 - Doğrulama: `flutter analyze` temiz (doc-only). Bar hareketsiz — dürüstçe
   şişirilmedi.
+
+### #177 — sleep oturumu çevrimdışı kuyruğu: gece kaybolmaz (PR #177)
+
+✅ **Yapıldı ve doğrulandı (11 test)** — müdür kararı, veri-kaybı defecti kapandı
+
+- **Kapatılan defect (müdür doğruladı, `sleep_mode_controller.dart:328`):** `recordSession`
+  başarısızsa (uçak modu / DND / bağlantı yok — sabah 06:00'da EN YAYGIN) gece sunucu
+  tarafında sessizce kayboluyordu (`catch` yalnızca hata gösteriyordu). Kod aynen "çevrimdışı
+  kuyruk ayrı iş — defterde" diyordu. Bir uyku app'inde gece kaybı gerçek ürün hatası.
+- **Yapıldı:** `SleepSessionQueue` — `KeyValueStore` üstüne (JSON draft listesi tek key).
+  Controller: kayıt başarısız→`enqueue`; **CANLI DRAIN iki tetik**: (1) controller init,
+  (2) her başarılı kayıttan sonra. `SleepSessionDraft.fromJson` (round-trip kayıpsız).
+  maxEntries=30 (en eski düşer), ilk başarısızlıkta drain durur (sıra korunur).
+- **DOĞRULAMA:** 7 kuyruk testi (enqueue/drain/başarısız-korunur/sıra/trim/bozuk-veri) +
+  4 controller testi (başarısız→kuyrukta, başarı sonrası DRAIN, açılış DRAIN, kuyruk-yok→eski
+  davranış). Tam mobil süit **423 yeşil**, analyze temiz. Müdür şartı "kuyruğa yaz ama
+  boşaltma=ölü kod" → drain tetikleri test'li (ölü kod değil).
+- 📌 **Düzeltme (müdür #5 uyarısı):** danışmada "drift zaten var" dedim — YANLIŞ. pubspec'te
+  drift/sqflite YOK; kalıcılık `flutter_secure_storage` → `KeyValueStore`. Kuyruk onun üstüne
+  kuruldu (yeni bağımlılık yok, kapsam şişmedi). Draft ham ses/olay içermez (§6) → secure
+  storage'da tutmak gizlilik-güvenli.
+- 📌 Kararlar (müdür bana bıraktı): key=`sleep_session_queue`, JSON=toJson dizisi, maxEntries=30,
+  drain ilk-başarısızlıkta-durur, canlı tetik=init+başarı-sonrası. Mobil 77→78 (+1; sınırda 64.5,
+  muhafazakâr ≈64).
 
 ### #176 — web canvas paylaşım kartı: tarayıcıda doğrulandı (PR #176)
 

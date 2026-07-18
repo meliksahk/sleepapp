@@ -54,6 +54,16 @@ class SleepSessionDraft {
         'movementEvents': movementEvents,
         'soundEvents': soundEvents,
       };
+
+  /// `toJson`'un tersi — çevrimdışı kuyruğu (#177) diskten okuyup geri kurar.
+  /// Zaman UTC parse edilir; tekrar `toJson`'da `.toUtc()` idempotent → API gövdesi
+  /// birebir aynı kalır (round-trip kayıpsız).
+  factory SleepSessionDraft.fromJson(Map<String, dynamic> json) => SleepSessionDraft(
+        startedAt: DateTime.parse(json['startedAt'] as String),
+        endedAt: DateTime.parse(json['endedAt'] as String),
+        movementEvents: json['movementEvents'] as int,
+        soundEvents: json['soundEvents'] as int,
+      );
 }
 
 /// Dedektör çıktısı + oturum zamanı → API'nin beklediği taslak.
