@@ -1,15 +1,21 @@
+'use client';
+
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { LocaleSwitcher } from '../i18n/LocaleSwitcher';
+import type { MessageKey } from '../i18n/dictionaries';
+import { useT } from '../i18n/I18nProvider';
 
 // Mevcut route → link; henüz yapılmamışlar (href yok) sönük span kalır (B3).
-const NAV: ReadonlyArray<{ label: string; href?: string }> = [
-  { label: 'Dashboard', href: '/' },
-  { label: 'Content', href: '/content' },
-  { label: 'Users', href: '/users' },
-  { label: 'Analytics' },
-  { label: 'Flags', href: '/flags' },
-  { label: 'Campaigns', href: '/campaigns' },
+/** Navigasyon: etiketler ARTIK anahtar (dile göre çözülür). Nav İngilizce,
+ * gövde Türkçeydi — panel karışık dildeydi; bu onu da düzeltir. */
+const NAV: ReadonlyArray<{ key: MessageKey; href?: string }> = [
+  { key: 'nav.dashboard', href: '/' },
+  { key: 'nav.content', href: '/content' },
+  { key: 'nav.users', href: '/users' },
+  { key: 'nav.analytics' },
+  { key: 'nav.flags', href: '/flags' },
+  { key: 'nav.campaigns', href: '/campaigns' },
 ];
 
 /**
@@ -20,6 +26,7 @@ const NAV: ReadonlyArray<{ label: string; href?: string }> = [
  * kimin geçireceğine app katmanı karar verir — bağımlılık yönü korunur.
  */
 export function AppShell({ children, actions }: { children: ReactNode; actions?: ReactNode }) {
+  const t = useT();
   return (
     <div className="flex min-h-screen bg-bg-base text-ink-primary">
       <aside className="w-56 shrink-0 border-r border-ink-faint/20 p-4">
@@ -28,18 +35,18 @@ export function AppShell({ children, actions }: { children: ReactNode; actions?:
           {NAV.map((item) =>
             item.href ? (
               <Link
-                key={item.label}
+                key={t(item.key)}
                 href={item.href}
                 className="rounded-chip px-3 py-2 text-body text-ink-primary hover:bg-ink-faint/10"
               >
-                {item.label}
+                {t(item.key)}
               </Link>
             ) : (
               <span
-                key={item.label}
+                key={t(item.key)}
                 className="rounded-chip px-3 py-2 text-body text-ink-secondary/50"
               >
-                {item.label}
+                {t(item.key)}
               </span>
             ),
           )}
