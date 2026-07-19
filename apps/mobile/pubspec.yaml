@@ -116,6 +116,12 @@ flutter:
     # Gömülü olması pazarlıksız: viral kanca #1 backend olmadan da çalışmalı.
     - assets/archetype/matrix.json
 
+    # Soundscape kütüphanesi (tarifler + preset'ler + haftalık yayın) — ÜRETİLEN
+    # dosya (kaynak: db/seed.sql; bkz. tooling/gen-content-library.mjs +
+    # check-content-drift.mjs). Gömülü olması pazarlıksız: CLAUDE.md §3.1
+    # offline-first — kütüphane backend olmadan da DOLU olmalı.
+    - assets/content/library.json
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

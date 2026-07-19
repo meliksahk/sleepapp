@@ -32,9 +32,16 @@ class AuthController {
   }
 
   /// Açılış akışı: kayıtlı oturum varsa onu kullan, yoksa anonim kaydol.
+  ///
+  /// **Ağ kapalıysa (bkz. [NoctaApiClient.isEnabled]) SESSİZCE BAŞARIR.** Oturum
+  /// kurulmaz ama bu bir hata değildir: yapılandırılmış bir API adresi yokken
+  /// kaydolunacak bir sunucu da yoktur. Hata fırlatılsaydı açılış akışı
+  /// başarısız sayılır, kullanıcı kalıcı bir "çevrimdışısınız + yeniden dene"
+  /// çubuğuna bakardı — ve o düğme hiçbir zaman bir şey yapamazdı. Uygulama
+  /// gömülü içerikle tam çalıştığı için doğru anlatı "sorun yok"tur.
   Future<void> ensureSession(String deviceFingerprint) async {
     await restore();
-    if (_session == null) {
+    if (_session == null && _client.isEnabled) {
       await registerAnonymously(deviceFingerprint);
     }
   }
@@ -46,6 +53,14 @@ class AuthController {
   Future<http.Response> authorizedRequest(
     Future<http.Response> Function(String accessToken) send,
   ) async {
+    // Ağ kapalı → istek OLUŞTURULMAZ ve `StateError` de fırlatılmaz. Oturumun
+    // olmaması burada bir programlama hatası değil, beklenen durumdur
+    // ([ensureSession] notu). Çağıranlar 503'ü ayakta olmayan sunucudan ayırt
+    // etmek zorunda değil — davranış aynı: sessizce yerel yedeğe düş.
+    if (!_client.isEnabled) {
+      return http.Response('', NoctaApiClient.serviceUnavailableStatus);
+    }
+
     final current = _session;
     if (current == null) {
       throw StateError('Oturum yok — önce ensureSession çağrılmalı.');

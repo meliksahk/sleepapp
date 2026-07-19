@@ -12,6 +12,7 @@ import 'package:nocta/core/sleep_tracking/night_service.dart';
 import 'package:nocta/core/sleep_tracking/sleep_recorder.dart';
 import 'package:nocta/core/sleep_tracking/sleep_session_builder.dart';
 import 'package:nocta/features/auth/auth_providers.dart';
+import 'package:nocta/features/content/content_providers.dart';
 import 'package:nocta/features/onboarding/onboarding_store.dart';
 import 'package:nocta/features/sleep/presentation/sleep_mode_screen.dart';
 import 'package:nocta/features/sleep/presentation/sleep_session_strip.dart';
@@ -21,6 +22,8 @@ import 'package:nocta/features/sleep/sleep_mode_controller.dart';
 import 'package:nocta/features/sleep/sleep_providers.dart';
 import 'package:nocta/features/sleep/sleep_session_beacon.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+
+import '../features/content/content_test_support.dart';
 
 /// **Süren gece HER EKRANDA görünür** — kabuk şeridi sözleşmesi.
 ///
@@ -92,6 +95,9 @@ void main() {
         sessionBootstrapProvider.overrideWith((ref) => Future<void>.value()),
         sleepSessionBeaconProvider.overrideWithValue(beacon),
         sleepModeControllerProvider.overrideWithValue(fakeController(beacon)),
+        // /library rotası gömülü kütüphaneyi okuyor; `rootBundle` sahte zaman
+        // bölgesinde çözülmez (bkz. content_test_support.dart).
+        contentLibrarySourceProvider.overrideWithValue(testLibrarySource()),
       ],
       child: const NoctaApp(),
     );

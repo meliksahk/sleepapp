@@ -18,6 +18,7 @@
     "gen:tokens": "pnpm --filter @nocta/design-tokens gen",
     "gen:api-types": "node tooling/gen-api-types.mjs",
     "gen:archetype": "node tooling/gen-archetype-matrix.mjs",
+    "gen:content": "node tooling/gen-content-library.mjs",
     "gen:api-dart": "echo 'Dart client: openapi-generator (Java gerekli) — bkz. apps/mobile/packages/api_client/README.md'",
     "db:migrate": "dbmate up",
     "db:new": "dbmate new",
@@ -25,12 +26,13 @@
     "db:seed": "node tooling/db-seed.mjs",
     "assets:upload": "node tooling/upload-audio-assets.mjs",
     "//test:tooling": "Dosya AÇIKÇA listeleniyor: `node --test tooling/` tüm .mjs'leri test sanıp gerçek script'leri ÇALIŞTIRIR (MinIO'ya yazardı).",
-    "test:tooling": "node --test tooling/upload-audio-assets.test.mjs",
+    "test:tooling": "node --test tooling/upload-audio-assets.test.mjs tooling/gen-content-library.test.mjs",
     "prepare": "husky",
     "check:health-claims": "node tooling/check-health-claims.mjs",
     "check:i18n": "node tooling/check-hardcoded-strings.mjs",
     "check:env-example": "node tooling/check-env-example.mjs",
     "check:archetype-drift": "node tooling/check-archetype-drift.mjs",
+    "check:content-drift": "node tooling/check-content-drift.mjs",
     "check:layer-source-drift": "node tooling/check-layer-source-drift.mjs"
   },
   "pnpm": {

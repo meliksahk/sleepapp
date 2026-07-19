@@ -99,6 +99,13 @@ jobs:
       - name: Layer source drift scan
         run: pnpm check:layer-source-drift
 
+      # Kütüphane (soundscape + preset + haftalık yayın) db/seed.sql'den üretilip
+      # asset olarak gömülüyor: prod APK'da kütüphane BOŞ kalmasın (CLAUDE.md §3.1
+      # offline-first). Gömülü kopya bayatlarsa kurulan uygulama ile sunucu FARKLI
+      # içerik gösterir ve fark yalnızca gerçek cihazda görülür.
+      - name: Content library drift scan
+        run: pnpm check:content-drift
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest
