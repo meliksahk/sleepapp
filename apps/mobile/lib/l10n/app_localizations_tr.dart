@@ -174,11 +174,78 @@ class AppL10nTr extends AppL10n {
   String get mixerAssetCatalogTitle => 'Ses dosyaların';
 
   @override
-  String get mixerAssetCatalogEmpty => 'Henüz ses dosyan yok.';
+  String get mixerAssetCatalogEmpty => 'Henüz sesin yok.';
 
   @override
   String get mixerAssetCatalogEmptyHow =>
-      'Dosyaları apps/api/assets-inbox/<kategori>/<ad>.mp3 altına koy; yanına başlık, mood, lisans ve kaynak bilgisini taşıyan <ad>.json ekle. Sonra pnpm assets:upload çalıştır — burada görünürler.';
+      'Telefonundan bir ses dosyası ekle. Dosya cihazında kalır, internet olmadan da çalar.';
+
+  @override
+  String get mixerLocalSectionTitle => 'Bu telefonda';
+
+  @override
+  String get mixerRemoteSectionTitle => 'NOCTA kütüphanesi';
+
+  @override
+  String get mixerPickFromDevice => 'Telefondan ekle';
+
+  @override
+  String mixerLocalStorageUsed(String mb) {
+    return '$mb MB kullanılıyor';
+  }
+
+  @override
+  String get mixerLocalImporting => 'Kopyalanıyor…';
+
+  @override
+  String get mixerLocalImportNotPlayable =>
+      'Bu dosya çalınamadı. Desteklenen biçimler: MP3, M4A, AAC, WAV, OGG, OPUS, FLAC.';
+
+  @override
+  String mixerLocalImportTooLarge(String size, String limit) {
+    return 'Bu dosya $size MB. Sınır $limit MB.';
+  }
+
+  @override
+  String mixerLocalImportLibraryFull(String used, String limit) {
+    return 'Ses kütüphanen dolu ($used MB / $limit MB). Yer açmak için bir ses sil.';
+  }
+
+  @override
+  String get mixerLocalImportNoSpace => 'Telefonunda yeterli yer yok.';
+
+  @override
+  String get mixerLocalImportSourceGone =>
+      'Bu dosya okunamadı; taşınmış ya da silinmiş olabilir.';
+
+  @override
+  String get mixerLocalImportPickerFailed => 'Dosya seçici açılamadı.';
+
+  @override
+  String get mixerLocalImportUnknown => 'Bu ses eklenemedi.';
+
+  @override
+  String mixerLocalImportTooManyLayers(String limit) {
+    return 'Aynı anda en fazla $limit ses dosyası çalabilir. Önce birini kaldır.';
+  }
+
+  @override
+  String get mixerLocalDelete => 'Kütüphaneden sil';
+
+  @override
+  String mixerLocalDeleteConfirm(String title) {
+    return '“$title” silinsin mi? Dosya NOCTA\'dan kaldırılır; telefonundaki orijinal dosyaya dokunulmaz.';
+  }
+
+  @override
+  String get mixerLocalDeleteFailed => 'Bu ses silinemedi. Tekrar dene.';
+
+  @override
+  String get mixerLocalSessionNotice =>
+      'Sesler kütüphanende kalır. Mikser her açıldığında katmanlar sıfırlanır.';
+
+  @override
+  String get mixerAssetAlreadyInMix => 'Bu ses zaten mikste.';
 
   @override
   String get mixerAssetAddFailed =>

@@ -580,9 +580,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                           text: switch (s.errorKind) {
                             MixerErrorKind.export => l10n.mixerExportFailed,
                             MixerErrorKind.assetAdd => l10n.mixerAssetAddFailed,
+                            MixerErrorKind.assetDuplicate =>
+                              l10n.mixerAssetAlreadyInMix,
                             _ => l10n.mixerFailed,
                           },
-                          color: NoctaColors.danger,
+                          // Çift ekleme bir ARIZA değil: kırmızı yerine ikincil
+                          // renk. Kullanıcıyı bir şeyin bozulduğuna inandırmak
+                          // istemiyoruz, yalnızca ne olduğunu söylüyoruz.
+                          color: s.errorKind == MixerErrorKind.assetDuplicate
+                              ? NoctaColors.inkSecondary
+                              : NoctaColors.danger,
                           noticeKey: const Key('mixer-error'),
                         ),
 
@@ -962,27 +969,53 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
 
   /// Katalogdan ses seçip mikse katman olarak ekler.
   ///
-  /// İki adım, ikisi de patlayabilir ve ikisinin de sonucu kullanıcıya söylenir:
-  /// 1. **Seçim** — [showAssetCatalogSheet]. null = vazgeçti (hata değil).
-  /// 2. **Adres çözme** — kayıt listede URL taşımaz; presigned URL ikinci bir
-  ///    çağrıyla alınır. 404/401/ağ yok → katman EKLENMEZ, hata gösterilir.
-  ///    Sessizce çalmayan bir sürgü bırakmak en kötü sonuç olurdu.
+  /// **İki dal, ikisi de bilinçli olarak farklı:**
+  /// - [CatalogPickLocal] — dosya ZATEN cihazda ve adresi belli. **Hiçbir ağ
+  ///   çağrısı yapılmaz**; bu, özelliğin prod'da (ağ katmanı kapalı) ve uçak
+  ///   modunda çalışmasının tek sebebi.
+  /// - [CatalogPickRemote] — kayıt listede URL taşımaz; presigned URL ikinci bir
+  ///   çağrıyla alınır. 404/401/ağ yok → katman EKLENMEZ, hata gösterilir.
+  ///   Sessizce çalmayan bir sürgü bırakmak en kötü sonuç olurdu.
   Future<void> _addSound() async {
-    final selected = await showAssetCatalogSheet(context);
+    final selected = await showAssetCatalogSheet(
+      context,
+      // Tavan kontrolü katalogta yapılır: dolu ise dosya seçici HİÇ açılmaz.
+      currentAssetLayerCount: _c.state.assets.length,
+    );
     if (selected == null || !mounted) return;
-    try {
-      final layer = await resolveAssetLayer(ref, selected.id);
-      if (!mounted) return;
-      if (layer == null) {
-        // 404: kayıt katalogda göründü ama dosya artık yok.
-        _c.reportAssetAddFailed('asset not found: ${selected.id}');
-        return;
-      }
-      await _c.addAsset(layer);
-    } catch (e) {
-      // Hata YUTULMAZ (CLAUDE.md §4): ağ/401/bozuk yanıt — hepsi buraya düşer
-      // ve kullanıcı sade bir metin görür, teknik detay state'te kalır.
-      if (mounted) _c.reportAssetAddFailed(e);
+
+    switch (selected) {
+      case CatalogPickLocal(:final layer):
+        await _addLayer(layer);
+      case CatalogPickRemote(:final id):
+        try {
+          final layer = await resolveAssetLayer(ref, id);
+          if (!mounted) return;
+          if (layer == null) {
+            // 404: kayıt katalogda göründü ama dosya artık yok.
+            _c.reportAssetAddFailed('asset not found: $id');
+            return;
+          }
+          await _addLayer(layer);
+        } catch (e) {
+          // Hata YUTULMAZ (CLAUDE.md §4): ağ/401/bozuk yanıt — hepsi buraya
+          // düşer, kullanıcı sade metin görür, teknik detay state'te kalır.
+          if (mounted) _c.reportAssetAddFailed(e);
+        }
+    }
+  }
+
+  /// Katmanı ekler ve **sonucu KONTROL EDER.**
+  ///
+  /// Eskiden `addAsset`'in dönüşü yok sayılıyordu: aynı ses ikinci kez
+  /// seçildiğinde sheet sessizce kapanıyor ve hiçbir şey olmuyordu. Yerel bölüm
+  /// listenin üstünde KALICI olduğu için bu artık rutin bir kullanıcı hareketi —
+  /// gece 3'te "bastım, bir şey olmadı" kabul edilemez.
+  Future<void> _addLayer(AssetLayer layer) async {
+    final outcome = await _c.addAsset(layer);
+    if (!mounted) return;
+    if (outcome == AddAssetOutcome.duplicate) {
+      _c.reportDuplicateAsset();
     }
   }
 

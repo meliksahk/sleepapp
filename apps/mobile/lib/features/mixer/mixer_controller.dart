@@ -20,7 +20,20 @@ enum MixerErrorKind {
   /// URL, bozuk dosya). [sound]'dan ayrı çünkü mix çalmaya devam ediyor —
   /// "ses başlatılamadı" demek yalan olurdu.
   assetAdd,
+
+  /// Kullanıcı mikste ZATEN olan bir sesi tekrar seçti.
+  ///
+  /// [assetAdd]'den ayrı: ortada arıza yok, yalnızca yapılacak bir şey yok — ama
+  /// kullanıcıya SÖYLENMESİ gerekir. Eskiden bu yol sessizce hiçbir şey yapmıyordu.
+  assetDuplicate,
 }
+
+/// [MixerController.addAsset] sonucu.
+///
+/// **`bool` DEĞİL:** eski dönüş `false`'u iki ayrı şey için kullanıyordu —
+/// "zaten ekli" ve "yüklenemedi". Çağıran ikisini ayırt edemediği için ikisini de
+/// yok sayıyordu; kullanıcı ne olduğunu hiç öğrenmiyordu.
+enum AddAssetOutcome { added, duplicate, loadFailed }
 
 /// Mikser durumu — UI'ın gördüğü tek şey.
 class MixerState {
@@ -235,8 +248,10 @@ class MixerController {
   ///
   /// Aynı id ikinci kez eklenemez: `MixPlayer.setLayerGain` id ile eşleştiği
   /// için çakışan iki katmanda sürgü YANLIŞ katmanı oynatırdı.
-  Future<bool> addAsset(AssetLayer asset) async {
-    if (_state.gains.containsKey(asset.id)) return false;
+  Future<AddAssetOutcome> addAsset(AssetLayer asset) async {
+    // Çakışan id, sürgünün YANLIŞ katmanı oynatması demek — ama artık SESSİZ
+    // değil: çağıran kullanıcıya "bu ses zaten mikste" diyebilsin.
+    if (_state.gains.containsKey(asset.id)) return AddAssetOutcome.duplicate;
 
     if (_player.voiceCount > 0) {
       final ok = await _player.addAsset(asset, autoPlay: _state.isPlaying);
@@ -245,7 +260,7 @@ class MixerController {
           error: 'asset load failed: ${asset.id}',
           errorKind: MixerErrorKind.assetAdd,
         ));
-        return false;
+        return AddAssetOutcome.loadFailed;
       }
     }
 
@@ -254,7 +269,16 @@ class MixerController {
       gains: <String, double>{..._state.gains, asset.id: asset.gain},
       clearError: true,
     ));
-    return true;
+    return AddAssetOutcome.added;
+  }
+
+  /// Kullanıcı mikste zaten olan bir sesi seçti — söylenmesi gereken bir durum,
+  /// arıza değil.
+  void reportDuplicateAsset() {
+    _emit(_state.copyWith(
+      error: 'duplicate asset',
+      errorKind: MixerErrorKind.assetDuplicate,
+    ));
   }
 
   /// Katman EKLENEMEDİ — dosyanın adresi çözülemedi (404: dosya silinmiş, 401:

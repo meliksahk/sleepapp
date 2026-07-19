@@ -66,3 +66,9 @@ apps/api/assets-inbox/**/*.ogg
 apps/api/assets-inbox/**/*.m4a
 apps/api/assets-inbox/**/*.flac
 apps/api/assets-inbox/**/*.opus
+
+# Elle derlenen teslim APK'ları — kök dizine kopyalanıyor (nocta-son.apk vb.).
+# Kural DEĞİL bir kaza için: 55 MB'lik ikili dosyalar `git add -A` ile sessizce
+# commit'e girer ve repo geçmişinden temizlenmesi acı verir.
+/*.apk
+/*.aab
