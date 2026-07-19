@@ -23,6 +23,10 @@ import { S3AssetSigner } from './infrastructure/s3-asset.signer';
 import { GetFeedUseCase } from './application/get-feed.usecase';
 import { GetSoundscapeUseCase } from './application/get-soundscape.usecase';
 import { GetWeeklyReleaseUseCase } from './application/get-weekly-release.usecase';
+import { ListAudioAssetsUseCase } from './application/list-audio-assets.usecase';
+import { GetAudioAssetUseCase } from './application/get-audio-asset.usecase';
+import { AUDIO_ASSET_REPOSITORY, type AudioAssetRepository } from './domain/audio-asset';
+import { PrismaAudioAssetRepository } from './infrastructure/prisma-audio-asset.repository';
 import { ContentController } from './presentation/content.controller';
 
 const providers: Provider[] = [
@@ -66,6 +70,28 @@ const providers: Provider[] = [
     inject: [CONTENT_REPOSITORY, ASSET_URL_SIGNER, ENV],
     useFactory: (repo: ContentRepository, signer: AssetUrlSigner, env: Env): GetSoundscapeUseCase =>
       new GetSoundscapeUseCase(repo, signer, env.MINIO_BUCKET_SOUNDSCAPES),
+  },
+  {
+    provide: AUDIO_ASSET_REPOSITORY,
+    inject: [PrismaService],
+    useFactory: (prisma: PrismaService): AudioAssetRepository =>
+      new PrismaAudioAssetRepository(prisma),
+  },
+  {
+    provide: ListAudioAssetsUseCase,
+    inject: [AUDIO_ASSET_REPOSITORY],
+    useFactory: (repo: AudioAssetRepository): ListAudioAssetsUseCase =>
+      new ListAudioAssetsUseCase(repo),
+  },
+  {
+    provide: GetAudioAssetUseCase,
+    inject: [AUDIO_ASSET_REPOSITORY, ASSET_URL_SIGNER, ENV],
+    useFactory: (
+      repo: AudioAssetRepository,
+      signer: AssetUrlSigner,
+      env: Env,
+    ): GetAudioAssetUseCase =>
+      new GetAudioAssetUseCase(repo, signer, env.MINIO_BUCKET_AUDIO_ASSETS),
   },
   {
     provide: GetWeeklyReleaseUseCase,

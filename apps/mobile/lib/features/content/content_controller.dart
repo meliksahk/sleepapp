@@ -33,6 +33,35 @@ class ContentController {
     return SoundscapeDetail.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Ses dosyası kataloğu (tür/mood filtreli). URL İÇERMEZ — çalmak için
+  /// [audioAsset] ile tekil kayda gidilir (sunucu listede imza dağıtmaz).
+  Future<List<AudioAsset>> audioAssets({String? genre, List<String>? moods}) async {
+    final params = <String>[
+      if (genre != null && genre.isNotEmpty) 'genre=${Uri.encodeQueryComponent(genre)}',
+      if (moods != null && moods.isNotEmpty)
+        'mood=${Uri.encodeQueryComponent(moods.join(','))}',
+    ];
+    final path =
+        '/v1/content/audio-assets${params.isEmpty ? '' : '?${params.join('&')}'}';
+    final res = await _auth.authorizedRequest((token) => _client.getAuthed(path, token));
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => AudioAsset.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  /// Tek ses dosyası + presigned URL; yoksa (404) null.
+  ///
+  /// URL KISA ÖMÜRLÜDÜR. Uzun bir gecede yeniden çalmak gerekirse bu uç yeniden
+  /// çağrılmalı — URL'i kalıcı saklamak, sabaha karşı çalmayan bir katman demektir.
+  Future<AudioAssetDetail?> audioAsset(String id) async {
+    final res = await _auth.authorizedRequest(
+      (token) => _client.getAuthed('/v1/content/audio-assets/${Uri.encodeComponent(id)}', token),
+    );
+    if (res.statusCode == 404) return null;
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return AudioAssetDetail.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   /// En güncel haftalık yayın; yoksa (404) null.
   Future<WeeklyRelease?> weekly() async {
     final res = await _auth.authorizedRequest(

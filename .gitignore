@@ -56,3 +56,13 @@ pnpm-debug.log*
 # Docker/local data volumes
 db/data/
 .minio-data/
+
+# Ses dosyası inbox'ı — SES REPOYA GİRMEZ (boyut). Yanındaki .json meta
+# (lisans/kaynak) BİLEREK versiyonlanır: hangi dosyanın hangi hakla yüklendiği
+# repoda izlenebilir kalmalı (CLAUDE.md §6, mağaza uyumu).
+apps/api/assets-inbox/**/*.mp3
+apps/api/assets-inbox/**/*.wav
+apps/api/assets-inbox/**/*.ogg
+apps/api/assets-inbox/**/*.m4a
+apps/api/assets-inbox/**/*.flac
+apps/api/assets-inbox/**/*.opus

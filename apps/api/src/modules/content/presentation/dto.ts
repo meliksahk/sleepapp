@@ -43,6 +43,32 @@ export class SoundscapeDetailDto {
   previewUrl!: string | null;
 }
 
+/**
+ * Ses DOSYASI meta verisi. `key` (depolama anahtarı) BİLEREK dışarı verilmez:
+ * istemcinin işine yaramaz (bucket'a doğrudan erişimi yok) ve iç depolama
+ * düzenimizi sızdırır. İstemci `id` ile tekil uca gider, URL'i oradan alır.
+ */
+export class AudioAssetDto {
+  @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiProperty({ example: 'Pad + Fire (demo)' }) title!: string;
+  @ApiProperty({ example: 'ambient' }) genre!: string;
+  @ApiProperty({ type: [String], example: ['calm', 'sleep'] }) mood!: string[];
+  @ApiProperty({ example: 30 }) durationSeconds!: number;
+  @ApiProperty({
+    example: 'self-produced',
+    description: 'Lisans — ZORUNLU alan (mağaza uyumu, CLAUDE.md §6).',
+  })
+  license!: string;
+  @ApiProperty({ example: 'NOCTA audio engine (tool/render_demo_asset.dart)' })
+  source!: string;
+}
+
+export class AudioAssetDetailDto {
+  @ApiProperty({ type: AudioAssetDto }) asset!: AudioAssetDto;
+  @ApiProperty({ description: 'Kısa ömürlü presigned GET URL' }) url!: string;
+  @ApiProperty({ example: 21600 }) expiresInSeconds!: number;
+}
+
 export class WeeklyReleaseDto {
   @ApiProperty({ example: '2026-07-13', description: 'Hafta başlangıcı (ISO tarih)' })
   weekStart!: string;

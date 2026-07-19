@@ -155,6 +155,50 @@ class AppL10nTr extends AppL10n {
   String get mixerFailed => 'Ses başlatılamadı.';
 
   @override
+  String get mixerAssetLoopNotice =>
+      'Ses dosyaları olduğu gibi tekrarlanır; döngü noktasında kısa bir tık duyabilirsiniz.';
+
+  @override
+  String get mixerAssetUnavailable =>
+      'Bir ses dosyası yüklenemedi; mix\'in geri kalanı çalmaya devam ediyor.';
+
+  @override
+  String get mixerAddSound => 'Ses ekle';
+
+  @override
+  String get mixerAssetCatalogTitle => 'Ses dosyaların';
+
+  @override
+  String get mixerAssetCatalogEmpty => 'Henüz ses dosyan yok.';
+
+  @override
+  String get mixerAssetCatalogEmptyHow =>
+      'Dosyaları apps/api/assets-inbox/<kategori>/<ad>.mp3 altına koy; yanına başlık, mood, lisans ve kaynak bilgisini taşıyan <ad>.json ekle. Sonra pnpm assets:upload çalıştır — burada görünürler.';
+
+  @override
+  String get mixerAssetAddFailed =>
+      'Bu ses eklenemedi. Mix çalmaya devam ediyor.';
+
+  @override
+  String mixerRemoveLayer(String name) {
+    return '$name katmanını kaldır';
+  }
+
+  @override
+  String get mixerExportAssetWarning =>
+      'Eklediğin ses dosyaları videoya kaydedilmez.';
+
+  @override
+  String get mixerExportAssetWarningLong =>
+      'Video yalnızca üretilen katmanları kaydeder. Eklediğin ses dosyaları videoda duyulmaz.';
+
+  @override
+  String get mixerExportAnyway => 'Yine de video yap';
+
+  @override
+  String get commonCancel => 'Vazgeç';
+
+  @override
   String get mixerExportVideo => 'Video olarak paylaş';
 
   @override

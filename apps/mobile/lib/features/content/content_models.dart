@@ -109,6 +109,77 @@ class MixerState {
   ]);
 }
 
+/// Sunucudaki ses DOSYASI kaydı (`/v1/content/audio-assets`).
+///
+/// Depolama anahtarı (`key`) BİLEREK yok: sunucu onu tele koymuyor. İstemci
+/// dosyaya yalnızca tekil uçtan aldığı kısa ömürlü presigned URL ile erişir.
+class AudioAsset {
+  const AudioAsset({
+    required this.id,
+    required this.title,
+    required this.genre,
+    required this.mood,
+    required this.durationSeconds,
+    required this.license,
+    required this.source,
+  });
+
+  final String id;
+  final String title;
+  final String genre;
+  final List<String> mood;
+  final int durationSeconds;
+
+  /// Lisans ve kaynak İSTEMCİDE DE taşınır — gösterilmek zorunda olduğumuz
+  /// atıflar (CC-BY gibi) için. Sunucuda zorunlu, burada opsiyonel olsaydı
+  /// atıf gösteremeden çalan bir dosyamız olurdu.
+  final String license;
+  final String source;
+
+  factory AudioAsset.fromJson(Map<String, dynamic> json) => AudioAsset(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        genre: json['genre'] as String,
+        mood: (json['mood'] as List<dynamic>? ?? const <dynamic>[])
+            .map((e) => e as String)
+            .toList(),
+        durationSeconds: (json['durationSeconds'] as num?)?.toInt() ?? 0,
+        license: json['license'] as String? ?? '',
+        source: json['source'] as String? ?? '',
+      );
+}
+
+/// Tekil uç yanıtı: meta + kısa ömürlü URL.
+class AudioAssetDetail {
+  const AudioAssetDetail({
+    required this.asset,
+    required this.url,
+    required this.expiresInSeconds,
+  });
+
+  final AudioAsset asset;
+  final String url;
+  final int expiresInSeconds;
+
+  factory AudioAssetDetail.fromJson(Map<String, dynamic> json) => AudioAssetDetail(
+        asset: AudioAsset.fromJson(json['asset'] as Map<String, dynamic>),
+        url: json['url'] as String,
+        expiresInSeconds: (json['expiresInSeconds'] as num?)?.toInt() ?? 0,
+      );
+
+  /// Mikserin çalabileceği katmana çevirir.
+  ///
+  /// [gain] varsayılanı düşük (0.3): kullanıcının eklediği dosya, hâlihazırda
+  /// çalan mix'in üstüne BİRDEN bindirilmemeli — gece yarısı ani seviye artışı
+  /// uyandırır. Kullanıcı sürgüyle yükseltir.
+  AssetLayer toLayer({double gain = 0.3}) => AssetLayer(
+        id: asset.id,
+        title: asset.title,
+        url: url,
+        gain: gain,
+      );
+}
+
 class Preset {
   const Preset({required this.archetypeSlug, required this.mixerState});
 
