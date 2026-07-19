@@ -1,0 +1,364 @@
+{
+  "$generated": "ÜRETİLEN DOSYA — ELLE DÜZENLEMEYİN. Kaynak: db/seed.sql. Yeniden üretmek için: pnpm gen:content",
+  "schemaVersion": 1,
+  "soundscapes": [
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000001",
+        "slug": "deep-ocean-hush",
+        "titleI18n": {
+          "en": "Deep Ocean Hush",
+          "tr": "Derin Okyanus Sessizliği"
+        },
+        "archetypeAffinity": [
+          "deep-ocean"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "swell",
+              "type": "brown",
+              "gain": 0.75
+            },
+            {
+              "id": "surface",
+              "type": "pink",
+              "gain": 0.18
+            }
+          ]
+        }
+      },
+      "presets": [
+        {
+          "archetypeSlug": "deep-ocean",
+          "mixerState": {
+            "layers": [
+              {
+                "id": "swell",
+                "type": "brown",
+                "gain": 0.85
+              },
+              {
+                "id": "surface",
+                "type": "pink",
+                "gain": 0.1
+              }
+            ]
+          }
+        }
+      ],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000002",
+        "slug": "rainfall-window",
+        "titleI18n": {
+          "en": "Rainfall Window",
+          "tr": "Yağmurlu Pencere"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "canopy",
+              "type": "pink",
+              "gain": 0.55
+            },
+            {
+              "id": "droplets",
+              "type": "white",
+              "gain": 0.28
+            },
+            {
+              "id": "gutter",
+              "type": "brown",
+              "gain": 0.12
+            }
+          ]
+        }
+      },
+      "presets": [
+        {
+          "archetypeSlug": "overthinker",
+          "mixerState": {
+            "layers": [
+              {
+                "id": "canopy",
+                "type": "pink",
+                "gain": 0.5
+              },
+              {
+                "id": "droplets",
+                "type": "white",
+                "gain": 0.4
+              },
+              {
+                "id": "gutter",
+                "type": "brown",
+                "gain": 0.1
+              }
+            ]
+          }
+        }
+      ],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000003",
+        "slug": "delta-drift",
+        "titleI18n": {
+          "en": "Delta Drift",
+          "tr": "Delta Sürüklenişi"
+        },
+        "archetypeAffinity": [
+          "delta-drifter"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "drift",
+              "type": "brown",
+              "gain": 0.62
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000004",
+        "slug": "first-light",
+        "titleI18n": {
+          "en": "First Light",
+          "tr": "İlk Işık"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "haze",
+              "type": "pink",
+              "gain": 0.4
+            },
+            {
+              "id": "breeze",
+              "type": "white",
+              "gain": 0.15
+            }
+          ]
+        }
+      },
+      "presets": [
+        {
+          "archetypeSlug": "dawn-chaser",
+          "mixerState": {
+            "layers": [
+              {
+                "id": "haze",
+                "type": "pink",
+                "gain": 0.34
+              },
+              {
+                "id": "breeze",
+                "type": "white",
+                "gain": 0.2
+              }
+            ]
+          }
+        }
+      ],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000005",
+        "slug": "night-train",
+        "titleI18n": {
+          "en": "Night Train",
+          "tr": "Gece Treni"
+        },
+        "archetypeAffinity": [
+          "delta-drifter",
+          "overthinker"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "rail-rumble",
+              "type": "brown",
+              "gain": 0.66
+            },
+            {
+              "id": "carriage-hum",
+              "type": "pink",
+              "gain": 0.3
+            },
+            {
+              "id": "track-hiss",
+              "type": "white",
+              "gain": 0.14
+            },
+            {
+              "id": "distant-wind",
+              "type": "pink",
+              "gain": 0.09
+            }
+          ]
+        }
+      },
+      "presets": [
+        {
+          "archetypeSlug": "delta-drifter",
+          "mixerState": {
+            "layers": [
+              {
+                "id": "rail-rumble",
+                "type": "brown",
+                "gain": 0.78
+              },
+              {
+                "id": "carriage-hum",
+                "type": "pink",
+                "gain": 0.2
+              },
+              {
+                "id": "track-hiss",
+                "type": "white",
+                "gain": 0.06
+              },
+              {
+                "id": "distant-wind",
+                "type": "pink",
+                "gain": 0.05
+              }
+            ]
+          }
+        },
+        {
+          "archetypeSlug": "overthinker",
+          "mixerState": {
+            "layers": [
+              {
+                "id": "rail-rumble",
+                "type": "brown",
+                "gain": 0.45
+              },
+              {
+                "id": "carriage-hum",
+                "type": "pink",
+                "gain": 0.45
+              },
+              {
+                "id": "track-hiss",
+                "type": "white",
+                "gain": 0.3
+              },
+              {
+                "id": "distant-wind",
+                "type": "pink",
+                "gain": 0.12
+              }
+            ]
+          }
+        }
+      ],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000006",
+        "slug": "cabin-fan",
+        "titleI18n": {
+          "en": "Cabin Fan",
+          "tr": "Oda Vantilatörü"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "blade-wash",
+              "type": "white",
+              "gain": 0.58
+            },
+            {
+              "id": "motor-body",
+              "type": "brown",
+              "gain": 0.22
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000007",
+        "slug": "hearth-and-static",
+        "titleI18n": {
+          "en": "Hearth & Static",
+          "tr": "Ocak ve Parazit"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "music",
+              "type": "pad",
+              "gain": 0.34
+            },
+            {
+              "id": "static",
+              "type": "white",
+              "gain": 0.3
+            },
+            {
+              "id": "hearth",
+              "type": "fire",
+              "gain": 0.26
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    }
+  ],
+  "weekly": {
+    "notes": "Lokal geliştirme yayını: katmanlı, maskeleyen ve ince — üç farklı tarif karakteri.",
+    "soundscapeSlugs": [
+      "night-train",
+      "rainfall-window",
+      "first-light"
+    ]
+  }
+}

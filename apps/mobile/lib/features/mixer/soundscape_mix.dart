@@ -1,4 +1,5 @@
 import '../../core/audio_engine/dsp/mix_render.dart';
+import '../../core/audio_engine/master_limiter.dart';
 import '../content/content_models.dart';
 // `show`: content_models.dart da `MixerState` adını taşıyor (preset mixer state)
 // ve mixer_controller.dart'ınki UI durumu. İkisini birden çekmek adı belirsizleştirir.
@@ -23,11 +24,23 @@ class ResolvedMix {
 
 /// Çalma yolunda izin verilen toplam kazanç.
 ///
-/// `MixPlayer` katmanları AYRI player'larda çalar; toplama işletim sistemi
-/// mikserinde olur ve `renderMix`'in kompresörü bu yolda DEVREDE DEĞİL. Yani
-/// toplam 1.0'ı aşarsa kırpma OS seviyesinde olur — uyku uygulamasında bu,
-/// kullanıcının kulağında cızırtı demektir.
-const double maxPlaybackTotalGain = 1.0;
+/// **Tek kaynak [kMasterCeiling]** — aynı tavan `MixPlayer`'ın master
+/// limitleyicisinde de uygulanıyor ve iki ayrı sabit tutmak, birinin
+/// değiştirilip diğerinin unutulmasına açık kapı bırakıyordu.
+///
+/// **Bu fonksiyon ile master limitleyici AYNI ŞEY DEĞİL** (ikisi de duruyor,
+/// bilinçli):
+/// - Burası SUNUCUDAN gelen tarifi çalmadan ÖNCE normalize eder; sonuç
+///   sürgülerin BAŞLANGIÇ değeri olur. Kullanıcı 3.0 toplamlı bir tarifte
+///   sürgüleri tepede değil, oranlanmış görür.
+/// - Master limitleyici KULLANICININ sürgü hareketini sınırlar ve sürgü
+///   değerlerine DOKUNMAZ.
+///
+/// ⚠️ Sonucu: sunucu tarifi geldiğinde limitleyici zaten devreye girmeyecek
+/// kadar aşağıda başlar. Bu bir çakışma değil ama örtüşme; native graf gelince
+/// (docs/04) ön-normalizasyonun kaldırılıp her şeyin limitleyiciye bırakılması
+/// değerlendirilmeli. Bu iterasyonda DEĞİŞTİRİLMEDİ (kapsam dışı).
+const double maxPlaybackTotalGain = kMasterCeiling;
 
 /// Toplam kazancı [maxPlaybackTotalGain]'e indirger, katmanların BİRBİRİNE
 /// oranını koruyarak.

@@ -18,10 +18,22 @@ import 'moon_painter.dart';
 ///    "sonsuz splash" durumu YAPISAL olarak imkânsız.
 /// 2. **Dokunuşla atlama:** ekrana dokunmak alt sınırı da bekletmeden geçişi
 ///    başlatır. Ses kesilmez (arka planda devam eder), yalnızca görsel kapı kalkar.
-/// 3. **Alt sınır [launchHoldSeconds]:** içerik erken hazırsa bile 1.1 sn durulur.
-///    Bu tek "bekletme" bilinçli: oturum önbellekten gelince bootstrap ~50 ms'de
-///    biter ve alt sınır olmasaydı kullanıcı ayı HİÇ görmez, yalnızca bir kare
-///    titreme görürdü. Gerekçesi ve süresi `launch_phase.dart`'ta.
+/// 3. **Alt sınır [launchHoldSeconds] (~0.865 sn):** içerik erken hazırsa bile
+///    bu kadar durulur. Bu tek "bekletme" bilinçli: oturum önbellekten gelince
+///    bootstrap ~50 ms'de biter ve alt sınır olmasaydı kullanıcı ayı HİÇ görmez,
+///    yalnızca bir kare titreme görürdü. Sınır elle seçilmiş bir sayı DEĞİL,
+///    zarftan hesaplanır (ilk parıltının tepe anı); gerekçesi `launch_phase.dart`.
+/// 4. **Görünür kare şartı [launchMinVisibleFrames]:** alt sınır duvar saatidir,
+///    çizim değil. Soğuk açılışta ilk kareler takılırsa saat dolduğunda ay ekrana
+///    yalnızca bir kez basılmış olabilir. Geçiş, ay gerçekten en az bu kadar kare
+///    ÇİZİLMEDEN başlamaz (sayaç `MoonPainter.onPainted`'tan gelir).
+///
+/// ## Süre uyarlanabilir, sabit değil
+///
+/// Toplam açılış süresi içeriğin ne zaman hazırlandığına göre değişir:
+/// önbellekten gelen oturumda ~1.20 sn (alt sınır + 0.32 sn mikroanimasyon),
+/// ağ yavaşsa en fazla ~2.52 sn (üst sınır + mikroanimasyon), dokunulursa
+/// hemen. Ölçüm: `test/core/launch/launch_adaptive_hold_test.dart`.
 ///
 /// ## Hareketi azalt
 ///
@@ -82,6 +94,10 @@ class _LaunchMomentState extends State<LaunchMoment>
   bool _reduceMotion = false;
   bool _started = false;
 
+  /// Ayın kaç kez GERÇEKTEN çizildiği. `paint` içinden artırılır; yalnızca
+  /// okunur bir şart olarak kullanılır (bkz. [launchMinVisibleFrames]).
+  int _paintedFrames = 0;
+
   @override
   void initState() {
     super.initState();
@@ -135,8 +151,16 @@ class _LaunchMomentState extends State<LaunchMoment>
     }
     // Normal yolda `_onTick` zaten her karede bakıyor; bu yalnızca alt sınır
     // DOLMUŞken içeriğin geç hazırlandığı durumu anında yakalamak için.
-    if (_elapsedSeconds >= launchHoldSeconds) _beginExit();
+    if (_canLeaveHold(_elapsedSeconds)) _beginExit();
   }
+
+  /// Alt sınır kapısı: **hem saat hem çizim**. İkisi de dolmadan marka anı
+  /// bitmez — saat tek başına "ay görüldü" demek DEĞİLDİR (bkz. sınıf notu 4).
+  ///
+  /// Üst sınır bu kapıdan GEÇMEZ: kaçış yolu hiçbir şarta bağlanamaz.
+  bool _canLeaveHold(double elapsedSeconds) =>
+      elapsedSeconds >= launchHoldSeconds &&
+      _paintedFrames >= launchMinVisibleFrames;
 
   Timer? _capTimer;
 
@@ -148,10 +172,16 @@ class _LaunchMomentState extends State<LaunchMoment>
     if (_stage != _Stage.hold) return;
     final t = _elapsedSeconds;
     // Üst sınır dolduysa içerik hazır OLMASA da geçilir (bkz. sınıf notu).
-    if (t >= launchCapSeconds || (widget.ready && t >= launchHoldSeconds)) {
+    if (t >= launchCapSeconds || (widget.ready && _canLeaveHold(t))) {
       _beginExit();
     }
   }
+
+  /// `MoonPainter.paint` sonunda çağrılır — render sırasında olduğu için
+  /// BURADA yalnızca sayaç artırılır, ağaç değiştirilmez. Şart bir SONRAKİ
+  /// tick'te (`_onTick`) okunur; yani kapı her zaman gerçekten çizilmiş
+  /// karelere bakar, planlanan karelere değil.
+  void _onMoonPainted() => _paintedFrames++;
 
   /// Mikroanimasyonu başlatır: ay küçülüp sönerken içerik yükselerek girer.
   void _beginExit() {
@@ -222,7 +252,7 @@ class _LaunchMomentState extends State<LaunchMoment>
     final moon = RepaintBoundary(
       child: CustomPaint(
         key: const Key('launch-moon'),
-        painter: MoonPainter(phase: _phase),
+        painter: MoonPainter(phase: _phase, onPainted: _onMoonPainted),
         child: const SizedBox.expand(),
       ),
     );

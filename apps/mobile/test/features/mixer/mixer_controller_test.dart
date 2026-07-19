@@ -61,11 +61,14 @@ void main() {
 
   late List<_FakePlayer> created;
 
+  /// Master limitleyicinin rampası ASENKRON: `setGain` döndüğünde ölçek henüz
+  /// hedefine yürümemiş olabilir. Uygulanan ses seviyesini ölçen testler önce
+  /// bunu beklemeli, yoksa rampanın ortasındaki geçici değeri ölçerler.
+  late MixPlayer player;
+
   MixerController build() {
     created = [];
-    return MixerController(
-      spec: spec,
-      player: MixPlayer(
+    player = MixPlayer(
       // Üretimde render ayrı isolate'te (compute) yapılır; widget testinin sabit
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
@@ -74,12 +77,12 @@ void main() {
         loopSeconds: 1,
         sampleRate: 8000,
         playerFactory: () {
-          final p = _FakePlayer();
-          created.add(p);
-          return p;
-        },
-      ),
+        final p = _FakePlayer();
+        created.add(p);
+        return p;
+      },
     );
+    return MixerController(spec: spec, player: player);
   }
 
   test('başlangıç durumu spec katmanlarını ve kazançlarını taşır', () {
@@ -114,11 +117,18 @@ void main() {
     await c.setGain('brown', 0.9);
     await c.setGain('brown', 0.1);
     await c.setGain('pink', 0.7);
+    // Ara adımda toplam 1.1'e çıkıp master limitleyiciyi TETİKLEDİ; rampa
+    // ölçeği 1.0'dan indirmeye başladı. Son durumda toplam 0.8 (tavanın altı),
+    // yani ölçek 1.0'a GERİ dönmeli — ama rampa asenkron. Beklemezsek burada
+    // rampanın ortasındaki değeri (0.1 × 0.9375 = 0.09375) ölçeriz.
+    await player.settleLimiter();
 
     // Yeniden yüklenseydi ses kesilir, tık olurdu.
     expect(created.map((p) => p.setAudioSourceCalls).toList(), sourcesAfterPrepare);
-    expect(created[0].lastVolume, 0.1);
-    expect(created[1].lastVolume, 0.7);
+    // Limitleyici DEVREDE DEĞİLKEN uygulanan seviye = sürgü değeri, birebir.
+    expect(player.isLimiting, isFalse, reason: 'toplam 0.8, tavanın altında');
+    expect(created[0].lastVolume, closeTo(0.1, 1e-9));
+    expect(created[1].lastVolume, closeTo(0.7, 1e-9));
   });
 
   test('setGain durumu günceller (UI slider\'ı takip eder)', () async {

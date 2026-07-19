@@ -36,9 +36,15 @@ import 'asset_catalog_sheet.dart';
 ///    WCAG AA eşiği 4.5'in üç-dört katı altında; dawn-chaser'da 34pt başlık bile
 ///    büyük-metin eşiği 3.0'ı geçemiyordu (2.49). CLAUDE.md §7 ihlali.
 /// 3. **Kontrol sayfası** — katman sürgüleri KAYDIRILIR, taşıma kontrolleri
-///    SABİT. Katman sayısı 3→7 olduğunda çal butonu ekranın altına düşmüştü
-///    (#213); burada butonların erişilebilirliği katman sayısından yapısal
-///    olarak bağımsız.
+///    dibe sabitlenir. Katman sayısı 3→7 olduğunda çal butonu ekranın altına
+///    düşmüştü (#213); burada butonların erişilebilirliği katman sayısından
+///    yapısal olarak bağımsız.
+///
+///    ⚠️ "Sabit" mutlak DEĞİL: taşıma çubuğunun tavanı kontrol bölgesinin
+///    tamamı ve sığmadığında kendi içinde kaydırılır (büyük yazı ölçeği).
+///    Çal butonu o listenin ilk çocuğu olduğu için her koşulda görünür kalır;
+///    teslim eden taraf video butonu ve erken-sürüm notudur. Gerekçe ve ölçüm:
+///    [playerControlsReserve].
 ///
 /// ## Dikey bütçe: neden `Expanded(flex: 3/5)` DEĞİL
 ///
@@ -119,34 +125,71 @@ const double kPlayerScrimAlpha = 0.80;
 /// kadar) kısalır. 48'in altı görünür bir kenar demektir — dikişi geri getirir.
 const double kPlayerScrimFadeHeight = 88;
 
-/// Kontrol bölgesinin (katman başlığı + taşıma çubuğu) **ölçülmüş** asgari
-/// yüksekliği. Katman listesi tamamen kaybolduğunda geriye kalan budur.
+/// Çal butonunun asgari yüksekliği — §7 dokunma hedefi (≥44) değil, ondan
+/// BÜYÜK bir değer: ekranın birincil eylemi parmakla aranmamalı.
 ///
-/// Ölçüm (varsayılan yazı ölçeği): başlık bloğu **44** (etiket + "Ses ekle"
-/// düğmesi; düğme §7 gereği ≥44 px dokunma hedefi, satırın dikey padding'i bu
-/// yüzden s1/s0'a kısıldı) + taşıma çubuğu
-/// (8 + çal 52 + 12 + video 48 + 12 + erken-sürüm notu + 20).
-/// - **EN**: not 2 satır → toplam 238
-/// - **TR**: not 320 px genişlikte 3 satıra sarıyor → toplam 252
+/// Tek kaynak: hem butonun kendi `minimumSize`'ı hem de
+/// [playerControlsReserve] bunu kullanır. İkisi ayrışırsa rezervasyon yalan
+/// söyler ve buton ekrandan taşar.
+const double kPlayerPlayButtonMinHeight = 52;
+
+/// Material 3 `labelLarge` punto — buton etiketlerinin varsayılanı.
 ///
-/// 264 seçildi: ölçülen en kötü dilin 12 px üstü.
+/// Tema (`buildNoctaDarkTheme`) buton tipografisini EZMİYOR, yalnızca renk ve
+/// font ailesi veriyor; dolayısıyla etiket punto kaynağı Material'ın kendisi.
+/// Tema bir gün buton textStyle'ı ezerse bu değer de güncellenmeli.
+const double _kButtonLabelFontSize = 14;
+
+/// Kontrol bölgesine **her koşulda** ayrılan yükseklik: taşıma çubuğunun
+/// teslim EDEMEYECEĞİ tek parçası — çal butonu + kendi dikey boşluğu.
 ///
-/// ⚠️ Bu değer 252 idi ve başlık satırına "Ses ekle" düğmesi eklenince
-/// 320×568 + çevrimdışı bandı kombinasyonunda düzen TAŞTI
-/// (`mixer_small_screen_test.dart` yakaladı). Sabit tahminle değil ölçümle
-/// güncellendi.
+/// ## Neden sabit bir sayı DEĞİL (bu bir gerileme düzeltmesi)
 ///
-/// **Ne işe yarıyor:** kısa ekranda yer BİTTİĞİNDE önce hero geri adım atsın
-/// diye. Denetimde 320×568'de çevrimdışı bandı + gece şeridi birlikteyken düzen
-/// 43 px taşıyordu; taşan taraf her zaman taşıma çubuğuydu, çünkü hero sabit
-/// payını korurken sıkışan hep en alttaki (ve en önemli) kontroldü.
+/// Buradaki değer eskiden `kPlayerControlsMinHeight = 280` idi: varsayılan yazı
+/// ölçeğinde, İngilizce ve Türkçe metinlerle **ölçülmüş** bir sayı. Ölçüm
+/// doğruydu ama sayı, ölçüldüğü koşulun dışında geçersizdi — kodun kendi uyarısı
+/// da bunu söylüyordu. Yazı ölçeği büyüyünce başlık satırı, dipnotlar ve taşıma
+/// çubuğunun sarmalı metinleri hep birlikte büyüyor; 280 px'lik pay onları
+/// tutmuyor ve düzen taşıyordu. Ölçülen taşma (320×568, iki kabuk bandı, EN):
 ///
-/// ⚠️ **Bu sabit ÖLÇÜLMÜŞ bir sayıdır, türetilmiş değil.** Yeni bir dil, daha
-/// uzun bir çeviri veya yeni bir taşıma öğesi onu geçersiz kılar; o durumda
-/// düzen yine taşar. Bekçisi `mixer_small_screen_test.dart`: en dar ekran ×
-/// dört kabuk kombinasyonu × iki dil. Yazı ölçeği büyütüldüğünde (a11y)
-/// KAPSANMADI — bkz. rapor.
-const double kPlayerControlsMinHeight = 280;
+/// | yazı ölçeği | taşma |
+/// |-------------|-------|
+/// | 1.0 | yok |
+/// | 1.3 | 9 px |
+/// | 1.6 | 148 px |
+/// | 2.0 | çal butonu ekranın 33 px ALTINDA (hiç dokunulamıyor) |
+///
+/// Sayıyı ölçekle çarpmak aynı hatanın katsayılı hâli olurdu: bir metnin kaç
+/// satıra saracağı dile, ekran genişliğine ve punto yuvarlamasına bağlı —
+/// çarpanla kestirilemez. Bu yüzden **düzen artık bir tahmine dayanmıyor**:
+///
+/// 1. Kontrol bölgesinin içindeki HER ŞEY (dipnotlar, katman başlığı, sürgüler,
+///    video butonu, erken-sürüm notu) yer daralınca kaydırılabilir hâle gelir —
+///    yani hiçbiri sabit bir maliyet değildir. Bkz. `_controlSheet`.
+/// 2. Geriye teslim edilemeyen tek parça kalır: çal butonu. Yüksekliği tahmin
+///    değil hesap — [kPlayerPlayButtonMinHeight] ile etiketin o ölçekteki
+///    yüksekliğinin büyüğü.
+///
+/// Böylece rezervasyon O(bir buton) olur; dil, çeviri uzunluğu veya yeni bir
+/// dipnot onu GEÇERSİZ KILAMAZ, çünkü hiçbiri bu paya girmiyor.
+///
+/// Metni kırpmak veya dokunma hedefini küçültmek alternatifleri reddedildi:
+/// ilki dürüstlük dipnotlarını, ikincisi §7'yi başka yerden çiğnerdi.
+///
+/// Bekçisi: `mixer_small_screen_test.dart` — 320×568 × 4 yazı ölçeği ×
+/// 4 kabuk kombinasyonu × 2 dil.
+double playerControlsReserve(BuildContext context) {
+  // Etiketin satır yüksekliği: punto × tipik satır aralığı. Buton etiketi TEK
+  // satırdır (sarmaz), o yüzden burada satır sayısı tahmini YOK.
+  final labelHeight =
+      MediaQuery.textScalerOf(context).scale(_kButtonLabelFontSize) * 1.45;
+  final buttonHeight = math.max(
+    kPlayerPlayButtonMinHeight,
+    labelHeight + NoctaSpace.s2,
+  );
+  // `_transport`'un kendi dikey padding'i — buton o kutunun içinde yaşıyor.
+  return NoctaSpace.s2 + buttonHeight + NoctaSpace.s4;
+}
 
 /// Yumuşama bandının gradyanı — **üretim ve test aynı fonksiyonu çağırır.**
 ///
@@ -288,6 +331,12 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final height = constraints.maxHeight;
+                // Kontrol bölgesine AYRILAN pay — düzenin tek dokunulmaz
+                // parçası. Aşağıdaki iki tavan da bunu çıkararak hesaplanır,
+                // yani `fade + hero ≤ height - reserve`: `Expanded` her zaman
+                // en az `reserve` kadar alır ve çal butonu ekranda kalır.
+                final reserve = playerControlsReserve(context);
+
                 // Yumuşama bandı küçük ekranda oransal olarak kısalır — ama bir
                 // tabanın altına inmez: çok kısa bir rampa yeniden görünür bir
                 // kenar demektir (dikişi geri getirirdi).
@@ -297,10 +346,17 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 // değerine AppBar yüksekliğini ekler; buradaki `SafeArea` onu
                 // tüketir. Yani bant zaten geri butonunun ALTINDA başlar ve
                 // AppBar'ın arkası tamamen scrim'siz kalır (ambiyans en net orada).
-                final fade = math.min(
+                final rawFade = math.min(
                   kPlayerScrimFadeHeight,
                   math.max(48.0, height * 0.12),
                 );
+                // 48 px'lik TABAN da teslim olur — ama en son. Gövde 2.0 yazı
+                // ölçeğinde (kabuk bantları büyüyünce) 123 px'e kadar iniyor;
+                // orada 48 px'i bir gradyana harcamak, ekranın %39'unu süse
+                // verip birincil eylemi ekran dışına itmek demekti. Dikişin
+                // görünürlüğü bir cila sorunu, çal butonuna ulaşamamak §7 ihlali:
+                // çakıştıklarında §7 kazanır.
+                final fade = math.max(0.0, math.min(rawFade, height - reserve));
                 return Column(
                   // ŞART: bu olmadan `SizedBox`/`ConstrainedBox` çocukları gevşek
                   // genişlik alır ve içeriklerinin genişliğine büzülür — ÖLÇÜLDÜ:
@@ -320,17 +376,14 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                     // piksel aşağıdaki `Expanded`'a gider. İki tavanı var:
                     // (a) ekranın %34'ü — uzun bir soundscape adı ekranın
                     //     yarısını yutmasın;
-                    // (b) kontrollere [kPlayerControlsMinHeight] kaldıktan sonra
+                    // (b) kontrollere [playerControlsReserve] kaldıktan sonra
                     //     ARTAN — yer bittiğinde geri adım atan taraf hero olsun.
                     // İkisini de aşarsa hero KENDİ İÇİNDE kaydırılır, taşmaz.
                     ConstrainedBox(
                       constraints: BoxConstraints(
                         maxHeight: math.max(
                           0.0,
-                          math.min(
-                            height * 0.34,
-                            height - fade - kPlayerControlsMinHeight,
-                          ),
+                          math.min(height * 0.34, height - fade - reserve),
                         ),
                       ),
                       child: _hero(l10n, s),
@@ -429,12 +482,21 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
           decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
         ),
         const SizedBox(width: NoctaSpace.s2),
-        Text(
-          text,
-          key: const Key('mixer-status'),
-          style: TextStyle(
-            fontSize: NoctaFontSize.caption,
-            color: NoctaColors.inkSecondary,
+        // `Flexible` — metin SARAR, kırpılmaz.
+        //
+        // Esnek DEĞİLDİ ve 2.0 yazı ölçeğinde 320 px'te yatayda 59 px taşıyordu
+        // (TR "Duraklatıldı" 26 punto → 315 px, kullanılabilir genişlik 272).
+        // `ellipsis` alternatifi reddedildi: durum metni ekranın "ne oluyor"
+        // cevabı; "Duraklat…" diye kesilmesi bilgiyi yok eder. Sarmak hero'yu
+        // uzatır, hero da zaten kendi içinde kaydırılabilir.
+        Flexible(
+          child: Text(
+            text,
+            key: const Key('mixer-status'),
+            style: TextStyle(
+              fontSize: NoctaFontSize.caption,
+              color: NoctaColors.inkSecondary,
+            ),
           ),
         ),
       ],
@@ -459,187 +521,251 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
       decoration: BoxDecoration(
         color: NoctaColors.bgBase.withValues(alpha: kPlayerScrimAlpha),
       ),
-      child: Column(
-        children: <Widget>[
-          // ── Dipnotlar: SABİT, kaydırma alanının DIŞINDA ──
-          // Kaydırılan listenin içinde olsalardı 7 katmanlı bir mikste kullanıcı
-          // hata mesajını görmek için kaydırmak zorunda kalırdı.
-          if (widget.recipeUnavailable)
-            _notice(
-              // Dürüstlük: kullanıcı istediği sesi seçti ama başka bir mix duyuyor.
-              // Ses çalmaya devam eder (offline-first); bu bir dipnottur.
-              text: l10n.mixerRecipeUnavailable,
-              color: NoctaColors.inkSecondary,
-              noticeKey: const Key('mixer-recipe-fallback'),
-            ),
-          if (s.assetsUnavailable)
-            _notice(
-              // Dosya katmanı yüklenemedi ama mix ÇALIYOR. `danger` değil
-              // `inkSecondary`: bu bir arıza değil, eksik bir katman.
-              text: l10n.mixerAssetUnavailable,
-              color: NoctaColors.inkSecondary,
-              noticeKey: const Key('mixer-asset-unavailable'),
-            ),
-          if (s.error != null)
-            _notice(
-              // Hangi iş patladı — kullanıcıya doğru olanı söyle. Üç ayrı hâl
-              // var ve üçü de farklı şey demek: ses hiç başlamadı / video
-              // üretilemedi / eklenmek istenen dosya gelmedi (mix çalıyor).
-              text: switch (s.errorKind) {
-                MixerErrorKind.export => l10n.mixerExportFailed,
-                MixerErrorKind.assetAdd => l10n.mixerAssetAddFailed,
-                _ => l10n.mixerFailed,
-              },
-              color: NoctaColors.danger,
-              noticeKey: const Key('mixer-error'),
-            ),
+      // Kendi yüksekliğini ÖLÇER: aşağıdaki taşıma çubuğunun tavanı bu.
+      // Sabit bir sayı olamaz — bkz. [playerControlsReserve].
+      child: LayoutBuilder(
+        builder: (context, sheet) {
+          final budget = sheet.maxHeight;
+          return Column(
+            children: <Widget>[
+              // ── KAYDIRILAN bölge ──
+              //
+              // Dipnotlar ve katman başlığı artık kaydırma alanının İÇİNDE.
+              // Önceden dışındaydılar ("kullanıcı hatayı görmek için
+              // kaydırmasın" diye) ama bu onları SABİT maliyet yapıyordu:
+              // yazı ölçeği 1.3'ten sonra üç dipnot + başlık satırı tek
+              // başına bütçeyi yiyip düzeni taşırıyordu.
+              //
+              // Amaç kaybolmuyor: liste dinlenme konumunda offset 0'dadır,
+              // yani dipnotlar hâlâ İLK görünen şeydir. Yalnızca "her zaman
+              // ekranda" garantisi "açılışta ekranda"ya iniyor — ve karşılığı,
+              // aynı garantiyi ekranın birincil eylemine verebilmek.
+              Expanded(
+                child: SingleChildScrollView(
+                  key: const Key('mixer-layers-scroll'),
+                  padding: const EdgeInsets.fromLTRB(
+                    NoctaSpace.s6,
+                    0,
+                    NoctaSpace.s6,
+                    NoctaSpace.s4,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      if (widget.recipeUnavailable)
+                        _notice(
+                          // Dürüstlük: kullanıcı istediği sesi seçti ama başka
+                          // bir mix duyuyor. Ses çalmaya devam eder
+                          // (offline-first); bu bir dipnottur.
+                          text: l10n.mixerRecipeUnavailable,
+                          color: NoctaColors.inkSecondary,
+                          noticeKey: const Key('mixer-recipe-fallback'),
+                        ),
+                      if (s.assetsUnavailable)
+                        _notice(
+                          // Dosya katmanı yüklenemedi ama mix ÇALIYOR. `danger`
+                          // değil `inkSecondary`: bu bir arıza değil, eksik bir
+                          // katman.
+                          text: l10n.mixerAssetUnavailable,
+                          color: NoctaColors.inkSecondary,
+                          noticeKey: const Key('mixer-asset-unavailable'),
+                        ),
+                      if (s.error != null)
+                        _notice(
+                          // Hangi iş patladı — kullanıcıya doğru olanı söyle.
+                          // Üç ayrı hâl var ve üçü de farklı şey demek: ses hiç
+                          // başlamadı / video üretilemedi / eklenmek istenen
+                          // dosya gelmedi (mix çalıyor).
+                          text: switch (s.errorKind) {
+                            MixerErrorKind.export => l10n.mixerExportFailed,
+                            MixerErrorKind.assetAdd => l10n.mixerAssetAddFailed,
+                            _ => l10n.mixerFailed,
+                          },
+                          color: NoctaColors.danger,
+                          noticeKey: const Key('mixer-error'),
+                        ),
 
-          // Dikey padding KISILDI (s3/s2 → s1/s0) ve bu bilinçli: "Ses ekle"
-          // düğmesi §7 gereği ≥44 px dokunma hedefi taşıyor, yani bu satır
-          // 36 px'ten 44 px'e çıkıyor. Düğmenin kendi iç boşluğu ayırıcı işi
-          // görüyor; padding'i eskisi gibi bırakmak 320×568'de 28 px'i
-          // doğrudan hero'dan çalardı ([kPlayerControlsMinHeight] ölçümü).
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              NoctaSpace.s6,
-              NoctaSpace.s0,
-              NoctaSpace.s6,
-              NoctaSpace.s0,
-            ),
-            child: Row(
-              children: <Widget>[
-                // `Expanded` (Spacer DEĞİL): 320 px'te TR etiketi + düğme
-                // yatayda 0.6 px taşıyordu. Etiket artan alanı alır ve
-                // gerekirse kısalır; taşan taraf hiçbir zaman düğme olmaz.
-                Expanded(
-                  child: Text(
-                    l10n.mixerLayersLabel,
-                    key: const Key('mixer-layers-label'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.micro,
-                      letterSpacing: 1.2,
-                      color: NoctaColors.inkFaint,
-                    ),
+                      // Katman listesinin başlığı. Yatay padding YOK: artık
+                      // kaydırma alanının kendi padding'inin içinde yaşıyor.
+                      //
+                      // **`Row` DEĞİL `Wrap`** — ölçülmüş bir taşma düzeltmesi.
+                      // `Row`'da esnek olmayan çocuk SINIRSIZ genişlik alır:
+                      // "Ses ekle" düğmesi 2.0 yazı ölçeğinde 299 px'e çıkıyor,
+                      // kullanılabilir genişlik ise 272 — yatayda 27 px taşma
+                      // (etiket `Expanded` olduğu için 0 px'e ezilmişti bile).
+                      //
+                      // `Wrap` sığmadığında düğmeyi ALT SATIRA alır ve orada
+                      // tam genişliği verir; düğmenin kendi etiketi de o sınır
+                      // içinde sarar. Yani ne metin kırpılıyor ne dokunma
+                      // hedefi küçülüyor — ikisi de §7'yi çiğnerdi.
+                      // Sığdığı sürece (varsayılan ölçek, iki dil) davranış
+                      // eskisiyle aynı: etiket solda, düğme sağda.
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        // Tek satıra sığdığında aradaki boşluk; alt satıra
+                        // düştüğünde satır arası.
+                        spacing: NoctaSpace.s2,
+                        children: <Widget>[
+                          Text(
+                            l10n.mixerLayersLabel,
+                            key: const Key('mixer-layers-label'),
+                            style: TextStyle(
+                              fontSize: NoctaFontSize.micro,
+                              letterSpacing: 1.2,
+                              color: NoctaColors.inkFaint,
+                            ),
+                          ),
+                          // "Ses ekle" — katman listesinin BAŞLIĞINDA, çünkü
+                          // yaptığı şey tam olarak bu listeye bir satır
+                          // eklemek. Taşıma çubuğuna koymak onu çal/paylaş ile
+                          // aynı ağırlıkta gösterirdi.
+                          TextButton.icon(
+                            key: const Key('mixer-add-sound'),
+                            onPressed: _addSound,
+                            style: TextButton.styleFrom(
+                              // Dokunma hedefi ≥44px (CLAUDE.md §7).
+                              minimumSize: const Size(44, 44),
+                              foregroundColor: NoctaColors.accentAurora,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: NoctaSpace.s3,
+                              ),
+                            ),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: Text(l10n.mixerAddSound),
+                          ),
+                        ],
+                      ),
+
+                      for (final layer in s.layers)
+                        _gainRow(
+                          label: _layerLabel(l10n, layer.type),
+                          id: layer.id,
+                          l10n: l10n,
+                          s: s,
+                        ),
+                      // DOSYA katmanları sentezin ALTINDA, aynı sürgü bileşeniyle:
+                      // kullanıcı için ikisi de "bir katman"dır. Etiket i18n'den
+                      // GELMEZ — içerik adıdır (sunucudaki başlık).
+                      for (final asset in s.assets)
+                        _gainRow(
+                          label: asset.title,
+                          id: asset.id,
+                          l10n: l10n,
+                          s: s,
+                          // YALNIZCA dosya katmanları kaldırılabilir: sentez
+                          // katmanları tarifin kendisi (sürgüsü 0'a çekilebilir).
+                          // Ekleyip vazgeçememek kabul edilemezdi.
+                          onRemove: () => _c.removeAsset(asset.id),
+                        ),
+                      // ── Master limitleyici göstergesi ──
+                      //
+                      // **Neden sessiz olamaz:** limitleyici devreye girdiğinde
+                      // kullanıcı sürgüyü yukarı iter ve ses YÜKSELMEZ (hatta
+                      // diğer katmanlar kısılır). Açıklamasız bu, "uygulama
+                      // sürgümü dinlemiyor" demektir. Söylenen üç şey: limit
+                      // devrede / ne kadar kısıldı / SÜRGÜLERİN DEĞİŞMEDİ.
+                      //
+                      // **Neden burada, dipnot bloğunun içinde değil:** uyarı hemen
+                      // üstündeki sürgülerle ilgili — kullanıcı sebebe bakarken
+                      // sonucu da görüyor. (Dipnotlar da artık bu kaydırma alanının
+                      // içinde; ikisi de sabit maliyet değil.)
+                      //
+                      // Renk `accentDawn` (danger DEĞİL): bu bir arıza değil,
+                      // motorun doğru çalıştığının işareti.
+                      if (s.isLimiting)
+                        Padding(
+                          padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                          child: Text(
+                            l10n.mixerLimiterNotice(s.limiterReductionPercent),
+                            key: const Key('mixer-limiter-notice'),
+                            style: TextStyle(
+                              fontSize: NoctaFontSize.micro,
+                              color: NoctaColors.accentDawn,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      // Dürüstlük dipnotu: dosya döngüsünde tık DUYULABİLİR ve bunu
+                      // düzeltemiyoruz (PCM'e erişimimiz yok — asset_layer.dart).
+                      // Kullanıcı "uygulama bozuk" demeden önce nedenini bilsin.
+                      if (s.assets.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                          child: Text(
+                            l10n.mixerAssetLoopNotice,
+                            key: const Key('mixer-asset-loop-notice'),
+                            style: TextStyle(
+                              fontSize: NoctaFontSize.micro,
+                              color: NoctaColors.inkFaint,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      // ⚠️ DÜRÜSTLÜK — viral kanca #3'ün bilinen deliği.
+                      //
+                      // `renderMix` yalnızca SENTEZ katmanlarını görür (yapısal,
+                      // bkz. asset_layer.dart): eklenen dosya katmanları videoya
+                      // GİRMEZ. Kullanıcı duyduğu mix'i paylaştığını sanır, karşı
+                      // taraf eksik bir mix duyar. Bunu paylaşımdan SONRA fark
+                      // etmek en kötü sonuç.
+                      //
+                      // İki kademe: burada kalıcı dipnot + export'a basınca onay
+                      // ([_confirmExportWithAssets]). Diyalog tek başına butona
+                      // basmadan önce bilgilendirmez; dipnot tek başına gözden
+                      // kaçabilir.
+                      //
+                      // **Neden taşıma çubuğunda DEĞİL de burada:** çubuk dar
+                      // ekranda kendi içinde kaydırılıyor; oraya konan sarmalı bir
+                      // metin, büyük yazı ölçeğinde kaydırma gerektirmeden
+                      // görünmezdi. Burası doğru yer aynı zamanda: uyarı, hemen
+                      // üstündeki dosya katmanlarıyla ilgili.
+                      // Onay diyaloğu zaten export anında ikinci kez söylüyor.
+                      if (s.assets.isNotEmpty && _canExportVideo)
+                        Padding(
+                          padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                          child: Text(
+                            l10n.mixerExportAssetWarning,
+                            key: const Key('mixer-export-asset-warning'),
+                            style: TextStyle(
+                              fontSize: NoctaFontSize.micro,
+                              color: NoctaColors.accentDawn,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                // "Ses ekle" — katman listesinin BAŞLIĞINDA, çünkü yaptığı şey
-                // tam olarak bu listeye bir satır eklemek. Taşıma çubuğuna
-                // koymak onu çal/paylaş ile aynı ağırlıkta gösterirdi.
-                TextButton.icon(
-                  key: const Key('mixer-add-sound'),
-                  onPressed: _addSound,
-                  style: TextButton.styleFrom(
-                    // Dokunma hedefi ≥44px (CLAUDE.md §7).
-                    minimumSize: const Size(44, 44),
-                    foregroundColor: NoctaColors.accentAurora,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: NoctaSpace.s3,
-                    ),
-                  ),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: Text(l10n.mixerAddSound),
+              ),
+
+              // ── Taşıma çubuğu: katman sayısından bağımsız erişilebilir ──
+              //
+              // Tavanı `budget` (kontrol bölgesinin TAMAMI). `SingleChildScroll
+              // View` sınırlı bir tavan altında içeriğine büzülür — yani:
+              //
+              // - **sığdığı sürece** (varsayılan ölçek, her iki dil) davranış
+              //   eskisiyle birebir aynı: tam boy, dibe yapışık, video butonu
+              //   ve erken-sürüm notu görünür. Kaydırma YOK.
+              // - **sığmadığında** (büyük yazı ölçeği) çubuk kendi içinde
+              //   kaydırılır. Çal butonu çubuğun İLK çocuğu ve liste offset
+              //   0'da açılır: kırpılan taraf her zaman video butonu ve not
+              //   olur, birincil eylem asla.
+              //
+              // `Expanded` yukarıda kalanı alır: `budget - taşıma` her zaman
+              // ≥ 0, yani bu Column YAPISAL OLARAK taşamaz — hangi dil, hangi
+              // yazı ölçeği, kaç dipnot olursa olsun.
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: budget),
+                child: SingleChildScrollView(
+                  key: const Key('mixer-transport-scroll'),
+                  child: _transport(l10n, s),
                 ),
-              ],
-            ),
-          ),
-
-          // ── KAYDIRILAN bölge: yalnızca katmanlar ──
-          // `SingleChildScrollView + Column` (ListView DEĞİL): sürgüler ekran dışına
-          // taşsa bile hepsi ağaçta kurulur. Tembel bir liste, görünmeyen katmanın
-          // durumunu ağaçtan düşürürdü.
-          Expanded(
-            child: SingleChildScrollView(
-              key: const Key('mixer-layers-scroll'),
-              padding: const EdgeInsets.fromLTRB(
-                NoctaSpace.s6,
-                0,
-                NoctaSpace.s6,
-                NoctaSpace.s4,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  for (final layer in s.layers)
-                    _gainRow(
-                      label: _layerLabel(l10n, layer.type),
-                      id: layer.id,
-                      l10n: l10n,
-                      s: s,
-                    ),
-                  // DOSYA katmanları sentezin ALTINDA, aynı sürgü bileşeniyle:
-                  // kullanıcı için ikisi de "bir katman"dır. Etiket i18n'den
-                  // GELMEZ — içerik adıdır (sunucudaki başlık).
-                  for (final asset in s.assets)
-                    _gainRow(
-                      label: asset.title,
-                      id: asset.id,
-                      l10n: l10n,
-                      s: s,
-                      // YALNIZCA dosya katmanları kaldırılabilir: sentez
-                      // katmanları tarifin kendisi (sürgüsü 0'a çekilebilir).
-                      // Ekleyip vazgeçememek kabul edilemezdi.
-                      onRemove: () => _c.removeAsset(asset.id),
-                    ),
-                  // Dürüstlük dipnotu: dosya döngüsünde tık DUYULABİLİR ve bunu
-                  // düzeltemiyoruz (PCM'e erişimimiz yok — asset_layer.dart).
-                  // Kullanıcı "uygulama bozuk" demeden önce nedenini bilsin.
-                  if (s.assets.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: NoctaSpace.s2),
-                      child: Text(
-                        l10n.mixerAssetLoopNotice,
-                        key: const Key('mixer-asset-loop-notice'),
-                        style: TextStyle(
-                          fontSize: NoctaFontSize.micro,
-                          color: NoctaColors.inkFaint,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  // ⚠️ DÜRÜSTLÜK — viral kanca #3'ün bilinen deliği.
-                  //
-                  // `renderMix` yalnızca SENTEZ katmanlarını görür (yapısal,
-                  // bkz. asset_layer.dart): eklenen dosya katmanları videoya
-                  // GİRMEZ. Kullanıcı duyduğu mix'i paylaştığını sanır, karşı
-                  // taraf eksik bir mix duyar. Bunu paylaşımdan SONRA fark
-                  // etmek en kötü sonuç.
-                  //
-                  // İki kademe: burada kalıcı dipnot + export'a basınca onay
-                  // ([_confirmExportWithAssets]). Diyalog tek başına butona
-                  // basmadan önce bilgilendirmez; dipnot tek başına gözden
-                  // kaçabilir.
-                  //
-                  // **Neden taşıma çubuğunda DEĞİL de burada:** taşıma çubuğu
-                  // SABİT yükseklik ve o bütçe 320×568'de tıka basa dolu
-                  // (bkz. [_transport] yorumu — 244 px'e sığmak zorunda).
-                  // Oraya ikinci bir sarmalı metin koymak, ekranın birincil
-                  // eylemini (çal) taşırırdı. Burası doğru yer aynı zamanda:
-                  // uyarı, hemen üstündeki dosya katmanlarıyla ilgili.
-                  // Onay diyaloğu zaten export anında ikinci kez söylüyor.
-                  if (s.assets.isNotEmpty && _canExportVideo)
-                    Padding(
-                      padding: const EdgeInsets.only(top: NoctaSpace.s2),
-                      child: Text(
-                        l10n.mixerExportAssetWarning,
-                        key: const Key('mixer-export-asset-warning'),
-                        style: TextStyle(
-                          fontSize: NoctaFontSize.micro,
-                          color: NoctaColors.accentDawn,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── SABİT taşıma çubuğu: katman sayısından bağımsız erişilebilir ──
-          _transport(l10n, s),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -650,12 +776,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     required Key noticeKey,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        NoctaSpace.s6,
-        NoctaSpace.s3,
-        NoctaSpace.s6,
-        0,
-      ),
+      // Yatay padding YOK: dipnotlar artık kaydırma alanının kendi
+      // padding'inin içinde yaşıyor, ikinci kez uygulamak onları içeri kaydırırdı.
+      padding: const EdgeInsets.only(top: NoctaSpace.s3),
       child: Text(
         text,
         key: noticeKey,
@@ -744,15 +867,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     );
   }
 
-  /// ⚠️ **Buradaki dikey boşluklar sıkı bir bütçeye tabidir.**
+  /// Taşıma çubuğu — çal / video / erken-sürüm notu, bu SIRAYLA.
   ///
-  /// 320×568 + çevrimdışı bandı + gece şeridi kombinasyonunda kontrol bölgesine
-  /// düşen alan **244 px** (ölçüldü, `zz` probe): hero zaten sıfıra inmiş,
-  /// [kPlayerControlsMinHeight] doygunluğa ulaşmış durumda — yani daha fazla yer
-  /// İSTENEMEZ, sığmak zorunludur. "Ses ekle" satırı (44 px, §7 dokunma hedefi)
-  /// eklendiğinde bütçe 16 px taştı ve bu boşluklar (s3→s2, s5→s4) o 16 px'i
-  /// geri kazanmak için kısıldı. Metni kırpmak ya da dokunma hedefini küçültmek
-  /// alternatifleri REDDEDİLDİ: ilki dürüstlük notunu, ikincisi §7'yi çiğnerdi.
+  /// **Sıra bir tasarım tercihi değil, bir garanti:** çubuk dar alanda kendi
+  /// içinde kaydırılıyor (bkz. `_controlSheet`) ve kaydırma offset 0'da açılıyor.
+  /// Yani ilk çocuk her koşulda görünür kalır. Çal butonunun burada BİRİNCİ
+  /// olması, ekranın birincil eyleminin hiçbir yazı ölçeğinde ekran dışına
+  /// düşmemesinin sebebidir. Sırayı değiştirmek bu garantiyi bozar.
+  ///
+  /// Dikey boşluklar (s2/s4) da bu bütçenin parçası; genişletmek küçük ekranda
+  /// doğrudan katman listesinden çalar.
   Widget _transport(AppL10n l10n, MixerState s) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -772,8 +896,10 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
               // basmak ikinci bir render tetiklerdi.
               onPressed: s.isPreparing ? null : () => _c.toggle(),
               // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
+              // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
+              // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
+                minimumSize: const Size.fromHeight(kPlayerPlayButtonMinHeight),
               ),
               icon: Icon(s.isPlaying ? Icons.pause : Icons.play_arrow),
               label: Text(

@@ -163,6 +163,11 @@ class AppL10nTr extends AppL10n {
       'Bir ses dosyası yüklenemedi; mix\'in geri kalanı çalmaya devam ediyor.';
 
   @override
+  String mixerLimiterNotice(int percent) {
+    return 'Limitleyici devrede: katmanların toplamı tam ölçeği aşıyor, çıkış %$percent kısıldı. Sürgü konumların değişmedi.';
+  }
+
+  @override
   String get mixerAddSound => 'Ses ekle';
 
   @override

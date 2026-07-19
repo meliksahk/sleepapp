@@ -34,10 +34,17 @@
 /// - **✓ Döngü dikişi (ÇÖZÜLDÜ, #170):** eskiden buffer'ın sonu ile başı arasında
 ///   süreklilik yoktu → her döngüde tık. Artık katman buffer'ı `renderSeamlessLoop`
 ///   ile üretiliyor (kuyruk başa eşit-güç crossfade) → `LoopMode.one` dikişi sürekli.
-/// - **Referans mikserin kompresörü devrede değil:** `renderMix` katmanları toplayıp
-///   sıkıştırıyordu; burada toplama işletim sistemi mikserinde oluyor → yüksek
-///   kazançlarda OS seviyesinde kırpma olabilir.
+/// - **✓ Toplam seviye (ÇÖZÜLDÜ, master limitleyici):** eskiden her katmanın
+///   kazancı doğrudan `setVolume`'a gidiyordu ve toplam OS mikserinde
+///   sınırsızca birikiyordu (7 katman @1.0 → tepe 1.333, örneklerin %14.1'i
+///   kırpılıyordu). Artık toplam [kMasterCeiling]'i aşınca TÜM `setVolume`
+///   çağrıları aynı katsayıyla ölçekleniyor — bkz. [MixPlayer.limiterScale].
+///   Bu, referans mikserin kompresörünün YERİNE GEÇMEZ (o programa bağlı
+///   dinamik sıkıştırma yapıyordu, bu sabit bir kazanç ölçeği) ama kırpmayı
+///   kaldırır.
 /// - **Gerçek zamanlı kazanç rampası yok:** `setVolume` platformun rampasına bağlı.
+///   Master limitleyici KENDİ ölçeğini rampalar (bkz. [MixPlayer.limiterRampStep]),
+///   ama tek bir sürgünün kendi hareketi hâlâ platformun insafında.
 /// - **RAM:** katman başına ~2.8 MB (30 sn @48kHz, 16-bit).
 ///
 /// Kalan sınırlar (kompresör, rampa, RAM) native graf gelince çözülür; o zaman bu
@@ -53,6 +60,7 @@ import 'package:just_audio/just_audio.dart';
 import 'dsp/mix_loop.dart';
 import 'dsp/mix_render.dart';
 import 'dsp/wav_encoder.dart';
+import 'master_limiter.dart';
 
 /// Bellekteki WAV'ı just_audio'ya besleyen kaynak — geçici DOSYA YOK.
 ///
@@ -89,10 +97,19 @@ class BytesAudioSource extends StreamAudioSource {
 
 /// Tek bir katmanın çalar durumu.
 class _LayerVoice {
-  _LayerVoice(this.id, this.player);
+  _LayerVoice(this.id, this.player, this.gain);
 
   final String id;
   final AudioPlayer player;
+
+  /// **KULLANICININ İSTEDİĞİ** kazanç — sürgüde yazan değer, ölçeklenmemiş.
+  ///
+  /// Player'a giden değer bu DEĞİL, `gain * limiterScale`. Ayrımı korumak
+  /// şart: `setVolume`'a yazdığımız değeri geri okuyup kaynak kabul etseydik,
+  /// limitleyici her devreye girdiğinde kullanıcının sürgüsünü kalıcı olarak
+  /// aşağı çeker (ve her tetiklenmede biraz daha) — kullanıcının eli kaymış
+  /// olurdu.
+  double gain;
 }
 
 /// Bir [MixSpec]'i çalar; katman kazançları canlı değiştirilebilir.
@@ -108,8 +125,11 @@ class MixPlayer {
     AudioPlayer Function()? playerFactory,
     Future<Float32List> Function(LoopRequest)? loopRenderer,
     this.onAssetError,
+    this.limiterRampStep = const Duration(milliseconds: 15),
+    this.limiterRampSteps = 16,
   })  : _newPlayer = playerFactory ?? AudioPlayer.new,
-        _renderLoop = loopRenderer ?? _computeLoop;
+        _renderLoop = loopRenderer ?? _computeLoop,
+        assert(limiterRampSteps > 0);
 
   /// Bir asset katmanı yüklenemediğinde çağrılır (dosya yok, ağ yok, bozuk kod
   /// çözücü...). **Yüklenemeyen katman mix'i ÇÖKERTMEZ:** diğer katmanlar çalar.
@@ -138,6 +158,79 @@ class MixPlayer {
 
   /// Test, gerçek `AudioPlayer` yerine sahte enjekte edebilsin diye (cihazsız test).
   final AudioPlayer Function() _newPlayer;
+
+  // ─────────────────────────── MASTER LİMİTLEYİCİ ───────────────────────────
+  //
+  // Toplam kazanç [kMasterCeiling]'i aştığında TÜM katmanların `setVolume`
+  // değeri aynı katsayıyla ölçeklenir. Sürgü DEĞERLERİ (`_LayerVoice.gain`)
+  // dokunulmaz kalır — kullanıcının eli kaymaz, yalnızca çıkış seviyesi iner.
+
+  /// Limitleyici devreye girip çıktığında çağrılır (UI göstergesi için).
+  ///
+  /// **Neden geri çağrı, neden UI'ın kendisi hesaplamıyor:** UI'ın elindeki
+  /// kazanç haritası KULLANICININ istediği değerler; motorun gerçekten ne
+  /// uyguladığı burada biliniyor (rampanın ortasında ikisi farklı). Kullanıcıya
+  /// "limit devrede" demek için motorun gerçeğini göstermek gerekir.
+  ///
+  /// Rampa sırasında her adımda tetiklenir; dinleyen taraf idempotent olmalı.
+  ///
+  /// `final` DEĞİL (`onChanged` deseninin aynısı): `MixerController` enjekte
+  /// edilmiş bir player da alabiliyor, o yüzden kurulumdan sonra bağlanabilmeli.
+  void Function(double scale)? onLimiterChanged;
+
+  /// Rampanın adım aralığı. Toplam geçiş süresi ≈ [limiterRampStep] ×
+  /// [limiterRampSteps] (varsayılan 15 ms × 16 = 240 ms).
+  ///
+  /// **Neden rampa var:** limit devreye girdiğinde ölçeği tek karede 1.0 → 0.42
+  /// sıçratmak, kullanıcının sürgüyü oynattığı anda TÜM mix'in seviyesini
+  /// bir anda düşürmek demektir — duyulan şey bir "pompalama"/basamaktır.
+  /// 240 ms, seviye değişimini algısal olarak yumuşak bırakacak kadar uzun,
+  /// kırpmayı uzatmayacak kadar kısa.
+  ///
+  /// ⚠️ **DÜRÜSTLÜK:** rampa boyunca (≤240 ms) toplam hâlâ tavanın üstünde
+  /// olabilir, yani teorik olarak o pencerede kırpma devam eder. Ani seviye
+  /// sıçraması ile kısa süreli kırpma arasında bilinçli bir takas: sıçrama her
+  /// zaman duyulur, 240 ms'lik artık kırpma kullanıcı sürgüyü zaten hareket
+  /// ettirirken olur. Cihazda ÖLÇÜLMEDİ.
+  ///
+  /// Testte `Duration.zero` verilir (gerçek zaman beklemeden yakınsar).
+  final Duration limiterRampStep;
+
+  /// Rampanın tam yol (1.0 → 0.0) için harcayacağı adım sayısı; adım başına
+  /// ölçek deltası `1 / limiterRampSteps`.
+  final int limiterRampSteps;
+
+  double _limiterScale = 1.0;
+
+  /// Şu an UYGULANAN master ölçek. 1.0 → limitleyici devrede değil.
+  ///
+  /// Rampa sürerken hedeften farklıdır (bilinçli: gösterge de yumuşak geçsin).
+  double get limiterScale => _limiterScale;
+
+  /// Kullanıcıya gösterge gösterilmeli mi.
+  bool get isLimiting => isLimiterEngaged(_limiterScale);
+
+  /// Kullanıcının sürgülerinin toplamı (ölçeklenmemiş). Teşhis ve test için.
+  double get requestedTotalGain =>
+      _voices.fold<double>(0, (sum, v) => sum + v.gain);
+
+  /// **ÖLÇÜLEN ÇIKIŞ:** gerçekten `setVolume`'a giden değerlerin toplamı.
+  ///
+  /// Testin kilitlediği sayı bu — [kMasterCeiling]'i aşmamalı.
+  double get outputTotalGain => requestedTotalGain * _limiterScale;
+
+  /// Toplamın gerektirdiği ölçek (rampanın HEDEFİ).
+  double get _targetScale => masterLimiterScale(requestedTotalGain);
+
+  Future<void>? _ramp;
+
+  /// Rampa bitene kadar bekler. Testler bunu `await` eder; üretimde kimse
+  /// beklemez (sürgü hareketi rampayı beklememeli).
+  Future<void> settleLimiter() async {
+    while (_ramp != null) {
+      await _ramp;
+    }
+  }
 
   final List<_LayerVoice> _voices = [];
   bool _disposed = false;
@@ -181,11 +274,20 @@ class MixPlayer {
       final player = _newPlayer();
       await player.setAudioSource(BytesAudioSource(encodeWav(pcm, sampleRate: sampleRate)));
       await player.setLoopMode(LoopMode.one);
-      await player.setVolume(layer.gain.clamp(0.0, 1.0));
-      _voices.add(_LayerVoice(layer.id, player));
+      // Ses seviyesi burada DEĞİL aşağıda, tüm katmanlar kurulduktan sonra
+      // verilir: master ölçek TOPLAMA bağlı ve toplam ancak son katman
+      // eklendiğinde bilinir. Erken yazsaydık ilk katmanlar ölçeksiz,
+      // sonrakiler ölçekli çıkardı — mix'in dengesi bozulurdu.
+      _voices.add(_LayerVoice(layer.id, player, layer.gain.clamp(0.0, 1.0)));
     }
 
     await _loadAssets(spec);
+
+    // Dosya katmanları DA sayıldıktan sonra: OS mikseri sesin sentezden mi
+    // dosyadan mı geldiğini umursamaz, hepsi aynı çıkışta toplanır.
+    // Rampa YOK (`_snapLimiter`): henüz çalan bir şey yok, sıçrayacak seviye de.
+    _snapLimiter();
+    await _applyAllVolumes();
   }
 
   /// DOSYA katmanları — **render YOK**, kaynak doğrudan dosya/URL.
@@ -227,9 +329,16 @@ class MixPlayer {
       // dosya dikişsiz değilse her sarmada tık duyulur. Kullanıcıya
       // `mixerAssetLoopNotice` ile söyleniyor.
       await player.setLoopMode(LoopMode.one);
-      await player.setVolume(asset.gain.clamp(0.0, 1.0));
-      _voices.add(_LayerVoice(asset.id, player));
+      final voice = _LayerVoice(asset.id, player, asset.gain.clamp(0.0, 1.0));
+      _voices.add(voice);
+      // Yeni katman MEVCUT ölçekle girer (rampa henüz yeni hedefe yürümedi):
+      // ölçeksiz girseydi, eklendiği anda diğerlerinden yüksek duyulur, sonra
+      // rampa boyunca geri inerdi — tam da kaçınmak istediğimiz sıçrama.
+      await player.setVolume(_appliedVolume(voice));
       if (autoPlay) unawaited(player.play());
+      // Toplam değişti → limitleyici yeni hedefe RAMPA ile yürür (ses çalıyor
+      // olabilir; burada `_snapLimiter` seviye basamağı üretirdi).
+      _scheduleLimiter();
       return true;
     } catch (e) {
       // SESSİZ DÜŞÜŞ ama SESSİZ HATA DEĞİL (CLAUDE.md §4: boş catch yasak).
@@ -269,6 +378,9 @@ class MixPlayer {
       // ignore: avoid_print
       print('MixPlayer: katman kapatılamadı ($id): $e');
     }
+    // Katman gitti → toplam düştü → limitleyici GEVŞER (belki tamamen çıkar).
+    // Rampalı: kalan katmanların hep birden yükselmesi de bir sıçramadır.
+    _scheduleLimiter();
   }
 
   Future<void> play() async {
@@ -285,13 +397,78 @@ class MixPlayer {
 
   /// Katman kazancını CANLI değiştirir. Bilinmeyen id sessizce yok sayılır:
   /// UI ile spec arasındaki geçici uyumsuzluk sesi kesmemeli.
+  ///
+  /// [gain] KULLANICININ istediği değerdir ve saklanan da odur; player'a giden
+  /// değer master ölçekle çarpılmış hâlidir. Sürgü %70'te kalır, çıkış iner.
   Future<void> setLayerGain(String id, double gain) async {
     for (final v in _voices) {
       if (v.id == id) {
-        await v.player.setVolume(gain.clamp(0.0, 1.0));
+        v.gain = gain.clamp(0.0, 1.0);
+        // Bu katman ANINDA tepki verir (sürgü takılmış hissi olmasın);
+        // master ölçeğin yeni hedefe yürümesi ise rampalı.
+        await v.player.setVolume(_appliedVolume(v));
+        _scheduleLimiter();
         return;
       }
     }
+  }
+
+  /// Bir katmanın player'ına UYGULANACAK ses seviyesi.
+  ///
+  /// Ölçek burada, tek noktada uygulanır: `setVolume` çağıran her yol (yükleme,
+  /// sürgü, dosya ekleme, rampa) buradan geçer. Ölçeği çağrı yerlerine dağıtmak,
+  /// birinin unutulduğu gün limitleyicinin sessizce yarım çalışması demekti.
+  double _appliedVolume(_LayerVoice v) =>
+      (v.gain * _limiterScale).clamp(0.0, 1.0);
+
+  Future<void> _applyAllVolumes() async {
+    if (_disposed) return;
+    // Sırayla DEĞİL paralel: 7 katmanda platform kanalına 7 ardışık await,
+    // rampanın adım süresini (15 ms) aşabilirdi → rampa yavaşlar.
+    await Future.wait(
+      _voices.map((v) => v.player.setVolume(_appliedVolume(v))),
+    );
+  }
+
+  /// Hedef ölçek değiştiyse rampayı başlatır (zaten sürüyorsa dokunmaz —
+  /// çalışan döngü hedefi HER adımda yeniden okur, yeni hedefi kendi yakalar).
+  void _scheduleLimiter() {
+    _ramp ??= _runRamp();
+  }
+
+  Future<void> _runRamp() async {
+    final stepSize = 1.0 / limiterRampSteps;
+    try {
+      while (!_disposed) {
+        final target = _targetScale;
+        final diff = target - _limiterScale;
+        if (diff.abs() <= stepSize) {
+          // Son adım: hedefe TAM otur (kayan nokta artığı bırakma — yoksa
+          // `isLimiting` 0.9999999'da true kalıp göstergeyi ekranda unuturdu).
+          _limiterScale = target;
+          await _applyAllVolumes();
+          onLimiterChanged?.call(_limiterScale);
+          return;
+        }
+        _limiterScale += diff.isNegative ? -stepSize : stepSize;
+        await _applyAllVolumes();
+        onLimiterChanged?.call(_limiterScale);
+        if (limiterRampStep > Duration.zero) {
+          await Future<void>.delayed(limiterRampStep);
+        }
+      }
+    } finally {
+      _ramp = null;
+    }
+  }
+
+  /// Ölçeği RAMPA OLMADAN hedefe oturtur — yalnızca ses DUYULMUYORKEN.
+  ///
+  /// `load()` bunu kullanır: orada henüz çalan bir şey yok, rampalamak yalnızca
+  /// ilk 240 ms'yi yanlış seviyede başlatmak olurdu.
+  void _snapLimiter() {
+    _limiterScale = _targetScale;
+    onLimiterChanged?.call(_limiterScale);
   }
 
   Future<void> dispose() async {
@@ -302,6 +479,10 @@ class MixPlayer {
   Future<void> _disposeVoices() async {
     final old = List.of(_voices);
     _voices.clear();
+    // Ölçek de sıfırlanır: yeni bir `load()` kendi toplamına göre karar verir,
+    // önceki mix'in limitini miras almaz (ve gösterge ekranda takılı kalmaz).
+    _limiterScale = 1.0;
+    onLimiterChanged?.call(_limiterScale);
     await Future.wait(old.map((v) => v.player.dispose()));
   }
 

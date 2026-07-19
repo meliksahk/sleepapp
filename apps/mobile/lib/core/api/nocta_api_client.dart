@@ -57,12 +57,38 @@ class NoctaApiClient {
     return {'Accept-Language': language};
   }
 
-  /// Her isteğin geçtiği tek kapı — timeout burada uygulanır ki yeni bir metot
-  /// eklerken UNUTULAMASIN (eklenmesi gereken yer değil, geçilmesi gereken yer).
+  /// Ağ katmanı açık mı? `baseUrl` boşsa HAYIR — istemci hiçbir soket açmaz.
+  ///
+  /// **NEDEN (CLAUDE.md §6):** prod/staging girişleri sahip OLMADIĞIMIZ bir alana
+  /// (`api.nocta.app`; DNS'te sahipsiz bir herokudns CNAME'i) bakıyordu ve kurulan
+  /// APK cihaz parmak izi + oturum token'larını oraya yolluyordu. Alan adı
+  /// yapılandırılana dek ağ katmanı komple kapalı (bkz. `FlavorConfig.apiBaseUrl`).
+  ///
+  /// Kapı [_send]'de: yeni bir metot eklerken kontrolün UNUTULMASI mümkün değil,
+  /// çünkü her istek buradan geçiyor.
+  bool get isEnabled => baseUrl.isNotEmpty;
+
+  /// Ağ kapalıyken dönen durum kodu. 503 seçildi çünkü anlamı tam olarak bu:
+  /// "servis şu an yok". Çağıranlar bunu ayakta olmayan bir sunucudan ayırt
+  /// etmek ZORUNDA değil — ikisinde de doğru davranış aynı: sessizce yerel
+  /// yedeğe düşmek.
+  static const int serviceUnavailableStatus = 503;
+
+  /// Her isteğin geçtiği tek kapı — ağ kapısı ve timeout burada uygulanır ki
+  /// yeni bir metot eklerken UNUTULAMASIN (eklenmesi gereken yer değil,
+  /// geçilmesi gereken yer).
   ///
   /// Süre dolarsa `TimeoutException` fırlar; çağıranlar (auth, archetype servisi)
   /// bunu diğer ağ hatalarıyla aynı şekilde ele alır — sessizce yedeğe düşülür.
   Future<http.Response> _send(Future<http.Response> Function() request) {
+    if (!isEnabled) {
+      // İSTEK HİÇ OLUŞTURULMAZ: `request` çağrılmadığı için ne DNS çözümlemesi
+      // ne soket açılışı olur. İstisna DA fırlatılmaz — ekranları kırmak yerine
+      // "veri yok" cevabı dönmek, çağıranların zaten ele aldığı bir durum.
+      return Future<http.Response>.value(
+        http.Response('', serviceUnavailableStatus),
+      );
+    }
     return request().timeout(timeout);
   }
 

@@ -355,6 +355,12 @@ abstract class AppL10n {
   /// **'An audio file could not be loaded; the rest of the mix is still playing.'**
   String get mixerAssetUnavailable;
 
+  /// Master limitleyici devrede — toplam kazanç tavanı aştı, çıkış oransal olarak kısıldı. Sürgü değerleri DEĞİŞMEDİ; kullanıcı sessiz bir seviye düşüşü yaşamasın diye söyleniyor.
+  ///
+  /// In en, this message translates to:
+  /// **'Limiter on: the layers add up past full scale, so output is turned down {percent}%. Your slider positions are unchanged.'**
+  String mixerLimiterNotice(int percent);
+
   /// Katman listesinin başlığındaki eylem — ses dosyası kataloğunu açar
   ///
   /// In en, this message translates to:

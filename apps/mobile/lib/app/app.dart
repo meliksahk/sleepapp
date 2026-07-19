@@ -212,15 +212,42 @@ class _AppRootState extends ConsumerState<_AppRoot> {
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
+          // `Wrap`, `Row` DEĞİL — §7. Row'da "Yeniden dene" düğmesi ESNEK DEĞİLDİ:
+          // iç genişliğini alıyor, metne kalanı bırakıyordu. Büyük yazı ölçeğinde
+          // düğme tek başına ekranı aşıyordu. ÖLÇÜLDÜ (320×568, TR, çevrimdışı,
+          // ANA EKRAN — mikser hiç açılmadan): ölçek 1.3 → 903 px, ölçek 2.0 →
+          // 1376 px taşma ve düğme yatayda 393 px > 320 px. Bant HER ekranda
+          // olduğu için bu, mikserdeki düzeltmeyi de görünmez kılıyordu.
+          // Wrap'te sığmayan düğme alt satıra iner; taşma yapısal olarak imkânsız.
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 8,
+            runSpacing: 4,
             children: [
-              const Icon(Icons.cloud_off, size: 16),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  AppL10n.of(context).offlineBanner,
-                  key: const Key('offline-banner'),
-                  style: Theme.of(context).textTheme.bodySmall,
+              // Simge + metin BİRLİKTE sarılır: metin uzunsa düğme alta iner,
+              // ama simge metinden kopmaz.
+              // Genişlik `LayoutBuilder`'dan, `MediaQuery`'den DEĞİL: MediaQuery
+              // boyutu taşımayan bir bağlamda (testler, gömülü kullanım) 0 döner
+              // ve `0 - 32` negatif bir kısıt üretip çöker. Gerçek kısıt her
+              // zaman doğrudur ve negatif olamaz.
+              LayoutBuilder(
+                builder: (context, constraints) => ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_off, size: 16),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          AppL10n.of(context).offlineBanner,
+                          key: const Key('offline-banner'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               TextButton(
