@@ -48,6 +48,7 @@
   "mixerFailed": "Ses başlatılamadı.",
   "mixerAssetLoopNotice": "Ses dosyaları olduğu gibi tekrarlanır; döngü noktasında kısa bir tık duyabilirsiniz.",
   "mixerAssetUnavailable": "Bir ses dosyası yüklenemedi; mix'in geri kalanı çalmaya devam ediyor.",
+  "mixerLimiterNotice": "Limitleyici devrede: katmanların toplamı tam ölçeği aşıyor, çıkış %{percent} kısıldı. Sürgü konumların değişmedi.",
   "mixerAddSound": "Ses ekle",
   "mixerAssetCatalogTitle": "Ses dosyaların",
   "mixerAssetCatalogEmpty": "Henüz ses dosyan yok.",

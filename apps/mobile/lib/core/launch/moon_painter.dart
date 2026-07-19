@@ -37,7 +37,7 @@ import 'launch_phase.dart';
 /// ⚠️ Bu sınıf ayın DOĞRU çizildiğini kanıtlar, GÜZEL olduğunu kanıtlamaz
 /// (CLAUDE.md §1.1) — o yargı ekrana bakan insana aittir.
 class MoonPainter extends CustomPainter {
-  MoonPainter({required this.phase, this.scale = 1.0})
+  MoonPainter({required this.phase, this.scale = 1.0, this.onPainted})
       : super(repaint: phase);
 
   /// Faz kaynağı. `repaint:` olarak verilir → kare başına yalnızca `paint`
@@ -46,6 +46,16 @@ class MoonPainter extends CustomPainter {
 
   /// Çıkış mikroanimasyonunda ay küçülür (1.0 → 0.88).
   final double scale;
+
+  /// Ay GERÇEKTEN çizildiğinde (boş olmayan bir yüzeye) çağrılır.
+  ///
+  /// `LaunchMoment` bunu "ay en az N kare görüldü mü" şartı için sayar
+  /// (`launchMinVisibleFrames`). Kare sayısını tick'ten tahmin etmek yerine
+  /// çizimin kendisinden okumak, şartın gerçekten ölçtüğü şeyi doğru kılar.
+  ///
+  /// ⚠️ `paint` içinden çağrılır: burada YALNIZCA sayaç artırılabilir. Ağacı
+  /// değiştiren (setState, notifier) bir iş yapmak render sırasında yasaktır.
+  final VoidCallback? onPainted;
 
   /// Ayın yarıçapı (kısa kenar oranı). 0.155 → 400 px genişlikte ~62 px:
   /// launcher ikonunun ekrandaki algısal boyutuna yakın.
@@ -84,6 +94,7 @@ class MoonPainter extends CustomPainter {
     _paintRipples(canvas, center, r, p);
     _paintCrescent(canvas, center, r, p);
     _paintStars(canvas, center, r, p);
+    onPainted?.call();
   }
 
   /// Ayın çevresindeki ışıma — zarfla parlar.

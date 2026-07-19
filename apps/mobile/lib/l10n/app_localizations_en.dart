@@ -162,6 +162,11 @@ class AppL10nEn extends AppL10n {
       'An audio file could not be loaded; the rest of the mix is still playing.';
 
   @override
+  String mixerLimiterNotice(int percent) {
+    return 'Limiter on: the layers add up past full scale, so output is turned down $percent%. Your slider positions are unchanged.';
+  }
+
+  @override
   String get mixerAddSound => 'Add sound';
 
   @override

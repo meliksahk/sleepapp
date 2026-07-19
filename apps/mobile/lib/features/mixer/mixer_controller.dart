@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/audio_engine/dsp/mix_render.dart';
+import '../../core/audio_engine/master_limiter.dart';
 import '../../core/audio_engine/mix_player.dart';
 import '../../core/media/mix_video_channel.dart';
 import 'mix_video_exporter.dart';
@@ -30,6 +31,7 @@ class MixerState {
     this.assetsUnavailable = false,
     this.isPlaying = false,
     this.isPreparing = false,
+    this.limiterScale = 1.0,
     this.exportProgress,
     this.error,
     this.errorKind,
@@ -55,6 +57,19 @@ class MixerState {
   final bool isPlaying;
   final bool isPreparing;
 
+  /// Master limitleyicinin UYGULADIĞI ölçek. 1.0 → devrede değil.
+  ///
+  /// **[gains] ile karıştırılmamalı:** `gains` kullanıcının sürgüleridir ve
+  /// limitleyici onlara ASLA dokunmaz. Bu ayrı alan, çıkışın ne kadar kısıldığını
+  /// söyler; sürgüde %70 yazıyorsa %70 yazmaya devam eder.
+  final double limiterScale;
+
+  /// Kullanıcıya gösterge gösterilecek mi.
+  bool get isLimiting => isLimiterEngaged(limiterScale);
+
+  /// Çıkışın kısıldığı oran, yüzde (gösterge metni için). 0 → kısılma yok.
+  int get limiterReductionPercent => ((1.0 - limiterScale) * 100).round();
+
   /// Video export'u sürerken 0..1, aksi hâlde null.
   ///
   /// Ayrı bir `isExporting` bayrağı YOK: iki alan birbirine yalan söyleyebilirdi
@@ -75,6 +90,7 @@ class MixerState {
     Map<String, double>? gains,
     bool? isPlaying,
     bool? isPreparing,
+    double? limiterScale,
     double? exportProgress,
     bool clearExport = false,
     String? error,
@@ -88,6 +104,7 @@ class MixerState {
       gains: gains ?? this.gains,
       isPlaying: isPlaying ?? this.isPlaying,
       isPreparing: isPreparing ?? this.isPreparing,
+      limiterScale: limiterScale ?? this.limiterScale,
       exportProgress:
           clearExport ? null : (exportProgress ?? this.exportProgress),
       error: clearError ? null : (error ?? this.error),
@@ -138,6 +155,14 @@ class MixerController {
         for (final a in _spec.assets) a.id: a.gain,
       },
     );
+    // Limitleyicinin GERÇEK durumu motorda; UI onu buradan öğrenir.
+    // State'ten türetmek (gains toplamına bakmak) yanlış olurdu: rampa sürerken
+    // motorun UYGULADIĞI ölçek hedeften farklıdır ve kullanıcıya gösterilen şey,
+    // duyduğu şey olmalı.
+    _player.onLimiterChanged = (scale) {
+      if (scale == _state.limiterScale) return; // gereksiz rebuild yok
+      _emit(_state.copyWith(limiterScale: scale));
+    };
   }
 
   final MixPlayer _player;
@@ -326,5 +351,9 @@ class MixerController {
     }
   }
 
-  Future<void> dispose() => _player.dispose();
+  Future<void> dispose() {
+    // Rampa hâlâ sürüyor olabilir; kapatılmış bir controller'a state basmasın.
+    _player.onLimiterChanged = null;
+    return _player.dispose();
+  }
 }

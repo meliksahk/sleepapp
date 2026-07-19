@@ -38,18 +38,59 @@ import '../audio_engine/dsp/nocta_signature.dart';
 /// parıltıların yarısını kesip deseni tanınmaz kılar.
 const double launchCapSeconds = 2.2;
 
+/// Görsel parıltının **tepe anı** (sn, tanenin doğuşundan itibaren).
+///
+/// Kapalı formda türetilir, elle ölçülmez. e(u) = (1−e^(−u/a))·e^(−u/d) için
+/// de/du = 0 çözümü u* = a·ln(1 + d/a); burada a = [launchSparkleAttack] = 0.08,
+/// d = [signatureGrainDecay] = 0.55 → **u\* ≈ 0.1651 sn**.
+///
+/// Alt sınır bu değerden HESAPLANIR (aşağı bkz.); sabit yazılsaydı ses tarafı
+/// (`signatureGrainDecay`) değiştiği gün alt sınır sessizce yanlış yere düşerdi —
+/// `launch_phase_test.dart`'ın kovaladığı "kopya sabit" regresyonunun aynısı.
+final double launchSparklePeakOffset =
+    launchSparkleAttack * math.log(1 + signatureGrainDecay / launchSparkleAttack);
+
 /// Açılış anının **alt sınırı** (sn) — içerik hazırsa bile bu kadar durulur.
 ///
 /// **Neden bir alt sınır var:** oturum önbellekten gelirse bootstrap ~50 ms'de
 /// biter. Alt sınır olmasaydı kullanıcı ayı HİÇ görmezdi; geriye bir kare
 /// titreme kalırdı — sıfır splash'tan daha kötü.
 ///
-/// **Neden 1.1:** zarfın yükselişi (0.60) + ilk parıltı (0.70) + o parıltının
-/// görülecek kadar sönmesi. Yani "ay doğdu ve bir yıldız parladı" cümlesinin
-/// tamamlandığı en erken an.
+/// **Neden HESAPLANAN ~0.865 (eski elle yazılmış 1.1 değil):** marka jesti bir
+/// cümledir — "ay doğdu ve bir yıldız parladı". Zarfa bakınca o cümlenin bittiği
+/// an ölçülebilir:
+///
+/// | an (sn) | zarfta ne oluyor                                    |
+/// |---------|-----------------------------------------------------|
+/// | 0.60    | `signatureAttackSeconds`: ay TAM parlaklıkta        |
+/// | 0.70    | ilk parıltı tanesi doğuyor (`launchGrains.first`)   |
+/// | 0.865   | **o parıltı tepe noktasında** (0.70 + [launchSparklePeakOffset]) |
+/// | 1.10    | (eski sınır) parıltı zaten sönmekte                 |
+///
+/// Yani 0.865'ten sonra kullanıcının seyrettiği tek şey ilk yıldızın SÖNÜŞÜ.
+/// Sönüşü izlemek jestin parçası değil — cümle tepe noktasında kurulmuş olur.
+/// 0.865'in ALTINA inmek ise yıldızı yükselirken keser: parıltı "parladı" değil
+/// "yanıp söndü" gibi okunur. Bu yüzden sınır tam olarak tepe anıdır.
+///
+/// Ölçülen etki (widget testi, `launch_adaptive_hold_test.dart`): içerik anında
+/// hazırken toplam açılış **1440 ms → 1200 ms**.
 ///
 /// Kullanıcı yine de beklemek ZORUNDA değil: dokunuş bu sınırı atlar.
-const double launchHoldSeconds = 1.1;
+final double launchHoldSeconds = _grains.first.onset + launchSparklePeakOffset;
+
+/// Alt sınır dolsa bile ayın çizilmiş olması gereken **asgari kare sayısı**.
+///
+/// **Neden zamana ek olarak bir de kare şartı var:** alt sınır duvar saatidir,
+/// çizim değil. Soğuk açılışta ilk kareler takılırsa (motor ısınması, ilk layout)
+/// saat 0.865 sn'yi geçtiğinde ay ekrana yalnızca BİR kez basılmış olabilir —
+/// tam da yasaklanan "tek kare titreme". Bu sayaç o senaryoyu yapısal olarak
+/// kapatır.
+///
+/// **Neden 2:** şart birebir yasağın kendisidir ("bir kare kabul edilemez"), daha
+/// fazlası değil. 60 fps'te alt sınır zaten ~52 kare üretir; bu sayaç normal
+/// koşulda HİÇ devreye girmez — yalnızca patolojik açılışta ısırır. Algısal bir
+/// eşik ölçümü DEĞİL, yasağın kod karşılığıdır.
+const int launchMinVisibleFrames = 2;
 
 /// Splash → ana ekran mikroanimasyonunun süresi.
 ///
