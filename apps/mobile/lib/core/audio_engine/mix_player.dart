@@ -321,7 +321,15 @@ class MixPlayer {
 Uri assetAudioUri(String url) {
   final parsed = Uri.tryParse(url);
   if (parsed != null && parsed.hasScheme && parsed.scheme.length > 1) return parsed;
-  return Uri.file(url);
+
+  // `windows:` AÇIKÇA veriliyor — varsayılan (null) ÇALIŞAN PLATFORMA bakar ve
+  // davranışı ana makineye göre değiştirir. CI'da yakalandı: Linux'ta
+  // `Uri.file(r'C:\ses.wav')` ters eğik çizgiyi ayraç saymaz, yolu GÖRELİ
+  // kabul eder ve şemasız bir Uri üretir (test 'file' beklerken '' aldı).
+  // Windows sürücü harfi desenini biçimden tanıyıp kararı biz veriyoruz;
+  // böylece sonuç geliştiricinin işletim sisteminden bağımsız.
+  final isWindowsPath = RegExp(r'^[A-Za-z]:[\\/]').hasMatch(url);
+  return Uri.file(url, windows: isWindowsPath);
 }
 
 /// `unawaited` için minik yardımcı (dart:async'i tüm dosyaya taşımamak için).
