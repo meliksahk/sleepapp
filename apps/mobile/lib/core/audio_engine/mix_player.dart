@@ -107,8 +107,21 @@ class MixPlayer {
     this.sampleRate = 48000,
     AudioPlayer Function()? playerFactory,
     Future<Float32List> Function(LoopRequest)? loopRenderer,
+    this.onAssetError,
   })  : _newPlayer = playerFactory ?? AudioPlayer.new,
         _renderLoop = loopRenderer ?? _computeLoop;
+
+  /// Bir asset katmanı yüklenemediğinde çağrılır (dosya yok, ağ yok, bozuk kod
+  /// çözücü...). **Yüklenemeyen katman mix'i ÇÖKERTMEZ:** diğer katmanlar çalar.
+  ///
+  /// Gerekçe (CLAUDE.md §3.1 offline-first): kullanıcı uçakta, presigned URL'i
+  /// dolmuş ya da dosya silinmiş olabilir. Bu durumda doğru davranış sessiz bir
+  /// hata ekranı değil, EKSİK AMA ÇALAN bir mikserdir. Hata YUTULMAZ (§4): log'a
+  /// basılır ve bu geri çağrı ile UI'a bildirilir.
+  final void Function(String assetId, Object error)? onAssetError;
+
+  /// Bu yüklemede düşen asset katmanlarının id'leri. [load] her çağrıda sıfırlar.
+  final List<String> failedAssetIds = <String>[];
 
   /// Katman buffer'ını üreten fonksiyon.
   ///
@@ -140,6 +153,7 @@ class MixPlayer {
   /// tam da bu yüzden slider yeniden render gerektirmez.
   Future<void> load(MixSpec spec) async {
     await _disposeVoices();
+    failedAssetIds.clear();
 
     for (var i = 0; i < spec.layers.length; i++) {
       final layer = spec.layers[i];
@@ -169,6 +183,91 @@ class MixPlayer {
       await player.setLoopMode(LoopMode.one);
       await player.setVolume(layer.gain.clamp(0.0, 1.0));
       _voices.add(_LayerVoice(layer.id, player));
+    }
+
+    await _loadAssets(spec);
+  }
+
+  /// DOSYA katmanları — **render YOK**, kaynak doğrudan dosya/URL.
+  ///
+  /// Sentez yolundan ayrı tutuluyor çünkü ortak hiçbir adımı yok: buffer
+  /// üretilmiyor, WAV'a paketlenmiyor, isolate'e iş atılmıyor. Ortak olan tek şey
+  /// sonuç: aynı `_voices` listesine giren bir `AudioPlayer`. Bu bilinçli —
+  /// böylece `setLayerGain`, `play`, `pause`, `dispose` İKİ TÜR İÇİN DE tek
+  /// koddan çalışır ve sürgü, katmanın sentez mi dosya mı olduğunu bilmez.
+  ///
+  /// Her katman AYRI try/catch içinde: bozuk tek bir dosya, mix'in tamamını
+  /// düşürmemeli.
+  Future<void> _loadAssets(MixSpec spec) async {
+    for (final asset in spec.assets) {
+      await addAsset(asset);
+    }
+  }
+
+  /// TEK bir dosya katmanını **çalarken** mikse ekler.
+  ///
+  /// **Neden `load()` yeniden çağrılmıyor:** kullanıcı katalogdan bir ses
+  /// eklediğinde mix zaten çalıyor olabilir. `load()` tüm sesleri atıp her sentez
+  /// katmanını YENİDEN render ederdi (yedi katman ≈ 285 ms + sesin kesilmesi).
+  /// Yeni bir dosya katmanı ise diğer katmanlardan tamamen bağımsız: kendi
+  /// player'ı var, ötekilere dokunmuyor.
+  ///
+  /// [autoPlay] true ise (mix o an ÇALIYORSA) yeni katman da hemen başlar —
+  /// aksi hâlde kullanıcı sürgüyü görür ama hiçbir şey duymaz ve motoru suçlar.
+  ///
+  /// Dönüş: yüklendi mi. **false = katman EKLENMEDİ** (çağıran kullanıcıya
+  /// söylemeli); id [failedAssetIds]'e yazılır ve [onAssetError] tetiklenir.
+  Future<bool> addAsset(AssetLayer asset, {bool autoPlay = false}) async {
+    AudioPlayer? player;
+    try {
+      player = _newPlayer();
+      await player.setAudioSource(AudioSource.uri(assetAudioUri(asset.url)));
+      // Dosya KENDİ BAŞINA dikişsiz döngülenmeli. Kuyruk→baş crossfade'ini
+      // burada uygulayamayız (PCM'e erişim yok, bkz. asset_layer.dart) —
+      // dosya dikişsiz değilse her sarmada tık duyulur. Kullanıcıya
+      // `mixerAssetLoopNotice` ile söyleniyor.
+      await player.setLoopMode(LoopMode.one);
+      await player.setVolume(asset.gain.clamp(0.0, 1.0));
+      _voices.add(_LayerVoice(asset.id, player));
+      if (autoPlay) unawaited(player.play());
+      return true;
+    } catch (e) {
+      // SESSİZ DÜŞÜŞ ama SESSİZ HATA DEĞİL (CLAUDE.md §4: boş catch yasak).
+      // Yarım kurulmuş player sızmasın diye atılır.
+      failedAssetIds.add(asset.id);
+      // ignore: avoid_print
+      print('MixPlayer: asset katmanı yüklenemedi (${asset.id}): $e');
+      onAssetError?.call(asset.id, e);
+      if (player != null) {
+        try {
+          await player.dispose();
+        } catch (disposeError) {
+          // ignore: avoid_print
+          print('MixPlayer: düşen asset player kapatılamadı (${asset.id}): $disposeError');
+        }
+      }
+      return false;
+    }
+  }
+
+  /// Katmanı mikserden ÇIKARIR ve player'ını kapatır.
+  ///
+  /// Bilinmeyen id sessizce yok sayılır (henüz `prepare()` edilmemiş bir mikserde
+  /// katman state'te vardır ama sesi yoktur — bu bir hata değil).
+  ///
+  /// **Kapatma şart:** yalnızca listeden düşürmek, sesi çalmaya devam eden ama
+  /// artık sürgüsü olmayan bir player bırakırdı — kullanıcı "kaldırdım ama hâlâ
+  /// duyuyorum" derdi.
+  Future<void> removeVoice(String id) async {
+    final index = _voices.indexWhere((v) => v.id == id);
+    if (index < 0) return;
+    final voice = _voices.removeAt(index);
+    failedAssetIds.remove(id);
+    try {
+      await voice.player.dispose();
+    } catch (e) {
+      // ignore: avoid_print
+      print('MixPlayer: katman kapatılamadı ($id): $e');
     }
   }
 
@@ -207,6 +306,22 @@ class MixPlayer {
   }
 
   bool get isDisposed => _disposed;
+}
+
+/// Asset katmanının kaynak adresini `Uri`'ye çevirir.
+///
+/// İki biçimi de kabul eder çünkü ikisi de gerçek yolda var:
+/// - **Şemalı** (`https://...` presigned URL, `file:///...`) → olduğu gibi.
+/// - **Şemasız yerel yol** (`/data/user/0/.../a.wav`, `C:\sesler\a.wav`) →
+///   `Uri.file`. `Uri.parse` bunu şemasız bir "yol" olarak ayrıştırır ve
+///   just_audio kaynağı ÇÖZEMEZ; Windows yolunda ise `C:` sürücü harfini ŞEMA
+///   sanar (`scheme: 'c'`). İkisi de sessizce çalmayan bir katman üretirdi.
+///
+/// Public: `mix_player_asset_test.dart` bu ayrımı doğrudan kilitler.
+Uri assetAudioUri(String url) {
+  final parsed = Uri.tryParse(url);
+  if (parsed != null && parsed.hasScheme && parsed.scheme.length > 1) return parsed;
+  return Uri.file(url);
 }
 
 /// `unawaited` için minik yardımcı (dart:async'i tüm dosyaya taşımamak için).

@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
+import 'asset_layer.dart';
 import 'dc_blocker.dart';
 import 'meditative.dart';
 import 'mixer.dart';
 import 'noise.dart';
+
+export 'asset_layer.dart' show AssetLayer;
 
 /// Mix tanımı ve **offline render** — DSP zincirinin birleştiği yer:
 /// kaynaklar → [Mixer] → [DcBlocker].
@@ -55,10 +58,42 @@ class MixLayer {
 }
 
 /// Bir mix'in tanımı (preset). Katman sırası render'ı etkilemez (toplama).
+///
+/// **İKİ AYRI LİSTE — bilinçli:** [layers] sentezlenir (bu dosyadaki render
+/// zinciri), [assets] dosyadan çalınır (`MixPlayer`, render YOK). Tek listede
+/// tutup "tipine bak" deseydik, render fonksiyonlarının HER BİRİ o ayrımı
+/// hatırlamak zorunda kalırdı; unutan ilk fonksiyon bir dosyayı sentezlemeye
+/// çalışırdı. Ayrı liste, hatayı yapısal olarak imkânsız kılar: render zinciri
+/// [assets]'i hiç görmez.
+///
+/// ⚠️ **Bunun bedeli — `renderMix` asset katmanını ATLAR.** Yani mix-to-video
+/// export'u (viral kanca #3) asset katmanlarını İÇERMEZ; paylaşılan videoda
+/// yalnızca sentez katmanları duyulur. Gizlenmiyor: bkz. `MixVideoExporter` ve
+/// rapor. Çözümü dosyayı çözüp PCM'ini karıştırmaktır (native graf işi).
 class MixSpec {
-  const MixSpec(this.layers);
+  const MixSpec(this.layers, {this.assets = const <AssetLayer>[]});
 
+  /// SENTEZ katmanları — `renderMix`/`renderSeamlessLoop` yalnızca bunları görür.
   final List<MixLayer> layers;
+
+  /// DOSYA katmanları — render EDİLMEZ, `MixPlayer` doğrudan çalar.
+  final List<AssetLayer> assets;
+
+  /// Sentez + dosya, mikserdeki görünme sırasıyla toplam katman sayısı.
+  int get totalLayerCount => layers.length + assets.length;
+
+  /// Aynı id iki katmanda mı? `setLayerGain` id ile eşleştiği için çakışma,
+  /// sürgünün YANLIŞ katmanı oynatması demektir (sessiz ve teşhisi zor bir hata).
+  bool get hasDuplicateIds {
+    final seen = <String>{};
+    for (final l in layers) {
+      if (!seen.add(l.id)) return true;
+    }
+    for (final a in assets) {
+      if (!seen.add(a.id)) return true;
+    }
+    return false;
+  }
 }
 
 /// Katman başına seed türetir. **Kritik:** tüm katmanlar aynı seed'i kullanırsa

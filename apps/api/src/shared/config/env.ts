@@ -62,6 +62,11 @@ const EnvSchema = z.object({
   MINIO_ROOT_PASSWORD: z.string().default('nocta_local_dev'),
   MINIO_REGION: z.string().default('us-east-1'),
   MINIO_BUCKET_SOUNDSCAPES: z.string().default('soundscape-assets'),
+  // Kullanıcı/editör ses DOSYALARI (audio_assets). Soundscape önizlemelerinden AYRI
+  // bucket: farklı yaşam döngüsü, farklı boyut profili ve ileride farklı saklama
+  // sınıfı (ör. seyrek erişim) gerekebilir. Tek bucket'ta karışsalardı ayırmak
+  // sonradan taşıma işi olurdu.
+  MINIO_BUCKET_AUDIO_ASSETS: z.string().default('audio-assets'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

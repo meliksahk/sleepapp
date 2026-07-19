@@ -1,0 +1,8 @@
+{
+  "title": "Pad + Fire (demo)",
+  "genre": "ambient",
+  "mood": ["calm", "sleep"],
+  "license": "self-produced",
+  "source": "NOCTA audio engine — apps/mobile/tool/render_demo_asset.dart",
+  "durationSeconds": 10
+}

@@ -154,6 +154,50 @@ class AppL10nEn extends AppL10n {
   String get mixerFailed => 'Sound could not start.';
 
   @override
+  String get mixerAssetLoopNotice =>
+      'Audio files repeat as-is; you may hear a short click at the loop point.';
+
+  @override
+  String get mixerAssetUnavailable =>
+      'An audio file could not be loaded; the rest of the mix is still playing.';
+
+  @override
+  String get mixerAddSound => 'Add sound';
+
+  @override
+  String get mixerAssetCatalogTitle => 'Your sounds';
+
+  @override
+  String get mixerAssetCatalogEmpty => 'No audio files yet.';
+
+  @override
+  String get mixerAssetCatalogEmptyHow =>
+      'Drop files into apps/api/assets-inbox/<category>/<name>.mp3 with a matching <name>.json holding title, mood, license and source. Then run pnpm assets:upload — they show up here.';
+
+  @override
+  String get mixerAssetAddFailed =>
+      'That sound could not be added. The mix is still playing.';
+
+  @override
+  String mixerRemoveLayer(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get mixerExportAssetWarning =>
+      'Audio files you added are not recorded in the video.';
+
+  @override
+  String get mixerExportAssetWarningLong =>
+      'The video only records generated layers. Audio files you added will not be heard in it.';
+
+  @override
+  String get mixerExportAnyway => 'Make video anyway';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
   String get mixerExportVideo => 'Share as video';
 
   @override

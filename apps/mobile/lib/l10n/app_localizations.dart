@@ -343,6 +343,78 @@ abstract class AppL10n {
   /// **'Sound could not start.'**
   String get mixerFailed;
 
+  /// Dosya katmanının döngü dikişi crossfade'lenemiyor (PCM'e erişim yok) — dürüstlük dipnotu
+  ///
+  /// In en, this message translates to:
+  /// **'Audio files repeat as-is; you may hear a short click at the loop point.'**
+  String get mixerAssetLoopNotice;
+
+  /// Asset katmanı yüklenemedi ama mix çalıyor — hata değil, dipnot
+  ///
+  /// In en, this message translates to:
+  /// **'An audio file could not be loaded; the rest of the mix is still playing.'**
+  String get mixerAssetUnavailable;
+
+  /// Katman listesinin başlığındaki eylem — ses dosyası kataloğunu açar
+  ///
+  /// In en, this message translates to:
+  /// **'Add sound'**
+  String get mixerAddSound;
+
+  /// Ses dosyası kataloğu sayfasının başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Your sounds'**
+  String get mixerAssetCatalogTitle;
+
+  /// Katalog boş — kullanıcı henüz dosya yüklememiş
+  ///
+  /// In en, this message translates to:
+  /// **'No audio files yet.'**
+  String get mixerAssetCatalogEmpty;
+
+  /// Boş katalogda NE YAPILACAĞI: dosya nereye konur + hangi komut çalıştırılır. Yol ve komut çevrilmez, cümle çevrilir
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files into apps/api/assets-inbox/<category>/<name>.mp3 with a matching <name>.json holding title, mood, license and source. Then run pnpm assets:upload — they show up here.'**
+  String get mixerAssetCatalogEmptyHow;
+
+  /// Katalogdan seçilen dosyanın adresi çözülemedi (404/401/ağ yok) — katman eklenmedi ama mix çalıyor
+  ///
+  /// In en, this message translates to:
+  /// **'That sound could not be added. The mix is still playing.'**
+  String get mixerAssetAddFailed;
+
+  /// Dosya katmanını kaldırma düğmesinin erişilebilirlik etiketi. {name} içerik adıdır, çevrilmez
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String mixerRemoveLayer(String name);
+
+  /// Kalıcı dipnot: renderMix asset katmanlarını atlar — paylaşılan videoda dosyalar duyulmaz
+  ///
+  /// In en, this message translates to:
+  /// **'Audio files you added are not recorded in the video.'**
+  String get mixerExportAssetWarning;
+
+  /// Export onay diyaloğunun gövdesi — dipnotun uzun hâli
+  ///
+  /// In en, this message translates to:
+  /// **'The video only records generated layers. Audio files you added will not be heard in it.'**
+  String get mixerExportAssetWarningLong;
+
+  /// Export onay diyaloğunda devam et
+  ///
+  /// In en, this message translates to:
+  /// **'Make video anyway'**
+  String get mixerExportAnyway;
+
+  /// Diyaloglarda vazgeç
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
+
   /// Mix-to-video export butonu — viral kanca #3
   ///
   /// In en, this message translates to:

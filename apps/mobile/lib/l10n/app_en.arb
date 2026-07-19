@@ -136,6 +136,45 @@
   "mixerFailed": "Sound could not start.",
   "@mixerFailed": { "description": "Ses başlatılamadığında" },
 
+  "mixerAssetLoopNotice": "Audio files repeat as-is; you may hear a short click at the loop point.",
+  "@mixerAssetLoopNotice": { "description": "Dosya katmanının döngü dikişi crossfade'lenemiyor (PCM'e erişim yok) — dürüstlük dipnotu" },
+
+  "mixerAssetUnavailable": "An audio file could not be loaded; the rest of the mix is still playing.",
+  "@mixerAssetUnavailable": { "description": "Asset katmanı yüklenemedi ama mix çalıyor — hata değil, dipnot" },
+
+  "mixerAddSound": "Add sound",
+  "@mixerAddSound": { "description": "Katman listesinin başlığındaki eylem — ses dosyası kataloğunu açar" },
+
+  "mixerAssetCatalogTitle": "Your sounds",
+  "@mixerAssetCatalogTitle": { "description": "Ses dosyası kataloğu sayfasının başlığı" },
+
+  "mixerAssetCatalogEmpty": "No audio files yet.",
+  "@mixerAssetCatalogEmpty": { "description": "Katalog boş — kullanıcı henüz dosya yüklememiş" },
+
+  "mixerAssetCatalogEmptyHow": "Drop files into apps/api/assets-inbox/<category>/<name>.mp3 with a matching <name>.json holding title, mood, license and source. Then run pnpm assets:upload — they show up here.",
+  "@mixerAssetCatalogEmptyHow": { "description": "Boş katalogda NE YAPILACAĞI: dosya nereye konur + hangi komut çalıştırılır. Yol ve komut çevrilmez, cümle çevrilir" },
+
+  "mixerAssetAddFailed": "That sound could not be added. The mix is still playing.",
+  "@mixerAssetAddFailed": { "description": "Katalogdan seçilen dosyanın adresi çözülemedi (404/401/ağ yok) — katman eklenmedi ama mix çalıyor" },
+
+  "mixerRemoveLayer": "Remove {name}",
+  "@mixerRemoveLayer": {
+    "description": "Dosya katmanını kaldırma düğmesinin erişilebilirlik etiketi. {name} içerik adıdır, çevrilmez",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "mixerExportAssetWarning": "Audio files you added are not recorded in the video.",
+  "@mixerExportAssetWarning": { "description": "Kalıcı dipnot: renderMix asset katmanlarını atlar — paylaşılan videoda dosyalar duyulmaz" },
+
+  "mixerExportAssetWarningLong": "The video only records generated layers. Audio files you added will not be heard in it.",
+  "@mixerExportAssetWarningLong": { "description": "Export onay diyaloğunun gövdesi — dipnotun uzun hâli" },
+
+  "mixerExportAnyway": "Make video anyway",
+  "@mixerExportAnyway": { "description": "Export onay diyaloğunda devam et" },
+
+  "commonCancel": "Cancel",
+  "@commonCancel": { "description": "Diyaloglarda vazgeç" },
+
   "mixerExportVideo": "Share as video",
   "@mixerExportVideo": { "description": "Mix-to-video export butonu — viral kanca #3" },
 

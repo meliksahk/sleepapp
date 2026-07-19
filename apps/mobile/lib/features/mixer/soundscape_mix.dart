@@ -35,14 +35,27 @@ const double maxPlaybackTotalGain = 1.0;
 /// Sunucudaki tarif tek tek katmanlar için 0..1 doğruluyor ama TOPLAMI
 /// doğrulamıyor: 3 katman × 1.0 = 3.0 geçerli bir tariftir ve kırpardı.
 /// Katmanları tek tek kısmak yerine ölçekliyoruz — tarifin karakteri korunur.
+///
+/// **ASSET KATMANLARI DA DAHİL (ve neden şart):** kırpma OS mikserinde olur ve
+/// OS, sesin sentezden mi dosyadan mı geldiğini umursamaz — hepsi aynı çıkışta
+/// toplanır. Yalnızca sentez katmanlarını saysaydık, kullanıcı iki dosya ekleyip
+/// toplamı 2.4'e çıkarır ve bu fonksiyon "1.0'ın altındayım" diye hiçbir şey
+/// yapmazdı: sınırın tam da korumaya çalıştığı durumda sessizce devre dışı
+/// kalırdı. Ölçek katsayısı `k` her iki listeye de AYNI uygulanır — mix'in
+/// karakteri (dosya/sentez dengesi) korunur.
 MixSpec limitTotalGain(MixSpec spec) {
-  final total = spec.layers.fold<double>(0, (sum, l) => sum + l.gain);
+  final synthTotal = spec.layers.fold<double>(0, (sum, l) => sum + l.gain);
+  final assetTotal = spec.assets.fold<double>(0, (sum, a) => sum + a.gain);
+  final total = synthTotal + assetTotal;
   if (total <= maxPlaybackTotalGain || total <= 0) return spec;
   final k = maxPlaybackTotalGain / total;
-  return MixSpec([
-    for (final l in spec.layers)
-      MixLayer(id: l.id, type: l.type, gain: l.gain * k),
-  ]);
+  return MixSpec(
+    [
+      for (final l in spec.layers)
+        MixLayer(id: l.id, type: l.type, gain: l.gain * k),
+    ],
+    assets: [for (final a in spec.assets) a.copyWith(gain: a.gain * k)],
+  );
 }
 
 /// [detail]'dan çalınabilir tarifi çıkarır. **Asla null dönmez.**

@@ -12,6 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../archetype/archetype_gradient.dart';
 import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
+import 'asset_catalog_sheet.dart';
 
 /// Mikser **PLAYER'ı** — uygulamanın ses çıkardığı ekran.
 ///
@@ -121,12 +122,19 @@ const double kPlayerScrimFadeHeight = 88;
 /// Kontrol bölgesinin (katman başlığı + taşıma çubuğu) **ölçülmüş** asgari
 /// yüksekliği. Katman listesi tamamen kaybolduğunda geriye kalan budur.
 ///
-/// Ölçüm (varsayılan yazı ölçeği): başlık bloğu 36 + taşıma çubuğu
+/// Ölçüm (varsayılan yazı ölçeği): başlık bloğu **44** (etiket + "Ses ekle"
+/// düğmesi; düğme §7 gereği ≥44 px dokunma hedefi, satırın dikey padding'i bu
+/// yüzden s1/s0'a kısıldı) + taşıma çubuğu
 /// (8 + çal 52 + 12 + video 48 + 12 + erken-sürüm notu + 20).
-/// - **EN**: not 2 satır → toplam 230
-/// - **TR**: not 320 px genişlikte 3 satıra sarıyor → toplam 244
+/// - **EN**: not 2 satır → toplam 238
+/// - **TR**: not 320 px genişlikte 3 satıra sarıyor → toplam 252
 ///
-/// 252 seçildi: ölçülen en kötü dilin 8 px üstü.
+/// 264 seçildi: ölçülen en kötü dilin 12 px üstü.
+///
+/// ⚠️ Bu değer 252 idi ve başlık satırına "Ses ekle" düğmesi eklenince
+/// 320×568 + çevrimdışı bandı kombinasyonunda düzen TAŞTI
+/// (`mixer_small_screen_test.dart` yakaladı). Sabit tahminle değil ölçümle
+/// güncellendi.
 ///
 /// **Ne işe yarıyor:** kısa ekranda yer BİTTİĞİNDE önce hero geri adım atsın
 /// diye. Denetimde 320×568'de çevrimdışı bandı + gece şeridi birlikteyken düzen
@@ -138,7 +146,7 @@ const double kPlayerScrimFadeHeight = 88;
 /// düzen yine taşar. Bekçisi `mixer_small_screen_test.dart`: en dar ekran ×
 /// dört kabuk kombinasyonu × iki dil. Yazı ölçeği büyütüldüğünde (a11y)
 /// KAPSANMADI — bkz. rapor.
-const double kPlayerControlsMinHeight = 252;
+const double kPlayerControlsMinHeight = 280;
 
 /// Yumuşama bandının gradyanı — **üretim ve test aynı fonksiyonu çağırır.**
 ///
@@ -464,33 +472,74 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
               color: NoctaColors.inkSecondary,
               noticeKey: const Key('mixer-recipe-fallback'),
             ),
+          if (s.assetsUnavailable)
+            _notice(
+              // Dosya katmanı yüklenemedi ama mix ÇALIYOR. `danger` değil
+              // `inkSecondary`: bu bir arıza değil, eksik bir katman.
+              text: l10n.mixerAssetUnavailable,
+              color: NoctaColors.inkSecondary,
+              noticeKey: const Key('mixer-asset-unavailable'),
+            ),
           if (s.error != null)
             _notice(
-              // Ses hatası mı export hatası mı — kullanıcıya doğru olanı söyle.
-              text: s.errorKind == MixerErrorKind.export
-                  ? l10n.mixerExportFailed
-                  : l10n.mixerFailed,
+              // Hangi iş patladı — kullanıcıya doğru olanı söyle. Üç ayrı hâl
+              // var ve üçü de farklı şey demek: ses hiç başlamadı / video
+              // üretilemedi / eklenmek istenen dosya gelmedi (mix çalıyor).
+              text: switch (s.errorKind) {
+                MixerErrorKind.export => l10n.mixerExportFailed,
+                MixerErrorKind.assetAdd => l10n.mixerAssetAddFailed,
+                _ => l10n.mixerFailed,
+              },
               color: NoctaColors.danger,
               noticeKey: const Key('mixer-error'),
             ),
 
+          // Dikey padding KISILDI (s3/s2 → s1/s0) ve bu bilinçli: "Ses ekle"
+          // düğmesi §7 gereği ≥44 px dokunma hedefi taşıyor, yani bu satır
+          // 36 px'ten 44 px'e çıkıyor. Düğmenin kendi iç boşluğu ayırıcı işi
+          // görüyor; padding'i eskisi gibi bırakmak 320×568'de 28 px'i
+          // doğrudan hero'dan çalardı ([kPlayerControlsMinHeight] ölçümü).
           Padding(
             padding: const EdgeInsets.fromLTRB(
               NoctaSpace.s6,
-              NoctaSpace.s3,
+              NoctaSpace.s0,
               NoctaSpace.s6,
-              NoctaSpace.s2,
+              NoctaSpace.s0,
             ),
             child: Row(
               children: <Widget>[
-                Text(
-                  l10n.mixerLayersLabel,
-                  key: const Key('mixer-layers-label'),
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.micro,
-                    letterSpacing: 1.2,
-                    color: NoctaColors.inkFaint,
+                // `Expanded` (Spacer DEĞİL): 320 px'te TR etiketi + düğme
+                // yatayda 0.6 px taşıyordu. Etiket artan alanı alır ve
+                // gerekirse kısalır; taşan taraf hiçbir zaman düğme olmaz.
+                Expanded(
+                  child: Text(
+                    l10n.mixerLayersLabel,
+                    key: const Key('mixer-layers-label'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.micro,
+                      letterSpacing: 1.2,
+                      color: NoctaColors.inkFaint,
+                    ),
                   ),
+                ),
+                // "Ses ekle" — katman listesinin BAŞLIĞINDA, çünkü yaptığı şey
+                // tam olarak bu listeye bir satır eklemek. Taşıma çubuğuna
+                // koymak onu çal/paylaş ile aynı ağırlıkta gösterirdi.
+                TextButton.icon(
+                  key: const Key('mixer-add-sound'),
+                  onPressed: _addSound,
+                  style: TextButton.styleFrom(
+                    // Dokunma hedefi ≥44px (CLAUDE.md §7).
+                    minimumSize: const Size(44, 44),
+                    foregroundColor: NoctaColors.accentAurora,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: NoctaSpace.s3,
+                    ),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(l10n.mixerAddSound),
                 ),
               ],
             ),
@@ -513,7 +562,76 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  for (final layer in s.layers) _layerRow(l10n, s, layer),
+                  for (final layer in s.layers)
+                    _gainRow(
+                      label: _layerLabel(l10n, layer.type),
+                      id: layer.id,
+                      l10n: l10n,
+                      s: s,
+                    ),
+                  // DOSYA katmanları sentezin ALTINDA, aynı sürgü bileşeniyle:
+                  // kullanıcı için ikisi de "bir katman"dır. Etiket i18n'den
+                  // GELMEZ — içerik adıdır (sunucudaki başlık).
+                  for (final asset in s.assets)
+                    _gainRow(
+                      label: asset.title,
+                      id: asset.id,
+                      l10n: l10n,
+                      s: s,
+                      // YALNIZCA dosya katmanları kaldırılabilir: sentez
+                      // katmanları tarifin kendisi (sürgüsü 0'a çekilebilir).
+                      // Ekleyip vazgeçememek kabul edilemezdi.
+                      onRemove: () => _c.removeAsset(asset.id),
+                    ),
+                  // Dürüstlük dipnotu: dosya döngüsünde tık DUYULABİLİR ve bunu
+                  // düzeltemiyoruz (PCM'e erişimimiz yok — asset_layer.dart).
+                  // Kullanıcı "uygulama bozuk" demeden önce nedenini bilsin.
+                  if (s.assets.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                      child: Text(
+                        l10n.mixerAssetLoopNotice,
+                        key: const Key('mixer-asset-loop-notice'),
+                        style: TextStyle(
+                          fontSize: NoctaFontSize.micro,
+                          color: NoctaColors.inkFaint,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  // ⚠️ DÜRÜSTLÜK — viral kanca #3'ün bilinen deliği.
+                  //
+                  // `renderMix` yalnızca SENTEZ katmanlarını görür (yapısal,
+                  // bkz. asset_layer.dart): eklenen dosya katmanları videoya
+                  // GİRMEZ. Kullanıcı duyduğu mix'i paylaştığını sanır, karşı
+                  // taraf eksik bir mix duyar. Bunu paylaşımdan SONRA fark
+                  // etmek en kötü sonuç.
+                  //
+                  // İki kademe: burada kalıcı dipnot + export'a basınca onay
+                  // ([_confirmExportWithAssets]). Diyalog tek başına butona
+                  // basmadan önce bilgilendirmez; dipnot tek başına gözden
+                  // kaçabilir.
+                  //
+                  // **Neden taşıma çubuğunda DEĞİL de burada:** taşıma çubuğu
+                  // SABİT yükseklik ve o bütçe 320×568'de tıka basa dolu
+                  // (bkz. [_transport] yorumu — 244 px'e sığmak zorunda).
+                  // Oraya ikinci bir sarmalı metin koymak, ekranın birincil
+                  // eylemini (çal) taşırırdı. Burası doğru yer aynı zamanda:
+                  // uyarı, hemen üstündeki dosya katmanlarıyla ilgili.
+                  // Onay diyaloğu zaten export anında ikinci kez söylüyor.
+                  if (s.assets.isNotEmpty && _canExportVideo)
+                    Padding(
+                      padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                      child: Text(
+                        l10n.mixerExportAssetWarning,
+                        key: const Key('mixer-export-asset-warning'),
+                        style: TextStyle(
+                          fontSize: NoctaFontSize.micro,
+                          color: NoctaColors.accentDawn,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -546,8 +664,20 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     );
   }
 
-  Widget _layerRow(AppL10n l10n, MixerState s, MixLayer layer) {
-    final gain = s.gains[layer.id] ?? 0;
+  /// Tek bir kazanç sürgüsü — sentez ve dosya katmanları AYNI bileşeni kullanır.
+  ///
+  /// Eskiden `MixLayer` alıyordu; dosya katmanı eklenince ikinci bir kopya yazmak
+  /// yerine imza "etiket + id"ye indirildi. Sürgünün katmanın türünü bilmesine
+  /// gerek yok — zaten `setGain(id, ...)` çağırıyor.
+  Widget _gainRow({
+    required String label,
+    required String id,
+    required AppL10n l10n,
+    required MixerState s,
+    VoidCallback? onRemove,
+  }) {
+    final layerId = id;
+    final gain = s.gains[layerId] ?? 0;
     return Padding(
       padding: const EdgeInsets.only(bottom: NoctaSpace.s2),
       child: Column(
@@ -558,7 +688,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  _layerLabel(l10n, layer.type),
+                  label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -578,12 +708,30 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                   ],
                 ),
               ),
+              if (onRemove != null)
+                IconButton(
+                  key: Key('remove-$layerId'),
+                  onPressed: onRemove,
+                  // Ekran okuyucu "Kaldır: <ses adı>" desin — ekranda yedi
+                  // sürgü varken çıplak bir çöp kutusu hangisini kaldıracağını
+                  // söylemez.
+                  tooltip: l10n.mixerRemoveLayer(label),
+                  visualDensity: VisualDensity.compact,
+                  // ≥44px dokunma hedefi (CLAUDE.md §7); ikon küçük ama hedef değil.
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
+                  iconSize: 18,
+                  color: NoctaColors.inkFaint,
+                  icon: const Icon(Icons.close),
+                ),
             ],
           ),
           Slider(
-            key: Key('gain-${layer.id}'),
+            key: Key('gain-$layerId'),
             value: gain,
-            onChanged: (v) => _c.setGain(layer.id, v),
+            onChanged: (v) => _c.setGain(layerId, v),
             // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
             // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
             label: l10n.mixerGainPercent((gain * 100).round()),
@@ -596,13 +744,22 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     );
   }
 
+  /// ⚠️ **Buradaki dikey boşluklar sıkı bir bütçeye tabidir.**
+  ///
+  /// 320×568 + çevrimdışı bandı + gece şeridi kombinasyonunda kontrol bölgesine
+  /// düşen alan **244 px** (ölçüldü, `zz` probe): hero zaten sıfıra inmiş,
+  /// [kPlayerControlsMinHeight] doygunluğa ulaşmış durumda — yani daha fazla yer
+  /// İSTENEMEZ, sığmak zorunludur. "Ses ekle" satırı (44 px, §7 dokunma hedefi)
+  /// eklendiğinde bütçe 16 px taştı ve bu boşluklar (s3→s2, s5→s4) o 16 px'i
+  /// geri kazanmak için kısıldı. Metni kırpmak ya da dokunma hedefini küçültmek
+  /// alternatifleri REDDEDİLDİ: ilki dürüstlük notunu, ikincisi §7'yi çiğnerdi.
   Widget _transport(AppL10n l10n, MixerState s) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         NoctaSpace.s6,
         NoctaSpace.s2,
         NoctaSpace.s6,
-        NoctaSpace.s5,
+        NoctaSpace.s4,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -629,7 +786,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
 
           // Viral kanca #3 (docs/04 §131). iOS'ta gizli: native kodlayıcı yok.
           if (_canExportVideo) ...<Widget>[
-            const SizedBox(height: NoctaSpace.s3),
+            const SizedBox(height: NoctaSpace.s2),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -660,7 +817,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
               ),
           ],
 
-          const SizedBox(height: NoctaSpace.s3),
+          const SizedBox(height: NoctaSpace.s2),
           // Dürüstlük: kullanıcı duyduğu şeyin nihai kalite olmadığını BİLMELİ.
           // Bunu saklamak, erken sürümde "ses kötü" izlenimini kalıcılaştırırdı.
           Text(
@@ -677,8 +834,74 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     );
   }
 
+  /// Katalogdan ses seçip mikse katman olarak ekler.
+  ///
+  /// İki adım, ikisi de patlayabilir ve ikisinin de sonucu kullanıcıya söylenir:
+  /// 1. **Seçim** — [showAssetCatalogSheet]. null = vazgeçti (hata değil).
+  /// 2. **Adres çözme** — kayıt listede URL taşımaz; presigned URL ikinci bir
+  ///    çağrıyla alınır. 404/401/ağ yok → katman EKLENMEZ, hata gösterilir.
+  ///    Sessizce çalmayan bir sürgü bırakmak en kötü sonuç olurdu.
+  Future<void> _addSound() async {
+    final selected = await showAssetCatalogSheet(context);
+    if (selected == null || !mounted) return;
+    try {
+      final layer = await resolveAssetLayer(ref, selected.id);
+      if (!mounted) return;
+      if (layer == null) {
+        // 404: kayıt katalogda göründü ama dosya artık yok.
+        _c.reportAssetAddFailed('asset not found: ${selected.id}');
+        return;
+      }
+      await _c.addAsset(layer);
+    } catch (e) {
+      // Hata YUTULMAZ (CLAUDE.md §4): ağ/401/bozuk yanıt — hepsi buraya düşer
+      // ve kullanıcı sade bir metin görür, teknik detay state'te kalır.
+      if (mounted) _c.reportAssetAddFailed(e);
+    }
+  }
+
+  /// Mikste dosya katmanı varken export onayı. false → export YAPILMAZ.
+  ///
+  /// Bu bir "emin misin" diyaloğu değil, bir BİLGİLENDİRME: paylaşılacak videonun
+  /// duyulan mixten farklı olacağını söylüyor (bkz. dipnot yorumu).
+  Future<bool> _confirmExportWithAssets(AppL10n l10n) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: NoctaColors.bgRaised,
+        content: Text(
+          l10n.mixerExportAssetWarningLong,
+          key: const Key('mixer-export-warning-dialog'),
+          style: TextStyle(
+            fontSize: NoctaFontSize.body,
+            color: NoctaColors.inkPrimary,
+            height: 1.4,
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            key: const Key('mixer-export-warning-cancel'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            key: const Key('mixer-export-warning-continue'),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.mixerExportAnyway),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
   Future<void> _exportVideo() async {
     final l10n = AppL10n.of(context);
+    // Dosya katmanı varsa ÖNCE söyle: video onlarsız üretilecek.
+    if (_c.state.assets.isNotEmpty) {
+      final go = await _confirmExportWithAssets(l10n);
+      if (!go || !mounted) return;
+    }
     // Viral kanca #3: export edilen video kullanıcının KENDİ arketip gradyanını
     // taşır (#178). Sonuç henüz yüklenmemişse/test yapılmamışsa slug null → nötr
     // varsayılan. `read` (watch değil): export tek seferlik bir eylem, o anki değer yeter.
