@@ -10,7 +10,6 @@ import 'package:nocta/features/mixer/domain/local_sound.dart';
 import 'package:nocta/features/mixer/domain/local_sound_library.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/mixer_providers.dart';
-import 'package:nocta/features/mixer/presentation/asset_catalog_sheet.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/l10n/app_localizations.dart';
 
