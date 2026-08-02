@@ -154,6 +154,20 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
     final l10n = AppL10n.of(context);
     final s = widget.controller.state;
 
+    // ALARM ÇALIYORSA EKRANIN TAMAMINI DEVRALIR (Elegy §15).
+    //
+    // Panel olarak durduğunda "geceyi bitir" ve "başlat/bitir" düğmeleri hâlâ
+    // ekrandaydı — yarı uykulu bir insan için üç düğmeli bir ekran, yanlış
+    // düğmeye basmanın davetidir. Çalarken tek bir karar var: sustur.
+    if (s.alarmRinging) {
+      return _AlarmRingingView(
+        trigger: s.alarmTrigger,
+        elapsed: s.startedAt == null ? null : _elapsed(s.startedAt!),
+        eventCount: s.eventCount,
+        onDismiss: widget.controller.dismissAlarm,
+      );
+    }
+
     return Scaffold(
       // Uyku modu bg.base'ten de karanlık: bu ekran gece boyunca AÇIK kalıyor.
       backgroundColor: NoctaColors.bgNight,
@@ -171,49 +185,6 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ÇALIYORSA HER ŞEYİN ÜSTÜNDE ve kaydırma alanının DIŞINDA:
-              // kullanıcı yarı uykulu, aradığı tek düğme bu. Kaydırma içinde
-              // kalsaydı ekranın altına düşer ve dokunuş alttaki "geceyi bitir"
-              // düğmesine giderdi — testte tam olarak bu oldu.
-              //
-              // Elegy §15: sabahın ilk karesi GÜN DOĞUMU. Gece paletinin tek
-              // sıcak anı burası — ekran kullanıcıyı uyandırıyor, artık
-              // karartmanın anlamı yok.
-              if (s.alarmRinging) ...[
-                Container(
-                  key: const Key('alarm-ringing'),
-                  padding: const EdgeInsets.all(NoctaSpace.s5),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: <Color>[
-                        NoctaColors.accentDawn,
-                        NoctaColors.bgNight,
-                      ],
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      NMono(
-                        s.alarmTrigger == AlarmTrigger.lightSleep
-                            ? l10n.alarmRingingLightSleep
-                            : l10n.alarmRingingDeadline,
-                        color: NoctaColors.inkPrimary,
-                        track: NoctaTrack.wide,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: NoctaSpace.s5),
-                      NButton(
-                        key: const Key('alarm-dismiss'),
-                        label: l10n.alarmDismiss,
-                        onPressed: widget.controller.dismissAlarm,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: NoctaSpace.s4),
-              ],
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -460,6 +431,92 @@ class _NightAction extends StatelessWidget {
                 )
               : null,
           child: NMono(label, color: NoctaColors.nightInk, height: 1),
+        ),
+      ),
+    );
+  }
+}
+
+/// **Alarm çalıyor** (Elegy §15) — gecenin tek sıcak karesi.
+///
+/// Gece paleti burada BİTER: ekran artık kullanıcıyı uyandırıyor, karartmanın
+/// anlamı yok. Gün doğumu gradyanı aşağıdan yukarı açılır.
+///
+/// **"Sustur" geceyi BİTİRMEZ** — kullanıcı uyumaya dönebilir. Tasarımdaki
+/// "kapat ve raporu aç" akışı bunu değiştirirdi; görsel bir karar uğruna
+/// davranışı değiştirmedik (test bunu sabitliyor).
+class _AlarmRingingView extends StatelessWidget {
+  const _AlarmRingingView({
+    required this.trigger,
+    required this.elapsed,
+    required this.eventCount,
+    required this.onDismiss,
+  });
+
+  final AlarmTrigger? trigger;
+  final String? elapsed;
+  final int eventCount;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    final String? spent = elapsed;
+    return Scaffold(
+      key: const Key('alarm-ringing'),
+      backgroundColor: NoctaColors.bgNight,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: <Color>[NoctaColors.accentDawn, NoctaColors.bgNight],
+            stops: <double>[0, 0.75],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(NoctaSpace.s6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Spacer(),
+                NMono(
+                  trigger == AlarmTrigger.lightSleep
+                      ? l10n.alarmRingingLightSleep
+                      : l10n.alarmRingingDeadline,
+                  track: NoctaTrack.wide,
+                  color: NoctaColors.inkSecondary,
+                ),
+                const SizedBox(height: NoctaSpace.s4),
+                if (spent != null)
+                  Text(
+                    spent,
+                    key: const Key('alarm-ringing-elapsed'),
+                    style: const TextStyle(
+                      fontFamily: NoctaFont.display,
+                      fontSize: 82,
+                      height: 1,
+                      color: NoctaColors.inkPrimary,
+                      fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+                    ),
+                  ),
+                const SizedBox(height: NoctaSpace.s4),
+                NMono(
+                  l10n.sleepModeEvents(eventCount),
+                  color: NoctaColors.inkSecondary,
+                ),
+                const Spacer(),
+                NButton(
+                  key: const Key('alarm-dismiss'),
+                  label: l10n.alarmDismiss,
+                  expand: true,
+                  rule: true,
+                  onPressed: onDismiss,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

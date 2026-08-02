@@ -87,7 +87,7 @@ ayakta değil). Deploy sırasında koşacak — koşmadan `GET /v1/admin/overvie
 
 ---
 
-## F2 — Gece kontrolü · **iki ekran BİTTİ, biri kaldı**
+## F2 — Gece kontrolü · ✅ **ÜÇ EKRAN DA BİTTİ**
 
 > **Durum (2 Ağu 2026):**
 >
@@ -97,9 +97,12 @@ ayakta değil). Deploy sırasında koşacak — koşmadan `GET /v1/admin/overvie
 > - ✅ **Akıllı alarm kurulumu** — `/sleep-mode/alarm`, saat + **pencere
 >   genişliği** (10–60 dk) birlikte. `SleepModeController.alarmWindow` artık
 >   değiştirilebilir ve değişiklik ZATEN KURULU alarma da uygulanıyor. 4 test.
-> - ⬜ **Alarm çalıyor tam ekran** — şu an uyku modunun içinde gün doğumu
->   gradyanlı bir panel (kaydırma alanının dışında, her zaman görünür).
->   Tasarımdaki tam ekran devralma yapılmadı.
+> - ✅ **Alarm çalıyor tam ekran** — çalarken ekranın TAMAMI devralınıyor;
+>   "geceyi bitir"/"başlat" düğmeleri ekranda kalmıyor (yarı uykuluya üç düğme
+>   sunmak yanlış düğmeye basmanın davetiydi; biri geceyi bitiriyor). Test
+>   `sleep-toggle`ın YOK olduğunu sabitliyor. "Sustur" geceyi bitirmez —
+>   tasarımdaki "kapat ve raporu aç" akışı davranışı değiştirirdi, görsel bir
+>   karar uğruna değiştirmedik.
 > - ⬜ **Gün doğumu rampası anahtarı** — tasarımda var, motorda karşılığı yok
 >   (`SunriseAlarmSound` her zaman açık). Çalışmayan anahtar ÇİZİLMEDİ: olmayan
 >   bir özelliği varmış gibi göstermek olurdu.
