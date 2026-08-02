@@ -1458,6 +1458,36 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Your ritual hasn\'t started yet.'**
   String get ritualEmpty;
+
+  /// Mix-to-video ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Share studio'**
+  String get studioTitle;
+
+  /// Sure secimi etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'LENGTH'**
+  String get studioLength;
+
+  /// Sure secenegi
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} SEC'**
+  String studioSeconds(int seconds);
+
+  /// Sure secimi notu: cihazda uretiliyor
+  ///
+  /// In en, this message translates to:
+  /// **'Longer clips take longer to make — everything is rendered on this phone.'**
+  String get studioLengthHint;
+
+  /// Birincil eylem
+  ///
+  /// In en, this message translates to:
+  /// **'MAKE THE VIDEO'**
+  String get studioExport;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

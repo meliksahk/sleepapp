@@ -259,5 +259,11 @@
   "ritualTotalNights": "TOPLAM GECE",
   "ritualAverage": "ORTALAMA",
   "ritualMonthLabel": "BU AY",
-  "ritualEmpty": "Ritüelin henüz başlamadı."
+  "ritualEmpty": "Ritüelin henüz başlamadı.",
+
+  "studioTitle": "Paylaşım stüdyosu",
+  "studioLength": "SÜRE",
+  "studioSeconds": "{seconds} SN",
+  "studioLengthHint": "Uzun klip daha uzun sürede hazırlanır — her şey bu telefonda üretiliyor.",
+  "studioExport": "VİDEOYU ÜRET"
 }

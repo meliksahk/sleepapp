@@ -714,5 +714,16 @@
   "ritualMonthLabel": "THIS MONTH",
   "@ritualMonthLabel": { "description": "Ay izgarasi basligi" },
   "ritualEmpty": "Your ritual hasn't started yet.",
-  "@ritualEmpty": { "description": "Hic gece yoksa" }
+  "@ritualEmpty": { "description": "Hic gece yoksa" },
+
+  "studioTitle": "Share studio",
+  "@studioTitle": { "description": "Mix-to-video ekrani basligi" },
+  "studioLength": "LENGTH",
+  "@studioLength": { "description": "Sure secimi etiketi" },
+  "studioSeconds": "{seconds} SEC",
+  "@studioSeconds": { "description": "Sure secenegi", "placeholders": { "seconds": { "type": "int" } } },
+  "studioLengthHint": "Longer clips take longer to make — everything is rendered on this phone.",
+  "@studioLengthHint": { "description": "Sure secimi notu: cihazda uretiliyor" },
+  "studioExport": "MAKE THE VIDEO",
+  "@studioExport": { "description": "Birincil eylem" }
 }

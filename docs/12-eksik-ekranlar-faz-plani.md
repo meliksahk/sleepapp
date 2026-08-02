@@ -160,7 +160,22 @@ bildirim o saate göre planlanıyor (integration test).
 
 ---
 
-## F5 — Share Studio (mix-to-video ekranı)
+## F5 — Share Studio (mix-to-video ekranı) · ✅ **BİTTİ**
+
+> **Durum (2 Ağu 2026):** mikserdeki video butonu artık doğrudan dışa aktarmıyor,
+> **Share Studio**'yu açıyor: 9:16 önizleme (gerçek `MixVideoFrame` bileşeni,
+> ayrı bir "temsilî" görsel değil), süre seçimi (15/30/60 sn), ilerleme, üret.
+> Dışa aktarma bitince stüdyo KAPANIR — sonucu (paylaşım sayfası ya da hata)
+> mikser gösteriyor; açık kalsaydı patlayan bir export'un hatası altında kalırdı
+> (testte tam olarak bu çıktı).
+>
+> **10 dakikalık seçenek SUNULMADI:** tasarımda vardı, 24 fps'te 14 400 kare
+> demek ve telefonda dakikalar sürer. Sunamayacağımız bir seçeneği listelemek,
+> kullanıcıyı bekleyip vazgeçmeye davet etmektir.
+>
+> **Önizlemenin dalga formu** mix'in kazançlarından türetiliyor, gerçek offline
+> render'dan değil (o saniyeler sürer). Önizlemenin işi kompozisyonu göstermek —
+> bu, kod yorumunda da açıkça yazılı.
 
 **Not:** dışa aktarma **kodu zaten var** (`MixVideoExporter`, `mix_video_frame.dart`) ve
 mikserdeki butondan çalışıyor; eksik olan **kendi ekranı** — süre seçimi, ön izleme,

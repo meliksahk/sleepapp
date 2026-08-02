@@ -817,4 +817,22 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get ritualEmpty => 'Your ritual hasn\'t started yet.';
+
+  @override
+  String get studioTitle => 'Share studio';
+
+  @override
+  String get studioLength => 'LENGTH';
+
+  @override
+  String studioSeconds(int seconds) {
+    return '$seconds SEC';
+  }
+
+  @override
+  String get studioLengthHint =>
+      'Longer clips take longer to make — everything is rendered on this phone.';
+
+  @override
+  String get studioExport => 'MAKE THE VIDEO';
 }

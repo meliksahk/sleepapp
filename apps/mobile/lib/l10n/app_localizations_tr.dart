@@ -817,4 +817,22 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get ritualEmpty => 'Ritüelin henüz başlamadı.';
+
+  @override
+  String get studioTitle => 'Paylaşım stüdyosu';
+
+  @override
+  String get studioLength => 'SÜRE';
+
+  @override
+  String studioSeconds(int seconds) {
+    return '$seconds SN';
+  }
+
+  @override
+  String get studioLengthHint =>
+      'Uzun klip daha uzun sürede hazırlanır — her şey bu telefonda üretiliyor.';
+
+  @override
+  String get studioExport => 'VİDEOYU ÜRET';
 }

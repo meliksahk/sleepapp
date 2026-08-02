@@ -13,6 +13,7 @@ import '../../archetype/archetype_gradient.dart';
 import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
 import 'asset_catalog_sheet.dart';
+import 'share_studio_screen.dart';
 
 /// Mikser **PLAYER'ı** — uygulamanın ses çıkardığı ekran.
 ///
@@ -270,11 +271,18 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     _c = widget.controller ?? MixerController(spec: widget.spec);
     _c.onChanged = () {
       if (mounted) setState(() {});
+      // Stüdyo AYRI bir rotada: parent'ın setState'i onu yeniden çizmez.
+      // `onChanged` tek slot olduğu için ikinci bir abone yerine bu köprü.
+      _studioTick.value = _c.state.exportProgress;
     };
   }
 
+  /// Stüdyo rotasının dinlediği ilerleme değeri (null = dışa aktarma yok).
+  final ValueNotifier<double?> _studioTick = ValueNotifier<double?>(null);
+
   @override
   void dispose() {
+    _studioTick.dispose();
     _c.onChanged = null;
     _c.dispose();
     super.dispose();
@@ -915,7 +923,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
               child: NButton(
                 key: const Key('mixer-export-video'),
                 variant: NButtonVariant.ghost,
-                onPressed: s.isExporting ? null : _exportVideo,
+                onPressed: s.isExporting ? null : _openStudio,
                 label: s.isExporting
                     ? l10n.mixerExporting((s.exportProgress! * 100).round())
                     : l10n.mixerExportVideo,
@@ -1038,7 +1046,58 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     return ok ?? false;
   }
 
-  Future<void> _exportVideo() async {
+  /// Video butonu artık DOĞRUDAN dışa aktarmıyor: **Share Studio**'yu açıyor
+  /// (Elegy §23). Kullanıcı ne çıkacağını görmeden ve süresini seçmeden
+  /// paylaşmaya zorlanmamalı — viral kancanın tamamı "paylaşmak hava atmak gibi
+  /// olsun" fikrine dayanıyor.
+  Future<void> _openStudio() async {
+    final l10n = AppL10n.of(context);
+    final slug = ref
+        .read(latestArchetypeResultProvider)
+        .maybeWhen(data: (r) => r?.archetypeSlug, orElse: () => null);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ValueListenableBuilder<double?>(
+          valueListenable: _studioTick,
+          builder: (context, progress, _) => ShareStudioScreen(
+            title: l10n.mixerVideoTitle,
+            peaks: _previewPeaks(),
+            gradient: archetypeGradientForSlug(slug),
+            exporting: progress != null,
+            progress: progress,
+            // Dışa aktarma bitince stüdyo KAPANIR: sonucu (paylaşım sayfası
+            // ya da hata metni) mikser ekranı gösteriyor. Stüdyo açık kalsaydı
+            // patlayan bir export'un hatası ALTINDA kalır, kullanıcı boş bir
+            // ekrana bakardı — testte tam olarak bu çıktı.
+            onExport: (seconds) async {
+              final nav = Navigator.of(context);
+              await _exportVideo(seconds: seconds);
+              if (nav.canPop()) nav.pop();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Önizlemenin dalga formu — mix'in KATMAN KAZANÇLARINDAN türetilir.
+  ///
+  /// **Gerçek çıktının birebir dalga formu DEĞİL:** o, sesin offline render
+  /// edilmesini gerektiriyor (saniyeler sürer, ekran açılışını bekletirdi).
+  /// Önizlemenin işi kompozisyonu (başlık, gradyan, yerleşim) göstermek;
+  /// dalga formu mix'in şeklini yansıtan bir gösterge.
+  List<double> _previewPeaks() {
+    final gains = _c.state.gains.values.toList();
+    if (gains.isEmpty) return List<double>.filled(64, 0.2);
+    return List<double>.generate(64, (i) {
+      final g = gains[i % gains.length];
+      // Deterministik dalgalanma: aynı mix her açılışta aynı önizlemeyi verir.
+      final wobble = 0.6 + 0.4 * (((i * 37) % 11) / 10);
+      return (g * wobble).clamp(0.05, 1.0);
+    });
+  }
+
+  Future<void> _exportVideo({int seconds = 15}) async {
     final l10n = AppL10n.of(context);
     // Dosya katmanı varsa ÖNCE söyle: video onlarsız üretilecek.
     if (_c.state.assets.isNotEmpty) {
@@ -1054,6 +1113,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     final path = await _c.exportVideo(
       title: l10n.mixerVideoTitle,
       gradient: archetypeGradientForSlug(slug),
+      seconds: seconds,
     );
     // Hata state'e yazıldı ve ekranda gösteriliyor; burada paylaşacak bir şey yok.
     if (path == null || !mounted) return;
