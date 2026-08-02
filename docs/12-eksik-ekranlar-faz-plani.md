@@ -39,39 +39,51 @@ Aşağıdakiler `apps/api/src/modules/*/presentation/*.controller.ts` ve
 
 ### EKSİK olan panel işleri
 
-| İhtiyaç                                                       | Neden gerekli                                                  | Faz |
-| ------------------------------------------------------------- | -------------------------------------------------------------- | --- |
-| Gizlilik görünürlüğü: silinen hesap sayısı + `audit` filtresi | Silme kaskadının çalıştığını operasyonel olarak görmek         | F1  |
-| Kampanya hedeflemesine "hatırlatıcı saati" alanı              | Bildirim tercihleri sunucuya taşınınca kampanya onu kullanmalı | F3  |
-| İçerik CMS'ine kategori/etiket editörü                        | Kütüphane filtreleri içeriğe bağlı                             | F6  |
+| İhtiyaç                                          | Neden gerekli                                                  | Faz       |
+| ------------------------------------------------ | -------------------------------------------------------------- | --------- |
+| ~~Gizlilik görünürlüğü: silinen hesap sayacı~~   | Silme kaskadının çalıştığını operasyonel olarak görmek         | **F1 ✅** |
+| Kampanya hedeflemesine "hatırlatıcı saati" alanı | Bildirim tercihleri sunucuya taşınınca kampanya onu kullanmalı | F3        |
+| İçerik CMS'ine kategori/etiket editörü           | Kütüphane filtreleri içeriğe bağlı                             | F6        |
 
 Panelin **content / users / flags / campaigns / security / dashboard** dilimleri zaten var;
 yukarıdakiler o dilimlerin içine eklenir, yeni bölüm açılmaz.
 
 ---
 
-## F1 — Gizlilik ve hesap _(lansman blokeri)_ · **mobil ayak BİTTİ**
+## F1 — Gizlilik ve hesap _(lansman blokeri)_ · ✅ **ÜÇ AYAK DA BİTTİ**
 
-> **Durum (2 Ağu 2026):** mobil ayak tamam ve testli — `/settings/delete-account`
-> rotası, ayarlarda "Gizlilik" bölümü, `AuthController.deleteAccount()` +
-> `exportData()`, 3 yeni test (onaysız istek gitmez · onaylı silme sunucuya gider
-> ve yerel oturum temizlenir · sunucu reddederse oturum DURUR).
-> **Kalan:** aşağıdaki admin ayağı — silme olayının `audit`'e yazılması ve panelde
-> sayaç. Bu, faz kuralı gereği F1'i henüz "tamam" yapmaz.
+> **Durum (2 Ağu 2026):**
+>
+> - **Mobil:** `/settings/delete-account` rotası + ayarlarda "Gizlilik" bölümü,
+>   `AuthController.deleteAccount()` / `exportData()`, 3 test.
+> - **Servis:** `account_deletions` tablosu (migration) + `AccountDeletionLog`
+>   portu + `CountAccountDeletionsUseCase` (identity'nin public servisi) +
+>   `DeleteAccountUseCase` artık silme BAŞARILI olunca sayaç yazıyor, 2 test.
+> - **Admin:** panoda "Silinen hesap · son 30 gün" kartı.
+>
+> **Tasarım kararı — audit'e YAZILMADI:** panel denetim izi (`admin_audit_log`)
+> bir ADMIN eylemi kaydıdır; satırları `actor_email` ile ve `users`'a FK ile
+> bağlıdır. Hesap silme bir KULLANICI eylemi ve kaskad o satırı da silerdi —
+> yani sayaç hep 0 dönerdi. Onun yerine kimlik taşımayan bir olay sayacı
+> tablosu açıldı: "sil" dediğinde gerçekten siliniyor, geriye yalnız bir
+> zaman damgası kalıyor.
 
 **Neden ilk:** App Store, hesap oluşturan her uygulamada **uygulama içinden hesap silmeyi**
 şart koşuyor. Bu olmadan gönderim reddedilir — yani F1 bitmeden lansman yok.
 Üstelik iki ucun ikisi de hazır: iş, ekran + istemci çağrısı.
 
-| Ayak  | İş                                                                                                                                                                                                                                                                                                                       |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Mobil | Ayarlar → "Gizlilik" bölümü · **Hesabımı sil** ekranı (geri alınamaz onayı, ne silineceğinin listesi, onay kutusu) · **Verilerimi indir** (paylaş sayfasına JSON)                                                                                                                                                        |
-| API   | Ek iş yok. `DELETE /v1/auth/me` + `GET /v1/me/export` kullanılacak                                                                                                                                                                                                                                                       |
-| Admin | `security` dilimine "son 30 günde silinen hesap" sayacı + audit filtresi — **BEKLİYOR**. Ön koşulu var: `DeleteAccountUseCase` şu an audit'e HİÇBİR ŞEY yazmıyor (ölçüldü), yani panelde gösterilecek veri henüz üretilmiyor. Sıra: (1) use case'e audit yazımı, (2) admin overview'a sayaç alanı, (3) panelde gösterim. |
+| Ayak  | İş                                                                                                                                                                |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mobil | Ayarlar → "Gizlilik" bölümü · **Hesabımı sil** ekranı (geri alınamaz onayı, ne silineceğinin listesi, onay kutusu) · **Verilerimi indir** (paylaş sayfasına JSON) |
+| API   | Ek iş yok. `DELETE /v1/auth/me` + `GET /v1/me/export` kullanılacak                                                                                                |
+| Admin | Panoda **"Silinen hesap · son 30 gün"** kartı — `deletedAccounts30d` alanı `GET /v1/admin/overview` yanıtına eklendi.                                             |
 
-**Çıkış kriteri:** silme akışı uçtan uca testli (onay kutusu işaretlenmeden buton pasif,
-silme sonrası oturum düşüyor ve karşılamaya dönülüyor); dışa aktarma paylaşım sayfasını
-açıyor; panelde sayaç görünüyor.
+**Çıkış kriteri (karşılandı):** onay kutusu işaretlenmeden buton pasif ve istek GİTMİYOR ·
+silme sonrası oturum düşüyor · sunucu reddederse oturum DURUYOR · silme patlarsa sayaç
+yazılmıyor · panoda sayaç kartı var.
+
+⚠️ **Migration henüz koşulmadı** (`pnpm db:migrate` bir Postgres ister; bu makinede
+ayakta değil). Deploy sırasında koşacak — koşmadan `GET /v1/admin/overview` 500 döner.
 
 ---
 

@@ -255,3 +255,11 @@ enum content_status {
   scheduled
   published
 }
+
+/// Hesap silme SAYACI — kullanıcı kimliği BİLEREK yok (bkz. migration yorumu).
+model account_deletions {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deleted_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([deleted_at(sort: Desc)], map: "account_deletions_deleted_at_idx")
+}

@@ -13,6 +13,7 @@ interface Overview {
   waitlist: number;
   pushAudience: number;
   shareFunnel: { completed: number; shared: number; rate: number | null };
+  deletedAccounts30d: number;
 }
 
 /**
@@ -61,6 +62,14 @@ export async function DashboardPage() {
           label={t('dashboard.pushAudience')}
           value={String(o.pushAudience)}
           hint={t('dashboard.pushAudienceHint')}
+        />
+        {/* Hesap silme kaskadının operasyonel görünürlüğü (F1). `users` satırı
+            hard-delete edildiği için başka hiçbir yerde iz kalmıyor; bu sayaç
+            KİMLİK TAŞIMAZ — "sil" dediğinde gerçekten siliniyor. */}
+        <StatCard
+          label={t('dashboard.deletedAccounts')}
+          value={String(o.deletedAccounts30d ?? 0)}
+          hint={t('dashboard.deletedAccountsHint')}
         />
         {/* Viral kancanın sağlığı (CLAUDE.md §1.1: "viral kancalar süs değil
             çekirdek özelliktir"). Ürünün bahsi buysa ölçülmeli. */}
