@@ -753,4 +753,47 @@ class AppL10nTr extends AppL10n {
   @override
   String get deleteAccountFailed =>
       'Hesabın silinemedi. Hiçbir şey kaldırılmadı.';
+
+  @override
+  String get micPermissionTitle =>
+      'Mikrofon açık kalır, hiçbir şey kaydedilmez.';
+
+  @override
+  String get micPermissionFactCounts =>
+      'Telefonun olayları sayar — hareket, ses, sessizlik. Sesin kendisini hiç tutmaz.';
+
+  @override
+  String get micPermissionFactLocal =>
+      'Çözümleme bu cihazda yapılır. Hiçbir şey yüklenmez, bir kez bile.';
+
+  @override
+  String get micPermissionFactOptional =>
+      'Hayır de, ritüel yine çalışır — ses ve alarm devam eder, yalnız gece raporu üretilmez.';
+
+  @override
+  String get micPermissionAllow => 'DEVAM';
+
+  @override
+  String get micPermissionSkip => 'ŞİMDİ DEĞİL';
+
+  @override
+  String get micPermissionDeniedTitle => 'İZİN REDDEDİLDİ';
+
+  @override
+  String get micPermissionDeniedBody =>
+      'Ritüel yine çalışır — yalnız gece raporu üretilmez. İstersen telefon ayarlarından sonra açabilirsin.';
+
+  @override
+  String get alarmLatestAt => 'EN GEÇ BU SAATTE';
+
+  @override
+  String get alarmWindowWidth => 'PENCERE GENİŞLİĞİ';
+
+  @override
+  String alarmWindowMinutes(int minutes) {
+    return '$minutes DK';
+  }
+
+  @override
+  String get alarmSave => 'ALARMI KUR';
 }

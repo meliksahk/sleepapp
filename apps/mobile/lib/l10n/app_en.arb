@@ -673,5 +673,31 @@
   "deleteAccountDeleting": "DELETING…",
   "@deleteAccountDeleting": { "description": "Silme suruyor" },
   "deleteAccountFailed": "We couldn't delete your account. Nothing was removed.",
-  "@deleteAccountFailed": { "description": "Silme hatasi - hicbir sey silinmedi" }
+  "@deleteAccountFailed": { "description": "Silme hatasi - hicbir sey silinmedi" },
+
+  "micPermissionTitle": "The microphone stays on. Nothing is recorded.",
+  "@micPermissionTitle": { "description": "Mikrofon izin gerek\u00e7esi ekrani basligi (serif)" },
+  "micPermissionFactCounts": "Your phone counts events — movement, sound, quiet. It never keeps the audio.",
+  "@micPermissionFactCounts": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionFactLocal": "Analysis happens on this device. Nothing is uploaded, not even once.",
+  "@micPermissionFactLocal": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionFactOptional": "Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.",
+  "@micPermissionFactOptional": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionAllow": "CONTINUE",
+  "@micPermissionAllow": { "description": "Izin akisini surdurur (sistem kutusu bundan SONRA cikar)" },
+  "micPermissionSkip": "NOT NOW",
+  "@micPermissionSkip": { "description": "Izin vermeden devam" },
+  "micPermissionDeniedTitle": "PERMISSION DENIED",
+  "@micPermissionDeniedTitle": { "description": "Reddedildi blo\u011fu basligi" },
+  "micPermissionDeniedBody": "The ritual still runs — only the night report won't be produced. You can turn it on later in your phone's settings.",
+  "@micPermissionDeniedBody": { "description": "Reddedildi blo\u011fu govdesi" },
+
+  "alarmLatestAt": "AT THE LATEST",
+  "@alarmLatestAt": { "description": "Alarm kurulum: secilen saatin anlami" },
+  "alarmWindowWidth": "WINDOW WIDTH",
+  "@alarmWindowWidth": { "description": "Alarm penceresi genisligi etiketi" },
+  "alarmWindowMinutes": "{minutes} MIN",
+  "@alarmWindowMinutes": { "description": "Pencere genisligi degeri", "placeholders": { "minutes": { "type": "int" } } },
+  "alarmSave": "SET THE ALARM",
+  "@alarmSave": { "description": "Alarm kurulum birincil eylem" }
 }

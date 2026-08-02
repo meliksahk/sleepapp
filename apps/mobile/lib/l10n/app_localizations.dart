@@ -1344,6 +1344,78 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'We couldn\'t delete your account. Nothing was removed.'**
   String get deleteAccountFailed;
+
+  /// Mikrofon izin gerekçesi ekrani basligi (serif)
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone stays on. Nothing is recorded.'**
+  String get micPermissionTitle;
+
+  /// Izin gerekcesi maddesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone counts events — movement, sound, quiet. It never keeps the audio.'**
+  String get micPermissionFactCounts;
+
+  /// Izin gerekcesi maddesi
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis happens on this device. Nothing is uploaded, not even once.'**
+  String get micPermissionFactLocal;
+
+  /// Izin gerekcesi maddesi
+  ///
+  /// In en, this message translates to:
+  /// **'Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.'**
+  String get micPermissionFactOptional;
+
+  /// Izin akisini surdurur (sistem kutusu bundan SONRA cikar)
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE'**
+  String get micPermissionAllow;
+
+  /// Izin vermeden devam
+  ///
+  /// In en, this message translates to:
+  /// **'NOT NOW'**
+  String get micPermissionSkip;
+
+  /// Reddedildi bloğu basligi
+  ///
+  /// In en, this message translates to:
+  /// **'PERMISSION DENIED'**
+  String get micPermissionDeniedTitle;
+
+  /// Reddedildi bloğu govdesi
+  ///
+  /// In en, this message translates to:
+  /// **'The ritual still runs — only the night report won\'t be produced. You can turn it on later in your phone\'s settings.'**
+  String get micPermissionDeniedBody;
+
+  /// Alarm kurulum: secilen saatin anlami
+  ///
+  /// In en, this message translates to:
+  /// **'AT THE LATEST'**
+  String get alarmLatestAt;
+
+  /// Alarm penceresi genisligi etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'WINDOW WIDTH'**
+  String get alarmWindowWidth;
+
+  /// Pencere genisligi degeri
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} MIN'**
+  String alarmWindowMinutes(int minutes);
+
+  /// Alarm kurulum birincil eylem
+  ///
+  /// In en, this message translates to:
+  /// **'SET THE ALARM'**
+  String get alarmSave;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

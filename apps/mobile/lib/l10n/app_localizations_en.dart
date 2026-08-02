@@ -753,4 +753,47 @@ class AppL10nEn extends AppL10n {
   @override
   String get deleteAccountFailed =>
       'We couldn\'t delete your account. Nothing was removed.';
+
+  @override
+  String get micPermissionTitle =>
+      'The microphone stays on. Nothing is recorded.';
+
+  @override
+  String get micPermissionFactCounts =>
+      'Your phone counts events — movement, sound, quiet. It never keeps the audio.';
+
+  @override
+  String get micPermissionFactLocal =>
+      'Analysis happens on this device. Nothing is uploaded, not even once.';
+
+  @override
+  String get micPermissionFactOptional =>
+      'Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.';
+
+  @override
+  String get micPermissionAllow => 'CONTINUE';
+
+  @override
+  String get micPermissionSkip => 'NOT NOW';
+
+  @override
+  String get micPermissionDeniedTitle => 'PERMISSION DENIED';
+
+  @override
+  String get micPermissionDeniedBody =>
+      'The ritual still runs — only the night report won\'t be produced. You can turn it on later in your phone\'s settings.';
+
+  @override
+  String get alarmLatestAt => 'AT THE LATEST';
+
+  @override
+  String get alarmWindowWidth => 'WINDOW WIDTH';
+
+  @override
+  String alarmWindowMinutes(int minutes) {
+    return '$minutes MIN';
+  }
+
+  @override
+  String get alarmSave => 'SET THE ALARM';
 }

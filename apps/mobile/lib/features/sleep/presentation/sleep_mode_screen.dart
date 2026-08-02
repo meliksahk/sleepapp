@@ -14,9 +14,26 @@ import 'widgets/night_orb.dart';
 /// #128–#132'de uyku takibi mantığı yazıldı ve test edildi ama kullanıcı ona hiç
 /// ulaşamıyordu. Burası o kapı.
 class SleepModeScreen extends StatefulWidget {
-  const SleepModeScreen({super.key, required this.controller});
+  const SleepModeScreen({
+    super.key,
+    required this.controller,
+    this.micRationale,
+    this.onEditAlarm,
+  });
 
   final SleepModeController controller;
+
+  /// Kayıt BAŞLAMADAN önce çalışan gerekçe kapısı (Elegy §13).
+  ///
+  /// `true` → başla · `false` → başlama (kullanıcı "şimdi değil" dedi).
+  /// **Opsiyonel ve varsayılan null:** kapı bir yerleştirme (routing) kararı,
+  /// bu ekranın iç mantığı değil. Null olduğunda ekran eskisi gibi doğrudan
+  /// başlar — mevcut widget testleri router kurmadan koşmaya devam eder.
+  final Future<bool> Function()? micRationale;
+
+  /// Alarm kurulum EKRANINA götürür (Elegy §14). Verilmezse ekran eski
+  /// davranışa düşer: sistemin saat diyaloğu. Yerleştirme kararı router'ın.
+  final VoidCallback? onEditAlarm;
 
   @override
   State<SleepModeScreen> createState() => _SleepModeScreenState();
@@ -106,6 +123,13 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
       TimeOfDay.fromDateTime(at).format(context);
 
   Future<void> _pickAlarm(BuildContext context) async {
+    // Kurulum ekranı varsa oraya: saat + PENCERE birlikte ayarlanır. Sistemin
+    // diyaloğu pencereyi soramaz, yani ürünün farkını gizler.
+    final edit = widget.onEditAlarm;
+    if (edit != null) {
+      edit();
+      return;
+    }
     final now = DateTime.now();
     final picked = await showTimePicker(
       context: context,
@@ -339,16 +363,19 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                 // `s.isRecording`e göre seçmek, build ile basış arasında durum
                 // değişirse YANLIŞ eylemi çağırırdı — nitekim çağırdı: testte
                 // "bitir"e basmak yeniden `start()` tetikledi ve gece kaydedilmedi.
-                onPressed: () {
+                onPressed: () async {
                   final now = widget.controller.state;
                   if (now.isRecording) {
                     widget.controller.stopAndSave();
-                  } else {
-                    widget.controller.start(
-                      notificationTitle: l10n.sleepModeNotificationTitle,
-                      notificationBody: l10n.sleepModeNotificationBody,
-                    );
+                    return;
                   }
+                  // Gerekçe kapısı: sistemin izin kutusu bundan SONRA çıkar.
+                  final gate = widget.micRationale;
+                  if (gate != null && !await gate()) return;
+                  widget.controller.start(
+                    notificationTitle: l10n.sleepModeNotificationTitle,
+                    notificationBody: l10n.sleepModeNotificationBody,
+                  );
                 },
               ),
             ],

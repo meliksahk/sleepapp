@@ -237,5 +237,19 @@
   "deleteAccountCta": "HESABI KALICI OLARAK SİL",
   "deleteAccountCancel": "HESABIMI TUT",
   "deleteAccountDeleting": "SİLİNİYOR…",
-  "deleteAccountFailed": "Hesabın silinemedi. Hiçbir şey kaldırılmadı."
+  "deleteAccountFailed": "Hesabın silinemedi. Hiçbir şey kaldırılmadı.",
+
+  "micPermissionTitle": "Mikrofon açık kalır, hiçbir şey kaydedilmez.",
+  "micPermissionFactCounts": "Telefonun olayları sayar — hareket, ses, sessizlik. Sesin kendisini hiç tutmaz.",
+  "micPermissionFactLocal": "Çözümleme bu cihazda yapılır. Hiçbir şey yüklenmez, bir kez bile.",
+  "micPermissionFactOptional": "Hayır de, ritüel yine çalışır — ses ve alarm devam eder, yalnız gece raporu üretilmez.",
+  "micPermissionAllow": "DEVAM",
+  "micPermissionSkip": "ŞİMDİ DEĞİL",
+  "micPermissionDeniedTitle": "İZİN REDDEDİLDİ",
+  "micPermissionDeniedBody": "Ritüel yine çalışır — yalnız gece raporu üretilmez. İstersen telefon ayarlarından sonra açabilirsin.",
+
+  "alarmLatestAt": "EN GEÇ BU SAATTE",
+  "alarmWindowWidth": "PENCERE GENİŞLİĞİ",
+  "alarmWindowMinutes": "{minutes} DK",
+  "alarmSave": "ALARMI KUR"
 }

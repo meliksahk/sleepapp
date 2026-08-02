@@ -10,6 +10,8 @@ import '../features/home/home_screen.dart';
 import '../features/mixer/presentation/mixer_route.dart';
 import '../features/settings/presentation/delete_account_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/sleep/presentation/alarm_setup_screen.dart';
+import '../features/sleep/presentation/mic_permission_screen.dart';
 import '../features/sleep/presentation/night_report_screen.dart';
 import '../features/sleep/presentation/sleep_mode_screen.dart';
 import '../features/sleep/presentation/sleep_history_screen.dart';
@@ -40,8 +42,44 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: sleepModeRoutePath,
       builder: (context, state) => Consumer(
+        builder: (context, ref, _) => SleepModeScreen(
+          controller: ref.read(sleepModeControllerProvider),
+          // Gerekçe BİR KEZ gösterilir; kararı alınır, bir daha araya girmez.
+          // Reddedilmiş izinle geri gelindiğinde ekran "ne kaybettiğini"
+          // söyleyen hâliyle açılır.
+          micRationale: () async {
+            final flag = ref.read(micRationaleFlagProvider);
+            if (await flag.seen()) return true;
+            if (!context.mounted) return false;
+            final denied = ref
+                .read(sleepModeControllerProvider)
+                .state
+                .permissionDenied;
+            final allowed = await context.push<bool>(
+              '/sleep-mode/microphone${denied ? '?denied=1' : ''}',
+            );
+            await flag.markSeen();
+            return allowed ?? false;
+          },
+          onEditAlarm: () => context.push('/sleep-mode/alarm'),
+        ),
+      ),
+    ),
+    // Akıllı alarm kurulumu — sistemin saat diyaloğu YALNIZCA saat sorar,
+    // oysa buradaki alarmın asıl ayarı pencere genişliği.
+    GoRoute(
+      path: '/sleep-mode/alarm',
+      builder: (context, state) => Consumer(
         builder: (context, ref, _) =>
-            SleepModeScreen(controller: ref.read(sleepModeControllerProvider)),
+            AlarmSetupScreen(controller: ref.read(sleepModeControllerProvider)),
+      ),
+    ),
+    // Mikrofon izin gerekçesi — sistemin izin kutusundan ÖNCE. `?denied=1`
+    // "daha önce reddettin" hâlini açar (kullanıcıya ne kaybettiğini söyler).
+    GoRoute(
+      path: '/sleep-mode/microphone',
+      builder: (context, state) => MicPermissionScreen(
+        denied: state.uri.queryParameters['denied'] == '1',
       ),
     ),
     // `?soundscape=<slug>` → mikser O sesin tarifiyle açılır. Parametre yoksa

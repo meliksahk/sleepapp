@@ -87,7 +87,22 @@ ayakta değil). Deploy sırasında koşacak — koşmadan `GET /v1/admin/overvie
 
 ---
 
-## F2 — Gece kontrolü
+## F2 — Gece kontrolü · **iki ekran BİTTİ, biri kaldı**
+
+> **Durum (2 Ağu 2026):**
+>
+> - ✅ **Mikrofon izin gerekçesi** — `/sleep-mode/microphone`, sistem kutusundan
+>   ÖNCE gösterilir, BİR KEZ (`MicRationaleFlag`, secure storage). Reddedilmiş
+>   izinle geri gelinirse "ne kaybettiğini" söyleyen blok açılır. 5 test.
+> - ✅ **Akıllı alarm kurulumu** — `/sleep-mode/alarm`, saat + **pencere
+>   genişliği** (10–60 dk) birlikte. `SleepModeController.alarmWindow` artık
+>   değiştirilebilir ve değişiklik ZATEN KURULU alarma da uygulanıyor. 4 test.
+> - ⬜ **Alarm çalıyor tam ekran** — şu an uyku modunun içinde gün doğumu
+>   gradyanlı bir panel (kaydırma alanının dışında, her zaman görünür).
+>   Tasarımdaki tam ekran devralma yapılmadı.
+> - ⬜ **Gün doğumu rampası anahtarı** — tasarımda var, motorda karşılığı yok
+>   (`SunriseAlarmSound` her zaman açık). Çalışmayan anahtar ÇİZİLMEDİ: olmayan
+>   bir özelliği varmış gibi göstermek olurdu.
 
 **Neden ikinci:** mikrofon izni reddedilirse gece raporu hiç üretilmiyor — ürünün ikinci
 viral kancası sessizce ölüyor. Sistemin izin kutusunu gerekçesiz göstermek red oranını
