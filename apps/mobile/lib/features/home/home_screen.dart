@@ -163,10 +163,20 @@ class HomeScreen extends ConsumerWidget {
                           data: (s) => s.totalNights == 0
                               ? const SizedBox.shrink()
                               : Padding(
-                                  padding: const EdgeInsets.only(top: NoctaSpace.s3),
-                                  child: StreakStrip(
-                                    current: s.current,
-                                    longest: s.longest,
+                                  padding: const EdgeInsets.only(
+                                    top: NoctaSpace.s3,
+                                  ),
+                                  // Şerit artık bir KAPI: seri kendi ekranında
+                                  // bağlamıyla (ay ızgarası, en uzun, ortalama)
+                                  // yaşıyor — ana ekranda tek sayı bağlamsızdı.
+                                  child: GestureDetector(
+                                    key: const Key('streak-open'),
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () => context.push('/ritual'),
+                                    child: StreakStrip(
+                                      current: s.current,
+                                      longest: s.longest,
+                                    ),
                                   ),
                                 ),
                           orElse: () => const SizedBox.shrink(),
@@ -207,7 +217,9 @@ class HomeScreen extends ConsumerWidget {
                           data: (w) => w == null
                               ? const SizedBox.shrink()
                               : Padding(
-                                  padding: const EdgeInsets.only(top: NoctaSpace.s4),
+                                  padding: const EdgeInsets.only(
+                                    top: NoctaSpace.s4,
+                                  ),
                                   child: WeeklyCard(release: w),
                                 ),
                           orElse: () => const SizedBox.shrink(),

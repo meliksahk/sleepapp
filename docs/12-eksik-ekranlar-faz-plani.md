@@ -123,7 +123,18 @@ tam ekranı devralıyor.
 
 ---
 
-## F3 — Alışkanlık ve bildirim
+## F3 — Alışkanlık ve bildirim · **seri ekranı BİTTİ, bildirim ayarları kaldı**
+
+> **Durum (2 Ağu 2026):**
+>
+> - ✅ **Ritüelim / seri ekranı** — `/ritual`, ana ekrandaki şeritten açılıyor.
+>   Büyük seri sayısı, **takvim ayı** ızgarası (dolu geceler yırtık krem kare,
+>   boşlar sönük çerçeve — ayrım şekilde de var), en uzun / toplam / ortalama.
+>   Izgara YALNIZCA sunucudan gelen gecelerle dolar; veri yoksa boş kalır
+>   ("muhtemelen uyudun" diye kutu boyamıyoruz). 3 test.
+> - ⬜ **Bildirim ayarları** — API'de karşılığı yok: `profile` yalnızca
+>   `notificationsEnabled` (tek boole) tutuyor. Hatırlatıcı saati ve sessiz
+>   saatler için migration + PATCH alanları + notification zamanlaması gerekiyor.
 
 | Ayak  | İş                                                                                                                                                       |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |

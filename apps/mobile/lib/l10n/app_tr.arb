@@ -251,5 +251,13 @@
   "alarmLatestAt": "EN GEÇ BU SAATTE",
   "alarmWindowWidth": "PENCERE GENİŞLİĞİ",
   "alarmWindowMinutes": "{minutes} DK",
-  "alarmSave": "ALARMI KUR"
+  "alarmSave": "ALARMI KUR",
+
+  "ritualTitle": "Ritüelim",
+  "ritualNightsInRow": "GECE ÜST ÜSTE",
+  "ritualLongest": "EN UZUN",
+  "ritualTotalNights": "TOPLAM GECE",
+  "ritualAverage": "ORTALAMA",
+  "ritualMonthLabel": "BU AY",
+  "ritualEmpty": "Ritüelin henüz başlamadı."
 }

@@ -13,6 +13,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/sleep/presentation/alarm_setup_screen.dart';
 import '../features/sleep/presentation/mic_permission_screen.dart';
 import '../features/sleep/presentation/night_report_screen.dart';
+import '../features/sleep/presentation/ritual_screen.dart';
 import '../features/sleep/presentation/sleep_mode_screen.dart';
 import '../features/sleep/presentation/sleep_history_screen.dart';
 import '../features/sleep/sleep_providers.dart';
@@ -102,6 +103,8 @@ final GoRouter appRouter = GoRouter(
       path: '/sleep',
       builder: (context, state) => const SleepHistoryScreen(),
     ),
+    // Ritüel/seri — alışkanlık döngüsünün kendi ekranı (F3).
+    GoRoute(path: '/ritual', builder: (context, state) => const RitualScreen()),
     GoRoute(
       path: '/report/:night',
       builder: (context, state) =>

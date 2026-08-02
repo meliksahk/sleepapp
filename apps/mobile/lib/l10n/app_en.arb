@@ -699,5 +699,20 @@
   "alarmWindowMinutes": "{minutes} MIN",
   "@alarmWindowMinutes": { "description": "Pencere genisligi degeri", "placeholders": { "minutes": { "type": "int" } } },
   "alarmSave": "SET THE ALARM",
-  "@alarmSave": { "description": "Alarm kurulum birincil eylem" }
+  "@alarmSave": { "description": "Alarm kurulum birincil eylem" },
+
+  "ritualTitle": "My ritual",
+  "@ritualTitle": { "description": "Rit\u00fcel/seri ekrani basligi" },
+  "ritualNightsInRow": "NIGHTS IN A ROW",
+  "@ritualNightsInRow": { "description": "Buyuk seri sayisinin altindaki etiket" },
+  "ritualLongest": "LONGEST",
+  "@ritualLongest": { "description": "Istatistik etiketi" },
+  "ritualTotalNights": "NIGHTS TOTAL",
+  "@ritualTotalNights": { "description": "Istatistik etiketi" },
+  "ritualAverage": "AVERAGE",
+  "@ritualAverage": { "description": "Istatistik etiketi" },
+  "ritualMonthLabel": "THIS MONTH",
+  "@ritualMonthLabel": { "description": "Ay izgarasi basligi" },
+  "ritualEmpty": "Your ritual hasn't started yet.",
+  "@ritualEmpty": { "description": "Hic gece yoksa" }
 }

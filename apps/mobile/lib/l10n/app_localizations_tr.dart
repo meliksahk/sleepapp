@@ -796,4 +796,25 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get alarmSave => 'ALARMI KUR';
+
+  @override
+  String get ritualTitle => 'Ritüelim';
+
+  @override
+  String get ritualNightsInRow => 'GECE ÜST ÜSTE';
+
+  @override
+  String get ritualLongest => 'EN UZUN';
+
+  @override
+  String get ritualTotalNights => 'TOPLAM GECE';
+
+  @override
+  String get ritualAverage => 'ORTALAMA';
+
+  @override
+  String get ritualMonthLabel => 'BU AY';
+
+  @override
+  String get ritualEmpty => 'Ritüelin henüz başlamadı.';
 }

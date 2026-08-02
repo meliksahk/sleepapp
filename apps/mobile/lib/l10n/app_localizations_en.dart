@@ -796,4 +796,25 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get alarmSave => 'SET THE ALARM';
+
+  @override
+  String get ritualTitle => 'My ritual';
+
+  @override
+  String get ritualNightsInRow => 'NIGHTS IN A ROW';
+
+  @override
+  String get ritualLongest => 'LONGEST';
+
+  @override
+  String get ritualTotalNights => 'NIGHTS TOTAL';
+
+  @override
+  String get ritualAverage => 'AVERAGE';
+
+  @override
+  String get ritualMonthLabel => 'THIS MONTH';
+
+  @override
+  String get ritualEmpty => 'Your ritual hasn\'t started yet.';
 }

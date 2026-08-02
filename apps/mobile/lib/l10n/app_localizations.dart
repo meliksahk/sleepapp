@@ -1416,6 +1416,48 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'SET THE ALARM'**
   String get alarmSave;
+
+  /// Ritüel/seri ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'My ritual'**
+  String get ritualTitle;
+
+  /// Buyuk seri sayisinin altindaki etiket
+  ///
+  /// In en, this message translates to:
+  /// **'NIGHTS IN A ROW'**
+  String get ritualNightsInRow;
+
+  /// Istatistik etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'LONGEST'**
+  String get ritualLongest;
+
+  /// Istatistik etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'NIGHTS TOTAL'**
+  String get ritualTotalNights;
+
+  /// Istatistik etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'AVERAGE'**
+  String get ritualAverage;
+
+  /// Ay izgarasi basligi
+  ///
+  /// In en, this message translates to:
+  /// **'THIS MONTH'**
+  String get ritualMonthLabel;
+
+  /// Hic gece yoksa
+  ///
+  /// In en, this message translates to:
+  /// **'Your ritual hasn\'t started yet.'**
+  String get ritualEmpty;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {
