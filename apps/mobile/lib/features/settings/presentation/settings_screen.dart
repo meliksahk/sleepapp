@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../core/share/sharer.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../archetype/archetype_providers.dart' show sharerProvider;
 import '../../auth/auth_providers.dart';
 import '../../entitlement/entitlement_providers.dart';
 import '../../profile/profile_providers.dart';
@@ -19,6 +22,38 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _busy = false;
   bool _savingNotifications = false;
+  bool _exporting = false;
+
+  /// Verilerimi indir — `GET /v1/me/export` (GDPR taşınabilirliği).
+  ///
+  /// Dosya SUNUCUYA geri gönderilmez, cihazın paylaşım sayfasına verilir:
+  /// kullanıcı nereye kaydedeceğine kendi karar verir. Otomatik hiçbir yere
+  /// yazmıyoruz — kişisel verinin varış yerini seçmek kullanıcının hakkı.
+  Future<void> _exportData() async {
+    if (_exporting) return;
+    setState(() => _exporting = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppL10n.of(context); // await'ten ÖNCE (context async gap)
+    try {
+      final json = await ref.read(authControllerProvider).exportData();
+      await ref
+          .read(sharerProvider)
+          .share(
+            ShareContent(
+              text: l10n.privacyExportHint,
+              url: '',
+              file: ShareFile.json(
+                text: json,
+                filename: 'nocta-data-export.json',
+              ),
+            ),
+          );
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.privacyExportFailed)));
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
 
   /// Bildirim toggle'ı: optimistic değil — PATCH sonucunu bekleyip provider'ı
   /// tazeler; hata olursa switch eski değerinde kalır (kullanıcıya snackbar).
@@ -243,6 +278,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     : l10n.settingsLogOutOthers,
                 variant: NButtonVariant.ghost,
                 onPressed: _busy ? null : _revokeOthers,
+              ),
+
+              // ── GİZLİLİK ──────────────────────────────────────────────────
+              // İki uç da sunucuda AYLARDIR hazırdı (`GET /v1/me/export`,
+              // `DELETE /v1/auth/me`) ve uygulamada düğmesi yoktu. App Store,
+              // hesap açan her uygulamada uygulama-içi silmeyi şart koşuyor;
+              // yani bu bölüm bir cila değil, gönderim önkoşuluydu.
+              const SizedBox(height: NoctaSpace.s5),
+              const Divider(color: NoctaColors.lineHairline),
+              const SizedBox(height: NoctaSpace.s3),
+              NMono(l10n.privacySection, track: NoctaTrack.wide),
+              const SizedBox(height: NoctaSpace.s3),
+              Text(
+                l10n.privacyExportHint,
+                style: const TextStyle(
+                  fontSize: NoctaFontSize.caption,
+                  height: 1.6,
+                  color: NoctaColors.inkSecondary,
+                ),
+              ),
+              const SizedBox(height: NoctaSpace.s3),
+              NButton(
+                key: const Key('privacy-export'),
+                label: _exporting ? l10n.privacyExporting : l10n.privacyExport,
+                variant: NButtonVariant.ghost,
+                onPressed: _exporting ? null : _exportData,
+              ),
+              const SizedBox(height: NoctaSpace.s3),
+              NButton(
+                key: const Key('privacy-delete-account'),
+                label: l10n.privacyDeleteEntry,
+                variant: NButtonVariant.ghost,
+                onPressed: () => context.push('/settings/delete-account'),
               ),
               const SizedBox(height: NoctaSpace.s8),
             ],

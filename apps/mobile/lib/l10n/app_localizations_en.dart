@@ -698,4 +698,59 @@ class AppL10nEn extends AppL10n {
   @override
   String get mixerRecipeUnavailable =>
       'We couldn\'t load this sound\'s recipe, so your default mix is playing.';
+
+  @override
+  String get privacySection => 'Privacy';
+
+  @override
+  String get privacyExport => 'DOWNLOAD MY DATA';
+
+  @override
+  String get privacyExportHint =>
+      'Everything we hold about you, as one JSON file.';
+
+  @override
+  String get privacyExporting => 'PREPARING…';
+
+  @override
+  String get privacyExportFailed =>
+      'We couldn\'t prepare your data. Try again in a moment.';
+
+  @override
+  String get privacyDeleteEntry => 'DELETE MY ACCOUNT';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account';
+
+  @override
+  String get deleteAccountBody =>
+      'This can\'t be undone. Every night, mix, identity result and local sound file is erased.';
+
+  @override
+  String get deleteAccountItemNights => 'Your nights and reports';
+
+  @override
+  String get deleteAccountItemMixes => 'Your mixes and saved sounds';
+
+  @override
+  String get deleteAccountItemIdentity => 'Your sleep identity history';
+
+  @override
+  String get deleteAccountItemDevices => 'Every signed-in device';
+
+  @override
+  String get deleteAccountConfirm => 'I understand there is no way back.';
+
+  @override
+  String get deleteAccountCta => 'DELETE PERMANENTLY';
+
+  @override
+  String get deleteAccountCancel => 'KEEP MY ACCOUNT';
+
+  @override
+  String get deleteAccountDeleting => 'DELETING…';
+
+  @override
+  String get deleteAccountFailed =>
+      'We couldn\'t delete your account. Nothing was removed.';
 }

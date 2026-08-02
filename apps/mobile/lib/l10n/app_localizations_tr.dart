@@ -697,4 +697,60 @@ class AppL10nTr extends AppL10n {
   @override
   String get mixerRecipeUnavailable =>
       'Bu sesin tarifi yüklenemedi; varsayılan mix\'in çalıyor.';
+
+  @override
+  String get privacySection => 'Gizlilik';
+
+  @override
+  String get privacyExport => 'VERİLERİMİ İNDİR';
+
+  @override
+  String get privacyExportHint =>
+      'Sende tuttuğumuz her şey, tek bir JSON dosyası olarak.';
+
+  @override
+  String get privacyExporting => 'HAZIRLANIYOR…';
+
+  @override
+  String get privacyExportFailed =>
+      'Verilerin hazırlanamadı. Birazdan tekrar dene.';
+
+  @override
+  String get privacyDeleteEntry => 'HESABIMI SİL';
+
+  @override
+  String get deleteAccountTitle => 'Hesabını sil';
+
+  @override
+  String get deleteAccountBody =>
+      'Bu geri alınamaz. Tüm geceler, mixler, kimlik sonuçların ve yerel ses dosyaların silinir.';
+
+  @override
+  String get deleteAccountItemNights => 'Geceler ve raporlar';
+
+  @override
+  String get deleteAccountItemMixes => 'Mixler ve kaydedilen sesler';
+
+  @override
+  String get deleteAccountItemIdentity => 'Uyku kimliği geçmişin';
+
+  @override
+  String get deleteAccountItemDevices => 'Giriş yapılmış tüm cihazlar';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Anladım, geri dönüşü olmadığını biliyorum.';
+
+  @override
+  String get deleteAccountCta => 'HESABI KALICI OLARAK SİL';
+
+  @override
+  String get deleteAccountCancel => 'HESABIMI TUT';
+
+  @override
+  String get deleteAccountDeleting => 'SİLİNİYOR…';
+
+  @override
+  String get deleteAccountFailed =>
+      'Hesabın silinemedi. Hiçbir şey kaldırılmadı.';
 }

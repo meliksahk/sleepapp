@@ -1242,6 +1242,108 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'We couldn\'t load this sound\'s recipe, so your default mix is playing.'**
   String get mixerRecipeUnavailable;
+
+  /// Ayarlar bolum basligi: gizlilik ve hesap
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacySection;
+
+  /// Kisisel verinin tamamini disa aktarma eylemi (mono etiket)
+  ///
+  /// In en, this message translates to:
+  /// **'DOWNLOAD MY DATA'**
+  String get privacyExport;
+
+  /// Disa aktarma aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'Everything we hold about you, as one JSON file.'**
+  String get privacyExportHint;
+
+  /// Disa aktarma suruyor
+  ///
+  /// In en, this message translates to:
+  /// **'PREPARING…'**
+  String get privacyExporting;
+
+  /// Disa aktarma hatasi
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t prepare your data. Try again in a moment.'**
+  String get privacyExportFailed;
+
+  /// Ayarlardan hesap silme ekranina giden eylem
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE MY ACCOUNT'**
+  String get privacyDeleteEntry;
+
+  /// Hesap silme ekrani basligi (serif)
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account'**
+  String get deleteAccountTitle;
+
+  /// Silmenin geri alinamazligi
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone. Every night, mix, identity result and local sound file is erased.'**
+  String get deleteAccountBody;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your nights and reports'**
+  String get deleteAccountItemNights;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your mixes and saved sounds'**
+  String get deleteAccountItemMixes;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your sleep identity history'**
+  String get deleteAccountItemIdentity;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Every signed-in device'**
+  String get deleteAccountItemDevices;
+
+  /// Onay kutusu etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'I understand there is no way back.'**
+  String get deleteAccountConfirm;
+
+  /// Yikici birincil eylem
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE PERMANENTLY'**
+  String get deleteAccountCta;
+
+  /// Vazgecme eylemi
+  ///
+  /// In en, this message translates to:
+  /// **'KEEP MY ACCOUNT'**
+  String get deleteAccountCancel;
+
+  /// Silme suruyor
+  ///
+  /// In en, this message translates to:
+  /// **'DELETING…'**
+  String get deleteAccountDeleting;
+
+  /// Silme hatasi - hicbir sey silinmedi
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t delete your account. Nothing was removed.'**
+  String get deleteAccountFailed;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

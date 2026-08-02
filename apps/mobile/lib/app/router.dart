@@ -8,6 +8,7 @@ import '../features/content/presentation/soundscape_library_screen.dart';
 import '../features/entitlement/presentation/paywall_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/mixer/presentation/mixer_route.dart';
+import '../features/settings/presentation/delete_account_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sleep/presentation/night_report_screen.dart';
 import '../features/sleep/presentation/sleep_mode_screen.dart';
@@ -71,6 +72,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    // Hesap silme AYRI rota: ayarların içine gömülü bir diyalog değil, kendi
+    // ekranı. Yıkıcı ve geri alınamaz bir eylem, geri düğmesi olan kendi
+    // sayfasında yaşamalı (App Store zorunluluğu, CLAUDE.md §6).
+    GoRoute(
+      path: '/settings/delete-account',
+      builder: (context, state) => const DeleteAccountScreen(),
     ),
     GoRoute(
       path: '/paywall',
