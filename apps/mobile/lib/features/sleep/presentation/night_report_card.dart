@@ -51,94 +51,142 @@ class NightReportCard extends StatelessWidget {
         child: SizedBox(
           width: shareCardSize.width,
           height: shareCardSize.height,
-          child: DecoratedBox(
-            decoration: BoxDecoration(gradient: gradient),
-            child: Center(
-              child: Container(
-                width: 820,
-                padding: const EdgeInsets.symmetric(horizontal: 72, vertical: 88),
-                decoration: BoxDecoration(
-                  color: NoctaColors.bgBase.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(16),
+          // ELEGY: kart artik bastan sona gradyan degil. Gece tuvalinin uzerinde
+          // arketibin lekesi duruyor, makbuz ise KREM KAGIT — yani ekrandaki
+          // `NightReceipt` ile ayni malzeme. Iki yuzeyin ayni gorunmesi sart:
+          // kullanici ekranda gordugu seyi paylasiyor.
+          child: ColoredBox(
+            color: NoctaColors.bgBase,
+            child: Stack(
+              children: <Widget>[
+                Positioned(
+                  left: -120,
+                  top: 120,
+                  child: Container(
+                    width: 560,
+                    height: 720,
+                    decoration: BoxDecoration(
+                      gradient: gradient,
+                      borderRadius: BorderRadius.circular(NoctaRadius.full),
+                    ),
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      labels.header.toUpperCase(),
-                      key: const Key('report-card-header'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 34,
-                        letterSpacing: 8,
-                        color: NoctaColors.inkSecondary,
-                      ),
+                const Positioned.fill(child: NGrain(seed: 9, density: 5200)),
+                Center(
+                  child: Container(
+                    width: 820,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 72,
+                      vertical: 88,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      nightDate,
-                      key: const Key('report-card-date'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 30, color: NoctaColors.inkFaint),
-                    ),
-                    const SizedBox(height: 56),
+                    decoration: const BoxDecoration(color: NoctaColors.bgPaper),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // `toUpperCase()` KALDIRILDI: Dart'in locale'siz buyutmesi
+                        // Turkce'de `i -> I` uretiyor (`I` olmali). Buyuk harf artik
+                        // i18n dizgesinin isi (docs/06).
+                        Text(
+                          labels.header,
+                          key: const Key('report-card-header'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: NoctaFont.mono,
+                            fontSize: 32,
+                            letterSpacing: 8,
+                            color: NoctaColors.inkOnPaperSoft,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          nightDate,
+                          key: const Key('report-card-date'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: NoctaFont.mono,
+                            fontSize: 28,
+                            letterSpacing: 2,
+                            color: NoctaColors.inkOnPaperSoft,
+                          ),
+                        ),
+                        const SizedBox(height: 56),
 
-                    // Süre: makbuzun "tutar"ı — en büyük satır.
-                    Text(
-                      labels.duration,
-                      key: const Key('report-card-duration'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 132,
-                        height: 1.0,
-                        fontWeight: FontWeight.w600,
-                        color: NoctaColors.inkPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 56),
-                    _rule(),
-                    _row(labels.calmLabel, '$calmScore/100', keyName: 'report-card-calm'),
-                    _rule(),
-                    // D-10: "Sound events" DEĞİL — ölçtüğümüz şey "yüksek anlar".
-                    _row(labels.loudLabel, '$soundEvents', keyName: 'report-card-loud'),
-                    _rule(),
-                    if (streak > 0) ...[
-                      _row(labels.streakLabel, '$streak', keyName: 'report-card-streak'),
-                      _rule(),
-                    ],
-                    if (archetypeName != null) ...[
-                      _row(labels.identityLabel, archetypeName!),
-                      _rule(),
-                    ],
+                        // Süre: makbuzun "tutar"ı — en büyük satır.
+                        Text(
+                          labels.duration,
+                          key: const Key('report-card-duration'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: NoctaFont.display,
+                            fontSize: 136,
+                            height: 1.0,
+                            color: NoctaColors.inkOnPaper,
+                            fontFeatures: <FontFeature>[
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 56),
+                        _rule(),
+                        _row(
+                          labels.calmLabel,
+                          '$calmScore/100',
+                          keyName: 'report-card-calm',
+                        ),
+                        _rule(),
+                        // D-10: "Sound events" DEĞİL — ölçtüğümüz şey "yüksek anlar".
+                        _row(
+                          labels.loudLabel,
+                          '$soundEvents',
+                          keyName: 'report-card-loud',
+                        ),
+                        _rule(),
+                        if (streak > 0) ...[
+                          _row(
+                            labels.streakLabel,
+                            '$streak',
+                            keyName: 'report-card-streak',
+                          ),
+                          _rule(),
+                        ],
+                        if (archetypeName != null) ...[
+                          _row(labels.identityLabel, archetypeName!),
+                          _rule(),
+                        ],
 
-                    const SizedBox(height: 40),
-                    // SAĞLIK İDDİASI DEĞİL (CLAUDE.md §1.1). Kart paylaşılıyor:
-                    // uyarı kartın ÜSTÜNDE olmalı, uygulamanın içinde kalmamalı.
-                    Text(
-                      labels.disclaimer,
-                      key: const Key('report-card-disclaimer'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        height: 1.4,
-                        color: NoctaColors.inkFaint,
-                      ),
+                        const SizedBox(height: 40),
+                        // SAĞLIK İDDİASI DEĞİL (CLAUDE.md §1.1). Kart paylaşılıyor:
+                        // uyarı kartın ÜSTÜNDE olmalı, uygulamanın içinde kalmamalı.
+                        Text(
+                          labels.disclaimer,
+                          key: const Key('report-card-disclaimer'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: NoctaFont.mono,
+                            fontSize: 22,
+                            height: 1.6,
+                            letterSpacing: 1,
+                            color: NoctaColors.inkOnPaperSoft,
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+                        Text(
+                          'NOCTA',
+                          key: const Key('report-card-wordmark'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: NoctaFont.mono,
+                            fontSize: 34,
+                            letterSpacing: 12,
+                            color: NoctaColors.inkOnPaper,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 48),
-                    Text(
-                      'NOCTA',
-                      key: const Key('report-card-wordmark'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 36,
-                        letterSpacing: 10,
-                        color: NoctaColors.inkPrimary.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -146,10 +194,14 @@ class NightReportCard extends StatelessWidget {
     );
   }
 
+  /// Makbuzun kesik ayraci — duz `Divider` degil: kagit makbuzda cizgi noktalidir.
   Widget _rule() => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Divider(height: 1, color: NoctaColors.inkFaint.withValues(alpha: 0.3)),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Divider(
+      height: 1,
+      color: NoctaColors.inkOnPaperSoft.withValues(alpha: 0.35),
+    ),
+  );
 
   /// Makbuz satırı: solda etiket, sağda değer.
   ///
@@ -157,34 +209,41 @@ class NightReportCard extends StatelessWidget {
   /// Overthinking Ruminator") satırı 820 piksel taşırıyordu — kart bozuk paylaşılırdı.
   /// Etiket sabit kalır (kısa ve bizim yazdığımız), taşan şey daima değer olur.
   Widget _row(String label, String value, {String? keyName}) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              label,
-              style: TextStyle(fontSize: 34, color: NoctaColors.inkSecondary),
-            ),
-            const SizedBox(width: 24),
-            Flexible(
-              child: Text(
-                value,
-                key: keyName == null ? null : Key(keyName),
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.w600,
-                  color: NoctaColors.inkPrimary,
-                ),
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 20),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: NoctaFont.mono,
+            fontSize: 30,
+            letterSpacing: 2,
+            color: NoctaColors.inkOnPaperSoft,
+          ),
         ),
-      );
+        const SizedBox(width: 24),
+        Flexible(
+          child: Text(
+            value,
+            key: keyName == null ? null : Key(keyName),
+            textAlign: TextAlign.right,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: NoctaFont.mono,
+              fontSize: 32,
+              fontWeight: FontWeight.w500,
+              color: NoctaColors.inkOnPaper,
+              fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Kartın metinleri — çağıran (l10n'u olan ekran) doldurur.

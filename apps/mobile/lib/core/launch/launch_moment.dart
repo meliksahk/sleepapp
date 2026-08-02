@@ -44,7 +44,7 @@ import 'moon_painter.dart';
 ///
 /// ## Dikiş: native splash → Flutter
 ///
-/// İlk karenin zemini [NoctaColors.bgBase] (#0A0E1A) ve `flutter_native_splash`
+/// İlk karenin zemini [NoctaColors.bgBase] (#08080A) ve `flutter_native_splash`
 /// rengi de aynı sabit. Farklı olsalardı açılışta görünür bir renk sıçraması
 /// olurdu; `test/app/native_splash_seam_test.dart` bu eşleşmeyi kilitler.
 class LaunchMoment extends StatefulWidget {

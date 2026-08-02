@@ -18,11 +18,14 @@ class WeeklyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
     final count = release.soundscapes.length;
+    // Elegy: haftanin tarifi KREM KAGIT uzerinde duruyor — ekranin geri
+    // kalanindan doku farkiyla ayrilir, ikinci bir dolu kutuyla degil.
     return InkWell(
       key: const Key('weekly-card'),
-      borderRadius: BorderRadius.circular(NoctaRadius.card),
       onTap: () => context.push('/library'),
-      child: NCard(
+      child: NPaper(
+        seed: 12,
+        padding: const EdgeInsets.all(NoctaSpace.s5),
         child: Row(
           children: <Widget>[
             Expanded(
@@ -30,27 +33,23 @@ class WeeklyCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Text(
+                  NMono(
                     l10n.homeWeeklyLabel,
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.micro,
-                      letterSpacing: 1.2,
-                      color: NoctaColors.accentAurora,
-                    ),
+                    color: NoctaColors.inkOnPaperSoft,
+                    track: NoctaTrack.wide,
                   ),
-                  const SizedBox(height: NoctaSpace.s2),
-                  Text(
+                  const SizedBox(height: NoctaSpace.s3),
+                  NDisplay(
                     release.notes ?? l10n.homeWeeklyCount(count),
                     key: const Key('weekly-note'),
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.body,
-                      color: NoctaColors.inkPrimary,
-                    ),
+                    size: NoctaFontSize.h2,
+                    color: NoctaColors.inkOnPaper,
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, size: 16, color: NoctaColors.inkFaint),
+            const SizedBox(width: NoctaSpace.s3),
+            Container(width: 24, height: 1, color: NoctaColors.inkOnPaper),
           ],
         ),
       ),

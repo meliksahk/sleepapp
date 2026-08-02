@@ -28,7 +28,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppL10n.of(context); // await'ten ONCE (context async gap)
     try {
-      await ref.read(profileControllerProvider).setNotificationsEnabled(enabled);
+      await ref
+          .read(profileControllerProvider)
+          .setNotificationsEnabled(enabled);
       ref.invalidate(profileProvider); // switch güncel sunucu değerini yansıtır
     } catch (_) {
       messenger.showSnackBar(
@@ -45,13 +47,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppL10n.of(context); // await'ten ONCE (context async gap)
     try {
-      final revoked = await ref.read(authControllerProvider).revokeOtherSessions();
+      final revoked = await ref
+          .read(authControllerProvider)
+          .revokeOtherSessions();
       ref.invalidate(activeSessionsProvider); // liste güncellenir
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.settingsDevicesSignedOut(revoked))),
       );
     } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.settingsSignOutOthersFailed)));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsSignOutOthersFailed)),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -64,36 +70,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final profile = ref.watch(profileProvider);
     final entitlement = ref.watch(entitlementProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTitle)),
+      appBar: AppBar(title: NMono(l10n.settingsTitle)),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(NoctaSpace.s5),
+        // KAYDIRILABILIR: bes bolum kucuk ekranda sabit Column'a sigmiyor.
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(NoctaSpace.s6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              NDisplay(l10n.settingsTitle, size: NoctaFontSize.h1),
+              const SizedBox(height: NoctaSpace.s6),
               // Üyelik — premium durumu sunucudan (docs/02 §183). Premium özellikler
               // eklendiğinde bu bayrak üzerinden gate edilir; şu an durum göstergesi.
-              Text(
-                l10n.settingsMembershipSection,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
-              ),
+              const Divider(color: NoctaColors.lineHairline),
+              const SizedBox(height: NoctaSpace.s3),
+              NMono(l10n.settingsMembershipSection, track: NoctaTrack.wide),
               entitlement.maybeWhen(
                 data: (e) => Padding(
                   padding: const EdgeInsets.only(top: NoctaSpace.s2),
-                  child: Text(
+                  child: NDisplay(
                     e.premium ? l10n.membershipPremium : l10n.membershipFree,
                     key: const Key('membership-status'),
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                    size: NoctaFontSize.h2,
                   ),
                 ),
                 // Yükleme/hata → gizli (dayanıklı; ayarlar ekranı bloke olmaz).
                 orElse: () => const SizedBox.shrink(),
               ),
               const SizedBox(height: NoctaSpace.s5),
-              Text(
-                l10n.settingsNotificationsSection,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
-              ),
+              const Divider(color: NoctaColors.lineHairline),
+              const SizedBox(height: NoctaSpace.s3),
+              NMono(l10n.settingsNotificationsSection, track: NoctaTrack.wide),
               // Bildirim tercihi — profil gelince (yükleme/hata → gizli, dayanıklı).
               profile.maybeWhen(
                 data: (p) => SwitchListTile(
@@ -101,86 +108,117 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     l10n.settingsPushNotifications,
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                    style: const TextStyle(
+                      fontSize: NoctaFontSize.body,
+                      color: NoctaColors.inkPrimary,
+                    ),
                   ),
+                  activeThumbColor: NoctaColors.bgPaper,
+                  activeTrackColor: NoctaColors.accentAurora,
                   value: p.notificationsEnabled,
                   onChanged: _savingNotifications ? null : _setNotifications,
                 ),
                 orElse: () => const SizedBox.shrink(),
               ),
               const SizedBox(height: NoctaSpace.s5),
-              Text(
-                l10n.settingsLanguageSection,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
-              ),
+              const Divider(color: NoctaColors.lineHairline),
+              const SizedBox(height: NoctaSpace.s3),
+              NMono(l10n.settingsLanguageSection, track: NoctaTrack.wide),
               // DİL SEÇİCİ: çeviriler baştan beri tamdı ama yalnızca cihaz diline
               // uyuluyordu — yani var olan bir yetenek erişilemezdi. Sistem/EN/TR.
-              ref.watch(appLocaleProvider).maybeWhen(
-                data: (current) => Column(
-                  children: <Widget>[
-                    for (final option in <(Locale?, String)>[
-                      (null, l10n.settingsLanguageSystem),
-                      (const Locale('en'), l10n.settingsLanguageEnglish),
-                      (const Locale('tr'), l10n.settingsLanguageTurkish),
-                    ])
-                      ListTile(
-                        key: Key('locale-${option.$1?.languageCode ?? 'system'}'),
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        title: Text(
-                          option.$2,
-                          style: TextStyle(
-                            fontSize: NoctaFontSize.body,
-                            color: NoctaColors.inkPrimary,
+              ref
+                  .watch(appLocaleProvider)
+                  .maybeWhen(
+                    data: (current) => Column(
+                      children: <Widget>[
+                        for (final option in <(Locale?, String)>[
+                          (null, l10n.settingsLanguageSystem),
+                          (const Locale('en'), l10n.settingsLanguageEnglish),
+                          (const Locale('tr'), l10n.settingsLanguageTurkish),
+                        ])
+                          ListTile(
+                            key: Key(
+                              'locale-${option.$1?.languageCode ?? 'system'}',
+                            ),
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            title: Text(
+                              option.$2,
+                              style: const TextStyle(
+                                fontSize: NoctaFontSize.body,
+                                color: NoctaColors.inkPrimary,
+                              ),
+                            ),
+                            // Elegy'de tik ikonu yok: secili dil KIZIL BLOKla isaretlenir.
+                            // Renk tek basina tasiyici degil, sekil de degisiyor
+                            // (yok -> var), CLAUDE.md §7.
+                            trailing:
+                                (current?.languageCode ?? 'system') ==
+                                    (option.$1?.languageCode ?? 'system')
+                                ? Container(
+                                    width: 18,
+                                    height: 8,
+                                    color: NoctaColors.accentAurora,
+                                  )
+                                : null,
+                            onTap: () async {
+                              await ref
+                                  .read(localeStoreProvider)
+                                  .write(option.$1);
+                              ref.invalidate(appLocaleProvider);
+                            },
                           ),
-                        ),
-                        trailing:
-                            (current?.languageCode ?? 'system') ==
-                                (option.$1?.languageCode ?? 'system')
-                            ? Icon(Icons.check, color: NoctaColors.accentAurora)
-                            : null,
-                        onTap: () async {
-                          await ref.read(localeStoreProvider).write(option.$1);
-                          ref.invalidate(appLocaleProvider);
-                        },
-                      ),
-                  ],
-                ),
-                orElse: () => const SizedBox.shrink(),
-              ),
+                      ],
+                    ),
+                    orElse: () => const SizedBox.shrink(),
+                  ),
               const SizedBox(height: NoctaSpace.s5),
-              Text(
-                l10n.settingsSoundSection,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
-              ),
+              const Divider(color: NoctaColors.lineHairline),
+              const SizedBox(height: NoctaSpace.s3),
+              NMono(l10n.settingsSoundSection, track: NoctaTrack.wide),
               // AÇILIŞ SESİ (aura) — kapatılabilir olması ZORUNLU: bu bir uyku
               // uygulaması ve ses gece 23:00'te, yanında biri uyurken çalabilir.
               // KENDİ bölümünde: "Notifications" altında görünmesi yanlıştı (bildirim
               // toggle'ı çevrimdışıyken gizlenince ses ayarı bildirim gibi okunuyordu).
-              ref.watch(signatureSoundEnabledProvider).maybeWhen(
-                data: (enabled) => SwitchListTile(
-                  key: const Key('signature-sound-toggle'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    l10n.settingsSignatureSound,
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+              ref
+                  .watch(signatureSoundEnabledProvider)
+                  .maybeWhen(
+                    data: (enabled) => SwitchListTile(
+                      key: const Key('signature-sound-toggle'),
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        l10n.settingsSignatureSound,
+                        style: const TextStyle(
+                          fontSize: NoctaFontSize.body,
+                          color: NoctaColors.inkPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        l10n.settingsSignatureSoundHint,
+                        style: const TextStyle(
+                          fontSize: NoctaFontSize.caption,
+                          height: 1.5,
+                          color: NoctaColors.inkSecondary,
+                        ),
+                      ),
+                      activeThumbColor: NoctaColors.bgPaper,
+                      activeTrackColor: NoctaColors.accentAurora,
+                      value: enabled,
+                      onChanged: (v) async {
+                        await ref
+                            .read(signatureSoundStoreProvider)
+                            .setEnabled(v);
+                        ref.invalidate(signatureSoundEnabledProvider);
+                      },
+                    ),
+                    orElse: () => const SizedBox.shrink(),
                   ),
-                  subtitle: Text(
-                    l10n.settingsSignatureSoundHint,
-                    style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary),
-                  ),
-                  value: enabled,
-                  onChanged: (v) async {
-                    await ref.read(signatureSoundStoreProvider).setEnabled(v);
-                    ref.invalidate(signatureSoundEnabledProvider);
-                  },
-                ),
-                orElse: () => const SizedBox.shrink(),
-              ),
               const SizedBox(height: NoctaSpace.s5),
-              Text(
+              const Divider(color: NoctaColors.lineHairline),
+              const SizedBox(height: NoctaSpace.s3),
+              NMono(
                 l10n.settingsAccountSecuritySection,
-                style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                track: NoctaTrack.wide,
               ),
               // Aktif cihaz sayısı — veri gelince (yükleme/hata → gizli).
               sessions.maybeWhen(
@@ -189,7 +227,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Text(
                     l10n.settingsActiveDevices(list.length),
                     key: const Key('active-devices'),
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary),
+                    style: const TextStyle(
+                      fontSize: NoctaFontSize.body,
+                      color: NoctaColors.inkPrimary,
+                    ),
                   ),
                 ),
                 orElse: () => const SizedBox.shrink(),
@@ -197,9 +238,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: NoctaSpace.s3),
               NButton(
                 key: const Key('revoke-others'),
-                label: _busy ? l10n.settingsSigningOut : l10n.settingsLogOutOthers,
+                label: _busy
+                    ? l10n.settingsSigningOut
+                    : l10n.settingsLogOutOthers,
+                variant: NButtonVariant.ghost,
                 onPressed: _busy ? null : _revokeOthers,
               ),
+              const SizedBox(height: NoctaSpace.s8),
             ],
           ),
         ),

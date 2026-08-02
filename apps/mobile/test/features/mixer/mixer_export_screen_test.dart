@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
 import 'package:nocta/core/share/sharer.dart';
@@ -178,8 +179,9 @@ void main() {
     await t.pump();
 
     expect(find.byKey(const Key('mixer-export-progress')), findsOneWidget);
-    final button =
-        t.widget<OutlinedButton>(find.byKey(const Key('mixer-export-video')));
+    // Buton artık `NButton` (Elegy): `OutlinedButton` yerine onu okuyoruz.
+    // İddia aynı — kilitli mi değil mi.
+    final button = t.widget<NButton>(find.byKey(const Key('mixer-export-video')));
     // Çift basış ikinci native oturum açardı.
     expect(button.onPressed, isNull);
 

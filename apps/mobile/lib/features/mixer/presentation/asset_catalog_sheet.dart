@@ -47,9 +47,8 @@ Future<CatalogPick?> showAssetCatalogSheet(
         top: Radius.circular(NoctaRadius.sheet),
       ),
     ),
-    builder: (context) => AssetCatalogSheet(
-      currentAssetLayerCount: currentAssetLayerCount,
-    ),
+    builder: (context) =>
+        AssetCatalogSheet(currentAssetLayerCount: currentAssetLayerCount),
   );
 }
 
@@ -184,13 +183,10 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
         spacing: NoctaSpace.s3,
         runSpacing: NoctaSpace.s2,
         children: <Widget>[
-          Text(
+          NDisplay(
             l10n.mixerAssetCatalogTitle,
             key: const Key('asset-catalog-title'),
-            style: TextStyle(
-              fontSize: NoctaFontSize.h2,
-              color: NoctaColors.inkPrimary,
-            ),
+            size: NoctaFontSize.h2,
           ),
           if (total > 0)
             Text(
@@ -198,8 +194,10 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
               // harcadığını bilmeden silmeye karar veremez.
               l10n.mixerLocalStorageUsed(_mb(total)),
               key: const Key('local-storage-used'),
-              style: TextStyle(
-                fontSize: NoctaFontSize.caption,
+              style: const TextStyle(
+                fontFamily: NoctaFont.mono,
+                fontSize: NoctaFontSize.micro,
+                letterSpacing: NoctaTrack.tight,
                 color: NoctaColors.inkSecondary,
               ),
             ),
@@ -230,14 +228,18 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
               key: const Key('mixer-pick-from-device'),
               onPressed: _import,
               icon: const Icon(Icons.add, size: 18),
-              label: Text(l10n.mixerPickFromDevice),
+              label: NMono(
+                l10n.mixerPickFromDevice,
+                color: NoctaColors.inkSecondary,
+                track: NoctaTrack.tight,
+              ),
               style: TextButton.styleFrom(
                 // Dokunma hedefi ≥44px (CLAUDE.md §7).
                 minimumSize: const Size(44, 44),
-                foregroundColor: NoctaColors.accentAurora,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: NoctaSpace.s3,
-                ),
+                foregroundColor: NoctaColors.inkSecondary,
+                shape: const RoundedRectangleBorder(),
+                side: const BorderSide(color: NoctaColors.lineDashed),
+                padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s3),
               ),
             ),
         ],
@@ -266,7 +268,9 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
     }
 
     final index = local.valueOrNull;
-    final sounds = index is LocalSoundIndexOk ? index.sounds : const <LocalSound>[];
+    final sounds = index is LocalSoundIndexOk
+        ? index.sounds
+        : const <LocalSound>[];
 
     if (sounds.isEmpty) {
       widgets.add(
@@ -364,10 +368,7 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                 onPressed: () => _confirmDelete(l10n, sound),
                 tooltip: l10n.mixerLocalDelete,
                 // Dokunma hedefi ≥44px (CLAUDE.md §7).
-                constraints: const BoxConstraints(
-                  minWidth: 44,
-                  minHeight: 44,
-                ),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 icon: Icon(
                   Icons.delete_outline,
                   size: 20,
@@ -418,16 +419,16 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
   }
 
   Widget _sectionTitle(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: NoctaFontSize.caption,
-            color: NoctaColors.inkSecondary,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: NoctaFontSize.caption,
+        color: NoctaColors.inkSecondary,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 
   /// Seçiciyi aç, kopyala, sına, kaydet — ve başarılıysa doğrudan mikse ekle.
   ///
@@ -464,7 +465,11 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
             ),
           ),
         );
-      case LocalSoundImportRejected(:final reason, :final sizeBytes, :final usedBytes):
+      case LocalSoundImportRejected(
+        :final reason,
+        :final sizeBytes,
+        :final usedBytes,
+      ):
         setState(() {
           _importing = false;
           // Vazgeçmek HATA DEĞİL: ekranda hiçbir şey gösterilmez.
@@ -527,29 +532,27 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
     LocalSoundImportFailure reason,
     int? sizeBytes,
     int? usedBytes,
-  ) =>
-      switch (reason) {
-        LocalSoundImportFailure.notAudio => l10n.mixerLocalImportNotPlayable,
-        LocalSoundImportFailure.tooLarge => l10n.mixerLocalImportTooLarge(
-            _mb(sizeBytes ?? 0),
-            _mb(kMaxFileBytes),
-          ),
-        LocalSoundImportFailure.libraryFull => l10n.mixerLocalImportLibraryFull(
-            _mb(usedBytes ?? 0),
-            _mb(kMaxLibraryBytes),
-          ),
-        LocalSoundImportFailure.noSpace => l10n.mixerLocalImportNoSpace,
-        LocalSoundImportFailure.sourceGone => l10n.mixerLocalImportSourceGone,
-        LocalSoundImportFailure.pickerFailed =>
-          l10n.mixerLocalImportPickerFailed,
-        LocalSoundImportFailure.tooManyLayers =>
-          l10n.mixerLocalImportTooManyLayers('$kMaxImportedLayers'),
-        // `cancelled` buraya hiç gelmez (çağıran yerde eleniyor) ama switch'in
-        // tükendiğinden emin olmak için sade bir metne düşer.
-        LocalSoundImportFailure.cancelled ||
-        LocalSoundImportFailure.unknown =>
-          l10n.mixerLocalImportUnknown,
-      };
+  ) => switch (reason) {
+    LocalSoundImportFailure.notAudio => l10n.mixerLocalImportNotPlayable,
+    LocalSoundImportFailure.tooLarge => l10n.mixerLocalImportTooLarge(
+      _mb(sizeBytes ?? 0),
+      _mb(kMaxFileBytes),
+    ),
+    LocalSoundImportFailure.libraryFull => l10n.mixerLocalImportLibraryFull(
+      _mb(usedBytes ?? 0),
+      _mb(kMaxLibraryBytes),
+    ),
+    LocalSoundImportFailure.noSpace => l10n.mixerLocalImportNoSpace,
+    LocalSoundImportFailure.sourceGone => l10n.mixerLocalImportSourceGone,
+    LocalSoundImportFailure.pickerFailed => l10n.mixerLocalImportPickerFailed,
+    LocalSoundImportFailure.tooManyLayers => l10n.mixerLocalImportTooManyLayers(
+      '$kMaxImportedLayers',
+    ),
+    // `cancelled` buraya hiç gelmez (çağıran yerde eleniyor) ama switch'in
+    // tükendiğinden emin olmak için sade bir metne düşer.
+    LocalSoundImportFailure.cancelled ||
+    LocalSoundImportFailure.unknown => l10n.mixerLocalImportUnknown,
+  };
 
   /// "4.1" — bir ondalık. Bayt göstermek kullanıcıya hiçbir şey anlatmaz.
   static String _mb(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);

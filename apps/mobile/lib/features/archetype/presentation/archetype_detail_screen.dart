@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../content/content_providers.dart';
+import '../archetype_gradient.dart';
 import '../archetype_providers.dart';
 
 /// Archetype detay ekranı (docs/04) — bir uyku kimliğinin isim/tagline/özetini
@@ -19,50 +20,60 @@ class ArchetypeDetailScreen extends ConsumerWidget {
     final l10n = AppL10n.of(context);
     final content = ref.watch(archetypeContentProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.archetypeDetailTitle)),
+      appBar: AppBar(title: NMono(l10n.archetypeDetailTitle)),
       body: SafeArea(
         child: content.when(
           data: (map) {
             final info = map[slug];
             if (info == null) {
               return Center(
-                child: Text(
-                  l10n.archetypeUnknown,
+                child: NEmptyState(
                   key: const Key('identity-unknown'),
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.body,
-                    color: NoctaColors.inkSecondary,
-                  ),
+                  title: l10n.archetypeUnknown,
                 ),
               );
             }
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(NoctaSpace.s5),
+              padding: const EdgeInsets.all(NoctaSpace.s6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  // Kimliğin lekesi: arketibin kendi tenti, daire değil elips.
+                  Container(
+                    width: 150,
+                    height: 196,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(NoctaRadius.full),
+                      gradient: archetypeGradientForSlug(slug),
+                    ),
+                  ),
+                  const SizedBox(height: NoctaSpace.s8),
+                  NMono(l10n.archetypeDetailTitle, track: NoctaTrack.wide),
+                  const SizedBox(height: NoctaSpace.s3),
+                  NDisplay(
                     info.name,
                     key: const Key('detail-name'),
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.h1,
-                      color: NoctaColors.inkPrimary,
-                    ),
+                    size: NoctaFontSize.display,
+                    height: 1.05,
                   ),
-                  const SizedBox(height: NoctaSpace.s2),
+                  const SizedBox(height: NoctaSpace.s3),
+                  // Vurgu METNİ accentAuroraInk: ham kızıl (#C1442E) koyu zeminde
+                  // 3.4:1 ile AA'yı geçmiyor.
                   Text(
                     info.tagline,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: NoctaFontSize.body,
-                      color: NoctaColors.accentAurora,
+                      color: NoctaColors.accentAuroraInk,
+                      height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: NoctaSpace.s4),
+                  const SizedBox(height: NoctaSpace.s5),
                   Text(
                     info.summary,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: NoctaFontSize.body,
                       color: NoctaColors.inkSecondary,
+                      height: 1.7,
                     ),
                   ),
                   _SoundsSection(slug: slug),
@@ -100,15 +111,12 @@ class _SoundsSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: NoctaSpace.s6),
-            Text(
+            NDisplay(
               AppL10n.of(context).archetypeSoundsThatSuitYou,
               key: const Key('sounds-heading'),
-              style: TextStyle(
-                fontSize: NoctaFontSize.h2,
-                color: NoctaColors.inkPrimary,
-              ),
+              size: NoctaFontSize.h2,
             ),
-            const SizedBox(height: NoctaSpace.s3),
+            const SizedBox(height: NoctaSpace.s4),
             for (final s in list)
               Padding(
                 padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
@@ -116,13 +124,7 @@ class _SoundsSection extends ConsumerWidget {
                   key: Key('detail-sound-${s.slug}'),
                   onTap: () => context.push('/library/${s.slug}'),
                   child: NCard(
-                    child: Text(
-                      s.title('en'),
-                      style: TextStyle(
-                        fontSize: NoctaFontSize.body,
-                        color: NoctaColors.inkPrimary,
-                      ),
-                    ),
+                    child: NDisplay(s.title('en'), size: NoctaFontSize.h2 - 6),
                   ),
                 ),
               ),

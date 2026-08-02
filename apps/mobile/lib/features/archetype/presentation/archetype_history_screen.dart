@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../archetype_models.dart';
+import '../archetype_gradient.dart';
 import '../archetype_providers.dart';
 
 /// Kimlik geçmişi — kullanıcının archetype sonuçları (yeniden eskiye).
@@ -20,7 +21,7 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
     final content = ref.watch(archetypeContentProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.identityHistoryTitle)),
+      appBar: AppBar(title: NMono(l10n.identityHistoryTitle)),
       body: SafeArea(
         child: history.when(
           data: (list) => list.isEmpty
@@ -39,13 +40,9 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
   }
 
   Widget _empty(BuildContext context) => Center(
-    child: Text(
-      AppL10n.of(context).identityHistoryEmpty,
+    child: NEmptyState(
       key: const Key('history-empty'),
-      style: TextStyle(
-        fontSize: NoctaFontSize.body,
-        color: NoctaColors.inkSecondary,
-      ),
+      title: AppL10n.of(context).identityHistoryEmpty,
     ),
   );
 
@@ -56,10 +53,11 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
     AsyncValue<Map<String, ArchetypeInfo>> content,
   ) {
     return ListView.separated(
-      padding: const EdgeInsets.all(NoctaSpace.s5),
+      padding: const EdgeInsets.all(NoctaSpace.s6),
       itemCount: list.length,
+      // Elegy: kart yığını değil, saç teli çizgiyle ayrılmış satırlar.
       separatorBuilder: (context, index) =>
-          const SizedBox(height: NoctaSpace.s3),
+          const Divider(color: NoctaColors.lineHairline),
       itemBuilder: (context, i) {
         final r = list[i];
         // İsim içerikten çözülür; içerik yoksa slug (dayanıklı — detay ekranıyla aynı).
@@ -70,43 +68,44 @@ class ArchetypeHistoryScreen extends ConsumerWidget {
         return GestureDetector(
           key: Key('history-item-${r.createdAt}'),
           onTap: () => context.push('/identity/${r.archetypeSlug}'),
-          child: NCard(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name ?? r.archetypeSlug,
-                      style: TextStyle(
-                        fontSize: NoctaFontSize.body,
-                        color: NoctaColors.inkPrimary,
-                      ),
-                    ),
-                    if (i == 0) ...[
-                      const SizedBox(height: NoctaSpace.s1),
-                      Text(
-                        AppL10n.of(context).identityHistoryCurrent,
-                        key: const Key('history-current-badge'),
-                        style: TextStyle(
-                          fontSize: NoctaFontSize.caption,
-                          color: NoctaColors.accentAurora,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                Text(
-                  // ISO tarihin gün kısmı (intl bağımlılığı eklemeden).
-                  r.createdAt.length >= 10
-                      ? r.createdAt.substring(0, 10)
-                      : r.createdAt,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.caption,
-                    color: NoctaColors.inkSecondary,
+                // Her kimliğin kendi lekesi — güncel olan daha iri.
+                Container(
+                  width: i == 0 ? 26 : 18,
+                  height: i == 0 ? 34 : 24,
+                  margin: const EdgeInsets.only(top: NoctaSpace.s1),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(NoctaRadius.full),
+                    gradient: archetypeGradientForSlug(r.archetypeSlug),
                   ),
                 ),
+                const SizedBox(width: NoctaSpace.s4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      NDisplay(name ?? r.archetypeSlug, size: 20),
+                      const SizedBox(height: NoctaSpace.s1),
+                      NMono(
+                        // ISO tarihin gün kısmı (intl bağımlılığı eklemeden).
+                        r.createdAt.length >= 10
+                            ? r.createdAt.substring(0, 10)
+                            : r.createdAt,
+                        track: NoctaTrack.tight,
+                      ),
+                    ],
+                  ),
+                ),
+                if (i == 0)
+                  NMono(
+                    AppL10n.of(context).identityHistoryCurrent,
+                    key: const Key('history-current-badge'),
+                    color: NoctaColors.accentAuroraInk,
+                    track: NoctaTrack.tight,
+                  ),
               ],
             ),
           ),

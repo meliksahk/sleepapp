@@ -39,16 +39,10 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        title: Text(
+        title: const NMono(
           'NOCTA',
-          style: TextStyle(
-            fontSize: NoctaFontSize.h2,
-            letterSpacing: 4,
-            color: NoctaColors.inkSecondary,
-          ),
+          track: NoctaTrack.wide,
+          color: NoctaColors.inkFaint,
         ),
         actions: <Widget>[
           IconButton(
@@ -83,48 +77,65 @@ class HomeScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         // ── BÖLGE 1 · BU GECE (birincil) ──
-                        _SectionLabel(l10n.homeTonightLabel),
-                        const SizedBox(height: NoctaSpace.s2),
-                        NCard(
-                          padding: const EdgeInsets.all(NoctaSpace.s5),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Text(
-                                l10n.homeRitualTitle,
-                                style: TextStyle(
-                                  fontSize: NoctaFontSize.display,
-                                  color: NoctaColors.inkPrimary,
-                                  height: 1.15,
+                        // Elegy: bu blok bir kart değil, tuvale yapıştırılmış YIRTIK
+                        // KAĞIT. Hafif eğim (~0,7°) kolajın elle yapıştırılmış hissini
+                        // verir; `Transform.rotate` yerleşimi değil yalnız çizimi döndürür,
+                        // o yüzden yükseklik hesabı bozulmaz.
+                        Transform.rotate(
+                          angle: -0.012,
+                          child: NPaper(
+                            seed: 7,
+                            padding: const EdgeInsets.fromLTRB(
+                              NoctaSpace.s6,
+                              NoctaSpace.s8,
+                              NoctaSpace.s5,
+                              NoctaSpace.s6,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                NMono(
+                                  l10n.homeTonightLabel,
+                                  track: NoctaTrack.wide,
+                                  color: NoctaColors.inkOnPaperSoft,
                                 ),
-                              ),
-                              const SizedBox(height: NoctaSpace.s2),
-                              Text(
-                                l10n.homeRitualSubtitle,
-                                style: TextStyle(
-                                  fontSize: NoctaFontSize.caption,
-                                  color: NoctaColors.inkSecondary,
-                                  height: 1.4,
+                                const SizedBox(height: NoctaSpace.s3),
+                                NDisplay(
+                                  l10n.homeRitualTitle,
+                                  size: NoctaFontSize.display,
+                                  color: NoctaColors.inkOnPaper,
+                                  height: 1.02,
                                 ),
-                              ),
-                              const SizedBox(height: NoctaSpace.s5),
-                              NButton(
-                                key: const Key('sleep-mode-cta'),
-                                label: l10n.homeStartRitual,
-                                onPressed: () => context.push('/sleep-mode'),
-                              ),
-                              const SizedBox(height: NoctaSpace.s3),
-                              NButton(
-                                key: const Key('mixer-cta'),
-                                label: l10n.homeOpenMixer,
-                                variant: NButtonVariant.ghost,
-                                onPressed: () => context.push('/mixer'),
-                              ),
-                            ],
+                                const SizedBox(height: NoctaSpace.s3),
+                                Text(
+                                  l10n.homeRitualSubtitle,
+                                  style: const TextStyle(
+                                    fontSize: NoctaFontSize.caption,
+                                    color: NoctaColors.inkOnPaperSoft,
+                                    height: 1.55,
+                                  ),
+                                ),
+                                const SizedBox(height: NoctaSpace.s6),
+                                NButton(
+                                  key: const Key('sleep-mode-cta'),
+                                  label: l10n.homeStartRitual,
+                                  variant: NButtonVariant.inverse,
+                                  expand: true,
+                                  rule: true,
+                                  onPressed: () => context.push('/sleep-mode'),
+                                ),
+                                const SizedBox(height: NoctaSpace.s4),
+                                _PaperLink(
+                                  key: const Key('mixer-cta'),
+                                  label: l10n.homeOpenMixer,
+                                  onTap: () => context.push('/mixer'),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: NoctaSpace.s6),
+                        const SizedBox(height: NoctaSpace.s8),
 
                         // ── BÖLGE 2 · KİMLİK ──
                         // Yükleme/hata → DAVET (ekran asla boşalmaz, archetype-cta hep 1).
@@ -228,20 +239,51 @@ class HomeScreen extends ConsumerWidget {
 }
 
 /// Bölüm etiketi. `toUpperCase()` YASAK: Dart'ın locale'siz büyütmesi Türkçe
-/// `i` → `I` üretir. Büyük harf etkisi letterSpacing + soluk renkle verilir.
+/// `i` → `I` üretir. Büyük harf etkisi mono aile + letterSpacing ile verilir.
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
 
   final String text;
 
   @override
+  Widget build(BuildContext context) => NMono(text, track: NoctaTrack.wide);
+}
+
+/// Kağıdın üstündeki ikincil eylem: altı çizili mono bağlantı.
+/// Kağıt zeminde ghost buton (koyu çerçeve) ağır durur — tasarım burada
+/// bilinçli olarak buton değil bağlantı kullanıyor.
+class _PaperLink extends StatelessWidget {
+  const _PaperLink({super.key, required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: NoctaFontSize.micro,
-        letterSpacing: 1.2,
-        color: NoctaColors.inkFaint,
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          // Dokunma hedefi 44px: görsel çizgi ince, hedef değil (CLAUDE.md §7).
+          constraints: const BoxConstraints(minHeight: 44),
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: const EdgeInsets.only(bottom: NoctaSpace.s1),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: NoctaColors.inkOnPaperSoft),
+              ),
+            ),
+            child: NMono(
+              label,
+              color: NoctaColors.inkOnPaperSoft,
+              track: NoctaTrack.tight,
+              height: 1,
+            ),
+          ),
+        ),
       ),
     );
   }

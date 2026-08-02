@@ -426,27 +426,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                l10n.mixerSoundLabel,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.micro,
-                  letterSpacing: 1.2,
-                  color: NoctaColors.inkSecondary,
-                ),
-              ),
-              const SizedBox(height: NoctaSpace.s2),
-              Text(
+              NMono(l10n.mixerSoundLabel, track: NoctaTrack.wide),
+              const SizedBox(height: NoctaSpace.s3),
+              NDisplay(
                 widget.title?.isNotEmpty == true
                     ? widget.title!
                     : l10n.mixerTitle,
                 key: const Key('mixer-title'),
                 maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.display,
-                  color: NoctaColors.inkPrimary,
-                  height: 1.15,
-                ),
+                size: NoctaFontSize.display,
+                height: 1.02,
               ),
               const SizedBox(height: NoctaSpace.s3),
               _statusLine(l10n, s),
@@ -476,11 +465,8 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-        ),
+        // Kolajda gosterge noktasi daire degil KARE bir isaret blogu.
+        Container(width: 8, height: 8, color: dot),
         const SizedBox(width: NoctaSpace.s2),
         // `Flexible` — metin SARAR, kırpılmaz.
         //
@@ -493,7 +479,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
           child: Text(
             text,
             key: const Key('mixer-status'),
-            style: TextStyle(
+            style: const TextStyle(
+              fontFamily: NoctaFont.mono,
+              letterSpacing: NoctaTrack.tight,
               fontSize: NoctaFontSize.caption,
               color: NoctaColors.inkSecondary,
             ),
@@ -816,26 +804,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.caption,
-                    color: NoctaColors.inkPrimary,
-                  ),
-                ),
-              ),
+              Expanded(child: NDisplay(label, size: 18, maxLines: 1)),
               Text(
                 l10n.mixerGainPercent((gain * 100).round()),
-                style: TextStyle(
+                style: const TextStyle(
+                  fontFamily: NoctaFont.mono,
                   fontSize: NoctaFontSize.micro,
+                  letterSpacing: NoctaTrack.tight,
                   color: NoctaColors.inkSecondary,
                   // Sürgü oynarken yüzde her adımda sağa-sola zıplamasın.
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
+                  fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
                 ),
               ),
               if (onRemove != null)
@@ -858,16 +836,32 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 ),
             ],
           ),
-          Slider(
-            key: Key('gain-$layerId'),
-            value: gain,
-            onChanged: (v) => _c.setGain(layerId, v),
-            // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
-            // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
-            label: l10n.mixerGainPercent((gain * 100).round()),
-            divisions: 20,
-            activeColor: NoctaColors.accentAurora,
-            inactiveColor: NoctaColors.inkFaint.withValues(alpha: 0.3),
+          // Elegy: yuvarlak topuzlu Material surgusu yerine DIKDORTGEN dolum.
+          // Tasarimda katmanin sesi, kartin ne kadarinin krem dolduguyla
+          // anlatiliyor; surgunun kendisi bir "dolum cubugu".
+          //
+          // Etkilesim DEGISMEDI (hala `Slider`): surukleme davranisi, 20 adim,
+          // ekran okuyucu etiketi ve testlerin `gain-<id>` tutamagi ayni kaldi.
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 26,
+              activeTrackColor: NoctaColors.bgPaper,
+              inactiveTrackColor: NoctaColors.bgOverlay,
+              thumbColor: NoctaColors.accentAurora,
+              overlayColor: NoctaColors.accentAurora.withValues(alpha: 0.12),
+              trackShape: const RectangularSliderTrackShape(),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              tickMarkShape: SliderTickMarkShape.noTickMark,
+            ),
+            child: Slider(
+              key: Key('gain-$layerId'),
+              value: gain,
+              onChanged: (v) => _c.setGain(layerId, v),
+              // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
+              // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
+              label: l10n.mixerGainPercent((gain * 100).round()),
+              divisions: 20,
+            ),
           ),
         ],
       ),
@@ -897,23 +891,19 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         children: <Widget>[
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
+            // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
+            // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
+            // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
+            child: NButton(
               key: const Key('mixer-toggle'),
               // Hazırlanırken buton KİLİTLİ: render sırasında ikinci kez
               // basmak ikinci bir render tetiklerdi.
               onPressed: s.isPreparing ? null : () => _c.toggle(),
-              // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
-              // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
-              // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(kPlayerPlayButtonMinHeight),
-              ),
-              icon: Icon(s.isPlaying ? Icons.pause : Icons.play_arrow),
-              label: Text(
-                s.isPreparing
-                    ? l10n.mixerPreparing
-                    : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
-              ),
+              expand: true,
+              rule: true,
+              label: s.isPreparing
+                  ? l10n.mixerPreparing
+                  : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
             ),
           ),
 
@@ -922,22 +912,13 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             const SizedBox(height: NoctaSpace.s2),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              child: NButton(
                 key: const Key('mixer-export-video'),
+                variant: NButtonVariant.ghost,
                 onPressed: s.isExporting ? null : _exportVideo,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: NoctaColors.inkPrimary,
-                  side: BorderSide(
-                    color: NoctaColors.inkFaint.withValues(alpha: 0.5),
-                  ),
-                ),
-                icon: const Icon(Icons.movie_creation_outlined),
-                label: Text(
-                  s.isExporting
-                      ? l10n.mixerExporting((s.exportProgress! * 100).round())
-                      : l10n.mixerExportVideo,
-                ),
+                label: s.isExporting
+                    ? l10n.mixerExporting((s.exportProgress! * 100).round())
+                    : l10n.mixerExportVideo,
               ),
             ),
             if (s.isExporting)
@@ -946,6 +927,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 child: LinearProgressIndicator(
                   key: const Key('mixer-export-progress'),
                   value: s.exportProgress,
+                  minHeight: 4,
+                  backgroundColor: NoctaColors.bgOverlay,
+                  color: NoctaColors.accentAurora,
                 ),
               ),
           ],

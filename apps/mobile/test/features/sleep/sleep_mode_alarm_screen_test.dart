@@ -125,7 +125,7 @@ void main() {
       await t.pump();
 
       await t.tap(find.byKey(const Key('alarm-dismiss')));
-      await t.pumpAndSettle();
+      await t.pump(const Duration(milliseconds: 400)); // pumpAndSettle DEĞİL: nefes alan küre sürekli animasyon
 
       expect(find.byKey(const Key('alarm-ringing')), findsNothing);
       // Alarmı kapatmak geceyi bitirmez — kullanıcı uyumaya dönebilir.
