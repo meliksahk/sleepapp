@@ -9,7 +9,8 @@
 // ('self-produced') ve üretilen şey gerçekten çalınabilir bir dosya.
 //
 // Çalıştır: cd apps/mobile && dart run tool/render_demo_asset.dart
-// Çıktı   : apps/api/assets-inbox/demo/pad-fire-demo.wav + .json
+// Çalıştır: cd apps/mobile && dart run tool/render_demo_asset.dart pad-only
+// Çıktı   : apps/api/assets-inbox/demo/<demo>.wav + .json
 //
 // `print` kasıtlı: bu bir CLI aracı.
 // ignore_for_file: avoid_print
@@ -26,22 +27,57 @@ const int sampleRate = 48000;
 /// mono → ~960 KB. Uzun tutmak depoyu ve yükleme testini gereksiz yavaşlatırdı.
 const int seconds = 10;
 
-/// Demo mix: pad (tonal) + fire (transient'li doku).
+/// Üretilebilecek demolar.
 ///
-/// İkisi bilerek seçildi — motorun İKİ farklı karakterini de taşısın ki dosya
-/// çalındığında "gerçekten ses var mı" sorusu tek bir gürültü tınısına bakarak
-/// değil, duyulur bir yapıyla cevaplansın.
-final MixSpec demoSpec = const MixSpec(<MixLayer>[
-  MixLayer(id: 'pad', type: LayerSource.pad, gain: 0.55),
-  MixLayer(id: 'fire', type: LayerSource.fire, gain: 0.35),
-]);
+/// **Neden birden fazla — ölçülmüş bir karışıklıktan doğdu.** Tek demo `pad +
+/// fire` idi ve kullanıcı onu mikserde çalıp "melodi dışında dipte bir gürültü
+/// var, neden?" diye sordu. Cevap: `fire` DOSYANIN İÇİNDE, bir mikser katmanı
+/// değil — sürgüyle kapatılamaz, çünkü ithal dosya motor için tek parça opak bir
+/// akıştır. Bunu ANLATMAK yerine GÖSTERMEK için yan yana dinlenebilecek temiz
+/// bir melodi dosyası gerekiyordu.
+const Map<String, ({String slug, String title, MixSpec spec})> demos =
+    <String, ({String slug, String title, MixSpec spec})>{
+  'pad-fire': (
+    slug: 'pad-fire-demo',
+    title: 'Pad + Fire (demo)',
+    // İkisi bilerek birlikte: motorun İKİ farklı karakterini de taşısın ki
+    // "gerçekten ses var mı" sorusu tek bir gürültü tınısıyla değil, duyulur
+    // bir yapıyla cevaplansın.
+    spec: MixSpec(<MixLayer>[
+      MixLayer(id: 'pad', type: LayerSource.pad, gain: 0.55),
+      MixLayer(id: 'fire', type: LayerSource.fire, gain: 0.35),
+    ]),
+  ),
+  'pad-only': (
+    slug: 'pad-only-demo',
+    title: 'Pad (yalnız melodi)',
+    // Tek katman, dokusuz. Kazanç 0.55 DEĞİL 0.72: `fire` çıkınca toplam
+    // seviye düşer ve iki dosya yan yana dinlenirken biri kısık gelirse
+    // karşılaştırma "gürültü mü, seviye mi" sorusuna bulanır.
+    spec: MixSpec(<MixLayer>[
+      MixLayer(id: 'pad', type: LayerSource.pad, gain: 0.72),
+    ]),
+  ),
+};
 
 void main(List<String> args) {
+  final key = args.isEmpty ? 'pad-fire' : args.first;
+  final demo = demos[key];
+  if (demo == null) {
+    print('Bilinmeyen demo: $key');
+    print('Seçenekler: ${demos.keys.join(', ')}');
+    exitCode = 2;
+    return;
+  }
+  render(demo);
+}
+
+void render(({String slug, String title, MixSpec spec}) demo) {
   // apps/mobile'dan apps/api/assets-inbox/demo'ya.
   final outDir = Directory('../api/assets-inbox/demo');
   outDir.createSync(recursive: true);
 
-  print('Render: ${seconds}s @ ${sampleRate}Hz — pad + fire…');
+  print('Render: ${seconds}s @ ${sampleRate}Hz — ${demo.title}…');
   final started = DateTime.now();
 
   // `renderSeamlessLoop`: dosyanın KENDİSİ dikişsiz döngülensin. Asset katmanında
@@ -50,7 +86,7 @@ void main(List<String> args) {
   // düzgün hazırlanmış bir dosya tıksız döngülenir.
   var clipped = 0;
   final pcm = renderSeamlessLoop(
-    demoSpec,
+    demo.spec,
     loopSeconds: seconds,
     sampleRate: sampleRate,
     seed: 20260719,
@@ -59,20 +95,20 @@ void main(List<String> args) {
   final elapsed = DateTime.now().difference(started);
 
   final wav = encodeWav(pcm, sampleRate: sampleRate);
-  final wavPath = '${outDir.path}/pad-fire-demo.wav';
+  final wavPath = '${outDir.path}/${demo.slug}.wav';
   File(wavPath).writeAsBytesSync(wav);
 
   // Yanındaki meta dosyası — yükleme script'inin okuduğu şey.
   // LİSANS ZORUNLU: bu dosyayı BİZ ürettik, kaynağı da bu script.
   final meta = <String, Object>{
-    'title': 'Pad + Fire (demo)',
+    'title': demo.title,
     'genre': 'ambient',
     'mood': <String>['calm', 'sleep'],
     'license': 'self-produced',
     'source': 'NOCTA audio engine — apps/mobile/tool/render_demo_asset.dart',
     'durationSeconds': seconds,
   };
-  final jsonPath = '${outDir.path}/pad-fire-demo.json';
+  final jsonPath = '${outDir.path}/${demo.slug}.json';
   File(jsonPath).writeAsStringSync(
     '${const JsonEncoder.withIndent('  ').convert(meta)}\n',
   );

@@ -60,6 +60,24 @@ dependencies:
   share_plus: ^12.0.2
   record: ^7.1.1
   flutter_foreground_task: ^10.0.0
+  # Kullanıcının KENDİ ses dosyasını seçmesi (#22). file_picker DEĞİL, üç sebeple:
+  # (1) file_picker'ın podspec'i iOS 14 dayatıyor, bizim hedefimiz 13.0 — sürüm
+  #     atlamak bir ÜRÜN kararıdır (CLAUDE.md §8), bağımlılık yan etkisi olarak
+  #     verilemez; (2) file_picker 6 platform + foto kütüphanesi kod yollarını
+  #     taşır, bize hiçbiri gerekmiyor; (3) bunun tek bağımlılığı Flutter SDK'sı.
+  # BEDELİ (gizlenmiyor): topluluk küçük (~62k/hafta, file_picker 3.16M) — terk
+  # edilme riski gerçek. Azaltma: yüzeyi `SoundPicker` arayüzünün arkasında tek
+  # fonksiyon; göç gerekirse yalnızca o arayüzün üretim uygulaması değişir.
+  flutter_file_dialog: ^3.3.1
+  # getApplicationSupportDirectory() — ithal edilen seslerin yaşadığı dizin.
+  # Bugün zaten geçişli geliyor; doğrudan import edildiği için açıkça bildirilir
+  # (depend_on_referenced_packages). Geçişliye güvenmek, üst bağımlılık sürüm
+  # atladığında SESSİZCE kırılır.
+  path_provider: ^2.1.5
+  # p.join — dizin + dosya adı birleştirme. Elle string birleştirmek platform
+  # ayracı farkını elle yönetmek demek; aynı hatayı `Uri.file` tarafında bir kez
+  # CI'da yedik (bkz. mix_player.assetAudioUri).
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

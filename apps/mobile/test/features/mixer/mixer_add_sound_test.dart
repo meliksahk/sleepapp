@@ -6,7 +6,10 @@ import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
 import 'package:nocta/features/content/content_models.dart';
 import 'package:nocta/features/content/content_providers.dart';
+import 'package:nocta/features/mixer/domain/local_sound.dart';
+import 'package:nocta/features/mixer/domain/local_sound_library.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
+import 'package:nocta/features/mixer/mixer_providers.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/l10n/app_localizations.dart';
 
@@ -89,6 +92,7 @@ void main() {
     AudioAssetDetail? assetDetail = detail,
     bool detailThrows = false,
     bool canExportVideo = false,
+    LocalSoundLibrary? library,
   }) {
     return ProviderScope(
       overrides: <Override>[
@@ -100,6 +104,11 @@ void main() {
           if (detailThrows) throw Exception('401');
           return assetDetail;
         }),
+        // ZORUNLU: override edilmezse katalog `path_provider` platform kanalına
+        // uzanır ve test `MissingPluginException` ile düşer.
+        localSoundLibraryProvider.overrideWithValue(
+          library ?? InMemoryLocalSoundLibrary(),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: AppL10n.localizationsDelegates,
@@ -145,11 +154,24 @@ void main() {
       final how = tester.widget<Text>(
         find.byKey(const Key('asset-catalog-empty-how')),
       );
-      // Dürüstlük: "hiç ses yok" demek yetmez — NEREYE koyacağını ve HANGİ
-      // komutu çalıştıracağını söylemeli.
-      expect(how.data, contains('assets-inbox'));
-      expect(how.data, contains('.json'));
-      expect(how.data, contains('assets:upload'));
+
+      // ⚠️ BU TEST ÖNCEDEN YANLIŞ DAVRANIŞI KİLİTLİYORDU.
+      //
+      // Eski hâli `assets-inbox`, `.json` ve `assets:upload` metinlerini ARIYORDU
+      // — yani boş katalogda kullanıcıya bir repo yolu ve bir pnpm komutu
+      // göstermeyi bir ÖZELLİK sanıyordu. Telefondaki kullanıcı ikisini de
+      // yapamaz; prod'da katalog her zaman boş açıldığı için "Ses ekle" fiilen
+      // bir çıkmazdı. Kullanıcı bunu bildirdi (#22).
+      //
+      // Yeni sözleşme: boş katalog, kullanıcının GERÇEKTEN yapabileceği şeyi
+      // gösterir — telefonundan dosya eklemeyi.
+      expect(how.data, isNot(contains('assets-inbox')));
+      expect(how.data, isNot(contains('pnpm')));
+      expect(how.data, isNot(contains('assets:upload')));
+
+      // Ve çıkış yolu ekranda GERÇEKTEN var: sunucu kataloğu boş olsa bile
+      // "telefondan ekle" düğmesi çizilir (ağdan bağımsız bölüm).
+      expect(find.byKey(const Key('mixer-pick-from-device')), findsOneWidget);
     });
 
     testWidgets('AĞ HATASI: ekran KIRILMAZ — açıklama + yeniden dene',
@@ -255,8 +277,10 @@ void main() {
     test('aynı id İKİ KEZ eklenemez (sürgü yanlış katmanı oynatırdı)', () async {
       final c = buildController();
       const layer = AssetLayer(id: 'a', title: 'A', url: 'u', gain: 0.3);
-      expect(await c.addAsset(layer), isTrue);
-      expect(await c.addAsset(layer), isFalse);
+      expect(await c.addAsset(layer), AddAssetOutcome.added);
+      // Artık `false` DEĞİL `duplicate`: çağıran bunu "yüklenemedi"den ayırt
+      // edip kullanıcıya "bu ses zaten mikste" diyebilsin (eskiden sessizdi).
+      expect(await c.addAsset(layer), AddAssetOutcome.duplicate);
       expect(c.state.assets, hasLength(1));
     });
 
@@ -399,6 +423,177 @@ void main() {
         find.byKey(const Key('mixer-export-warning-dialog')),
         findsNothing,
       );
+    });
+  });
+
+  /// Kullanıcının bildirdiği hata: "ekleyemiyorum cihazdan ses".
+  ///
+  /// Kök sebep tekti ama iki katmanlıydı: (a) telefondan dosya seçmenin hiçbir
+  /// yolu yoktu, (b) sunucu kataloğu prod'da HER ZAMAN boş açıldığı için tek
+  /// giriş noktası da çıkmazdı. Bu grup ikisini birden kilitler.
+  group('cihazdan ses ekleme (#22)', () {
+    testWidgets('AĞ ÇÖKSE BİLE telefondan ekleme yolu AÇIK kalır',
+        (tester) async {
+      // `catalog: null` → sunucu uçu patlıyor. Eskiden bu, sayfanın GÖVDESİNİN
+      // TAMAMINI hata durumuna düşürüyordu ve ağ gerektirmeyen özellik de
+      // onunla birlikte yok oluyordu. Prod'da bu her açılışta oluyordu.
+      await tester.pumpWidget(wrap(buildController(), catalog: null));
+      await tester.pump();
+      await openCatalog(tester);
+
+      // Sunucu bölümü hatayı gösteriyor...
+      expect(find.byKey(const Key('asset-catalog-retry')), findsOneWidget);
+      // ...ama yerel bölüm ÇİZİLMİŞ ve kullanılabilir durumda.
+      expect(find.byKey(const Key('mixer-pick-from-device')), findsOneWidget);
+    });
+
+    testWidgets('kütüphanedeki ses SEÇİLİNCE katman olur — ağ çağrısı YOK',
+        (tester) async {
+      final library = InMemoryLocalSoundLibrary(
+        sounds: <LocalSound>[
+          LocalSound(
+            id: 'local-abc',
+            title: 'Gece Yağmuru',
+            fileName: 'abc__gece-yagmuru.mp3',
+            sizeBytes: 2 * 1024 * 1024,
+            importedAt: DateTime.utc(2026, 7, 20),
+          ),
+        ],
+      );
+      final c = buildController();
+      await tester.pumpWidget(
+        wrap(
+          c,
+          library: library,
+          // Uzak detay ucu çağrılırsa test PATLAR: yerel dalın ağa hiç
+          // dokunmadığının kanıtı bu.
+          detailThrows: true,
+        ),
+      );
+      await tester.pump();
+      await openCatalog(tester);
+
+      expect(find.text('Gece Yağmuru'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('local-sound-local-abc')));
+      await tester.pumpAndSettle();
+
+      // Katman mikse girdi, sürgüsü ekranda ve yolu YEREL (http değil).
+      expect(c.state.assets.single.id, 'local-abc');
+      expect(c.state.assets.single.url, isNot(startsWith('http')));
+      expect(find.byKey(const Key('gain-local-abc')), findsOneWidget);
+    });
+
+    testWidgets('KATMAN TAVANI dolu: dosya seçici HİÇ açılmaz', (tester) async {
+      final library = InMemoryLocalSoundLibrary(
+        importResult: const LocalSoundImportRejected(
+          LocalSoundImportFailure.tooManyLayers,
+        ),
+      );
+      await tester.pumpWidget(wrap(buildController(), library: library));
+      await tester.pump();
+      await openCatalog(tester);
+
+      await tester.tap(find.byKey(const Key('mixer-pick-from-device')));
+      await tester.pumpAndSettle();
+
+      // Hata METNİ görünür (sessizce hiçbir şey olmaması kabul edilemez)...
+      expect(find.byKey(const Key('local-import-error')), findsOneWidget);
+      // ...ve sheet KAPANMADI: kullanıcı hâlâ listede, ne yapacağını görüyor.
+      expect(find.byKey(const Key('mixer-pick-from-device')), findsOneWidget);
+    });
+
+    testWidgets('SINAMA reddederse hata söylenir, katman EKLENMEZ',
+        (tester) async {
+      final library = InMemoryLocalSoundLibrary(
+        importResult: const LocalSoundImportRejected(
+          LocalSoundImportFailure.notAudio,
+        ),
+      );
+      final c = buildController();
+      await tester.pumpWidget(wrap(c, library: library));
+      await tester.pump();
+      await openCatalog(tester);
+
+      await tester.tap(find.byKey(const Key('mixer-pick-from-device')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('local-import-error')), findsOneWidget);
+      // Çalınamayan bir dosya için sürgü bırakmak, kullanıcıya sessizce yalan
+      // söylemek olurdu.
+      expect(c.state.assets, isEmpty);
+    });
+
+    testWidgets('VAZGEÇME hata değildir — ekranda hiçbir uyarı çıkmaz',
+        (tester) async {
+      final library = InMemoryLocalSoundLibrary(
+        importResult: const LocalSoundImportRejected(
+          LocalSoundImportFailure.cancelled,
+        ),
+      );
+      await tester.pumpWidget(wrap(buildController(), library: library));
+      await tester.pump();
+      await openCatalog(tester);
+
+      await tester.tap(find.byKey(const Key('mixer-pick-from-device')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('local-import-error')), findsNothing);
+    });
+
+    testWidgets('AYNI ses ikinci kez eklenirse SESSİZ kalınmaz',
+        (tester) async {
+      final library = InMemoryLocalSoundLibrary(
+        sounds: <LocalSound>[
+          LocalSound(
+            id: 'local-abc',
+            title: 'Gece Yağmuru',
+            fileName: 'abc__gece-yagmuru.mp3',
+            sizeBytes: 1024,
+            importedAt: DateTime.utc(2026, 7, 20),
+          ),
+        ],
+      );
+      final c = buildController();
+      await tester.pumpWidget(wrap(c, library: library));
+      await tester.pump();
+
+      // Birinci ekleme.
+      await openCatalog(tester);
+      await tester.tap(find.byKey(const Key('local-sound-local-abc')));
+      await tester.pumpAndSettle();
+
+      // İkinci ekleme — aynı ses.
+      await openCatalog(tester);
+      await tester.tap(find.byKey(const Key('local-sound-local-abc')));
+      await tester.pumpAndSettle();
+
+      // Eskiden sheet sessizce kapanıyor ve hiçbir şey olmuyordu.
+      expect(c.state.errorKind, MixerErrorKind.assetDuplicate);
+      expect(find.byKey(const Key('mixer-error')), findsOneWidget);
+      expect(c.state.assets, hasLength(1));
+    });
+
+    testWidgets('kütüphaneden SİLME onay ister', (tester) async {
+      final library = InMemoryLocalSoundLibrary(
+        sounds: <LocalSound>[
+          LocalSound(
+            id: 'local-abc',
+            title: 'Gece Yağmuru',
+            fileName: 'abc__gece-yagmuru.mp3',
+            sizeBytes: 1024,
+            importedAt: DateTime.utc(2026, 7, 20),
+          ),
+        ],
+      );
+      await tester.pumpWidget(wrap(buildController(), library: library));
+      await tester.pump();
+      await openCatalog(tester);
+
+      await tester.tap(find.byKey(const Key('local-sound-delete-local-abc')));
+      await tester.pumpAndSettle();
+
+      // Onaysız silme yok: kullanıcının dosyası geri getirilemez.
+      expect(find.byKey(const Key('local-delete-confirm')), findsOneWidget);
     });
   });
 }

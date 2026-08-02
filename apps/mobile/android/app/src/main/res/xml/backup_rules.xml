@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 11 ve öncesi (auto-backup) için yedek kuralları.
+
+  NEDEN: kullanıcının ithal ettiği ses dosyaları `files/nocta_sounds` altında
+  yaşıyor ve tavanı 150 MB. Auto-backup VARSAYILAN OLARAK AÇIK olduğu için bu
+  dosyalar sessizce kullanıcının Google Drive yedek kotasına yazılırdı — hem
+  onun kotası hem de kaynağı zaten telefonunda duran verinin gereksiz kopyası.
+
+  minSdk 24 olduğumuz için HEM bu dosya HEM de data_extraction_rules.xml gerekli:
+  Android 12 öncesi cihazlar yalnızca bunu okur, yalnızca yenisini yazmak o
+  cihazlarda HİÇBİR ŞEY yapmazdı.
+-->
+<full-backup-content>
+    <exclude domain="file" path="nocta_sounds" />
+</full-backup-content>

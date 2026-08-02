@@ -154,11 +154,80 @@
   "mixerAssetCatalogTitle": "Your sounds",
   "@mixerAssetCatalogTitle": { "description": "Ses dosyası kataloğu sayfasının başlığı" },
 
-  "mixerAssetCatalogEmpty": "No audio files yet.",
-  "@mixerAssetCatalogEmpty": { "description": "Katalog boş — kullanıcı henüz dosya yüklememiş" },
+  "mixerAssetCatalogEmpty": "No sounds yet.",
+  "@mixerAssetCatalogEmpty": { "description": "Katalog boş. ESKİ HÂLİ kullanıcıya bir repo yolu ve pnpm komutu gösteriyordu — telefondaki kullanıcı ikisini de yapamaz, bu bir çıkmazdı (#22)" },
 
-  "mixerAssetCatalogEmptyHow": "Drop files into apps/api/assets-inbox/<category>/<name>.mp3 with a matching <name>.json holding title, mood, license and source. Then run pnpm assets:upload — they show up here.",
-  "@mixerAssetCatalogEmptyHow": { "description": "Boş katalogda NE YAPILACAĞI: dosya nereye konur + hangi komut çalıştırılır. Yol ve komut çevrilmez, cümle çevrilir" },
+  "mixerAssetCatalogEmptyHow": "Add a sound file from your phone. It stays on your device and plays without internet.",
+  "@mixerAssetCatalogEmptyHow": { "description": "Boş katalogda NE YAPILACAĞI. Artık cihazdan ekleme yolunu gösterir; geliştirici komutu DEĞİL" },
+
+  "mixerLocalSectionTitle": "On this phone",
+  "@mixerLocalSectionTitle": { "description": "Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir" },
+
+  "mixerRemoteSectionTitle": "NOCTA library",
+  "@mixerRemoteSectionTitle": { "description": "Katalogtaki sunucu içeriği bölümü — ağ yoksa hata/yeniden dene gösterir" },
+
+  "mixerPickFromDevice": "Add from phone",
+  "@mixerPickFromDevice": { "description": "Dosya seçiciyi açan eylem" },
+
+  "mixerLocalStorageUsed": "{mb} MB used",
+  "@mixerLocalStorageUsed": {
+    "description": "Kopyalama yaklaşımının bedelini GÖRÜNÜR kılar — kullanıcı ne harcadığını bilmeden silmeye karar veremez",
+    "placeholders": { "mb": { "type": "String" } }
+  },
+
+  "mixerLocalImporting": "Copying…",
+  "@mixerLocalImporting": { "description": "İthal sürüyor — dosya kopyalanıyor ve çalınabilirliği sınanıyor" },
+
+  "mixerLocalImportNotPlayable": "This file couldn't be played. Supported formats: MP3, M4A, AAC, WAV, OGG, OPUS, FLAC.",
+  "@mixerLocalImportNotPlayable": { "description": "Sınama reddetti — dosya kütüphaneye GİRMEDİ" },
+
+  "mixerLocalImportTooLarge": "This file is {size} MB. The limit is {limit} MB.",
+  "@mixerLocalImportTooLarge": {
+    "description": "Dosya başına sınır aşıldı. Boyutu SÖYLER — 'çok büyük' demek kullanıcıya hangi dosyayı seçeceğini öğretmez",
+    "placeholders": { "size": { "type": "String" }, "limit": { "type": "String" } }
+  },
+
+  "mixerLocalImportLibraryFull": "Your sound library is full ({used} MB / {limit} MB). Delete a sound to free up space.",
+  "@mixerLocalImportLibraryFull": {
+    "description": "Kütüphane toplam sınırı aşıldı — çıkış yolunu (sil) söyler",
+    "placeholders": { "used": { "type": "String" }, "limit": { "type": "String" } }
+  },
+
+  "mixerLocalImportNoSpace": "There isn't enough room on your phone.",
+  "@mixerLocalImportNoSpace": { "description": "ENOSPC ve tanınmayan yazma hataları. 'Tekrar dene' DEMİYORUZ: dolu diskte kullanıcıyı döngüde kilitlerdi" },
+
+  "mixerLocalImportSourceGone": "This file couldn't be read; it may have been moved or deleted.",
+  "@mixerLocalImportSourceGone": { "description": "Kaynak dosya kopyalama sırasında kayboldu" },
+
+  "mixerLocalImportPickerFailed": "The file picker couldn't be opened.",
+  "@mixerLocalImportPickerFailed": { "description": "Seçici açılamadı (platform hatası)" },
+
+  "mixerLocalImportUnknown": "This sound couldn't be added.",
+  "@mixerLocalImportUnknown": { "description": "Sınıflandırılamayan hata — teknik detay loga gider, kullanıcıya sade cümle (CLAUDE.md §4)" },
+
+  "mixerLocalImportTooManyLayers": "You can play at most {limit} sound files at once. Remove one first.",
+  "@mixerLocalImportTooManyLayers": {
+    "description": "Eşzamanlı dosya katmanı tavanı. Seçici HİÇ açılmadan gösterilir",
+    "placeholders": { "limit": { "type": "String" } }
+  },
+
+  "mixerLocalDelete": "Remove from library",
+  "@mixerLocalDelete": { "description": "İthal edilen sesi kütüphaneden silme eylemi" },
+
+  "mixerLocalDeleteConfirm": "Delete “{title}”? The file is removed from NOCTA. Your original file is untouched.",
+  "@mixerLocalDeleteConfirm": {
+    "description": "Silme onayı. Kullanıcının TELEFONUNDAKİ orijinal dosyaya dokunulmadığını açıkça söyler — yoksa silmeye korkar",
+    "placeholders": { "title": { "type": "String" } }
+  },
+
+  "mixerLocalDeleteFailed": "This sound couldn't be deleted. Try again.",
+  "@mixerLocalDeleteFailed": { "description": "Dosya silinemedi; KAYIT KORUNDU (ulaşılamaz yetim üretmemek için)" },
+
+  "mixerLocalSessionNotice": "Your sounds stay in your library. Layers reset each time you open the mixer.",
+  "@mixerLocalSessionNotice": { "description": "DÜRÜSTLÜK DİPNOTU: ses kütüphanede kalıcı ama MİKS BİLEŞİMİ kalıcı değil. Bunu söylememek kullanıcıya sessizce yalan olurdu" },
+
+  "mixerAssetAlreadyInMix": "This sound is already in your mix.",
+  "@mixerAssetAlreadyInMix": { "description": "Aynı katman ikinci kez eklendi. Eskiden sheet SESSİZCE kapanıyordu — gece 3'te hiçbir şey olmaması kabul edilemez" },
 
   "mixerAssetAddFailed": "That sound could not be added. The mix is still playing.",
   "@mixerAssetAddFailed": { "description": "Katalogdan seçilen dosyanın adresi çözülemedi (404/401/ağ yok) — katman eklenmedi ama mix çalıyor" },

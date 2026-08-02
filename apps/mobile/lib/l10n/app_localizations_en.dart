@@ -173,11 +173,81 @@ class AppL10nEn extends AppL10n {
   String get mixerAssetCatalogTitle => 'Your sounds';
 
   @override
-  String get mixerAssetCatalogEmpty => 'No audio files yet.';
+  String get mixerAssetCatalogEmpty => 'No sounds yet.';
 
   @override
   String get mixerAssetCatalogEmptyHow =>
-      'Drop files into apps/api/assets-inbox/<category>/<name>.mp3 with a matching <name>.json holding title, mood, license and source. Then run pnpm assets:upload — they show up here.';
+      'Add a sound file from your phone. It stays on your device and plays without internet.';
+
+  @override
+  String get mixerLocalSectionTitle => 'On this phone';
+
+  @override
+  String get mixerRemoteSectionTitle => 'NOCTA library';
+
+  @override
+  String get mixerPickFromDevice => 'Add from phone';
+
+  @override
+  String mixerLocalStorageUsed(String mb) {
+    return '$mb MB used';
+  }
+
+  @override
+  String get mixerLocalImporting => 'Copying…';
+
+  @override
+  String get mixerLocalImportNotPlayable =>
+      'This file couldn\'t be played. Supported formats: MP3, M4A, AAC, WAV, OGG, OPUS, FLAC.';
+
+  @override
+  String mixerLocalImportTooLarge(String size, String limit) {
+    return 'This file is $size MB. The limit is $limit MB.';
+  }
+
+  @override
+  String mixerLocalImportLibraryFull(String used, String limit) {
+    return 'Your sound library is full ($used MB / $limit MB). Delete a sound to free up space.';
+  }
+
+  @override
+  String get mixerLocalImportNoSpace =>
+      'There isn\'t enough room on your phone.';
+
+  @override
+  String get mixerLocalImportSourceGone =>
+      'This file couldn\'t be read; it may have been moved or deleted.';
+
+  @override
+  String get mixerLocalImportPickerFailed =>
+      'The file picker couldn\'t be opened.';
+
+  @override
+  String get mixerLocalImportUnknown => 'This sound couldn\'t be added.';
+
+  @override
+  String mixerLocalImportTooManyLayers(String limit) {
+    return 'You can play at most $limit sound files at once. Remove one first.';
+  }
+
+  @override
+  String get mixerLocalDelete => 'Remove from library';
+
+  @override
+  String mixerLocalDeleteConfirm(String title) {
+    return 'Delete “$title”? The file is removed from NOCTA. Your original file is untouched.';
+  }
+
+  @override
+  String get mixerLocalDeleteFailed =>
+      'This sound couldn\'t be deleted. Try again.';
+
+  @override
+  String get mixerLocalSessionNotice =>
+      'Your sounds stay in your library. Layers reset each time you open the mixer.';
+
+  @override
+  String get mixerAssetAlreadyInMix => 'This sound is already in your mix.';
 
   @override
   String get mixerAssetAddFailed =>

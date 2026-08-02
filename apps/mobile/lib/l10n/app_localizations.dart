@@ -373,17 +373,125 @@ abstract class AppL10n {
   /// **'Your sounds'**
   String get mixerAssetCatalogTitle;
 
-  /// Katalog boş — kullanıcı henüz dosya yüklememiş
+  /// Katalog boş. ESKİ HÂLİ kullanıcıya bir repo yolu ve pnpm komutu gösteriyordu — telefondaki kullanıcı ikisini de yapamaz, bu bir çıkmazdı (#22)
   ///
   /// In en, this message translates to:
-  /// **'No audio files yet.'**
+  /// **'No sounds yet.'**
   String get mixerAssetCatalogEmpty;
 
-  /// Boş katalogda NE YAPILACAĞI: dosya nereye konur + hangi komut çalıştırılır. Yol ve komut çevrilmez, cümle çevrilir
+  /// Boş katalogda NE YAPILACAĞI. Artık cihazdan ekleme yolunu gösterir; geliştirici komutu DEĞİL
   ///
   /// In en, this message translates to:
-  /// **'Drop files into apps/api/assets-inbox/<category>/<name>.mp3 with a matching <name>.json holding title, mood, license and source. Then run pnpm assets:upload — they show up here.'**
+  /// **'Add a sound file from your phone. It stays on your device and plays without internet.'**
   String get mixerAssetCatalogEmptyHow;
+
+  /// Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir
+  ///
+  /// In en, this message translates to:
+  /// **'On this phone'**
+  String get mixerLocalSectionTitle;
+
+  /// Katalogtaki sunucu içeriği bölümü — ağ yoksa hata/yeniden dene gösterir
+  ///
+  /// In en, this message translates to:
+  /// **'NOCTA library'**
+  String get mixerRemoteSectionTitle;
+
+  /// Dosya seçiciyi açan eylem
+  ///
+  /// In en, this message translates to:
+  /// **'Add from phone'**
+  String get mixerPickFromDevice;
+
+  /// Kopyalama yaklaşımının bedelini GÖRÜNÜR kılar — kullanıcı ne harcadığını bilmeden silmeye karar veremez
+  ///
+  /// In en, this message translates to:
+  /// **'{mb} MB used'**
+  String mixerLocalStorageUsed(String mb);
+
+  /// İthal sürüyor — dosya kopyalanıyor ve çalınabilirliği sınanıyor
+  ///
+  /// In en, this message translates to:
+  /// **'Copying…'**
+  String get mixerLocalImporting;
+
+  /// Sınama reddetti — dosya kütüphaneye GİRMEDİ
+  ///
+  /// In en, this message translates to:
+  /// **'This file couldn\'t be played. Supported formats: MP3, M4A, AAC, WAV, OGG, OPUS, FLAC.'**
+  String get mixerLocalImportNotPlayable;
+
+  /// Dosya başına sınır aşıldı. Boyutu SÖYLER — 'çok büyük' demek kullanıcıya hangi dosyayı seçeceğini öğretmez
+  ///
+  /// In en, this message translates to:
+  /// **'This file is {size} MB. The limit is {limit} MB.'**
+  String mixerLocalImportTooLarge(String size, String limit);
+
+  /// Kütüphane toplam sınırı aşıldı — çıkış yolunu (sil) söyler
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound library is full ({used} MB / {limit} MB). Delete a sound to free up space.'**
+  String mixerLocalImportLibraryFull(String used, String limit);
+
+  /// ENOSPC ve tanınmayan yazma hataları. 'Tekrar dene' DEMİYORUZ: dolu diskte kullanıcıyı döngüde kilitlerdi
+  ///
+  /// In en, this message translates to:
+  /// **'There isn\'t enough room on your phone.'**
+  String get mixerLocalImportNoSpace;
+
+  /// Kaynak dosya kopyalama sırasında kayboldu
+  ///
+  /// In en, this message translates to:
+  /// **'This file couldn\'t be read; it may have been moved or deleted.'**
+  String get mixerLocalImportSourceGone;
+
+  /// Seçici açılamadı (platform hatası)
+  ///
+  /// In en, this message translates to:
+  /// **'The file picker couldn\'t be opened.'**
+  String get mixerLocalImportPickerFailed;
+
+  /// Sınıflandırılamayan hata — teknik detay loga gider, kullanıcıya sade cümle (CLAUDE.md §4)
+  ///
+  /// In en, this message translates to:
+  /// **'This sound couldn\'t be added.'**
+  String get mixerLocalImportUnknown;
+
+  /// Eşzamanlı dosya katmanı tavanı. Seçici HİÇ açılmadan gösterilir
+  ///
+  /// In en, this message translates to:
+  /// **'You can play at most {limit} sound files at once. Remove one first.'**
+  String mixerLocalImportTooManyLayers(String limit);
+
+  /// İthal edilen sesi kütüphaneden silme eylemi
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from library'**
+  String get mixerLocalDelete;
+
+  /// Silme onayı. Kullanıcının TELEFONUNDAKİ orijinal dosyaya dokunulmadığını açıkça söyler — yoksa silmeye korkar
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{title}”? The file is removed from NOCTA. Your original file is untouched.'**
+  String mixerLocalDeleteConfirm(String title);
+
+  /// Dosya silinemedi; KAYIT KORUNDU (ulaşılamaz yetim üretmemek için)
+  ///
+  /// In en, this message translates to:
+  /// **'This sound couldn\'t be deleted. Try again.'**
+  String get mixerLocalDeleteFailed;
+
+  /// DÜRÜSTLÜK DİPNOTU: ses kütüphanede kalıcı ama MİKS BİLEŞİMİ kalıcı değil. Bunu söylememek kullanıcıya sessizce yalan olurdu
+  ///
+  /// In en, this message translates to:
+  /// **'Your sounds stay in your library. Layers reset each time you open the mixer.'**
+  String get mixerLocalSessionNotice;
+
+  /// Aynı katman ikinci kez eklendi. Eskiden sheet SESSİZCE kapanıyordu — gece 3'te hiçbir şey olmaması kabul edilemez
+  ///
+  /// In en, this message translates to:
+  /// **'This sound is already in your mix.'**
+  String get mixerAssetAlreadyInMix;
 
   /// Katalogdan seçilen dosyanın adresi çözülemedi (404/401/ağ yok) — katman eklenmedi ama mix çalıyor
   ///
