@@ -3,6 +3,7 @@ import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
+import Redis from 'ioredis';
 import { AppModule } from '../../src/app.module';
 
 /**
@@ -39,6 +40,18 @@ describe('Admin girişi kaba kuvvet limiti e2e', () => {
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
     );
     await app.init();
+
+    // KOVAYI BOŞALT: throttle deposu REDIS_URL varken Redis'tir (app.module) — yani
+    // sayaç IP başına ve TÜM spec dosyaları + ardışık koşular arasında ORTAK. Başka
+    // bir spec 60 sn içinde admin login'e dokunduysa bu test daha ilk denemede 429
+    // alır ve sebepsiz kırmızıya döner (gerçekte oldu: 33 hatalı koşunun ardından).
+    // Testin sırasından bağımsız olması için pencereyi burada sıfırlıyoruz.
+    if (process.env.REDIS_URL) {
+      const redis = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 3 });
+      const keys = await redis.keys('throttle:*');
+      if (keys.length > 0) await redis.del(...keys);
+      await redis.quit();
+    }
   });
 
   afterAll(async () => {
