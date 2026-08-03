@@ -39,6 +39,10 @@ model profiles {
   timezone              String   @default("UTC")
   created_at            DateTime @default(now()) @db.Timestamptz(6)
   notifications_enabled Boolean  @default(true)
+  /// Kullanıcının YEREL saati (0-23), UTC değil — bkz. migration yorumu.
+  reminder_hour         Int?     @db.SmallInt
+  quiet_hours_start     Int?     @db.SmallInt
+  quiet_hours_end       Int?     @db.SmallInt
   users                 users    @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
