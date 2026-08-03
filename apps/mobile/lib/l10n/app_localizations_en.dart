@@ -835,4 +835,44 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get studioExport => 'MAKE THE VIDEO';
+
+  @override
+  String get notifSettingsTitle => 'Notifications';
+
+  @override
+  String get notifReminderSection => 'EVENING REMINDER';
+
+  @override
+  String get notifReminderOff => 'No reminder';
+
+  @override
+  String notifReminderAt(String hour) {
+    return 'Every evening at $hour';
+  }
+
+  @override
+  String get notifReminderHint => 'A nudge to start the ritual — nothing else.';
+
+  @override
+  String get notifQuietSection => 'QUIET HOURS';
+
+  @override
+  String get notifQuietOff => 'Off';
+
+  @override
+  String notifQuietRange(String start, String end) {
+    return '$start — $end';
+  }
+
+  @override
+  String get notifQuietHint => 'Nothing reaches you between these hours.';
+
+  @override
+  String get notifSaveFailed => 'Couldn\'t save. Your settings are unchanged.';
+
+  @override
+  String get notifPick => 'CHANGE';
+
+  @override
+  String get notifClear => 'TURN OFF';
 }

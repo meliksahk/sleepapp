@@ -835,4 +835,45 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get studioExport => 'VİDEOYU ÜRET';
+
+  @override
+  String get notifSettingsTitle => 'Bildirimler';
+
+  @override
+  String get notifReminderSection => 'AKŞAM HATIRLATICISI';
+
+  @override
+  String get notifReminderOff => 'Hatırlatıcı yok';
+
+  @override
+  String notifReminderAt(String hour) {
+    return 'Her akşam $hour';
+  }
+
+  @override
+  String get notifReminderHint =>
+      'Ritüele başlaman için bir dürtme — başka bir şey değil.';
+
+  @override
+  String get notifQuietSection => 'SESSİZ SAATLER';
+
+  @override
+  String get notifQuietOff => 'Kapalı';
+
+  @override
+  String notifQuietRange(String start, String end) {
+    return '$start — $end';
+  }
+
+  @override
+  String get notifQuietHint => 'Bu saatler arasında sana hiçbir şey ulaşmaz.';
+
+  @override
+  String get notifSaveFailed => 'Kaydedilemedi. Ayarların değişmedi.';
+
+  @override
+  String get notifPick => 'DEĞİŞTİR';
+
+  @override
+  String get notifClear => 'KAPAT';
 }

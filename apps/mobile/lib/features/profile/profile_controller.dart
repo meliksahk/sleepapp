@@ -20,6 +20,38 @@ class ProfileController {
     return Profile.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  /// Hatırlatıcı/sessiz saat tercihlerini günceller.
+  ///
+  /// **`null` GÖNDERMEK ile ALAN GÖNDERMEMEK farklı:** null "temizle" demek,
+  /// yokluk "dokunma". `clearReminder` bu ayrımı çağıranın açıkça yapmasını
+  /// sağlıyor — aksi hâlde hatırlatıcıyı kapatmak imkânsız olurdu.
+  Future<Profile> setReminder({
+    int? hour,
+    bool clearReminder = false,
+    int? quietStart,
+    int? quietEnd,
+    bool clearQuietHours = false,
+  }) async {
+    // `?deger` null-aware eleman: değer null ise ANAHTAR HİÇ GÖNDERİLMEZ.
+    // Sunucuda "alan yok = dokunma", "alan null = temizle" olduğu için bu ayrım
+    // gövdeye birebir yansımalı.
+    final body = <String, dynamic>{
+      if (clearReminder) 'reminderHour': null else 'reminderHour': ?hour,
+      if (clearQuietHours) ...<String, dynamic>{
+        'quietHoursStart': null,
+        'quietHoursEnd': null,
+      } else ...<String, dynamic>{
+        'quietHoursStart': ?quietStart,
+        'quietHoursEnd': ?quietEnd,
+      },
+    };
+    final res = await _auth.authorizedRequest(
+      (token) => _client.patchAuthed('/v1/profile', token, body),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return Profile.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   /// Push bildirim tercihini günceller (opt-out). Güncel profili döner.
   Future<Profile> setNotificationsEnabled(bool enabled) async {
     final res = await _auth.authorizedRequest(

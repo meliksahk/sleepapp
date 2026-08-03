@@ -1488,6 +1488,78 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'MAKE THE VIDEO'**
   String get studioExport;
+
+  /// Bildirim ayarlari ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifSettingsTitle;
+
+  /// Hatirlatici bolumu
+  ///
+  /// In en, this message translates to:
+  /// **'EVENING REMINDER'**
+  String get notifReminderSection;
+
+  /// Hatirlatici kapali
+  ///
+  /// In en, this message translates to:
+  /// **'No reminder'**
+  String get notifReminderOff;
+
+  /// Hatirlatici saati
+  ///
+  /// In en, this message translates to:
+  /// **'Every evening at {hour}'**
+  String notifReminderAt(String hour);
+
+  /// Hatirlatici aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'A nudge to start the ritual — nothing else.'**
+  String get notifReminderHint;
+
+  /// Sessiz saatler bolumu
+  ///
+  /// In en, this message translates to:
+  /// **'QUIET HOURS'**
+  String get notifQuietSection;
+
+  /// Sessiz saat kapali
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get notifQuietOff;
+
+  /// Sessiz saat araligi
+  ///
+  /// In en, this message translates to:
+  /// **'{start} — {end}'**
+  String notifQuietRange(String start, String end);
+
+  /// Sessiz saat aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing reaches you between these hours.'**
+  String get notifQuietHint;
+
+  /// Kaydetme hatasi
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save. Your settings are unchanged.'**
+  String get notifSaveFailed;
+
+  /// Saat secme eylemi
+  ///
+  /// In en, this message translates to:
+  /// **'CHANGE'**
+  String get notifPick;
+
+  /// Tercihi kapatma
+  ///
+  /// In en, this message translates to:
+  /// **'TURN OFF'**
+  String get notifClear;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

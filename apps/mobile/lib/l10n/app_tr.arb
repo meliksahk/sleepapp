@@ -265,5 +265,18 @@
   "studioLength": "SÜRE",
   "studioSeconds": "{seconds} SN",
   "studioLengthHint": "Uzun klip daha uzun sürede hazırlanır — her şey bu telefonda üretiliyor.",
-  "studioExport": "VİDEOYU ÜRET"
+  "studioExport": "VİDEOYU ÜRET",
+
+  "notifSettingsTitle": "Bildirimler",
+  "notifReminderSection": "AKŞAM HATIRLATICISI",
+  "notifReminderOff": "Hatırlatıcı yok",
+  "notifReminderAt": "Her akşam {hour}",
+  "notifReminderHint": "Ritüele başlaman için bir dürtme — başka bir şey değil.",
+  "notifQuietSection": "SESSİZ SAATLER",
+  "notifQuietOff": "Kapalı",
+  "notifQuietRange": "{start} — {end}",
+  "notifQuietHint": "Bu saatler arasında sana hiçbir şey ulaşmaz.",
+  "notifSaveFailed": "Kaydedilemedi. Ayarların değişmedi.",
+  "notifPick": "DEĞİŞTİR",
+  "notifClear": "KAPAT"
 }

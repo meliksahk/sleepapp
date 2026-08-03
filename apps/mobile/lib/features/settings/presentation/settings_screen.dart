@@ -155,6 +155,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 orElse: () => const SizedBox.shrink(),
               ),
+              // Hatırlatıcı saati ve sessiz saatler KENDİ ekranında (F3):
+              // buradaki anahtar yalnızca "bildirim var/yok" diyor.
+              const SizedBox(height: NoctaSpace.s3),
+              NButton(
+                key: const Key('notif-settings-open'),
+                label: l10n.notifSettingsTitle,
+                variant: NButtonVariant.ghost,
+                onPressed: () => context.push('/settings/notifications'),
+              ),
+
               const SizedBox(height: NoctaSpace.s5),
               const Divider(color: NoctaColors.lineHairline),
               const SizedBox(height: NoctaSpace.s3),

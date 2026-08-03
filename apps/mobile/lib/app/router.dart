@@ -9,6 +9,7 @@ import '../features/entitlement/presentation/paywall_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/mixer/presentation/mixer_route.dart';
 import '../features/settings/presentation/delete_account_screen.dart';
+import '../features/settings/presentation/notification_settings_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/sleep/presentation/alarm_setup_screen.dart';
 import '../features/sleep/presentation/mic_permission_screen.dart';
@@ -113,6 +114,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    // Bildirim ayarları — hatırlatıcı saati + sessiz saatler (F3).
+    GoRoute(
+      path: '/settings/notifications',
+      builder: (context, state) => const NotificationSettingsScreen(),
     ),
     // Hesap silme AYRI rota: ayarların içine gömülü bir diyalog değil, kendi
     // ekranı. Yıkıcı ve geri alınamaz bir eylem, geri düğmesi olan kendi
