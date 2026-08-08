@@ -68,7 +68,13 @@ void main() {
 
   test('UÇTAN UCA: sentetik gece → API gövdesi (yalnızca türetilmiş sayılar)', () async {
     // 1) Sentetik gece: sessizlik + 3 kısa hareket + 1 uzun horlama.
-    final detector = AcousticEventDetector(initialFloorDb: -60);
+    // Bu sentetik geceler çerçeve SAYISIyla yazıldı ve yorumları ~50 ms/çerçeve
+    // varsayıyor (ör. 'burst(0.3, 60)' = 3 sn horlama). Süreyi açıkça vererek o
+    // anlamı koruyoruz.
+    final detector = AcousticEventDetector(
+      frameDuration: const Duration(milliseconds: 50),
+      initialFloorDb: -60,
+    );
     void quiet(int n) {
       for (var i = 0; i < n; i++) {
         detector.addFrame(frameDbfs(tone(0.001)));
@@ -117,7 +123,13 @@ void main() {
   });
 
   test('SESSİZ gece de gönderilir (0 olay geçerli bir gecedir)', () async {
-    final detector = AcousticEventDetector(initialFloorDb: -60);
+    // Bu sentetik geceler çerçeve SAYISIyla yazıldı ve yorumları ~50 ms/çerçeve
+    // varsayıyor (ör. 'burst(0.3, 60)' = 3 sn horlama). Süreyi açıkça vererek o
+    // anlamı koruyoruz.
+    final detector = AcousticEventDetector(
+      frameDuration: const Duration(milliseconds: 50),
+      initialFloorDb: -60,
+    );
     for (var i = 0; i < 500; i++) {
       detector.addFrame(frameDbfs(tone(0.001)));
     }
@@ -141,7 +153,13 @@ void main() {
   });
 
   test('HAM SES gövdeye ASLA sızmaz (CLAUDE.md §6 — mikrofon iznimizin gerekçesi)', () async {
-    final detector = AcousticEventDetector(initialFloorDb: -60);
+    // Bu sentetik geceler çerçeve SAYISIyla yazıldı ve yorumları ~50 ms/çerçeve
+    // varsayıyor (ör. 'burst(0.3, 60)' = 3 sn horlama). Süreyi açıkça vererek o
+    // anlamı koruyoruz.
+    final detector = AcousticEventDetector(
+      frameDuration: const Duration(milliseconds: 50),
+      initialFloorDb: -60,
+    );
     for (var i = 0; i < 50; i++) {
       detector.addFrame(frameDbfs(tone(0.001)));
     }

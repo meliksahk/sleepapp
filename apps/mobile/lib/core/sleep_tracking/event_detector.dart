@@ -46,47 +46,75 @@ class AcousticEvent {
 /// **REFRAKTER SÜRE:** tek bir dönme-hareketi genlikte birkaç kez salınır; refrakter
 /// olmadan tek olay 3-4 kez sayılırdı.
 ///
-/// **BİRİM ÇERÇEVEDİR, SANİYE DEĞİL:** dedektör çerçeve süresini BİLMEZ (çağıranın
-/// kararı). Varsayılanlar ~50 ms/çerçeve varsayar: [maxEventFrames]=100 ≈ 5 sn —
-/// horlama (2-3 sn) olay kalır, fan uğultusu (dakikalar) seviye kayması sayılır.
-/// Çağıran farklı bir çerçeve süresi kullanıyorsa BU DEĞERLERİ ÇEVİRMELİDİR.
+/// **AYARLAR SÜRE CİNSİNDEN VERİLİR, ÇERÇEVE CİNSİNDEN DEĞİL.** Çerçeveye çevirme
+/// [frameDuration] ile burada yapılır. Bu bir hata sınıfını kapatmak içindir:
+/// sabitler daha önce çerçeve sayısıydı ve "~50 ms/çerçeve" varsayıyordu, ama
+/// gerçek boru hattı 16 kHz/256 örnek = **16 ms/çerçeve** çalışıyor ve çağıran
+/// çevirme yapmıyordu. Sonuç: her süre 3.1× kısaydı — [maxEventDuration] 5 sn
+/// yerine 1.6 sn olduğu için 2-3 saniyelik horlama "olay" değil "seviye kayması"
+/// sayılıyor, taban horlamanın seviyesine sıçrıyordu. Yani sınıf yorumunun tam da
+/// önlemek için yazıldığı davranış gerçekleşiyordu. Birim süre olunca çağıranın
+/// yanlış değer geçirmesi mümkün değil.
 ///
-/// **UYARI — AYARLANMADI:** eşikler makul başlangıç değerleridir, GERÇEK GECE
-/// KAYITLARIYLA AYARLANMADI (docs/04 §120 fixture'ları henüz yok). Sınıflandırma
-/// (hareket/horlama/gürültü ayrımı) da bilinçli olarak YOK: mikrofonla bunları
-/// ayırmak süre/periyodiklik analizi ister ve gerçek veriyle doğrulanmalıdır —
-/// uydurmak, sayıyı yanlış etiketleyip kullanıcıya güvenilir gibi sunmak olurdu.
+/// **UYARI — HÂLÂ AYARLANMADI:** 2026-08-03'te 45 dk'lık gerçek bir zarf kaydı
+/// (docs/04 §120 fixture'ı) şunu DOĞRULADI: gürültü tabanı gerçekten sürükleniyor
+/// (45 dk'da ~3 dB), yani uyarlanabilir taban kararı yerinde. Ama [thresholdDb]
+/// AYARLANAMADI: kayıtta etiket yok (hangi saniye dönme, hangisi horlama, hangisi
+/// dışarıdaki araba bilinmiyor). Etiketsiz veriyle sinyal karakterize edilir, eşik
+/// ayarlanmaz. Sınıflandırma da bu yüzden hâlâ YOK — uydurmak, sayıyı yanlış
+/// etiketleyip kullanıcıya güvenilir gibi sunmak olurdu.
 class AcousticEventDetector {
   AcousticEventDetector({
+    required this.frameDuration,
     this.thresholdDb = 12.0,
-    this.minDurationFrames = 2,
-    this.maxEventFrames = 100,
-    this.refractoryFrames = 10,
-    this.floorAttack = 0.02,
+    Duration minDuration = const Duration(milliseconds: 100),
+    Duration maxEventDuration = const Duration(seconds: 5),
+    Duration refractory = const Duration(milliseconds: 500),
+    Duration floorTimeConstant = const Duration(milliseconds: 2500),
     double? initialFloorDb,
   })  : assert(thresholdDb > 0),
-        assert(minDurationFrames >= 1),
-        assert(maxEventFrames > minDurationFrames),
-        assert(refractoryFrames >= 0),
-        assert(floorAttack > 0 && floorAttack < 1),
+        assert(frameDuration > Duration.zero),
+        assert(maxEventDuration > minDuration),
+        assert(refractory >= Duration.zero),
+        assert(floorTimeConstant > Duration.zero),
+        // En az 1 çerçeve: çerçeve süresi istenen süreden uzunsa aşağı yuvarlamak
+        // 0 verir ve "her çerçeve olaydır" anlamına gelirdi.
+        minDurationFrames = _frames(minDuration, frameDuration, min: 1),
+        maxEventFrames = _frames(maxEventDuration, frameDuration, min: 2),
+        refractoryFrames = _frames(refractory, frameDuration, min: 0),
+        // τ = 1/attack çerçeve → attack = çerçeve süresi / τ. Üst sınır bir
+        // çerçevede tam uyum (1.0) olurdu; taban sese anında yapışırdı.
+        floorAttack = (frameDuration.inMicroseconds /
+                floorTimeConstant.inMicroseconds)
+            .clamp(1e-6, 0.5),
         _floorDb = initialFloorDb ?? silenceDbfs;
+
+  static int _frames(Duration d, Duration frame, {required int min}) {
+    final n = (d.inMicroseconds / frame.inMicroseconds).round();
+    return n < min ? min : n;
+  }
+
+  /// Bir çerçevenin kapsadığı süre — tüm süre→çerçeve çevrimlerinin dayanağı.
+  final Duration frameDuration;
 
   /// Olay sayılması için tabanın kaç dB üstüne çıkılmalı.
   final double thresholdDb;
 
-  /// Bu kadar çerçeveden kısa süren aşımlar YOK SAYILIR (tek örneklik tıklama,
-  /// ADC parazitini olay saymamak için).
+  /// `minDuration`'ın çerçeve karşılığı. Bundan kısa aşımlar YOK SAYILIR (tek
+  /// örneklik tıklama, ADC parazitini olay saymamak için).
   final int minDurationFrames;
 
-  /// Bundan uzun süren aşım artık OLAY değil SEVİYE KAYMASIDIR: bir kez sayılır,
-  /// sonra taban yeni seviyeye sıçratılır (bkz. sınıf yorumu).
+  /// `maxEventDuration`'ın çerçeve karşılığı. Bundan uzun süren aşım artık OLAY
+  /// değil SEVİYE KAYMASIDIR: bir kez sayılır, sonra taban yeni seviyeye
+  /// sıçratılır (bkz. sınıf yorumu).
   final int maxEventFrames;
 
-  /// Olay bittikten sonra yeni olay sayılmayan süre.
+  /// `refractory`'nin çerçeve karşılığı — olay bittikten sonra yeni olay
+  /// sayılmayan süre.
   final int refractoryFrames;
 
-  /// Taban EMA'sının uyum hızı. YAVAŞ olmalı: hızlı taban, horlamanın kendisini
-  /// "yeni normal" sayıp olayı yutardı.
+  /// `floorTimeConstant`'tan türetilen EMA uyum hızı. YAVAŞ olmalı: hızlı taban,
+  /// horlamanın kendisini "yeni normal" sayıp olayı yutardı.
   final double floorAttack;
 
   double _floorDb;

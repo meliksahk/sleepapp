@@ -11,9 +11,17 @@ import 'package:nocta/core/sleep_tracking/event_detector.dart';
 /// rapor üretimi testle kanıtlı". Gerçek gece doğrulaması docs/10'da (insan-kapılı);
 /// burada sentetik beslemeyle MANTIK kanıtlanıyor.
 void main() {
+  /// Bu dosyadaki testler çerçeve SAYISI üzerinden yazıldı ve yorumları
+  /// "~50 ms/çerçeve" varsayıyor. 50 ms verildiğinde varsayılan süreler tam olarak
+  /// eski çerçeve sabitlerine denk geliyor (100 ms/50 = 2, 5 sn/50 ms = 100,
+  /// 500 ms/50 ms = 10, 50/2500 = 0.02) — yani bu sabit, testlerin anlamını
+  /// korumakla kalmıyor, süre→çerçeve çevriminin doğruluğunu da kanıtlıyor.
+  const testFrame = Duration(milliseconds: 50);
+
   /// Verilen dB dizisini dedektörden geçirir.
   List<AcousticEvent> run(List<double> dbFrames, {AcousticEventDetector? det}) {
-    final d = det ?? AcousticEventDetector(initialFloorDb: -60);
+    final d = det ??
+        AcousticEventDetector(frameDuration: testFrame, initialFloorDb: -60);
     for (final db in dbFrames) {
       d.addFrame(db);
     }
@@ -73,7 +81,11 @@ void main() {
       // İlk yazımda taban olay boyunca SONSUZA KADAR donduruluyordu → fan bitmeyen
       // tek olay oluyor ve taban bir daha hiç uyum sağlamıyordu (test yakaladı).
       // Ayrım: kısa aşım OLAY, sürekli aşım SEVİYE KAYMASI.
-      final d = AcousticEventDetector(initialFloorDb: -60, maxEventFrames: 100);
+      final d = AcousticEventDetector(
+        frameDuration: testFrame,
+        initialFloorDb: -60,
+        maxEventDuration: const Duration(seconds: 5), // 50 ms'de = 100 çerçeve
+      );
       run([...level(-60, 30), ...level(-25, 500)], det: d);
 
       expect(d.events, hasLength(1));
@@ -125,7 +137,7 @@ void main() {
     });
 
     test('taban yükseldikten SONRA aynı mutlak seviye artık olay değil', () {
-      final d = AcousticEventDetector(initialFloorDb: -60);
+      final d = AcousticEventDetector(frameDuration: testFrame, initialFloorDb: -60);
       run([...level(-60, 50), ...level(-35, 1000)], det: d);
       final afterFan = d.events.length;
 
@@ -140,7 +152,7 @@ void main() {
 
     test('taban yükselse bile DAHA YÜKSEK ses hâlâ olaydır (duyarlılık kaybolmaz)', () {
       // Uyarlanabilir taban "artık hiçbir şey duymuyorum" demek olmamalı.
-      final d = AcousticEventDetector(initialFloorDb: -60);
+      final d = AcousticEventDetector(frameDuration: testFrame, initialFloorDb: -60);
       run([...level(-60, 50), ...level(-35, 1000)], det: d);
       final before = d.events.length;
 
@@ -174,7 +186,7 @@ void main() {
         return f;
       }
 
-      final d = AcousticEventDetector(initialFloorDb: -60);
+      final d = AcousticEventDetector(frameDuration: testFrame, initialFloorDb: -60);
       for (var i = 0; i < 60; i++) {
         d.addFrame(frameDbfs(tone(0.001, 64))); // sessiz oda
       }
@@ -188,6 +200,41 @@ void main() {
 
       expect(d.events, hasLength(1));
       expect(d.events.single.prominenceDb, greaterThan(12));
+    });
+  });
+
+  group('GERÇEK boru hattı hızı (16 kHz / 256 örnek = 16 ms/çerçeve)', () {
+    // Üretimdeki gerçek çerçeve süresi. Ayarlar çerçeve SAYISI olduğu sürece bu
+    // değer sessizce yanlış davranış üretiyordu (2026-08-03 zarf kaydı ortaya
+    // çıkardı): tüm süreler 3.1× kısaydı.
+    const realFrame = Duration(microseconds: 16000);
+
+    test('süreler çerçeveye DOĞRU çevrilir (eski sabitler 3.1× kısaydı)', () {
+      final d = AcousticEventDetector(frameDuration: realFrame, initialFloorDb: -60);
+      // 5 sn / 16 ms = 312.5 → 313. Eski kod burada 100 kullanıyordu (= 1.6 sn).
+      expect(d.maxEventFrames, 313);
+      expect(d.refractoryFrames, 31); // 500 ms, eskiden 10 (= 160 ms)
+      expect(d.minDurationFrames, 6); // 100 ms, eskiden 2 (= 32 ms)
+      expect(d.floorAttack, closeTo(0.0064, 0.0001)); // τ=2.5 sn, eskiden 0.02 (τ=0.8 sn)
+    });
+
+    test('REGRESYON: 3 saniyelik horlama SEVİYE KAYMASI sayılmaz', () {
+      // HATA: maxEventFrames=100 çerçeve sabiti 16 ms'de 1.6 sn eder. Horlama
+      // 2-3 sn sürdüğü için tavanı aşıyor, "seviye kayması" sayılıyor ve taban
+      // horlamanın seviyesine SIÇRIYORDU — yani dedektör horlamayı odanın yeni
+      // normali ilan ediyordu. Sınıf yorumunun önlemek için yazıldığı davranışın
+      // ta kendisi.
+      final d = AcousticEventDetector(frameDuration: realFrame, initialFloorDb: -60);
+      // 3 sn horlama = 3000/16 ≈ 188 çerçeve.
+      for (final db in [...level(-60, 100), ...level(-25, 188), ...level(-60, 100)]) {
+        d.addFrame(db);
+      }
+      d.finish();
+
+      expect(d.events, hasLength(1));
+      expect(d.events.single.durationFrames, 188); // kesilmedi
+      // Asıl kanıt: taban horlamaya YAPIŞMADI, oda tabanında kaldı.
+      expect(d.floorDb, lessThan(-50));
     });
   });
 }
