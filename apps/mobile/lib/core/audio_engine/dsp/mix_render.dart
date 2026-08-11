@@ -36,7 +36,20 @@ enum LayerSource {
   fire,
   rain,
   pad,
+  // F4 frekans katmanları — nötr etiket / iddia yok; bkz. pulseSource.
+  pulseDelta,
+  pulseTheta,
+  pulseAlpha,
 }
+
+/// Frekans katmanının hızı (Hz). Bant adları SINIFLANDIRMA etiketidir; hiçbir
+/// sağlık/beyin dalgası iddiası taşımaz (CLAUDE.md §1.1).
+double? pulseRateHz(LayerSource type) => switch (type) {
+  LayerSource.pulseDelta => 2.0,
+  LayerSource.pulseTheta => 6.0,
+  LayerSource.pulseAlpha => 10.0,
+  _ => null,
+};
 
 /// Kaynak, döngü periyoduna **kilitli** mi (kuyruk ile baş birebir aynı mı)?
 ///
@@ -44,7 +57,8 @@ enum LayerSource {
 /// kaynağa eşit-güç crossfade uygulamak zararlıdır: aynı sinyalin kendisiyle
 /// sin+cos ağırlıklı toplamı √2'ye kadar çıkar → döngü başında +3 dB kabarma.
 /// Kilitli kaynakta crossfade'e GEREK de yoktur, çünkü süreklilik zaten sağlanır.
-bool isLoopPeriodic(LayerSource type) => type == LayerSource.pad;
+bool isLoopPeriodic(LayerSource type) =>
+    type == LayerSource.pad || pulseRateHz(type) != null;
 
 /// Tek bir mikser katmanı: hangi kaynak, hangi kazanç.
 class MixLayer {
@@ -131,6 +145,14 @@ Float32List renderSource(
     case LayerSource.rain:
       return rainSource(samples,
           seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.pulseDelta:
+    case LayerSource.pulseTheta:
+    case LayerSource.pulseAlpha:
+      return pulseSource(samples,
+          seed: seed,
+          sampleRate: sampleRate,
+          loopSamples: loopSamples,
+          rateHz: pulseRateHz(type)!);
     case LayerSource.pad:
       // [variant] YALNIZCA pad'e gider: gürültü/doku kaynakları zaten tohumla
       // baştan sona değişiyor, pad'in tonal yatağı ise değişmiyordu (F2).

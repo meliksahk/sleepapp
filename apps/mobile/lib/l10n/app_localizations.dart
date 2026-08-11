@@ -325,6 +325,30 @@ abstract class AppL10n {
   /// **'Warm pad'**
   String get mixerLayerPad;
 
+  /// F4 frekans katmani. NOTR: yalnizca olcu. Saglik/beyin dalgasi iddiasi YOK
+  ///
+  /// In en, this message translates to:
+  /// **'Delta · 2 Hz'**
+  String get mixerLayerPulseDelta;
+
+  /// F4 frekans katmani - notr etiket
+  ///
+  /// In en, this message translates to:
+  /// **'Theta · 6 Hz'**
+  String get mixerLayerPulseTheta;
+
+  /// F4 frekans katmani - notr etiket
+  ///
+  /// In en, this message translates to:
+  /// **'Alpha · 10 Hz'**
+  String get mixerLayerPulseAlpha;
+
+  /// Frekans katmani mikste varken gosterilen NOTR not. Rakipler burada iddia kuruyor; biz kurmuyoruz
+  ///
+  /// In en, this message translates to:
+  /// **'A steady pulse at a set rate. It is just a sound — use it if you like how it feels.'**
+  String get mixerPulseNotice;
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:

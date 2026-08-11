@@ -27,7 +27,7 @@ class SoundTextureSignature {
 }
 
 /// Desen aileleri. Her sentez kaynağı kendi ailesini alır (bkz. [soundTextureSignature]).
-enum SoundTextureShape { hatch, speckle, band, wave, streak, flame, arc }
+enum SoundTextureShape { hatch, speckle, band, wave, streak, flame, arc, pulse }
 
 /// **Doku SESTEN türer.** Eskiden tek algoritma (slug hash'li tarama çizgisi)
 /// vardı; yedi tarif yedi farklı ses olmasına rağmen yedi aynı kare görünüyordu.
@@ -70,6 +70,13 @@ SoundTextureShape _shapeOf(LayerSource? source) => switch (source) {
   LayerSource.rain => SoundTextureShape.streak,
   LayerSource.fire => SoundTextureShape.flame,
   LayerSource.pad => SoundTextureShape.arc,
+  // Üç frekans katmanı AYNI deseni paylaşır ve bu doğru: hepsi aynı aileden
+  // (sabit hızda titreşen ton), yalnız hızları farklı. Farklı desen vermek
+  // "bunlar farklı şeyler" demek olurdu.
+  LayerSource.pulseDelta ||
+  LayerSource.pulseTheta ||
+  LayerSource.pulseAlpha =>
+    SoundTextureShape.pulse,
   // Sentez katmanı yok (yalnız dosya, ya da tarif çözülemedi) → nötr tarama.
   null => SoundTextureShape.hatch,
 };
@@ -181,6 +188,16 @@ class SoundTexturePainter extends CustomPainter {
           final x = i * step + step / 2;
           final h = size.height * (0.3 + rand.nextDouble() * 0.6);
           canvas.drawLine(Offset(x, size.height), Offset(x, size.height - h), paint);
+        }
+      case SoundTextureShape.pulse:
+        // Eşit aralıklı dikey çubuklar — düzenliliğin kendisi desen.
+        final fill = Paint()..color = NoctaColors.inkSecondary;
+        final step = size.width / n;
+        for (var i = 0; i < n; i++) {
+          canvas.drawRect(
+            Rect.fromLTWH(i * step + step * 0.3, 0, step * 0.25, size.height),
+            fill,
+          );
         }
       case SoundTextureShape.arc:
         // Pad: tek merkezden yayılan halkalar — sürekli, tekrar eden ton.

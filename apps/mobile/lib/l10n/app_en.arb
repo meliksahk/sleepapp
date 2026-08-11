@@ -124,6 +124,18 @@
   "mixerLayerPad": "Warm pad",
   "@mixerLayerPad": { "description": "Melodik pad katmanı adı (sentezlenmiş)" },
 
+  "mixerLayerPulseDelta": "Delta · 2 Hz",
+  "@mixerLayerPulseDelta": { "description": "F4 frekans katmani. NOTR: yalnizca olcu. Saglik/beyin dalgasi iddiasi YOK" },
+
+  "mixerLayerPulseTheta": "Theta · 6 Hz",
+  "@mixerLayerPulseTheta": { "description": "F4 frekans katmani - notr etiket" },
+
+  "mixerLayerPulseAlpha": "Alpha · 10 Hz",
+  "@mixerLayerPulseAlpha": { "description": "F4 frekans katmani - notr etiket" },
+
+  "mixerPulseNotice": "A steady pulse at a set rate. It is just a sound — use it if you like how it feels.",
+  "@mixerPulseNotice": { "description": "Frekans katmani mikste varken gosterilen NOTR not. Rakipler burada iddia kuruyor; biz kurmuyoruz" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",

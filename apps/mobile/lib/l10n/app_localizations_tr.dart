@@ -143,6 +143,19 @@ class AppL10nTr extends AppL10n {
   String get mixerLayerPad => 'Sıcak pad';
 
   @override
+  String get mixerLayerPulseDelta => 'Delta · 2 Hz';
+
+  @override
+  String get mixerLayerPulseTheta => 'Theta · 6 Hz';
+
+  @override
+  String get mixerLayerPulseAlpha => 'Alpha · 10 Hz';
+
+  @override
+  String get mixerPulseNotice =>
+      'Sabit hızda bir titreşim. Yalnızca bir ses — hoşuna gidiyorsa kullan.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }

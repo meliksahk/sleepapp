@@ -2747,7 +2747,7 @@
           },
           "layers": {
             "type": "array",
-            "description": "Mikser katmanları (1–8); type: white|pink|brown|waves|fire|rain|pad, gain 0–1",
+            "description": "Mikser katmanları (1–8); type: white|pink|brown|waves|fire|rain|pad|pulseDelta|pulseTheta|pulseAlpha, gain 0–1",
             "example": [
               {
                 "id": "base",
@@ -2912,7 +2912,18 @@
           },
           "type": {
             "type": "string",
-            "enum": ["white", "pink", "brown", "waves", "fire", "rain", "pad"],
+            "enum": [
+              "white",
+              "pink",
+              "brown",
+              "waves",
+              "fire",
+              "rain",
+              "pad",
+              "pulseDelta",
+              "pulseTheta",
+              "pulseAlpha"
+            ],
             "example": "pink"
           },
           "gain": {

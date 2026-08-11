@@ -460,3 +460,67 @@ Float32List padSource(
   }
   return out;
 }
+
+// ─────────────────────────── frekans katmanı (F4) ───────────────────────────
+
+/// **Titreşimli ton (izokronik) — nötr bir ARAÇ, iddia DEĞİL.**
+///
+/// ## SAĞLIK İDDİASI YOK (CLAUDE.md §1.1) — bu yorum bir uyarı değil, sınırdır
+///
+/// Burada üretilen şey, sabit hızda genliği inip çıkan yumuşak bir tondur.
+/// Rakiplerin "beyin dalgası", "delta uykusu", "bilimsel olarak kanıtlanmış"
+/// dediği yerde biz YALNIZCA ölçüyü söylüyoruz: hız kaç Hz. Arayüzdeki etiket de
+/// aynı: "Delta · 2 Hz". Bandın adı bir SINIFLANDIRMA etiketidir (müzikte "La"
+/// gibi), bir vaat değil. Hiçbir metinde tedavi/şifa/uyku garantisi geçmez.
+///
+/// ## Neden binaural DEĞİL
+///
+/// Binaural vuru, iki kulağa AYRI frekans gerektirir. Motor bugün MONO üretiyor
+/// (`renderMix` tek kanal döner) ve mono bir "binaural" ses fiilen imkânsızdır —
+/// öyle etiketlemek doğrudan yalan olurdu. Genlik modülasyonu (izokronik) monoda
+/// tam olarak neyse odur.
+///
+/// ## Döngüye kilit
+///
+/// Hem taşıyıcı hem modülasyon `loopLockedHz` ızgarasına oturur → kaynak döngü
+/// periyoduna kilitlidir ve dikişte faz sıçraması olmaz (`isLoopPeriodic`).
+/// **Bu kaynak segmentten segmente DEĞİŞMEZ ve bu doğrudur:** düzenliliği onun
+/// tanımıdır; "hiç tekrar etmeyen ses" vaadi doku katmanları içindir, bir
+/// metronomun tekrar etmemesi diye bir şey olamaz.
+///
+/// **|çıkış| ≤ 0.30.** Kanıt: 0.30 · |sin| · zarf, zarf ∈ [1−depth, 1] ⊂ [0,1].
+const double pulsePeakBound = 0.30;
+
+/// Taşıyıcı: A2 (110 Hz). Düşük ve yumuşak — mikste "zil" gibi öne çıkmaz,
+/// pad'in (C3, 130.8 Hz) altına oturur.
+const double pulseCarrierHz = 110.0;
+
+/// Modülasyon derinliği. 1.0 (tam kapanma) sert bir "tık tık" üretir ve uykuda
+/// rahatsız eder; 0.6 nefes gibi bir inip çıkma bırakır.
+const double _pulseDepth = 0.6;
+
+const double _pulseAmp = 0.30;
+
+/// [rateHz] hızında genlik modüle edilmiş yumuşak ton.
+Float32List pulseSource(
+  int samples, {
+  required int seed,
+  required int sampleRate,
+  required int loopSamples,
+  required double rateHz,
+}) {
+  final loopSeconds = loopSamples / sampleRate;
+  final carrier = loopLockedHz(pulseCarrierHz, loopSeconds);
+  final rate = loopLockedHz(rateHz, loopSeconds);
+
+  final out = Float32List(samples);
+  const twoPi = 2 * math.pi;
+  for (var i = 0; i < samples; i++) {
+    final t = i / sampleRate;
+    // Zarf [1-depth, 1]: kosinüs tabanlı, yani başlangıçta (t=0) tepe değil
+    // çukurdur — kaynak sessizden açılır, ani bir giriş yapmaz.
+    final env = 1 - _pulseDepth * (0.5 + 0.5 * math.cos(twoPi * rate * t));
+    out[i] = _pulseAmp * env * math.sin(twoPi * carrier * t);
+  }
+  return out;
+}

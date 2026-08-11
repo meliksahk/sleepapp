@@ -1324,7 +1324,7 @@ export interface components {
              */
             schemaVersion: number;
             /**
-             * @description Mikser katmanları (1–8); type: white|pink|brown|waves|fire|rain|pad, gain 0–1
+             * @description Mikser katmanları (1–8); type: white|pink|brown|waves|fire|rain|pad|pulseDelta|pulseTheta|pulseAlpha, gain 0–1
              * @example [
              *       {
              *         "id": "base",
@@ -1413,7 +1413,7 @@ export interface components {
              * @example pink
              * @enum {string}
              */
-            type: "white" | "pink" | "brown" | "waves" | "fire" | "rain" | "pad";
+            type: "white" | "pink" | "brown" | "waves" | "fire" | "rain" | "pad" | "pulseDelta" | "pulseTheta" | "pulseAlpha";
             /** @example 0.5 */
             gain: number;
         };

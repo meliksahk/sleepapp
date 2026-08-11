@@ -142,6 +142,19 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerPad => 'Warm pad';
 
   @override
+  String get mixerLayerPulseDelta => 'Delta · 2 Hz';
+
+  @override
+  String get mixerLayerPulseTheta => 'Theta · 6 Hz';
+
+  @override
+  String get mixerLayerPulseAlpha => 'Alpha · 10 Hz';
+
+  @override
+  String get mixerPulseNotice =>
+      'A steady pulse at a set rate. It is just a sound — use it if you like how it feels.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }

@@ -56,7 +56,17 @@ const Duration padSeamCrossfade = Duration(seconds: 3);
 const Duration noiseSeamCrossfade = Duration(milliseconds: 50);
 
 Duration seamCrossfadeFor(LayerSource type) =>
-    isLoopPeriodic(type) ? padSeamCrossfade : noiseSeamCrossfade;
+    type == LayerSource.pad ? padSeamCrossfade : noiseSeamCrossfade;
+
+/// Kaynak segmentten segmente **aynı mı** (sabit ton)?
+///
+/// F4 frekans katmanları (`pulse*`) tam olarak budur: düzenlilik onların
+/// TANIMIDIR. Böyle bir kaynakta dikiş harmanı ZARARLIDIR — kuyruk ile baş
+/// birebir aynı olduğu için eşit-güç toplamı √2'ye çıkar ve her segment başında
+/// +3 dB kabarma duyulur (`mix_loop.dart`'ta pad için öğrenilmiş aynı ders;
+/// ölçüldü: 1.25 dB'lik segment-arası seviye farkı olarak testte yakalandı).
+/// Harman gerekmez de: s[n] = s[0] zaten sağlanır.
+bool isSteadySource(LayerSource type) => pulseRateHz(type) != null;
 
 /// Tek bir segmentin RENDER isteği — **saf veri**, isolate sınırından geçebilir.
 ///
@@ -189,7 +199,7 @@ class LayerSegmentChain {
     _levelMatch(full, n);
 
     final out = Float32List(n);
-    final prevTail = _tail;
+    final prevTail = isSteadySource(type) ? null : _tail;
     if (prevTail == null) {
       out.setRange(0, n, full);
     } else {

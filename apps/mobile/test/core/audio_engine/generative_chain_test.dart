@@ -51,6 +51,8 @@ void main() {
   group('tekrar YOK', () {
     test('ÇEKİRDEK: ardışık segmentler birbirinin kopyası değil', () {
       for (final type in LayerSource.values) {
+        // Sabit ton (F4 frekans katmanları) HARİÇ: bkz. aşağıdaki ayrı test.
+        if (isSteadySource(type)) continue;
         final c = chain(type);
         final a = c.next();
         final b = c.next();
@@ -76,6 +78,7 @@ void main() {
       // birebir aynı çalıyordu ve "tekrar etmeyen ses" iddiası pad katmanında
       // yanlıştı. Akor havuzu (padVariantRatios) tam olarak bunu düzeltiyor.
       for (final type in LayerSource.values) {
+        if (isSteadySource(type)) continue; // sabit ton: aynı olması DOĞRU
         final c = chain(type);
         final a = c.next();
         final b = c.next();
@@ -98,6 +101,19 @@ void main() {
           reason: '$type: gövdeler korelasyonlu (${corr.toStringAsFixed(3)}) — '
               'segment bir öncekini tekrar ediyor',
         );
+      }
+    });
+
+    test('SABİT TON (F4) bilerek AYNI kalır — ve harman uygulanmaz', () {
+      // Bir metronomun "tekrar etmemesi" diye bir şey olamaz: düzenlilik onun
+      // tanımı. Üstelik harman uygulansaydı kuyruk ile baş birebir aynı olduğu
+      // için her segment başında +3 dB kabarma olurdu (ölçülmüş hata).
+      for (final type in LayerSource.values) {
+        if (!isSteadySource(type)) continue;
+        final c = chain(type);
+        final a = c.next();
+        final b = c.next();
+        expect(a, orderedEquals(b), reason: '$type: sabit ton kaymış');
       }
     });
 

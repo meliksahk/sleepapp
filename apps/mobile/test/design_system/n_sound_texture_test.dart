@@ -11,15 +11,18 @@ MixSpec _spec(List<(LayerSource, double)> layers) => MixSpec([
 
 void main() {
   group('doku SESTEN türer', () {
-    test('baskın katman deseni seçer — yedi kaynak yedi ayrı desen', () {
+    test('baskın katman deseni seçer — her AİLE kendi deseni', () {
       final shapes = <SoundTextureShape>{};
       for (final source in LayerSource.values) {
         shapes.add(soundTextureSignature(_spec([(source, 0.8)]), 1).shape);
       }
+      // 10 kaynak, 8 desen: üç frekans katmanı (pulseDelta/Theta/Alpha) aynı
+      // aileden olduğu için TEK deseni paylaşır — farklı desen vermek onları
+      // farklı şeyler gibi göstermek olurdu.
       expect(
         shapes.length,
-        LayerSource.values.length,
-        reason: 'iki kaynak aynı deseni paylaşıyor — kütüphane yine tek tip görünür',
+        SoundTextureShape.values.length,
+        reason: 'iki AYRI aile aynı deseni paylaşıyor — kütüphane tek tip görünür',
       );
     });
 

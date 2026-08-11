@@ -304,6 +304,14 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         return l10n.mixerLayerRain;
       case LayerSource.pad:
         return l10n.mixerLayerPad;
+      // F4 — NÖTR etiket: yalnızca ölçü söylenir. Bant adı bir sınıflandırma
+      // etiketidir; hiçbir sağlık/beyin dalgası iddiası YOK (CLAUDE.md §1.1).
+      case LayerSource.pulseDelta:
+        return l10n.mixerLayerPulseDelta;
+      case LayerSource.pulseTheta:
+        return l10n.mixerLayerPulseTheta;
+      case LayerSource.pulseAlpha:
+        return l10n.mixerLayerPulseAlpha;
     }
   }
 
