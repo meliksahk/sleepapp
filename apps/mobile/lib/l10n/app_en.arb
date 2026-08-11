@@ -160,6 +160,15 @@
   "mixerAssetCatalogEmptyHow": "Add a sound file from your phone. It stays on your device and plays without internet.",
   "@mixerAssetCatalogEmptyHow": { "description": "Boş katalogda NE YAPILACAĞI. Artık cihazdan ekleme yolunu gösterir; geliştirici komutu DEĞİL" },
 
+  "catalogSearchHint": "Search sounds",
+  "@catalogSearchHint": { "description": "Ses kataloğu arama kutusu ipucu" },
+
+  "catalogGenreAll": "All",
+  "@catalogGenreAll": { "description": "Kategori şeridinde filtresiz seçenek" },
+
+  "catalogNoMatches": "Nothing matches that.",
+  "@catalogNoMatches": { "description": "Arama/kategori boş sonuç verdi — katalog boş DEĞİL" },
+
   "mixerLocalSectionTitle": "On this phone",
   "@mixerLocalSectionTitle": { "description": "Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir" },
 

@@ -12,7 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../archetype/archetype_gradient.dart';
 import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
-import 'asset_catalog_sheet.dart';
+import 'asset_catalog_screen.dart';
 import 'share_studio_screen.dart';
 
 /// Mikser **PLAYER'ı** — uygulamanın ses çıkardığı ekran.
@@ -969,7 +969,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
   ///   çağrıyla alınır. 404/401/ağ yok → katman EKLENMEZ, hata gösterilir.
   ///   Sessizce çalmayan bir sürgü bırakmak en kötü sonuç olurdu.
   Future<void> _addSound() async {
-    final selected = await showAssetCatalogSheet(
+    final selected = await openAssetCatalog(
       context,
       // Tavan kontrolü katalogta yapılır: dolu ise dosya seçici HİÇ açılmaz.
       currentAssetLayerCount: _c.state.assets.length,

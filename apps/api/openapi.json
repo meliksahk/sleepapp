@@ -1400,6 +1400,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Serbest metin: başlık VEYA tür içinde geçer, harf duyarsız.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

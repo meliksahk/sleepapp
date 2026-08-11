@@ -181,6 +181,15 @@ class AppL10nTr extends AppL10n {
       'Telefonundan bir ses dosyası ekle. Dosya cihazında kalır, internet olmadan da çalar.';
 
   @override
+  String get catalogSearchHint => 'Ses ara';
+
+  @override
+  String get catalogGenreAll => 'Hepsi';
+
+  @override
+  String get catalogNoMatches => 'Buna uyan bir şey yok.';
+
+  @override
   String get mixerLocalSectionTitle => 'Bu telefonda';
 
   @override

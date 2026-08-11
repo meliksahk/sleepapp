@@ -180,6 +180,15 @@ class AppL10nEn extends AppL10n {
       'Add a sound file from your phone. It stays on your device and plays without internet.';
 
   @override
+  String get catalogSearchHint => 'Search sounds';
+
+  @override
+  String get catalogGenreAll => 'All';
+
+  @override
+  String get catalogNoMatches => 'Nothing matches that.';
+
+  @override
   String get mixerLocalSectionTitle => 'On this phone';
 
   @override

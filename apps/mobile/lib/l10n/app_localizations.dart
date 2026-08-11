@@ -385,6 +385,24 @@ abstract class AppL10n {
   /// **'Add a sound file from your phone. It stays on your device and plays without internet.'**
   String get mixerAssetCatalogEmptyHow;
 
+  /// Ses kataloğu arama kutusu ipucu
+  ///
+  /// In en, this message translates to:
+  /// **'Search sounds'**
+  String get catalogSearchHint;
+
+  /// Kategori şeridinde filtresiz seçenek
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get catalogGenreAll;
+
+  /// Arama/kategori boş sonuç verdi — katalog boş DEĞİL
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches that.'**
+  String get catalogNoMatches;
+
   /// Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir
   ///
   /// In en, this message translates to:

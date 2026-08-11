@@ -35,11 +35,19 @@ class ContentController {
 
   /// Ses dosyası kataloğu (tür/mood filtreli). URL İÇERMEZ — çalmak için
   /// [audioAsset] ile tekil kayda gidilir (sunucu listede imza dağıtmaz).
-  Future<List<AudioAsset>> audioAssets({String? genre, List<String>? moods}) async {
+  Future<List<AudioAsset>> audioAssets({
+    String? genre,
+    List<String>? moods,
+    String? query,
+  }) async {
     final params = <String>[
       if (genre != null && genre.isNotEmpty) 'genre=${Uri.encodeQueryComponent(genre)}',
       if (moods != null && moods.isNotEmpty)
         'mood=${Uri.encodeQueryComponent(moods.join(','))}',
+      // Harf duyarsızlığı SUNUCUDA (Postgres ILIKE). İstemcide toLowerCase
+      // yapmak Türkçe'de I→i üretip aramayı sessizce bozardı.
+      if (query != null && query.trim().isNotEmpty)
+        'q=${Uri.encodeQueryComponent(query.trim())}',
     ];
     final path =
         '/v1/content/audio-assets${params.isEmpty ? '' : '?${params.join('&')}'}';

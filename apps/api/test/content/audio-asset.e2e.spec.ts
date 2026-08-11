@@ -132,6 +132,50 @@ describe('Audio assets e2e (HTTP)', () => {
     expect(mine).toHaveLength(2);
   });
 
+  it('q= başlıkta arar, harf duyarsız', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      // Küçük harfle aranıyor, başlıkta 'Focus Two' büyük harfli.
+      .get('/v1/content/audio-assets?q=focus%20two')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const mine = res.body.filter((x: { title: string }) => x.title.startsWith(prefix));
+    expect(mine).toHaveLength(1);
+    expect(mine[0].genre).toBe('noise');
+  });
+
+  it('q= TÜR içinde de arar (kullanıcı "ambient" yazınca türü kasteder)', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/content/audio-assets?q=ambien')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const mine = res.body.filter((x: { title: string }) => x.title.startsWith(prefix));
+    expect(mine).toHaveLength(1);
+    expect(mine[0].genre).toBe('ambient');
+  });
+
+  it('q= ile genre birlikte VE bağlanır', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get(`/v1/content/audio-assets?q=${prefix}&genre=noise`)
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const mine = res.body.filter((x: { title: string }) => x.title.startsWith(prefix));
+    expect(mine).toHaveLength(1);
+    expect(mine[0].genre).toBe('noise');
+  });
+
+  it('boş q= filtre uygulamaz (tüm katalog)', async () => {
+    const t = await token();
+    const res = await request(app.getHttpServer())
+      .get('/v1/content/audio-assets?q=%20%20')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const mine = res.body.filter((x: { title: string }) => x.title.startsWith(prefix));
+    expect(mine).toHaveLength(2);
+  });
+
   it('tekil uç presigned URL döner, key alanı yok', async () => {
     const t = await token();
     const res = await request(app.getHttpServer())

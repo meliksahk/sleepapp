@@ -2704,6 +2704,8 @@ export interface operations {
                 genre?: string;
                 /** @description Virgülle ayrık; herhangi biri eşleşirse döner (örtüşme). */
                 mood?: string;
+                /** @description Serbest metin: başlık VEYA tür içinde geçer, harf duyarsız. */
+                q?: string;
             };
             header?: never;
             path?: never;
