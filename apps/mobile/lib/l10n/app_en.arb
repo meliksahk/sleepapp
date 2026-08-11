@@ -481,6 +481,63 @@
   "paywallBenefitMore": "More premium features on the way",
   "@paywallBenefitMore": { "description": "Premium fayda: gelecek özellikler (dürüst — bugün yalnız trend gated)" },
 
+  "paywallFreeSection": "ALWAYS FREE",
+  "@paywallFreeSection": { "description": "Paywall ucretsiz bolum basligi" },
+
+  "paywallFreeMixer": "The whole mixer, every layer, no limits.",
+  "@paywallFreeMixer": { "description": "Ucretsiz kapsam" },
+
+  "paywallFreeRecordings": "Your own recordings, and the sleep timer.",
+  "@paywallFreeRecordings": { "description": "Ucretsiz kapsam" },
+
+  "paywallFreeLibrary": "{count} sounds from the library.",
+  "@paywallFreeLibrary": {
+    "description": "Ucretsiz kutuphane boyutu",
+    "placeholders": { "count": { "type": "String" } }
+  },
+
+  "paywallPremiumSection": "WITH PREMIUM",
+  "@paywallPremiumSection": { "description": "Paywall premium bolum basligi" },
+
+  "premiumFullLibrary": "The full sound library.",
+  "@premiumFullLibrary": { "description": "Premium ozellik" },
+
+  "premiumInfiniteExtension": "Sound that never repeats, all night.",
+  "@premiumInfiniteExtension": { "description": "Premium ozellik (F2)" },
+
+  "premiumOffline": "Offline listening.",
+  "@premiumOffline": { "description": "Premium ozellik" },
+
+  "premiumSmartAlarm": "The smart alarm.",
+  "@premiumSmartAlarm": { "description": "Premium ozellik" },
+
+  "premiumUnlimitedMixes": "Unlimited saved mixes (free keeps {count}).",
+  "@premiumUnlimitedMixes": {
+    "description": "Premium ozellik",
+    "placeholders": { "count": { "type": "String" } }
+  },
+
+  "premiumVideoExport": "Export a mix as video.",
+  "@premiumVideoExport": { "description": "Premium ozellik" },
+
+  "premiumWeeklyTrends": "Weekly trends.",
+  "@premiumWeeklyTrends": { "description": "Premium ozellik" },
+
+  "paywallTrialCta": "Try {days} days free",
+  "@paywallTrialCta": {
+    "description": "Deneme CTA - gercek satin alma YOK",
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "paywallRestore": "Restore purchases",
+  "@paywallRestore": { "description": "Magaza kilavuzlari ister; bugun ise yaramaz ve bunu soyler" },
+
+  "paywallNoChargeYet": "Nothing is charged today: payments are not connected yet. When they are, the {days}-day trial starts before any payment.",
+  "@paywallNoChargeYet": {
+    "description": "DURUSTLUK: ekran gercek satin alma yapmiyor",
+    "placeholders": { "days": { "type": "int" } }
+  },
+
   "paywallCta": "Get Premium",
   "@paywallCta": { "description": "Paywall ana buton — gerçek IAP en son faz, şimdilik 'yakında'" },
 

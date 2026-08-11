@@ -516,6 +516,60 @@ class AppL10nEn extends AppL10n {
   String get paywallBenefitMore => 'More premium features on the way';
 
   @override
+  String get paywallFreeSection => 'ALWAYS FREE';
+
+  @override
+  String get paywallFreeMixer => 'The whole mixer, every layer, no limits.';
+
+  @override
+  String get paywallFreeRecordings =>
+      'Your own recordings, and the sleep timer.';
+
+  @override
+  String paywallFreeLibrary(String count) {
+    return '$count sounds from the library.';
+  }
+
+  @override
+  String get paywallPremiumSection => 'WITH PREMIUM';
+
+  @override
+  String get premiumFullLibrary => 'The full sound library.';
+
+  @override
+  String get premiumInfiniteExtension => 'Sound that never repeats, all night.';
+
+  @override
+  String get premiumOffline => 'Offline listening.';
+
+  @override
+  String get premiumSmartAlarm => 'The smart alarm.';
+
+  @override
+  String premiumUnlimitedMixes(String count) {
+    return 'Unlimited saved mixes (free keeps $count).';
+  }
+
+  @override
+  String get premiumVideoExport => 'Export a mix as video.';
+
+  @override
+  String get premiumWeeklyTrends => 'Weekly trends.';
+
+  @override
+  String paywallTrialCta(int days) {
+    return 'Try $days days free';
+  }
+
+  @override
+  String get paywallRestore => 'Restore purchases';
+
+  @override
+  String paywallNoChargeYet(int days) {
+    return 'Nothing is charged today: payments are not connected yet. When they are, the $days-day trial starts before any payment.';
+  }
+
+  @override
   String get paywallCta => 'Get Premium';
 
   @override

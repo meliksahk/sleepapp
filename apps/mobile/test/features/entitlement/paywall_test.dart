@@ -86,7 +86,11 @@ void main() {
     testWidgets('başlık + faydalar + CTA render eder', (t) async {
       await _pump(t, entitlement: free, initial: '/paywall');
       expect(find.byKey(const Key('paywall-title')), findsOneWidget);
-      expect(find.text('Weekly sleep trends'), findsOneWidget);
+      // F5: paywall artık plan KARŞILAŞTIRMASI — önce ücretsizde ne var, sonra
+      // premium ne ekliyor (tablo: premium_plan.dart).
+      expect(find.text('Weekly trends.'), findsOneWidget);
+      expect(find.textContaining('The whole mixer'), findsOneWidget);
+      expect(find.byKey(const Key('paywall-no-charge')), findsOneWidget);
       expect(find.byKey(const Key('paywall-cta')), findsOneWidget);
     });
 

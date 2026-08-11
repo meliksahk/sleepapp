@@ -937,6 +937,96 @@ abstract class AppL10n {
   /// **'More premium features on the way'**
   String get paywallBenefitMore;
 
+  /// Paywall ucretsiz bolum basligi
+  ///
+  /// In en, this message translates to:
+  /// **'ALWAYS FREE'**
+  String get paywallFreeSection;
+
+  /// Ucretsiz kapsam
+  ///
+  /// In en, this message translates to:
+  /// **'The whole mixer, every layer, no limits.'**
+  String get paywallFreeMixer;
+
+  /// Ucretsiz kapsam
+  ///
+  /// In en, this message translates to:
+  /// **'Your own recordings, and the sleep timer.'**
+  String get paywallFreeRecordings;
+
+  /// Ucretsiz kutuphane boyutu
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sounds from the library.'**
+  String paywallFreeLibrary(String count);
+
+  /// Paywall premium bolum basligi
+  ///
+  /// In en, this message translates to:
+  /// **'WITH PREMIUM'**
+  String get paywallPremiumSection;
+
+  /// Premium ozellik
+  ///
+  /// In en, this message translates to:
+  /// **'The full sound library.'**
+  String get premiumFullLibrary;
+
+  /// Premium ozellik (F2)
+  ///
+  /// In en, this message translates to:
+  /// **'Sound that never repeats, all night.'**
+  String get premiumInfiniteExtension;
+
+  /// Premium ozellik
+  ///
+  /// In en, this message translates to:
+  /// **'Offline listening.'**
+  String get premiumOffline;
+
+  /// Premium ozellik
+  ///
+  /// In en, this message translates to:
+  /// **'The smart alarm.'**
+  String get premiumSmartAlarm;
+
+  /// Premium ozellik
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited saved mixes (free keeps {count}).'**
+  String premiumUnlimitedMixes(String count);
+
+  /// Premium ozellik
+  ///
+  /// In en, this message translates to:
+  /// **'Export a mix as video.'**
+  String get premiumVideoExport;
+
+  /// Premium ozellik
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly trends.'**
+  String get premiumWeeklyTrends;
+
+  /// Deneme CTA - gercek satin alma YOK
+  ///
+  /// In en, this message translates to:
+  /// **'Try {days} days free'**
+  String paywallTrialCta(int days);
+
+  /// Magaza kilavuzlari ister; bugun ise yaramaz ve bunu soyler
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get paywallRestore;
+
+  /// DURUSTLUK: ekran gercek satin alma yapmiyor
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is charged today: payments are not connected yet. When they are, the {days}-day trial starts before any payment.'**
+  String paywallNoChargeYet(int days);
+
   /// Paywall ana buton — gerçek IAP en son faz, şimdilik 'yakında'
   ///
   /// In en, this message translates to:

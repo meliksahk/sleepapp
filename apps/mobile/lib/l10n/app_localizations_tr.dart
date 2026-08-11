@@ -514,6 +514,59 @@ class AppL10nTr extends AppL10n {
   String get paywallBenefitMore => 'Daha fazla premium özellik yolda';
 
   @override
+  String get paywallFreeSection => 'HER ZAMAN ÜCRETSİZ';
+
+  @override
+  String get paywallFreeMixer => 'Mikserin tamamı, her katman, sınır yok.';
+
+  @override
+  String get paywallFreeRecordings => 'Kendi kayıtların ve uyku zamanlayıcısı.';
+
+  @override
+  String paywallFreeLibrary(String count) {
+    return 'Kütüphaneden $count ses.';
+  }
+
+  @override
+  String get paywallPremiumSection => 'PREMIUM İLE';
+
+  @override
+  String get premiumFullLibrary => 'Ses kütüphanesinin tamamı.';
+
+  @override
+  String get premiumInfiniteExtension => 'Sabaha kadar hiç tekrar etmeyen ses.';
+
+  @override
+  String get premiumOffline => 'Çevrimdışı dinleme.';
+
+  @override
+  String get premiumSmartAlarm => 'Akıllı alarm.';
+
+  @override
+  String premiumUnlimitedMixes(String count) {
+    return 'Sınırsız kayıtlı mix (ücretsizde $count).';
+  }
+
+  @override
+  String get premiumVideoExport => 'Mix\'i video olarak dışa aktar.';
+
+  @override
+  String get premiumWeeklyTrends => 'Haftalık trendler.';
+
+  @override
+  String paywallTrialCta(int days) {
+    return '$days gün ücretsiz dene';
+  }
+
+  @override
+  String get paywallRestore => 'Satın alımları geri yükle';
+
+  @override
+  String paywallNoChargeYet(int days) {
+    return 'Bugün hiçbir ücret alınmıyor: ödeme henüz bağlı değil. Bağlandığında $days günlük deneme her ödemeden önce başlayacak.';
+  }
+
+  @override
   String get paywallCta => 'Premium\'a geç';
 
   @override
