@@ -169,6 +169,33 @@
   "catalogNoMatches": "Nothing matches that.",
   "@catalogNoMatches": { "description": "Arama/kategori boş sonuç verdi — katalog boş DEĞİL" },
 
+  "recordTitle": "Record a place",
+  "@recordTitle": { "description": "Kendi kaydin ekrani basligi (F3)" },
+
+  "recordPrivacy": "The recording stays on your phone. It is not uploaded and not shared with anyone.",
+  "@recordPrivacy": { "description": "UGC ERTELENDI: kaydin nereye gitmedigi acikca soylenir" },
+
+  "recordStart": "Start recording",
+  "@recordStart": { "description": "Kayda basla" },
+
+  "recordStop": "Stop",
+  "@recordStop": { "description": "Kaydi bitir" },
+
+  "recordSave": "Save to my sounds",
+  "@recordSave": { "description": "Kaydi kutuphaneye al ve mikse koy" },
+
+  "recordPlaceHint": "Where is this? (kitchen, rain, the 6am train)",
+  "@recordPlaceHint": { "description": "Mekan etiketi ipucu — icerik adi, i18n disi bir deger uretir" },
+
+  "recordPermissionDenied": "Microphone access is needed to record.",
+  "@recordPermissionDenied": { "description": "Izin reddedildi" },
+
+  "recordFailed": "That recording could not be saved.",
+  "@recordFailed": { "description": "Kayit/kaydetme basarisiz" },
+
+  "recordLibraryFull": "Your sound library is full. Delete a sound to make room.",
+  "@recordLibraryFull": { "description": "150 MB tavani doldu" },
+
   "mixerLocalSectionTitle": "On this phone",
   "@mixerLocalSectionTitle": { "description": "Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir" },
 

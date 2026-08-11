@@ -14,6 +14,7 @@ import '../data/local_sound_library_impl.dart'
 import '../domain/local_sound.dart';
 import '../domain/local_sound_library.dart';
 import '../mixer_providers.dart';
+import 'record_sound_screen.dart';
 
 /// Mikserdeki "Ses ekle" — **iki kaynak, eşit ağırlıkta.**
 ///
@@ -353,7 +354,26 @@ class _AssetCatalogScreenState extends ConsumerState<AssetCatalogScreen> {
                 ),
               ],
             )
-          else
+          else ...<Widget>[
+            // F3 — kendi kaydın. "Telefondan ekle"nin YANINDA ve aynı ağırlıkta:
+            // ürünün vaadi (gerçek yerlerin sesi) burada başlıyor.
+            TextButton.icon(
+              key: const Key('mixer-record-place'),
+              onPressed: _record,
+              icon: const Icon(Icons.mic_none, size: 18),
+              label: NMono(
+                l10n.recordTitle,
+                color: NoctaColors.inkSecondary,
+                track: NoctaTrack.tight,
+              ),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(44, 44),
+                foregroundColor: NoctaColors.inkSecondary,
+                shape: const RoundedRectangleBorder(),
+                side: const BorderSide(color: NoctaColors.lineDashed),
+                padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s3),
+              ),
+            ),
             TextButton.icon(
               key: const Key('mixer-pick-from-device'),
               onPressed: _import,
@@ -372,9 +392,25 @@ class _AssetCatalogScreenState extends ConsumerState<AssetCatalogScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s3),
               ),
             ),
+          ],
         ],
       ),
     );
+  }
+
+  /// Kayıt ekranını açar; kullanıcı bir kayıt aldıysa doğrudan mikse koyar.
+  Future<void> _record() async {
+    final layer = await Navigator.of(context).push<AssetLayer>(
+      MaterialPageRoute<AssetLayer>(
+        builder: (context) => RecordSoundScreen(
+          currentAssetLayerCount: widget.currentAssetLayerCount,
+        ),
+      ),
+    );
+    if (layer == null || !mounted) return;
+    // Kütüphane listesi tazelensin (kayıt oraya da girdi).
+    ref.invalidate(localSoundsProvider);
+    Navigator.of(context).pop(CatalogPickLocal(layer));
   }
 
   List<Widget> _localSection(AppL10n l10n, AsyncValue<LocalSoundIndex> local) {

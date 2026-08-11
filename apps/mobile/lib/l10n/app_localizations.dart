@@ -403,6 +403,60 @@ abstract class AppL10n {
   /// **'Nothing matches that.'**
   String get catalogNoMatches;
 
+  /// Kendi kaydin ekrani basligi (F3)
+  ///
+  /// In en, this message translates to:
+  /// **'Record a place'**
+  String get recordTitle;
+
+  /// UGC ERTELENDI: kaydin nereye gitmedigi acikca soylenir
+  ///
+  /// In en, this message translates to:
+  /// **'The recording stays on your phone. It is not uploaded and not shared with anyone.'**
+  String get recordPrivacy;
+
+  /// Kayda basla
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording'**
+  String get recordStart;
+
+  /// Kaydi bitir
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get recordStop;
+
+  /// Kaydi kutuphaneye al ve mikse koy
+  ///
+  /// In en, this message translates to:
+  /// **'Save to my sounds'**
+  String get recordSave;
+
+  /// Mekan etiketi ipucu — icerik adi, i18n disi bir deger uretir
+  ///
+  /// In en, this message translates to:
+  /// **'Where is this? (kitchen, rain, the 6am train)'**
+  String get recordPlaceHint;
+
+  /// Izin reddedildi
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone access is needed to record.'**
+  String get recordPermissionDenied;
+
+  /// Kayit/kaydetme basarisiz
+  ///
+  /// In en, this message translates to:
+  /// **'That recording could not be saved.'**
+  String get recordFailed;
+
+  /// 150 MB tavani doldu
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound library is full. Delete a sound to make room.'**
+  String get recordLibraryFull;
+
   /// Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir
   ///
   /// In en, this message translates to:

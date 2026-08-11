@@ -190,6 +190,36 @@ class AppL10nTr extends AppL10n {
   String get catalogNoMatches => 'Buna uyan bir şey yok.';
 
   @override
+  String get recordTitle => 'Bir yeri kaydet';
+
+  @override
+  String get recordPrivacy =>
+      'Kayıt telefonunda kalır. Hiçbir yere yüklenmez, kimseyle paylaşılmaz.';
+
+  @override
+  String get recordStart => 'Kaydı başlat';
+
+  @override
+  String get recordStop => 'Durdur';
+
+  @override
+  String get recordSave => 'Seslerime kaydet';
+
+  @override
+  String get recordPlaceHint => 'Burası neresi? (mutfak, yağmur, 06:00 treni)';
+
+  @override
+  String get recordPermissionDenied =>
+      'Kaydetmek için mikrofon erişimi gerekiyor.';
+
+  @override
+  String get recordFailed => 'Bu kayıt kaydedilemedi.';
+
+  @override
+  String get recordLibraryFull =>
+      'Ses kütüphanen dolu. Yer açmak için bir ses sil.';
+
+  @override
   String get mixerLocalSectionTitle => 'Bu telefonda';
 
   @override

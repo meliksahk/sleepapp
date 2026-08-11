@@ -17,6 +17,23 @@ abstract class LocalSoundLibrary {
   /// etkileşim olurdu).
   Future<LocalSoundImportResult> import({required int currentAssetLayerCount});
 
+  /// **F3 — kendi kaydın.** Mikrofonun yazacağı geçici yolu verir.
+  ///
+  /// Yol kütüphane dizininin İÇİNDEDİR ve `.part` uzantısı taşır: yarım bir
+  /// kayıt hem yeniden inşadan hem de uzlaştırmadan gizlenir (ithalde
+  /// öğrenilen kural).
+  Future<String> newRecordingPath();
+
+  /// Kaydedilmiş dosyayı kütüphaneye ALIR — kopyalamaz, zaten bizim dizinimizde.
+  ///
+  /// [title] kullanıcının verdiği MEKÂN etiketidir ("Mutfak, yağmur"): içerik
+  /// adıdır, i18n'e girmez.
+  Future<LocalSoundImportResult> adoptRecording({
+    required String partPath,
+    required String title,
+    required int currentAssetLayerCount,
+  });
+
   /// Kaydı VE dosyayı siler. Kullanıcının telefonundaki ORİJİNAL dosyaya dokunmaz.
   Future<bool> delete(String id);
 
@@ -78,6 +95,10 @@ class InMemoryLocalSoundLibrary implements LocalSoundLibrary {
 
   int importCallCount = 0;
 
+  /// Kayıt alma yolunun sahte cevabı; null → mutlu yol.
+  LocalSoundImportResult? adoptResult;
+  int adoptCallCount = 0;
+
   @override
   Future<LocalSoundIndex> list() async =>
       unreadable ? const LocalSoundIndexUnreadable() : LocalSoundIndexOk(_sounds);
@@ -117,6 +138,31 @@ class InMemoryLocalSoundLibrary implements LocalSoundLibrary {
 
   @override
   Future<String> pathOf(LocalSound sound) async => '/tmp/nocta/${sound.fileName}';
+
+  @override
+  Future<String> newRecordingPath() async =>
+      '/tmp/nocta/kayit-${_sounds.length}.m4a.part';
+
+  /// Bellekte: dosya sistemi yok, yalnız kayıt üretilir.
+  @override
+  Future<LocalSoundImportResult> adoptRecording({
+    required String partPath,
+    required String title,
+    required int currentAssetLayerCount,
+  }) async {
+    adoptCallCount++;
+    final result = adoptResult;
+    if (result != null) return result;
+    final sound = LocalSound(
+      id: 'local-rec${_sounds.length.toString().padLeft(13, '0')}',
+      title: title,
+      fileName: '${_sounds.length.toString().padLeft(16, '0')}__kayit.m4a',
+      sizeBytes: 2048,
+      importedAt: DateTime.utc(2026),
+    );
+    _sounds.add(sound);
+    return LocalSoundImported(sound);
+  }
 }
 
 /// [LocalSoundLibrary.reconcile] sonucu — kullanıcıya ne söyleneceğini belirler.

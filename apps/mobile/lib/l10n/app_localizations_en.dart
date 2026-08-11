@@ -189,6 +189,35 @@ class AppL10nEn extends AppL10n {
   String get catalogNoMatches => 'Nothing matches that.';
 
   @override
+  String get recordTitle => 'Record a place';
+
+  @override
+  String get recordPrivacy =>
+      'The recording stays on your phone. It is not uploaded and not shared with anyone.';
+
+  @override
+  String get recordStart => 'Start recording';
+
+  @override
+  String get recordStop => 'Stop';
+
+  @override
+  String get recordSave => 'Save to my sounds';
+
+  @override
+  String get recordPlaceHint => 'Where is this? (kitchen, rain, the 6am train)';
+
+  @override
+  String get recordPermissionDenied => 'Microphone access is needed to record.';
+
+  @override
+  String get recordFailed => 'That recording could not be saved.';
+
+  @override
+  String get recordLibraryFull =>
+      'Your sound library is full. Delete a sound to make room.';
+
+  @override
   String get mixerLocalSectionTitle => 'On this phone';
 
   @override
