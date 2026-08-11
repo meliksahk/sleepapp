@@ -148,7 +148,7 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get mixerStopgapNotice =>
-      'Early build: generated locally, looped. Sound quality is not final.';
+      'Generated on your phone and never repeated. Early build: sound quality is not final.';
 
   @override
   String get mixerFailed => 'Sound could not start.';

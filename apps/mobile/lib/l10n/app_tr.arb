@@ -44,7 +44,7 @@
   "mixerLayerRain": "Yağmur",
   "mixerLayerPad": "Sıcak pad",
   "mixerGainPercent": "%{percent}",
-  "mixerStopgapNotice": "Erken sürüm: yerelde üretilip döngüleniyor. Ses kalitesi nihai değil.",
+  "mixerStopgapNotice": "Telefonunda üretiliyor ve hiç tekrar etmiyor. Erken sürüm: ses kalitesi nihai değil.",
   "mixerFailed": "Ses başlatılamadı.",
   "mixerAssetLoopNotice": "Ses dosyaları olduğu gibi tekrarlanır; döngü noktasında kısa bir tık duyabilirsiniz.",
   "mixerAssetUnavailable": "Bir ses dosyası yüklenemedi; mix'in geri kalanı çalmaya devam ediyor.",

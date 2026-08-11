@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
+import 'package:nocta/core/audio_engine/dsp/generative_chain.dart';
+import 'package:nocta/core/audio_engine/generative_audio_source.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
 
 /// Asset (DOSYA) katmanı — cihazsız.
@@ -98,6 +100,13 @@ void main() {
         renderedIds.add(r.id);
         return renderLoopSync(r);
       },
+      // F2: sentez katmanları artık DÖNGÜ değil sonsuz AKIŞ. Kayıt aynı listeye
+      // düşüyor (kaynak adı = katman id'si) ki testin sorduğu soru değişmesin:
+      // "asset katmanı sentezleniyor mu?"
+      segmentRenderer: (r) async {
+        renderedIds.add(r.type.name);
+        return renderSegmentRequest(r);
+      },
       playerFactory: () {
         final p = _FakePlayer(failOnSource: failAssets);
         created.add(p);
@@ -116,9 +125,18 @@ void main() {
     );
 
     expect(player.voiceCount, 2, reason: 'sentez + dosya, tek listede');
-    // Renderer YALNIZCA sentez katmanı için çağrıldı. Asset render edilseydi
-    // burada 'asset-1' de olurdu — tam olarak engellemeye çalıştığımız hata.
-    expect(renderedIds, <String>['brown']);
+    expect(player.extendForever, isTrue, reason: 'sonsuz akış varsayılan olmalı');
+
+    // **F2 sonrası soru aynı, ölçüm yeri farklı:** sentez katmanı artık yükleme
+    // ANINDA render edilmiyor (akış, çalar baytları istedikçe üretiyor). Bu
+    // yüzden "render edildi mi" yerine KAYNAK TİPİNE bakılıyor:
+    // sentez → sonsuz akış, dosya → Uri. Asset yanlışlıkla sentez yoluna
+    // düşseydi (engellemeye çalıştığımız hata) burada GenerativeAudioSource
+    // görünürdü.
+    expect(created, hasLength(2));
+    expect(created[0].source, isA<GenerativeAudioSource>());
+    expect(created[1].source, isA<UriAudioSource>());
+    expect(renderedIds, isEmpty, reason: 'akış yolunda önden render YOK');
     expect(player.failedAssetIds, isEmpty);
   });
 

@@ -69,6 +69,23 @@ features/report/
 örneklenmiş uyku sesindeki en yaygın şikâyet duyulabilir loop noktasıdır. Ayrıca bant
 genişliği/depolama maliyeti sıfırdır ve internetsiz çalışır.
 
+> **F2 (sonsuz jeneratif uzatma) — bu vaadin fiilen karşılandığı yer.**
+> Uzun süre bu cümle DOĞRU DEĞİLDİ: motor 30 sn'lik tek bir buffer'ı `LoopMode.one`
+> ile döngülüyordu, yani ses gecede ~960 kez birebir tekrar ediyordu (dikiş tıksızdı
+> ama içerik aynıydı). Artık her katman bir **segment zinciri**dir
+> (`dsp/generative_chain.dart`): her segment kendi tohumundan üretilir, segment
+> sınırında eşit-güç harmanla dikilir ve çalara `GenerativeAudioSource` ile
+> **uzunluğu bilinmeyen tek bir WAV akışı** olarak sunulur (çalma listesi yok,
+> dolayısıyla parça sınırı da yok). Pad'in tonal yatağı tohumdan bağımsız olduğu
+> için ayrıca bir **akor havuzu** (`padVariantRatios`) eklendi — ölçülmüştü: iki pad
+> segmenti arasındaki korelasyon 1.000'di, yani pad tekrar ediyordu.
+> Ayrıca zincir segmentleri **seviye eşitler**: `pinkNoise`/`brownNoise` her buffer'ı
+> kendi tepesine normalize ettiği için segment RMS'i 1.5 dB geziyordu (30 sn'de bir
+> duyulur seviye basamağı).
+> **Kaçış yolu:** `MixPlayer(extendForever: false)` eski döngü yolunu geri açar.
+> **Doğrulama sınırı:** birim testleri (tekrarsızlık, dikiş, seviye, bayt akışı) var;
+> gerçek cihazda kulakla dinlenmedi.
+
 **v2'de gerçek kayıt istenirse yol:** CC0/kamu malı kütüphaneler veya ısmarlama/kendi
 kaydımız. Motora bir "asset katmanı" tipi eklenir ve sentez katmanlarıyla yan yana
 çalışır — bugünkü sentez kararı o kapıyı kapatmıyor.

@@ -149,7 +149,7 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get mixerStopgapNotice =>
-      'Erken sürüm: yerelde üretilip döngüleniyor. Ses kalitesi nihai değil.';
+      'Telefonunda üretiliyor ve hiç tekrar etmiyor. Erken sürüm: ses kalitesi nihai değil.';
 
   @override
   String get mixerFailed => 'Ses başlatılamadı.';

@@ -341,6 +341,23 @@ const List<List<double>> _padPartials = <List<double>>[
 const double _padAmp = 0.26;
 const double _padDetuneGain = 0.35;
 
+/// **Akor havuzu** — sonsuz uzatmanın (F2) pad ayağı.
+///
+/// Pad'in gövdesi tohumdan BAĞIMSIZDI: yalnız parıltı zamanlaması seed'e
+/// bakıyordu, tonal yatak her seferinde birebir aynıydı. Ölçüldü: iki farklı
+/// tohumla üretilen iki pad segmenti arasındaki korelasyon **1.000**. Yani
+/// "hiç tekrar etmeyen ses" iddiası pad katmanında YANLIŞ olurdu.
+///
+/// Çözüm kökü kaydırmak: her segment bu havuzdan bir oran seçer. Oranlar saf
+/// aralıklar (unison, majör 2, minör 3, kuartt, kuint, minör 6) — hepsi aynı
+/// tona akraba, yani geçiş bir "modülasyon" değil renk değişimi. Oran
+/// `loopLockedHz`'e girdiği için döngü kilidi (ve dolayısıyla `renderSeamlessLoop`
+/// crossfade muafiyeti) BOZULMAZ.
+///
+/// `variant: 0` → 1.0 → bugünkü sesin BİREBİR aynısı; mevcut testler ve export
+/// yolu değişmez.
+const List<double> padVariantRatios = <double>[1.0, 9 / 8, 6 / 5, 4 / 3, 3 / 2, 8 / 5];
+
 /// Parıltı perdeleri: yalnız f0'ın tam katları → seed ne olursa olsun disonans
 /// imkânsız (rastgelelik yalnız ZAMANLAMADA). `nocta_signature.dart` ile aynı.
 const List<int> _padShimmerMultiples = <int>[8, 12, 16, 20, 24];
@@ -377,16 +394,20 @@ Float32List padSource(
   required int seed,
   required int sampleRate,
   required int loopSamples,
+  int variant = 0,
 }) {
   final loopSeconds = loopSamples / sampleRate;
   final breath = loopLockedPeriod(padBreathSeconds, loopSeconds);
+  // Akor rengi (bkz. [padVariantRatios]). Negatif indeks de güvenli olsun diye
+  // mod sonucu mutlak alınır.
+  final ratio = padVariantRatios[variant.abs() % padVariantRatios.length];
 
   // Her frekans ızgaraya oturtulur → döngüde tam sayıda periyot.
   final freqs = <double>[];
   final detuned = <double>[];
   final weights = <double>[];
   for (final p in _padPartials) {
-    final f = loopLockedHz(padF0 * p[0], loopSeconds);
+    final f = loopLockedHz(padF0 * ratio * p[0], loopSeconds);
     // Detune de ızgaraya oturur; en az BİR ızgara adımı olmalı, yoksa vuru
     // kaybolur (kısa döngüde ızgara kabalaşır ve 0.17 Hz sıfıra yuvarlanırdı).
     var dCycles = (p[2] * loopSeconds).round();

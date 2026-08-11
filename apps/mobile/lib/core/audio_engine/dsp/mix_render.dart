@@ -113,6 +113,7 @@ Float32List renderSource(
   required int seed,
   required int sampleRate,
   required int loopSamples,
+  int variant = 0,
 }) {
   switch (type) {
     case LayerSource.white:
@@ -131,8 +132,13 @@ Float32List renderSource(
       return rainSource(samples,
           seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
     case LayerSource.pad:
+      // [variant] YALNIZCA pad'e gider: gürültü/doku kaynakları zaten tohumla
+      // baştan sona değişiyor, pad'in tonal yatağı ise değişmiyordu (F2).
       return padSource(samples,
-          seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+          seed: seed,
+          sampleRate: sampleRate,
+          loopSamples: loopSamples,
+          variant: variant);
   }
 }
 

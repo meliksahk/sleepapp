@@ -331,10 +331,10 @@ abstract class AppL10n {
   /// **'{percent}%'**
   String mixerGainPercent(int percent);
 
-  /// Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil
+  /// Ses yolu notu. 'looped' ifadesi F2 ile YANLIS hale geldi: sentez katmanlari artik donguleneMIYOR, sonsuz uretiliyor
   ///
   /// In en, this message translates to:
-  /// **'Early build: generated locally, looped. Sound quality is not final.'**
+  /// **'Generated on your phone and never repeated. Early build: sound quality is not final.'**
   String get mixerStopgapNotice;
 
   /// Ses başlatılamadığında

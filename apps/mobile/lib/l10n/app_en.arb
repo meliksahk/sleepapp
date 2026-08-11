@@ -130,8 +130,8 @@
     "placeholders": { "percent": { "type": "int" } }
   },
 
-  "mixerStopgapNotice": "Early build: generated locally, looped. Sound quality is not final.",
-  "@mixerStopgapNotice": { "description": "Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil" },
+  "mixerStopgapNotice": "Generated on your phone and never repeated. Early build: sound quality is not final.",
+  "@mixerStopgapNotice": { "description": "Ses yolu notu. 'looped' ifadesi F2 ile YANLIS hale geldi: sentez katmanlari artik donguleneMIYOR, sonsuz uretiliyor" },
 
   "mixerFailed": "Sound could not start.",
   "@mixerFailed": { "description": "Ses başlatılamadığında" },
