@@ -55,16 +55,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final pages = <_OnboardingPage>[
       _OnboardingPage(
         gradient: NoctaArchetypeGradient.deepOcean,
+        step: '1 / 3',
         title: l10n.onboardingIdentityTitle,
         body: l10n.onboardingIdentityBody,
       ),
       _OnboardingPage(
         gradient: NoctaArchetypeGradient.overthinker,
+        step: '2 / 3',
         title: l10n.onboardingRitualTitle,
         body: l10n.onboardingRitualBody,
       ),
       _OnboardingPage(
         gradient: NoctaArchetypeGradient.deltaDrifter,
+        step: '3 / 3',
         title: l10n.onboardingAlarmTitle,
         body: l10n.onboardingAlarmBody,
       ),
@@ -83,10 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: TextButton(
                   key: const Key('onboarding-skip'),
                   onPressed: unawaitedDone,
-                  child: Text(
-                    l10n.onboardingSkip,
-                    style: TextStyle(color: NoctaColors.inkSecondary),
-                  ),
+                  child: NMono(l10n.onboardingSkip),
                 ),
               ),
             ),
@@ -98,12 +98,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, i) => pages[i],
               ),
             ),
-            _Dots(count: pages.length, active: _page),
             Padding(
-              padding: const EdgeInsets.all(NoctaSpace.s5),
+              padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s6),
+              child: _Dots(count: pages.length, active: _page),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(NoctaSpace.s6),
               child: NButton(
                 key: const Key('onboarding-cta'),
                 label: _page >= last ? l10n.onboardingStart : l10n.onboardingNext,
+                expand: true,
+                rule: true,
                 onPressed: () => _next(last),
               ),
             ),
@@ -117,44 +122,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class _OnboardingPage extends StatelessWidget {
   const _OnboardingPage({
     required this.gradient,
+    required this.step,
     required this.title,
     required this.body,
   });
 
   final LinearGradient gradient;
+  final String step;
   final String title;
   final String body;
 
   @override
   Widget build(BuildContext context) {
+    // Elegy: metin ORTALANMAZ. Kolajda her şey bir kenara yaslanır; ortalama
+    // metin sunum slaytı hissi veriyordu.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s5),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s6),
+      child: Stack(
         children: <Widget>[
-          // Marka görseli: arketip gradyanından bir "gece küresi" — ekstra asset gerektirmez.
-          Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(shape: BoxShape.circle, gradient: gradient),
-          ),
-          const SizedBox(height: NoctaSpace.s6),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: NoctaFontSize.h1,
-              color: NoctaColors.inkPrimary,
+          // Organik leke: daire değil ELİPS — kolajın kesilmiş kağıt lekeleri.
+          Positioned(
+            left: -60,
+            top: 40,
+            child: Container(
+              width: 210,
+              height: 270,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(NoctaRadius.full),
+                gradient: gradient,
+              ),
             ),
           ),
-          const SizedBox(height: NoctaSpace.s3),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: NoctaFontSize.body,
-              color: NoctaColors.inkSecondary,
-              height: 1.5,
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                NMono(step, track: NoctaTrack.wide),
+                const SizedBox(height: NoctaSpace.s5),
+                NDisplay(title, size: NoctaFontSize.display, height: 1.06),
+                const SizedBox(height: NoctaSpace.s4),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  child: Text(
+                    body,
+                    style: const TextStyle(
+                      fontSize: NoctaFontSize.body,
+                      color: NoctaColors.inkSecondary,
+                      height: 1.65,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: NoctaSpace.s8),
+              ],
             ),
           ),
         ],
@@ -163,6 +184,8 @@ class _OnboardingPage extends StatelessWidget {
   }
 }
 
+/// İlerleme: nokta değil **çubuk**. Tasarımda üç eşit şerit var; aktif olan
+/// dolu ve kalın, geçilmiş olanlar sönük — sayfa sayısını göz saymadan görür.
 class _Dots extends StatelessWidget {
   const _Dots({required this.count, required this.active});
 
@@ -172,17 +195,21 @@ class _Dots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: List<Widget>.generate(count, (i) {
-        final on = i == active;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: on ? 20 : 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: on ? NoctaColors.accentAurora : NoctaColors.inkFaint,
-            borderRadius: BorderRadius.circular(4),
+        final bool on = i == active;
+        final bool past = i < active;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(right: NoctaSpace.s2),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: on ? 6 : 2,
+              color: on
+                  ? NoctaColors.inkPrimary
+                  : past
+                  ? NoctaColors.inkFaint
+                  : NoctaColors.lineStrong,
+            ),
           ),
         );
       }),

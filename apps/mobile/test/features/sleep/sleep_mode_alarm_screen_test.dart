@@ -114,6 +114,14 @@ void main() {
       // Son tarihte çaldı (hiç aktivite yoktu) → "vakit geldi" metni.
       expect(find.text('Time to wake up.'), findsOneWidget);
       expect(find.byKey(const Key('alarm-dismiss')), findsOneWidget);
+      // ÇALARKEN EKRAN DEVRALINIR (F2): "geceyi bitir"/"başlat" düğmeleri
+      // ekranda KALMAZ. Yarı uykulu birine üç düğme sunmak, yanlış düğmeye
+      // basmanın davetidir — ve o düğmelerden biri geceyi bitiriyor.
+      expect(
+        find.byKey(const Key('sleep-toggle')),
+        findsNothing,
+        reason: 'alarm çalarken geceyi bitirebilecek düğme hâlâ ekranda',
+      );
     });
 
     testWidgets('ÇEKİRDEK: sustur → panel kapanır, GECE DEVAM EDER', (t) async {
@@ -125,9 +133,11 @@ void main() {
       await t.pump();
 
       await t.tap(find.byKey(const Key('alarm-dismiss')));
-      await t.pumpAndSettle();
+      await t.pump(const Duration(milliseconds: 400)); // pumpAndSettle DEĞİL: nefes alan küre sürekli animasyon
 
       expect(find.byKey(const Key('alarm-ringing')), findsNothing);
+      // Devralma bittiğinde uyku modunun kendi kontrolleri geri gelir.
+      expect(find.byKey(const Key('sleep-toggle')), findsOneWidget);
       // Alarmı kapatmak geceyi bitirmez — kullanıcı uyumaya dönebilir.
       expect(controller.state.isRecording, isTrue);
     });

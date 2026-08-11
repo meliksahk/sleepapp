@@ -153,7 +153,21 @@ class SleepModeController {
   /// 30 dk kategori standardı: uyku döngüsü ~90 dk, hafif uyku evresi o döngünün
   /// sonunda. 30 dk'lık pencere en az bir hafif uyku fırsatı yakalamaya yeter ama
   /// kullanıcıyı "istediğimden yarım saat erken kalktım"dan fazla erken uyandırmaz.
-  final Duration alarmWindow;
+  ///
+  /// **Artık kullanıcı değiştirebilir** (F2, alarm kurulum ekranı): kimin ne
+  /// kadar erken uyandırılmaya razı olduğu kişisel bir tercih — 30 dk yalnızca
+  /// iyi bir başlangıç. Değişiklik ZATEN KURULU alarma da uygulanır
+  /// ([setAlarmWindow]), aksi hâlde ayar bir sonraki geceye kadar yalan olurdu.
+  Duration alarmWindow;
+
+  /// Pencere genişliğini değiştirir. Alarm zaten kuruluysa YENİDEN kurulur:
+  /// kullanıcı ayarı değiştirip "tamam" dedikten sonra eski pencereyle
+  /// uyandırılırsa, ayar ekranı bir dekordan ibaret olurdu.
+  void setAlarmWindow(Duration window) {
+    alarmWindow = window;
+    final at = state.alarmAt;
+    if (at != null) setAlarm(at);
+  }
 
   /// "Son N dakikada ses" = hafif uyku sezgiseli. 5 dk: tek bir öksürük değil,
   /// süregelen bir hareketlenme aransın.

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../generated/nocta_tokens.dart';
+import 'n_paper.dart';
 
 /// Tek seçimli soru seçeneği — **"seçili" hali gözle anlaşılmalı**.
 ///
 /// **Neden var:** arketip testinde seçenekler tam genişlik `NButton` yığınıydı;
 /// seçili olan yalnızca dolgu rengiyle ayrışıyordu ve ekran ana ekranda denetlenip
 /// kaldırılan "dev menüsü" desenine dönüyordu. Bir seçim kontrolü buton değildir:
-/// durum taşır, o durumu tek renkle değil **işaretle** (dolu daire + tik) anlatır.
+/// durum taşır, o durumu tek renkle değil **işaretle** anlatır.
 ///
-/// `NButton`'un sade API'si bilinçli olarak bozulmadı — seçim durumu ayrı bir
-/// bileşende yaşar.
+/// **Elegy:** seçenek artık koyu bir kutu değil, tuvale yapıştırılmış **yırtık
+/// krem kağıt**. Seçili hal renkle DEĞİL, sol kenardaki kızıl blok + kalın
+/// çerçeve + kalın metinle anlatılır — kızıl zemin üstünde koyu metnin kontrastı
+/// 4.5:1'i geçmiyor, o yüzden dolgu değil işaret kullanıldı.
 ///
-/// - Dokunma hedefi ≥ 52px (CLAUDE.md §7 eşiği 44px).
+/// - Dokunma hedefi ≥ 60px (CLAUDE.md §7 eşiği 44px).
 /// - Etiket çok satırlı olabilir (TR metinleri EN'den uzun) — `Expanded` + sarma.
 /// - Metin çağırandan gelir (i18n); bileşen dizge tutmaz.
 class NSelectableOption extends StatelessWidget {
@@ -21,91 +24,67 @@ class NSelectableOption extends StatelessWidget {
     required this.label,
     required this.selected,
     this.onTap,
+    this.seed = 0,
   });
 
   final String label;
   final bool selected;
   final VoidCallback? onTap;
 
+  /// Yırtık kenarın tohumu — listede her seçenek farklı yırtılsın diye.
+  final int seed;
+
   @override
   Widget build(BuildContext context) {
-    final BorderRadius radius = BorderRadius.circular(NoctaRadius.button);
     return Semantics(
       button: true,
       selected: selected,
-      child: Material(
-        color: selected
-            ? NoctaColors.accentAurora.withValues(alpha: 0.14)
-            : NoctaColors.bgOverlay,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: NPaper(
+          seed: seed,
+          padding: EdgeInsets.zero,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 52),
-            padding: const EdgeInsets.symmetric(
-              horizontal: NoctaSpace.s4,
-              vertical: NoctaSpace.s3,
-            ),
+            constraints: const BoxConstraints(minHeight: 60),
             decoration: BoxDecoration(
-              borderRadius: radius,
               border: Border.all(
-                color: selected
-                    ? NoctaColors.accentAurora
-                    : Colors.white.withValues(alpha: 0.08),
-                width: selected ? 1.5 : 1,
+                color: selected ? NoctaColors.accentAurora : Colors.transparent,
+                width: 2,
               ),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                _Mark(selected: selected),
-                const SizedBox(width: NoctaSpace.s3),
+                // Seçim işareti: şekil değişir (ince çizgi → kalın kızıl blok),
+                // yalnızca renk değil.
+                Container(
+                  key: const Key('n-option-mark'),
+                  width: selected ? 8 : 3,
+                  height: selected ? 44 : 20,
+                  margin: const EdgeInsets.only(left: NoctaSpace.s4),
+                  color: selected ? NoctaColors.accentAurora : NoctaColors.inkOnPaperSoft,
+                ),
+                const SizedBox(width: NoctaSpace.s4),
                 Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.body,
-                      height: 1.3,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected
-                          ? NoctaColors.inkPrimary
-                          : NoctaColors.inkSecondary,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s3),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: NoctaFontSize.body,
+                        height: 1.35,
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                        color: NoctaColors.inkOnPaper,
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(width: NoctaSpace.s4),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Seçim işareti: boş halka → dolu daire + tik. Renk TEK başına taşıyıcı değil
-/// (renk körlüğü / düşük kontrast ekran) — şekil de değişir.
-class _Mark extends StatelessWidget {
-  const _Mark({required this.selected});
-
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: selected ? NoctaColors.accentAurora : Colors.transparent,
-        border: Border.all(
-          color: selected ? NoctaColors.accentAurora : NoctaColors.inkFaint,
-          width: 1.5,
-        ),
-      ),
-      child: selected
-          ? Icon(Icons.check, size: 14, color: NoctaColors.bgBase)
-          : null,
     );
   }
 }

@@ -19,6 +19,7 @@ const NAV: ReadonlyArray<{ key: MessageKey; href?: string }> = [
   { key: 'nav.users', href: '/users' },
   { key: 'nav.analytics' },
   { key: 'nav.flags', href: '/flags' },
+  { key: 'nav.plan', href: '/plan' },
   { key: 'nav.campaigns', href: '/campaigns' },
   { key: 'nav.security', href: '/security' },
 ];

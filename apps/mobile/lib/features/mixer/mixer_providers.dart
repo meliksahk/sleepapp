@@ -6,8 +6,10 @@ import 'package:path_provider/path_provider.dart';
 
 import 'data/audio_probe.dart';
 import 'data/local_sound_library_impl.dart';
+import 'data/record_sound_recorder.dart';
 import 'data/sound_picker.dart';
 import 'domain/local_sound_library.dart';
+import 'domain/sound_recorder.dart';
 
 /// İthal seslerin yaşadığı dizin: `<appSupport>/nocta_sounds`.
 ///
@@ -43,6 +45,18 @@ final localSoundLibraryProvider = Provider<LocalSoundLibrary>(
     probe: ref.watch(audioProbeProvider),
   ),
 );
+
+/// **F3 — kendi kaydın.** Mikrofonu dosyaya yazan kaydedici.
+///
+/// Ekran ömrünce tek örnek: her `ref.read` yeni bir `AudioRecorder` üretseydi
+/// başlatan ile durduran farklı nesneler olurdu (kayıt hiç bitmezdi).
+final soundRecorderProvider = Provider<SoundRecorder>((ref) {
+  final recorder = RecordSoundRecorder();
+  // Platform kaynağı (mikrofon oturumu) provider ile birlikte kapanır — ekran
+  // kapatmaz, çünkü ikinci kayıt aynı nesneyi kullanacak.
+  ref.onDispose(recorder.dispose);
+  return recorder;
+});
 
 /// Kütüphanenin okunmuş hâli. `LocalSoundIndex` döner — "boş" ile "okunamadı"
 /// arasındaki ayrım UI'a kadar TAŞINIR (bkz. `LocalSoundIndex`).

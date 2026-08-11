@@ -57,9 +57,11 @@ import 'package:flutter/foundation.dart' show compute;
 
 import 'package:just_audio/just_audio.dart';
 
+import 'dsp/generative_chain.dart';
 import 'dsp/mix_loop.dart';
 import 'dsp/mix_render.dart';
 import 'dsp/wav_encoder.dart';
+import 'generative_audio_source.dart';
 import 'master_limiter.dart';
 
 /// Bellekteki WAV'ı just_audio'ya besleyen kaynak — geçici DOSYA YOK.
@@ -124,12 +126,35 @@ class MixPlayer {
     this.sampleRate = 48000,
     AudioPlayer Function()? playerFactory,
     Future<Float32List> Function(LoopRequest)? loopRenderer,
+    SegmentRenderer? segmentRenderer,
+    this.extendForever = true,
     this.onAssetError,
     this.limiterRampStep = const Duration(milliseconds: 15),
     this.limiterRampSteps = 16,
   })  : _newPlayer = playerFactory ?? AudioPlayer.new,
         _renderLoop = loopRenderer ?? _computeLoop,
+        // `loopRenderer` enjekte edilmişse çağıran zaten "isolate açma" diyor
+        // (widget testlerinin sabit pump döngüsü gerçek isolate'i beklemez).
+        // Aynı niyet segment yoluna da uygulanır.
+        _renderSegment = segmentRenderer ??
+            (loopRenderer != null ? _renderSegmentSync : _computeSegment),
         assert(limiterRampSteps > 0);
+
+  /// Sentez katmanları **döngülenmek yerine sonsuza kadar uzatılsın mı** (F2).
+  ///
+  /// Ürünün asıl vaadi bu (bkz. `generative_chain.dart`) ve varsayılan açık.
+  /// Kapalıyken eski, çok test edilmiş yol çalışır: tek bir dikişsiz döngü
+  /// buffer'ı + `LoopMode.one`. **Kaçış yolu olarak duruyor:** akış yolu gerçek
+  /// cihazda henüz kulakla doğrulanmadı; bir sorun çıkarsa tek satırla eski
+  /// davranışa dönülebilir. Dosya (asset) katmanları HER İKİ hâlde de
+  /// döngülenir — onlar kullanıcının dosyası, üretilemezler.
+  final bool extendForever;
+
+  final SegmentRenderer _renderSegment;
+
+  /// Açık akışlar — `dispose`/yeniden yükleme sırasında üretim durdurulur ki
+  /// arka planda ölü bir zincir render etmeye devam etmesin.
+  final List<GenerativeAudioSource> _streams = <GenerativeAudioSource>[];
 
   /// Bir asset katmanı yüklenemediğinde çağrılır (dosya yok, ağ yok, bozuk kod
   /// çözücü...). **Yüklenemeyen katman mix'i ÇÖKERTMEZ:** diğer katmanlar çalar.
@@ -261,19 +286,42 @@ class MixPlayer {
       // `nocta_signature.dart` "çağıran compute() ile ayrı isolate'e almalıdır"
       // diyor — pad aynı partial+shimmer desenini kullandığı için kural ona da
       // uygulanmalıydı; bu iterasyonda atlanmıştı.
-      final pcm = await _renderLoop(
-        LoopRequest(
-          type: layer.type,
-          id: layer.id,
-          loopSeconds: loopSeconds,
-          sampleRate: sampleRate,
-          seed: i * 104729, // asal: katmanlar arası benzerlik olmasın
-        ),
-      );
-
+      // Asal: katmanlar arası benzerlik olmasın.
+      final seed = i * 104729;
       final player = _newPlayer();
-      await player.setAudioSource(BytesAudioSource(encodeWav(pcm, sampleRate: sampleRate)));
-      await player.setLoopMode(LoopMode.one);
+
+      if (extendForever) {
+        // SONSUZ AKIŞ: çalar tek bir "dosya" görür, biz baytları üretmeye
+        // devam ederiz. Döngü yok → tekrar yok.
+        final source = GenerativeAudioSource(
+          chain: LayerSegmentChain(
+            type: layer.type,
+            seed: seed,
+            segmentSeconds: loopSeconds,
+            sampleRate: sampleRate,
+          ),
+          sampleRate: sampleRate,
+          render: _renderSegment,
+        );
+        _streams.add(source);
+        await player.setAudioSource(source);
+        // Döngü KAPALI: akışın sonu yok, döngülenecek bir şey de yok.
+        await player.setLoopMode(LoopMode.off);
+      } else {
+        final pcm = await _renderLoop(
+          LoopRequest(
+            type: layer.type,
+            id: layer.id,
+            loopSeconds: loopSeconds,
+            sampleRate: sampleRate,
+            seed: seed,
+          ),
+        );
+        await player.setAudioSource(
+          BytesAudioSource(encodeWav(pcm, sampleRate: sampleRate)),
+        );
+        await player.setLoopMode(LoopMode.one);
+      }
       // Ses seviyesi burada DEĞİL aşağıda, tüm katmanlar kurulduktan sonra
       // verilir: master ölçek TOPLAMA bağlı ve toplam ancak son katman
       // eklendiğinde bilinir. Erken yazsaydık ilk katmanlar ölçeksiz,
@@ -477,6 +525,13 @@ class MixPlayer {
   }
 
   Future<void> _disposeVoices() async {
+    // Üretimi ÖNCE durdur: player kapanırken akış hâlâ segment render ediyorsa
+    // o iş çöpe gider (ve pad'de 189 ms'lik boşa CPU demektir).
+    for (final s in _streams) {
+      s.close();
+    }
+    _streams.clear();
+
     final old = List.of(_voices);
     _voices.clear();
     // Ölçek de sıfırlanır: yeni bir `load()` kendi toplamına göre karar verir,
@@ -545,6 +600,17 @@ class LoopRequest {
 
 /// Üretim yolu: render'ı ayrı isolate'e taşır.
 Future<Float32List> _computeLoop(LoopRequest r) => compute(renderLoopSync, r);
+
+/// Üretim yolu (sonsuz akış): segment sentezi ayrı isolate'te.
+///
+/// Ölçülen sebep aynı: pad tek başına 189 ms. Ana isolate'te yapılsaydı her
+/// segment sınırında (30 sn'de bir) görünür bir donma olurdu.
+Future<Float32List> _computeSegment(SegmentRequest r) =>
+    compute(renderSegmentRequest, r);
+
+/// Test yolu: aynı işi isolate AÇMADAN yapar.
+Future<Float32List> _renderSegmentSync(SegmentRequest r) async =>
+    renderSegmentRequest(r);
 
 /// Testlerin de kullanabildiği SENKRON render (isolate giriş noktası).
 Float32List renderLoopSync(LoopRequest r) => renderSeamlessLoop(

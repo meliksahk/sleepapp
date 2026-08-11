@@ -1,7 +1,20 @@
 // apps/* birbirini import EDEMEZ (CLAUDE.md §2) → bu liste sunucudakinin zorunlu
 // kopyasıdır. Kopyanın sessizce eskimesini `tooling/check-layer-source-drift.mjs`
 // engeller: sıra dahil sunucu + mobil ile karşılaştırılır.
-export const LAYER_SOURCES = ['white', 'pink', 'brown', 'waves', 'fire', 'rain', 'pad'] as const;
+export const LAYER_SOURCES = [
+  'white',
+  'pink',
+  'brown',
+  'waves',
+  'fire',
+  'rain',
+  'pad',
+  // F4 — frekans katmanları. Panelde de NÖTR etiketle görünür ("Delta · 2 Hz");
+  // hiçbir sağlık iddiası taşımaz (CLAUDE.md §1.1).
+  'pulseDelta',
+  'pulseTheta',
+  'pulseAlpha',
+] as const;
 export type LayerSource = (typeof LAYER_SOURCES)[number];
 export const MAX_LAYERS = 8;
 

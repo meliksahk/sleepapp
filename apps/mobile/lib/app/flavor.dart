@@ -45,4 +45,12 @@ class FlavorConfig {
   }
 
   static set current(FlavorConfig config) => _current = config;
+
+  /// Bootstrap edilmediyse **fırlatmadan** null döner.
+  ///
+  /// Sunum katmanı için: bir widget "ağ açık mı" diye sorduğunda, cevabı
+  /// bilmemek onu çökertmemeli. Bilmiyorsak varsayılan davranış korunur
+  /// (bkz. `NetworkErrorView`). Uygulamanın kendisi `bootstrap` içinde her zaman
+  /// atar; null yalnızca testlerde/izole widget'larda görülür.
+  static FlavorConfig? get currentOrNull => _current;
 }

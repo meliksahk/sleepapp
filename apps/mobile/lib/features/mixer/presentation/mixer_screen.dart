@@ -12,7 +12,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../archetype/archetype_gradient.dart';
 import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
-import 'asset_catalog_sheet.dart';
+import 'asset_catalog_screen.dart';
+import 'share_studio_screen.dart';
 
 /// Mikser **PLAYER'ı** — uygulamanın ses çıkardığı ekran.
 ///
@@ -270,11 +271,18 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     _c = widget.controller ?? MixerController(spec: widget.spec);
     _c.onChanged = () {
       if (mounted) setState(() {});
+      // Stüdyo AYRI bir rotada: parent'ın setState'i onu yeniden çizmez.
+      // `onChanged` tek slot olduğu için ikinci bir abone yerine bu köprü.
+      _studioTick.value = _c.state.exportProgress;
     };
   }
 
+  /// Stüdyo rotasının dinlediği ilerleme değeri (null = dışa aktarma yok).
+  final ValueNotifier<double?> _studioTick = ValueNotifier<double?>(null);
+
   @override
   void dispose() {
+    _studioTick.dispose();
     _c.onChanged = null;
     _c.dispose();
     super.dispose();
@@ -296,6 +304,14 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         return l10n.mixerLayerRain;
       case LayerSource.pad:
         return l10n.mixerLayerPad;
+      // F4 — NÖTR etiket: yalnızca ölçü söylenir. Bant adı bir sınıflandırma
+      // etiketidir; hiçbir sağlık/beyin dalgası iddiası YOK (CLAUDE.md §1.1).
+      case LayerSource.pulseDelta:
+        return l10n.mixerLayerPulseDelta;
+      case LayerSource.pulseTheta:
+        return l10n.mixerLayerPulseTheta;
+      case LayerSource.pulseAlpha:
+        return l10n.mixerLayerPulseAlpha;
     }
   }
 
@@ -426,27 +442,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                l10n.mixerSoundLabel,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.micro,
-                  letterSpacing: 1.2,
-                  color: NoctaColors.inkSecondary,
-                ),
-              ),
-              const SizedBox(height: NoctaSpace.s2),
-              Text(
+              NMono(l10n.mixerSoundLabel, track: NoctaTrack.wide),
+              const SizedBox(height: NoctaSpace.s3),
+              NDisplay(
                 widget.title?.isNotEmpty == true
                     ? widget.title!
                     : l10n.mixerTitle,
                 key: const Key('mixer-title'),
                 maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.display,
-                  color: NoctaColors.inkPrimary,
-                  height: 1.15,
-                ),
+                size: NoctaFontSize.display,
+                height: 1.02,
               ),
               const SizedBox(height: NoctaSpace.s3),
               _statusLine(l10n, s),
@@ -476,11 +481,8 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-        ),
+        // Kolajda gosterge noktasi daire degil KARE bir isaret blogu.
+        Container(width: 8, height: 8, color: dot),
         const SizedBox(width: NoctaSpace.s2),
         // `Flexible` — metin SARAR, kırpılmaz.
         //
@@ -493,7 +495,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
           child: Text(
             text,
             key: const Key('mixer-status'),
-            style: TextStyle(
+            style: const TextStyle(
+              fontFamily: NoctaFont.mono,
+              letterSpacing: NoctaTrack.tight,
               fontSize: NoctaFontSize.caption,
               color: NoctaColors.inkSecondary,
             ),
@@ -816,26 +820,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.caption,
-                    color: NoctaColors.inkPrimary,
-                  ),
-                ),
-              ),
+              Expanded(child: NDisplay(label, size: 18, maxLines: 1)),
               Text(
                 l10n.mixerGainPercent((gain * 100).round()),
-                style: TextStyle(
+                style: const TextStyle(
+                  fontFamily: NoctaFont.mono,
                   fontSize: NoctaFontSize.micro,
+                  letterSpacing: NoctaTrack.tight,
                   color: NoctaColors.inkSecondary,
                   // Sürgü oynarken yüzde her adımda sağa-sola zıplamasın.
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
+                  fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
                 ),
               ),
               if (onRemove != null)
@@ -858,16 +852,32 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 ),
             ],
           ),
-          Slider(
-            key: Key('gain-$layerId'),
-            value: gain,
-            onChanged: (v) => _c.setGain(layerId, v),
-            // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
-            // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
-            label: l10n.mixerGainPercent((gain * 100).round()),
-            divisions: 20,
-            activeColor: NoctaColors.accentAurora,
-            inactiveColor: NoctaColors.inkFaint.withValues(alpha: 0.3),
+          // Elegy: yuvarlak topuzlu Material surgusu yerine DIKDORTGEN dolum.
+          // Tasarimda katmanin sesi, kartin ne kadarinin krem dolduguyla
+          // anlatiliyor; surgunun kendisi bir "dolum cubugu".
+          //
+          // Etkilesim DEGISMEDI (hala `Slider`): surukleme davranisi, 20 adim,
+          // ekran okuyucu etiketi ve testlerin `gain-<id>` tutamagi ayni kaldi.
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 26,
+              activeTrackColor: NoctaColors.bgPaper,
+              inactiveTrackColor: NoctaColors.bgOverlay,
+              thumbColor: NoctaColors.accentAurora,
+              overlayColor: NoctaColors.accentAurora.withValues(alpha: 0.12),
+              trackShape: const RectangularSliderTrackShape(),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              tickMarkShape: SliderTickMarkShape.noTickMark,
+            ),
+            child: Slider(
+              key: Key('gain-$layerId'),
+              value: gain,
+              onChanged: (v) => _c.setGain(layerId, v),
+              // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
+              // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
+              label: l10n.mixerGainPercent((gain * 100).round()),
+              divisions: 20,
+            ),
           ),
         ],
       ),
@@ -897,23 +907,19 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         children: <Widget>[
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
+            // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
+            // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
+            // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
+            child: NButton(
               key: const Key('mixer-toggle'),
               // Hazırlanırken buton KİLİTLİ: render sırasında ikinci kez
               // basmak ikinci bir render tetiklerdi.
               onPressed: s.isPreparing ? null : () => _c.toggle(),
-              // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
-              // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
-              // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(kPlayerPlayButtonMinHeight),
-              ),
-              icon: Icon(s.isPlaying ? Icons.pause : Icons.play_arrow),
-              label: Text(
-                s.isPreparing
-                    ? l10n.mixerPreparing
-                    : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
-              ),
+              expand: true,
+              rule: true,
+              label: s.isPreparing
+                  ? l10n.mixerPreparing
+                  : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
             ),
           ),
 
@@ -922,22 +928,13 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             const SizedBox(height: NoctaSpace.s2),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              child: NButton(
                 key: const Key('mixer-export-video'),
-                onPressed: s.isExporting ? null : _exportVideo,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: NoctaColors.inkPrimary,
-                  side: BorderSide(
-                    color: NoctaColors.inkFaint.withValues(alpha: 0.5),
-                  ),
-                ),
-                icon: const Icon(Icons.movie_creation_outlined),
-                label: Text(
-                  s.isExporting
-                      ? l10n.mixerExporting((s.exportProgress! * 100).round())
-                      : l10n.mixerExportVideo,
-                ),
+                variant: NButtonVariant.ghost,
+                onPressed: s.isExporting ? null : _openStudio,
+                label: s.isExporting
+                    ? l10n.mixerExporting((s.exportProgress! * 100).round())
+                    : l10n.mixerExportVideo,
               ),
             ),
             if (s.isExporting)
@@ -946,6 +943,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 child: LinearProgressIndicator(
                   key: const Key('mixer-export-progress'),
                   value: s.exportProgress,
+                  minHeight: 4,
+                  backgroundColor: NoctaColors.bgOverlay,
+                  color: NoctaColors.accentAurora,
                 ),
               ),
           ],
@@ -977,7 +977,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
   ///   çağrıyla alınır. 404/401/ağ yok → katman EKLENMEZ, hata gösterilir.
   ///   Sessizce çalmayan bir sürgü bırakmak en kötü sonuç olurdu.
   Future<void> _addSound() async {
-    final selected = await showAssetCatalogSheet(
+    final selected = await openAssetCatalog(
       context,
       // Tavan kontrolü katalogta yapılır: dolu ise dosya seçici HİÇ açılmaz.
       currentAssetLayerCount: _c.state.assets.length,
@@ -1054,7 +1054,58 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     return ok ?? false;
   }
 
-  Future<void> _exportVideo() async {
+  /// Video butonu artık DOĞRUDAN dışa aktarmıyor: **Share Studio**'yu açıyor
+  /// (Elegy §23). Kullanıcı ne çıkacağını görmeden ve süresini seçmeden
+  /// paylaşmaya zorlanmamalı — viral kancanın tamamı "paylaşmak hava atmak gibi
+  /// olsun" fikrine dayanıyor.
+  Future<void> _openStudio() async {
+    final l10n = AppL10n.of(context);
+    final slug = ref
+        .read(latestArchetypeResultProvider)
+        .maybeWhen(data: (r) => r?.archetypeSlug, orElse: () => null);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ValueListenableBuilder<double?>(
+          valueListenable: _studioTick,
+          builder: (context, progress, _) => ShareStudioScreen(
+            title: l10n.mixerVideoTitle,
+            peaks: _previewPeaks(),
+            gradient: archetypeGradientForSlug(slug),
+            exporting: progress != null,
+            progress: progress,
+            // Dışa aktarma bitince stüdyo KAPANIR: sonucu (paylaşım sayfası
+            // ya da hata metni) mikser ekranı gösteriyor. Stüdyo açık kalsaydı
+            // patlayan bir export'un hatası ALTINDA kalır, kullanıcı boş bir
+            // ekrana bakardı — testte tam olarak bu çıktı.
+            onExport: (seconds) async {
+              final nav = Navigator.of(context);
+              await _exportVideo(seconds: seconds);
+              if (nav.canPop()) nav.pop();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Önizlemenin dalga formu — mix'in KATMAN KAZANÇLARINDAN türetilir.
+  ///
+  /// **Gerçek çıktının birebir dalga formu DEĞİL:** o, sesin offline render
+  /// edilmesini gerektiriyor (saniyeler sürer, ekran açılışını bekletirdi).
+  /// Önizlemenin işi kompozisyonu (başlık, gradyan, yerleşim) göstermek;
+  /// dalga formu mix'in şeklini yansıtan bir gösterge.
+  List<double> _previewPeaks() {
+    final gains = _c.state.gains.values.toList();
+    if (gains.isEmpty) return List<double>.filled(64, 0.2);
+    return List<double>.generate(64, (i) {
+      final g = gains[i % gains.length];
+      // Deterministik dalgalanma: aynı mix her açılışta aynı önizlemeyi verir.
+      final wobble = 0.6 + 0.4 * (((i * 37) % 11) / 10);
+      return (g * wobble).clamp(0.05, 1.0);
+    });
+  }
+
+  Future<void> _exportVideo({int seconds = 15}) async {
     final l10n = AppL10n.of(context);
     // Dosya katmanı varsa ÖNCE söyle: video onlarsız üretilecek.
     if (_c.state.assets.isNotEmpty) {
@@ -1070,6 +1121,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     final path = await _c.exportVideo(
       title: l10n.mixerVideoTitle,
       gradient: archetypeGradientForSlug(slug),
+      seconds: seconds,
     );
     // Hata state'e yazıldı ve ekranda gösteriliyor; burada paylaşacak bir şey yok.
     if (path == null || !mounted) return;

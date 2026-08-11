@@ -341,6 +341,23 @@ const List<List<double>> _padPartials = <List<double>>[
 const double _padAmp = 0.26;
 const double _padDetuneGain = 0.35;
 
+/// **Akor havuzu** — sonsuz uzatmanın (F2) pad ayağı.
+///
+/// Pad'in gövdesi tohumdan BAĞIMSIZDI: yalnız parıltı zamanlaması seed'e
+/// bakıyordu, tonal yatak her seferinde birebir aynıydı. Ölçüldü: iki farklı
+/// tohumla üretilen iki pad segmenti arasındaki korelasyon **1.000**. Yani
+/// "hiç tekrar etmeyen ses" iddiası pad katmanında YANLIŞ olurdu.
+///
+/// Çözüm kökü kaydırmak: her segment bu havuzdan bir oran seçer. Oranlar saf
+/// aralıklar (unison, majör 2, minör 3, kuartt, kuint, minör 6) — hepsi aynı
+/// tona akraba, yani geçiş bir "modülasyon" değil renk değişimi. Oran
+/// `loopLockedHz`'e girdiği için döngü kilidi (ve dolayısıyla `renderSeamlessLoop`
+/// crossfade muafiyeti) BOZULMAZ.
+///
+/// `variant: 0` → 1.0 → bugünkü sesin BİREBİR aynısı; mevcut testler ve export
+/// yolu değişmez.
+const List<double> padVariantRatios = <double>[1.0, 9 / 8, 6 / 5, 4 / 3, 3 / 2, 8 / 5];
+
 /// Parıltı perdeleri: yalnız f0'ın tam katları → seed ne olursa olsun disonans
 /// imkânsız (rastgelelik yalnız ZAMANLAMADA). `nocta_signature.dart` ile aynı.
 const List<int> _padShimmerMultiples = <int>[8, 12, 16, 20, 24];
@@ -377,16 +394,20 @@ Float32List padSource(
   required int seed,
   required int sampleRate,
   required int loopSamples,
+  int variant = 0,
 }) {
   final loopSeconds = loopSamples / sampleRate;
   final breath = loopLockedPeriod(padBreathSeconds, loopSeconds);
+  // Akor rengi (bkz. [padVariantRatios]). Negatif indeks de güvenli olsun diye
+  // mod sonucu mutlak alınır.
+  final ratio = padVariantRatios[variant.abs() % padVariantRatios.length];
 
   // Her frekans ızgaraya oturtulur → döngüde tam sayıda periyot.
   final freqs = <double>[];
   final detuned = <double>[];
   final weights = <double>[];
   for (final p in _padPartials) {
-    final f = loopLockedHz(padF0 * p[0], loopSeconds);
+    final f = loopLockedHz(padF0 * ratio * p[0], loopSeconds);
     // Detune de ızgaraya oturur; en az BİR ızgara adımı olmalı, yoksa vuru
     // kaybolur (kısa döngüde ızgara kabalaşır ve 0.17 Hz sıfıra yuvarlanırdı).
     var dCycles = (p[2] * loopSeconds).round();
@@ -436,6 +457,70 @@ Float32List padSource(
       final u = (i - g.start) / sampleRate;
       out[i] += gain * _grainEnv(u, _padShimmerAttack, _padShimmerDecay) * math.sin(twoPi * fm * u);
     }
+  }
+  return out;
+}
+
+// ─────────────────────────── frekans katmanı (F4) ───────────────────────────
+
+/// **Titreşimli ton (izokronik) — nötr bir ARAÇ, iddia DEĞİL.**
+///
+/// ## SAĞLIK İDDİASI YOK (CLAUDE.md §1.1) — bu yorum bir uyarı değil, sınırdır
+///
+/// Burada üretilen şey, sabit hızda genliği inip çıkan yumuşak bir tondur.
+/// Rakiplerin "beyin dalgası", "delta uykusu", "bilimsel olarak kanıtlanmış"
+/// dediği yerde biz YALNIZCA ölçüyü söylüyoruz: hız kaç Hz. Arayüzdeki etiket de
+/// aynı: "Delta · 2 Hz". Bandın adı bir SINIFLANDIRMA etiketidir (müzikte "La"
+/// gibi), bir vaat değil. Hiçbir metinde tedavi/şifa/uyku garantisi geçmez.
+///
+/// ## Neden binaural DEĞİL
+///
+/// Binaural vuru, iki kulağa AYRI frekans gerektirir. Motor bugün MONO üretiyor
+/// (`renderMix` tek kanal döner) ve mono bir "binaural" ses fiilen imkânsızdır —
+/// öyle etiketlemek doğrudan yalan olurdu. Genlik modülasyonu (izokronik) monoda
+/// tam olarak neyse odur.
+///
+/// ## Döngüye kilit
+///
+/// Hem taşıyıcı hem modülasyon `loopLockedHz` ızgarasına oturur → kaynak döngü
+/// periyoduna kilitlidir ve dikişte faz sıçraması olmaz (`isLoopPeriodic`).
+/// **Bu kaynak segmentten segmente DEĞİŞMEZ ve bu doğrudur:** düzenliliği onun
+/// tanımıdır; "hiç tekrar etmeyen ses" vaadi doku katmanları içindir, bir
+/// metronomun tekrar etmemesi diye bir şey olamaz.
+///
+/// **|çıkış| ≤ 0.30.** Kanıt: 0.30 · |sin| · zarf, zarf ∈ [1−depth, 1] ⊂ [0,1].
+const double pulsePeakBound = 0.30;
+
+/// Taşıyıcı: A2 (110 Hz). Düşük ve yumuşak — mikste "zil" gibi öne çıkmaz,
+/// pad'in (C3, 130.8 Hz) altına oturur.
+const double pulseCarrierHz = 110.0;
+
+/// Modülasyon derinliği. 1.0 (tam kapanma) sert bir "tık tık" üretir ve uykuda
+/// rahatsız eder; 0.6 nefes gibi bir inip çıkma bırakır.
+const double _pulseDepth = 0.6;
+
+const double _pulseAmp = 0.30;
+
+/// [rateHz] hızında genlik modüle edilmiş yumuşak ton.
+Float32List pulseSource(
+  int samples, {
+  required int seed,
+  required int sampleRate,
+  required int loopSamples,
+  required double rateHz,
+}) {
+  final loopSeconds = loopSamples / sampleRate;
+  final carrier = loopLockedHz(pulseCarrierHz, loopSeconds);
+  final rate = loopLockedHz(rateHz, loopSeconds);
+
+  final out = Float32List(samples);
+  const twoPi = 2 * math.pi;
+  for (var i = 0; i < samples; i++) {
+    final t = i / sampleRate;
+    // Zarf [1-depth, 1]: kosinüs tabanlı, yani başlangıçta (t=0) tepe değil
+    // çukurdur — kaynak sessizden açılır, ani bir giriş yapmaz.
+    final env = 1 - _pulseDepth * (0.5 + 0.5 * math.cos(twoPi * rate * t));
+    out[i] = _pulseAmp * env * math.sin(twoPi * carrier * t);
   }
   return out;
 }

@@ -10,7 +10,7 @@ import { GetWeeklyReleaseUseCase } from '../application/get-weekly-release.useca
 import { ListAudioAssetsUseCase } from '../application/list-audio-assets.usecase';
 import { GetAudioAssetUseCase } from '../application/get-audio-asset.usecase';
 import type { Soundscape, WeeklyRelease } from '../domain/soundscape';
-import { parseMoodFilter, type AudioAsset } from '../domain/audio-asset';
+import { parseMoodFilter, parseSearchQuery, type AudioAsset } from '../domain/audio-asset';
 import {
   AudioAssetDetailDto,
   AudioAssetDto,
@@ -72,14 +72,21 @@ export class ContentController {
     required: false,
     description: 'Virgülle ayrık; herhangi biri eşleşirse döner (örtüşme).',
   })
+  @ApiQuery({
+    name: 'q',
+    required: false,
+    description: 'Serbest metin: başlık VEYA tür içinde geçer, harf duyarsız.',
+  })
   @ApiOkResponse({ type: [AudioAssetDto] })
   async assets(
     @Query('genre') genre?: string,
     @Query('mood') mood?: string,
+    @Query('q') q?: string,
   ): Promise<AudioAssetDto[]> {
     const list = await this.listAssets.execute({
       genre: genre?.trim() || undefined,
       moods: parseMoodFilter(mood),
+      query: parseSearchQuery(q),
     });
     // AÇIK eşleme (spread DEĞİL): `key` iç depolama anahtarıdır ve dışarı
     // sızmamalı. Spread kullansaydık domain'e yarın eklenecek her alan sessizce

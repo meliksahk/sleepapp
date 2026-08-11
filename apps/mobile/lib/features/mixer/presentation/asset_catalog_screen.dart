@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/audio_engine/dsp/mix_render.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../content/content_models.dart';
@@ -11,6 +14,7 @@ import '../data/local_sound_library_impl.dart'
 import '../domain/local_sound.dart';
 import '../domain/local_sound_library.dart';
 import '../mixer_providers.dart';
+import 'record_sound_screen.dart';
 
 /// Mikserdeki "Ses ekle" — **iki kaynak, eşit ağırlıkta.**
 ///
@@ -26,29 +30,24 @@ import '../mixer_providers.dart';
 /// Artık "Bu telefonda" bölümü her koşulda çizilir; `catalog.when` yalnızca
 /// "NOCTA kütüphanesi" bölümünü sarar.
 ///
-/// ## Neden hâlâ bottom sheet
+/// ## Bottom sheet DEĞİL, tam ekran (F1)
 ///
-/// Mix çalarken seçiliyor (mikser arkada kalmalı), ambiyans kesilmiyor, çıkış
-/// tek jest. **Bedeli:** dikey alan sınırlı; kütüphane büyüdükçe burası darlaşır
-/// ve arama/filtre ister (bu sürümde YOK). O gün geldiğinde doğru hamle bunu tam
-/// ekran bir rotaya terfi ettirmektir.
-Future<CatalogPick?> showAssetCatalogSheet(
+/// Sheet ekranın %70'iyle sınırlıydı: arama kutusu + kategori şeridi + iki bölüm
+/// aynı anda sığmıyordu, klavye açılınca liste iki satıra düşüyordu. Kütüphane
+/// büyüdükçe (ürünün asıl vaadi) bu daralma kabul edilemez.
+///
+/// **Neden `Navigator.push`, go_router rotası değil:** bu bir HEDEF değil, bir
+/// SEÇİCİ — çağırana bir değer döndürür (`CatalogPick`) ve derin linki olmamalı
+/// (bağlamsız açılan bir "ses seç" ekranının döneceği yer yoktur). go_router'ın
+/// tip güvenli rota tablosu (CLAUDE.md §3.1) gezilebilir ekranlar içindir.
+Future<CatalogPick?> openAssetCatalog(
   BuildContext context, {
   required int currentAssetLayerCount,
 }) {
-  return showModalBottomSheet<CatalogPick>(
-    context: context,
-    isScrollControlled: true,
-    // bgBase (bgRaised DEĞİL): listedeki [NCard]'lar bgRaised kullanıyor — sheet
-    // de aynı rengi alsaydı kartların kenarı kaybolur, liste tek düz bloğa dönerdi.
-    backgroundColor: NoctaColors.bgBase,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(NoctaRadius.sheet),
-      ),
-    ),
-    builder: (context) => AssetCatalogSheet(
-      currentAssetLayerCount: currentAssetLayerCount,
+  return Navigator.of(context).push<CatalogPick>(
+    MaterialPageRoute<CatalogPick>(
+      builder: (context) =>
+          AssetCatalogScreen(currentAssetLayerCount: currentAssetLayerCount),
     ),
   );
 }
@@ -73,17 +72,17 @@ class CatalogPickLocal extends CatalogPick {
   final AssetLayer layer;
 }
 
-class AssetCatalogSheet extends ConsumerStatefulWidget {
-  const AssetCatalogSheet({super.key, required this.currentAssetLayerCount});
+class AssetCatalogScreen extends ConsumerStatefulWidget {
+  const AssetCatalogScreen({super.key, required this.currentAssetLayerCount});
 
   /// Tavan kontrolü için: dolu ise seçici HİÇ açılmaz.
   final int currentAssetLayerCount;
 
   @override
-  ConsumerState<AssetCatalogSheet> createState() => _AssetCatalogSheetState();
+  ConsumerState<AssetCatalogScreen> createState() => _AssetCatalogScreenState();
 }
 
-class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
+class _AssetCatalogScreenState extends ConsumerState<AssetCatalogScreen> {
   /// İthal sürüyor — düğme devre dışı, gösterge görünür. Çift basış İKİNCİ bir
   /// seçici açmamalı: iki eşzamanlı kopyalama disk sızdırabilir.
   bool _importing = false;
@@ -91,29 +90,59 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
   /// Son ithal hatasının i18n metni. `null` → hata yok.
   String? _error;
 
+  /// Kutuya YAZILAN metin (her tuşta değişir) — yerel listeyi anında süzer.
+  String _typed = '';
+
+  /// SUNUCUYA sorulan metin — [_debounce] sonrası [_typed]'a yetişir.
+  ///
+  /// İkisi ayrı, çünkü her tuş vuruşunda ağ isteği atmak hem sunucuyu hem
+  /// kullanıcının bağlantısını boşa yorar; yerel listeyi geciktirmenin ise
+  /// hiçbir sebebi yok (arama diskte, anında).
+  String _searched = '';
+  Timer? _debounce;
+
+  /// Seçili kategori — yalnızca NOCTA kütüphanesi bölümünü etkiler
+  /// (cihazdaki dosyaların türü yoktur). null = hepsi.
+  String? _genre;
+
+  static const Duration _debounceDelay = Duration(milliseconds: 300);
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() => _typed = value);
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, () {
+      if (!mounted) return;
+      setState(() => _searched = value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
-    final catalog = ref.watch(audioAssetCatalogProvider);
+    final query = (genre: _genre, search: _searched);
+    final catalog = ref.watch(audioAssetCatalogProvider(query));
     final local = ref.watch(localSoundsProvider);
 
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
+    return Scaffold(
+      appBar: AppBar(title: NMono(l10n.mixerAssetCatalogTitle)),
+      body: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             _header(l10n),
-            Flexible(
+            _searchField(l10n),
+            Expanded(
               child: ListView(
                 key: const Key('asset-catalog-list'),
-                shrinkWrap: true,
                 padding: const EdgeInsets.fromLTRB(
                   NoctaSpace.s5,
-                  0,
+                  NoctaSpace.s3,
                   NoctaSpace.s5,
                   NoctaSpace.s6,
                 ),
@@ -122,18 +151,17 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                   _sectionTitle(l10n.mixerLocalSectionTitle),
                   ..._localSection(l10n, local),
 
-                  // ── NOCTA KÜTÜPHANESİ ── yalnızca içerik varsa/yükleniyorsa.
+                  // ── NOCTA KÜTÜPHANESİ ── kategori şeridi bu bölüme aittir:
+                  // türler kütüphanenin, cihazdaki dosyaların değil.
+                  const SizedBox(height: NoctaSpace.s5),
+                  _sectionTitle(l10n.mixerRemoteSectionTitle),
+                  _genreStrip(l10n),
                   // Ağ hatası burada KALIR, yukarıdaki bölümü etkilemez.
                   ...catalog.when(
                     data: (list) => list.isEmpty
-                        ? const <Widget>[]
-                        : <Widget>[
-                            const SizedBox(height: NoctaSpace.s5),
-                            _sectionTitle(l10n.mixerRemoteSectionTitle),
-                            for (final asset in list) _remoteRow(asset),
-                          ],
+                        ? <Widget>[_noMatches(l10n)]
+                        : <Widget>[for (final asset in list) _remoteRow(asset)],
                     loading: () => const <Widget>[
-                      SizedBox(height: NoctaSpace.s5),
                       Center(
                         child: Padding(
                           padding: EdgeInsets.all(NoctaSpace.s4),
@@ -144,14 +172,10 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                       ),
                     ],
                     error: (error, stack) => <Widget>[
-                      const SizedBox(height: NoctaSpace.s5),
-                      _sectionTitle(l10n.mixerRemoteSectionTitle),
-                      NErrorState(
+                      NetworkErrorView(
                         retryKey: const Key('asset-catalog-retry'),
-                        message: l10n.loadFailed,
-                        retryLabel: l10n.offlineRetry,
                         onRetry: () =>
-                            ref.invalidate(audioAssetCatalogProvider),
+                            ref.invalidate(audioAssetCatalogProvider(query)),
                       ),
                     ],
                   ),
@@ -163,6 +187,112 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
       ),
     );
   }
+
+  Widget _searchField(AppL10n l10n) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      NoctaSpace.s5,
+      0,
+      NoctaSpace.s5,
+      NoctaSpace.s2,
+    ),
+    child: TextField(
+      key: const Key('asset-catalog-search'),
+      onChanged: _onSearchChanged,
+      textInputAction: TextInputAction.search,
+      style: const TextStyle(
+        fontSize: NoctaFontSize.body,
+        color: NoctaColors.inkPrimary,
+      ),
+      decoration: InputDecoration(
+        hintText: l10n.catalogSearchHint,
+        hintStyle: const TextStyle(color: NoctaColors.inkSecondary),
+        prefixIcon: const Icon(
+          Icons.search,
+          size: 20,
+          color: NoctaColors.inkSecondary,
+        ),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: NoctaSpace.s3,
+          horizontal: NoctaSpace.s3,
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: NoctaColors.lineSoft),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.zero,
+          borderSide: BorderSide(color: NoctaColors.inkSecondary),
+        ),
+      ),
+    ),
+  );
+
+  /// Kategori şeridi — türler katalogtan gelir, elle yazılmaz (yeni tür eklenince
+  /// şerit kendiliğinden büyür).
+  Widget _genreStrip(AppL10n l10n) {
+    final genres = ref.watch(audioAssetGenresProvider).valueOrNull;
+    if (genres == null || genres.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: <Widget>[
+            _genreChip(l10n.catalogGenreAll, null),
+            for (final g in genres) _genreChip(g, g),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _genreChip(String label, String? value) {
+    final selected = _genre == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: NoctaSpace.s2),
+      child: InkWell(
+        key: Key('asset-catalog-genre-${value ?? 'all'}'),
+        onTap: () => setState(() => _genre = value),
+        child: Container(
+          // Dokunma hedefi ≥44px (CLAUDE.md §7).
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s3),
+          decoration: BoxDecoration(
+            // Seçim RENKLE DEĞİL dolgu+kenarla işaretlenir: renk tek başına
+            // taşıyıcı olamaz (CLAUDE.md §7).
+            color: selected ? NoctaColors.bgOverlay : null,
+            border: Border.all(
+              color: selected ? NoctaColors.inkSecondary : NoctaColors.lineSoft,
+            ),
+          ),
+          child: NMono(
+            label,
+            color: selected ? NoctaColors.inkPrimary : NoctaColors.inkSecondary,
+            track: NoctaTrack.tight,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _noMatches(AppL10n l10n) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s3),
+    child: Text(
+      // Arama/kategori boş sonuç verdiyse bunu SÖYLE. Boş bir alan bırakmak
+      // "katalog yok" gibi okunur — oysa yalnızca bu süzgeç boş.
+      _typed.isEmpty && _genre == null
+          ? l10n.mixerAssetCatalogEmpty
+          : l10n.catalogNoMatches,
+      key: const Key('asset-catalog-no-matches'),
+      style: const TextStyle(
+        fontSize: NoctaFontSize.caption,
+        color: NoctaColors.inkSecondary,
+        height: 1.5,
+      ),
+    ),
+  );
 
   /// Başlık + disk kullanımı + "Telefondan ekle".
   ///
@@ -184,13 +314,10 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
         spacing: NoctaSpace.s3,
         runSpacing: NoctaSpace.s2,
         children: <Widget>[
-          Text(
+          NDisplay(
             l10n.mixerAssetCatalogTitle,
             key: const Key('asset-catalog-title'),
-            style: TextStyle(
-              fontSize: NoctaFontSize.h2,
-              color: NoctaColors.inkPrimary,
-            ),
+            size: NoctaFontSize.h2,
           ),
           if (total > 0)
             Text(
@@ -198,8 +325,10 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
               // harcadığını bilmeden silmeye karar veremez.
               l10n.mixerLocalStorageUsed(_mb(total)),
               key: const Key('local-storage-used'),
-              style: TextStyle(
-                fontSize: NoctaFontSize.caption,
+              style: const TextStyle(
+                fontFamily: NoctaFont.mono,
+                fontSize: NoctaFontSize.micro,
+                letterSpacing: NoctaTrack.tight,
                 color: NoctaColors.inkSecondary,
               ),
             ),
@@ -225,24 +354,63 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                 ),
               ],
             )
-          else
+          else ...<Widget>[
+            // F3 — kendi kaydın. "Telefondan ekle"nin YANINDA ve aynı ağırlıkta:
+            // ürünün vaadi (gerçek yerlerin sesi) burada başlıyor.
+            TextButton.icon(
+              key: const Key('mixer-record-place'),
+              onPressed: _record,
+              icon: const Icon(Icons.mic_none, size: 18),
+              label: NMono(
+                l10n.recordTitle,
+                color: NoctaColors.inkSecondary,
+                track: NoctaTrack.tight,
+              ),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(44, 44),
+                foregroundColor: NoctaColors.inkSecondary,
+                shape: const RoundedRectangleBorder(),
+                side: const BorderSide(color: NoctaColors.lineDashed),
+                padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s3),
+              ),
+            ),
             TextButton.icon(
               key: const Key('mixer-pick-from-device'),
               onPressed: _import,
               icon: const Icon(Icons.add, size: 18),
-              label: Text(l10n.mixerPickFromDevice),
+              label: NMono(
+                l10n.mixerPickFromDevice,
+                color: NoctaColors.inkSecondary,
+                track: NoctaTrack.tight,
+              ),
               style: TextButton.styleFrom(
                 // Dokunma hedefi ≥44px (CLAUDE.md §7).
                 minimumSize: const Size(44, 44),
-                foregroundColor: NoctaColors.accentAurora,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: NoctaSpace.s3,
-                ),
+                foregroundColor: NoctaColors.inkSecondary,
+                shape: const RoundedRectangleBorder(),
+                side: const BorderSide(color: NoctaColors.lineDashed),
+                padding: const EdgeInsets.symmetric(horizontal: NoctaSpace.s3),
               ),
             ),
+          ],
         ],
       ),
     );
+  }
+
+  /// Kayıt ekranını açar; kullanıcı bir kayıt aldıysa doğrudan mikse koyar.
+  Future<void> _record() async {
+    final layer = await Navigator.of(context).push<AssetLayer>(
+      MaterialPageRoute<AssetLayer>(
+        builder: (context) => RecordSoundScreen(
+          currentAssetLayerCount: widget.currentAssetLayerCount,
+        ),
+      ),
+    );
+    if (layer == null || !mounted) return;
+    // Kütüphane listesi tazelensin (kayıt oraya da girdi).
+    ref.invalidate(localSoundsProvider);
+    Navigator.of(context).pop(CatalogPickLocal(layer));
   }
 
   List<Widget> _localSection(AppL10n l10n, AsyncValue<LocalSoundIndex> local) {
@@ -266,7 +434,28 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
     }
 
     final index = local.valueOrNull;
-    final sounds = index is LocalSoundIndexOk ? index.sounds : const <LocalSound>[];
+    final all = index is LocalSoundIndexOk ? index.sounds : const <LocalSound>[];
+    // Yerel arama DİSKTE, anında — sunucu gecikmesini beklemez.
+    final sounds = _matching(all);
+
+    if (sounds.isEmpty && all.isNotEmpty) {
+      // Kütüphane dolu ama süzgeç boş: "hiç sesin yok" demek YANLIŞ olurdu.
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: NoctaSpace.s2),
+          child: Text(
+            l10n.catalogNoMatches,
+            key: const Key('local-no-matches'),
+            style: const TextStyle(
+              fontSize: NoctaFontSize.caption,
+              color: NoctaColors.inkSecondary,
+              height: 1.5,
+            ),
+          ),
+        ),
+      );
+      return widgets;
+    }
 
     if (sounds.isEmpty) {
       widgets.add(
@@ -364,10 +553,7 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                 onPressed: () => _confirmDelete(l10n, sound),
                 tooltip: l10n.mixerLocalDelete,
                 // Dokunma hedefi ≥44px (CLAUDE.md §7).
-                constraints: const BoxConstraints(
-                  minWidth: 44,
-                  minHeight: 44,
-                ),
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 icon: Icon(
                   Icons.delete_outline,
                   size: 20,
@@ -418,16 +604,16 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
   }
 
   Widget _sectionTitle(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: NoctaFontSize.caption,
-            color: NoctaColors.inkSecondary,
-            letterSpacing: 1.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: NoctaFontSize.caption,
+        color: NoctaColors.inkSecondary,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 
   /// Seçiciyi aç, kopyala, sına, kaydet — ve başarılıysa doğrudan mikse ekle.
   ///
@@ -464,7 +650,11 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
             ),
           ),
         );
-      case LocalSoundImportRejected(:final reason, :final sizeBytes, :final usedBytes):
+      case LocalSoundImportRejected(
+        :final reason,
+        :final sizeBytes,
+        :final usedBytes,
+      ):
         setState(() {
           _importing = false;
           // Vazgeçmek HATA DEĞİL: ekranda hiçbir şey gösterilmez.
@@ -527,29 +717,40 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
     LocalSoundImportFailure reason,
     int? sizeBytes,
     int? usedBytes,
-  ) =>
-      switch (reason) {
-        LocalSoundImportFailure.notAudio => l10n.mixerLocalImportNotPlayable,
-        LocalSoundImportFailure.tooLarge => l10n.mixerLocalImportTooLarge(
-            _mb(sizeBytes ?? 0),
-            _mb(kMaxFileBytes),
-          ),
-        LocalSoundImportFailure.libraryFull => l10n.mixerLocalImportLibraryFull(
-            _mb(usedBytes ?? 0),
-            _mb(kMaxLibraryBytes),
-          ),
-        LocalSoundImportFailure.noSpace => l10n.mixerLocalImportNoSpace,
-        LocalSoundImportFailure.sourceGone => l10n.mixerLocalImportSourceGone,
-        LocalSoundImportFailure.pickerFailed =>
-          l10n.mixerLocalImportPickerFailed,
-        LocalSoundImportFailure.tooManyLayers =>
-          l10n.mixerLocalImportTooManyLayers('$kMaxImportedLayers'),
-        // `cancelled` buraya hiç gelmez (çağıran yerde eleniyor) ama switch'in
-        // tükendiğinden emin olmak için sade bir metne düşer.
-        LocalSoundImportFailure.cancelled ||
-        LocalSoundImportFailure.unknown =>
-          l10n.mixerLocalImportUnknown,
-      };
+  ) => switch (reason) {
+    LocalSoundImportFailure.notAudio => l10n.mixerLocalImportNotPlayable,
+    LocalSoundImportFailure.tooLarge => l10n.mixerLocalImportTooLarge(
+      _mb(sizeBytes ?? 0),
+      _mb(kMaxFileBytes),
+    ),
+    LocalSoundImportFailure.libraryFull => l10n.mixerLocalImportLibraryFull(
+      _mb(usedBytes ?? 0),
+      _mb(kMaxLibraryBytes),
+    ),
+    LocalSoundImportFailure.noSpace => l10n.mixerLocalImportNoSpace,
+    LocalSoundImportFailure.sourceGone => l10n.mixerLocalImportSourceGone,
+    LocalSoundImportFailure.pickerFailed => l10n.mixerLocalImportPickerFailed,
+    LocalSoundImportFailure.tooManyLayers => l10n.mixerLocalImportTooManyLayers(
+      '$kMaxImportedLayers',
+    ),
+    // `cancelled` buraya hiç gelmez (çağıran yerde eleniyor) ama switch'in
+    // tükendiğinden emin olmak için sade bir metne düşer.
+    LocalSoundImportFailure.cancelled ||
+    LocalSoundImportFailure.unknown => l10n.mixerLocalImportUnknown,
+  };
+
+  /// Yazılan metne göre cihazdaki sesleri süzer.
+  ///
+  /// **`toLowerCase()` KULLANILMAZ:** Dart'ın locale'siz küçültmesi Türkçe'de
+  /// `I → i` üretir (`ı` olmalı) ve "IŞIK" araması "ışık"ı bulamaz. `RegExp`'in
+  /// `caseSensitive: false`'u en azından simetrik davranır; desen kaçırılır
+  /// (`escape`) ki kullanıcının yazdığı `(` regex'e dönüşüp çökmesin.
+  List<LocalSound> _matching(List<LocalSound> sounds) {
+    final q = _typed.trim();
+    if (q.isEmpty) return sounds;
+    final re = RegExp(RegExp.escape(q), caseSensitive: false);
+    return sounds.where((s) => re.hasMatch(s.title)).toList();
+  }
 
   /// "4.1" — bir ondalık. Bayt göstermek kullanıcıya hiçbir şey anlatmaz.
   static String _mb(int bytes) => (bytes / (1024 * 1024)).toStringAsFixed(1);

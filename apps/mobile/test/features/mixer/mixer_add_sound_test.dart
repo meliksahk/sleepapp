@@ -96,9 +96,18 @@ void main() {
   }) {
     return ProviderScope(
       overrides: <Override>[
-        audioAssetCatalogProvider.overrideWith((ref) async {
+        audioAssetCatalogProvider.overrideWith((ref, query) async {
           if (catalog == null) throw Exception('network down');
-          return catalog;
+          // Arama/kategori süzgeci SUNUCUDA; sahte katalog da öyle davranır ki
+          // ekran testi gerçek akışı taklit etsin.
+          return <AudioAsset>[
+            for (final a in catalog)
+              if ((query.genre == null || a.genre == query.genre) &&
+                  (query.search.isEmpty ||
+                      RegExp(RegExp.escape(query.search), caseSensitive: false)
+                          .hasMatch(a.title)))
+                a,
+          ];
         }),
         audioAssetDetailProvider.overrideWith((ref, id) async {
           if (detailThrows) throw Exception('401');
@@ -367,6 +376,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('mixer-export-video')));
+      // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+      // stüdyodaki süre seçiminden sonra başlar.
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('studio-export')));
       await tester.pumpAndSettle();
 
       expect(
@@ -417,6 +430,10 @@ void main() {
       await tester.pump();
 
       await tester.tap(find.byKey(const Key('mixer-export-video')));
+      // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+      // stüdyodaki süre seçiminden sonra başlar.
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('studio-export')));
       await tester.pump();
 
       expect(

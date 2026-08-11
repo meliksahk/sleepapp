@@ -23,6 +23,11 @@ export class PrismaProfileRepository implements ProfileRepository {
         ...(update.notificationsEnabled !== undefined
           ? { notifications_enabled: update.notificationsEnabled }
           : {}),
+        ...(update.reminderHour !== undefined ? { reminder_hour: update.reminderHour } : {}),
+        ...(update.quietHoursStart !== undefined
+          ? { quiet_hours_start: update.quietHoursStart }
+          : {}),
+        ...(update.quietHoursEnd !== undefined ? { quiet_hours_end: update.quietHoursEnd } : {}),
       },
       // update: yalnızca verilen alanlar (undefined → değişmez, null → temizler).
       update: {
@@ -33,6 +38,11 @@ export class PrismaProfileRepository implements ProfileRepository {
         ...(update.notificationsEnabled !== undefined
           ? { notifications_enabled: update.notificationsEnabled }
           : {}),
+        ...(update.reminderHour !== undefined ? { reminder_hour: update.reminderHour } : {}),
+        ...(update.quietHoursStart !== undefined
+          ? { quiet_hours_start: update.quietHoursStart }
+          : {}),
+        ...(update.quietHoursEnd !== undefined ? { quiet_hours_end: update.quietHoursEnd } : {}),
       },
     });
     return toProfile(row);
@@ -46,6 +56,9 @@ function toProfile(row: {
   locale: string;
   timezone: string;
   notifications_enabled: boolean;
+  reminder_hour: number | null;
+  quiet_hours_start: number | null;
+  quiet_hours_end: number | null;
 }): Profile {
   return {
     userId: row.id,
@@ -54,5 +67,8 @@ function toProfile(row: {
     locale: row.locale,
     timezone: row.timezone,
     notificationsEnabled: row.notifications_enabled,
+    reminderHour: row.reminder_hour,
+    quietHoursStart: row.quiet_hours_start,
+    quietHoursEnd: row.quiet_hours_end,
   };
 }

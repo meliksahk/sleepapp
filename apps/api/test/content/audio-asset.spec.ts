@@ -1,6 +1,8 @@
 import {
   MAX_MOOD_FILTER,
+  MAX_SEARCH_LENGTH,
   parseMoodFilter,
+  parseSearchQuery,
   type AudioAsset,
   type AudioAssetFilter,
   type AudioAssetRepository,
@@ -52,6 +54,24 @@ describe('parseMoodFilter', () => {
   it(`en fazla ${MAX_MOOD_FILTER} mood alır (sorgu şişmesi kapısı)`, () => {
     const many = Array.from({ length: MAX_MOOD_FILTER + 5 }, (_, i) => `m${i}`).join(',');
     expect(parseMoodFilter(many)).toHaveLength(MAX_MOOD_FILTER);
+  });
+});
+
+describe('parseSearchQuery', () => {
+  it('kırpar; boş/yalnız boşluk → undefined (filtre yok)', () => {
+    expect(parseSearchQuery('  Rain  ')).toBe('Rain');
+    expect(parseSearchQuery(undefined)).toBeUndefined();
+    expect(parseSearchQuery('   ')).toBeUndefined();
+  });
+
+  it('KÜÇÜK HARFE İNDİRMEZ — Türkçe I/ı tuzağı (harf duyarsızlığı DB işi)', () => {
+    // toLowerCase() burada 'ISTANBUL' → 'istanbul' üretirdi; Türkçe'de 'ıstanbul'
+    // olmalıydı ve eşleşme sessizce kaybolurdu.
+    expect(parseSearchQuery('ISTANBUL')).toBe('ISTANBUL');
+  });
+
+  it(`en fazla ${MAX_SEARCH_LENGTH} karakter (sorgu şişmesi kapısı)`, () => {
+    expect(parseSearchQuery('x'.repeat(MAX_SEARCH_LENGTH + 50))).toHaveLength(MAX_SEARCH_LENGTH);
   });
 });
 

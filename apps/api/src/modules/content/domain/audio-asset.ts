@@ -51,6 +51,8 @@ export interface AudioAssetWithUrl {
 export interface AudioAssetFilter {
   readonly genre?: string;
   readonly moods?: readonly string[];
+  /** Serbest metin araması — başlık VEYA tür içinde geçer (bkz. `parseSearchQuery`). */
+  readonly query?: string;
 }
 
 export interface AudioAssetRepository {
@@ -71,6 +73,23 @@ export const ASSET_URL_TTL_SECONDS = 6 * 60 * 60;
 
 /** Filtre olarak kabul edilen azami mood sayısı (sorgu şişmesini engeller). */
 export const MAX_MOOD_FILTER = 8;
+
+/** Arama teriminin azami uzunluğu — daha uzunu kırpılır (sorgu şişmesi). */
+export const MAX_SEARCH_LENGTH = 64;
+
+/**
+ * `?q=  Rain  ` → 'Rain'. Boş/yalnız boşluk → undefined (filtre YOK, tüm liste).
+ *
+ * **Küçük harfe İNDİRMEZ** — bilerek. Dart/JS `toLowerCase()` Türkçe'de
+ * `I → i` üretir (`ı` olmalı) ve eşleşmeyi sessizce bozar. Harf duyarsızlığı
+ * veritabanına bırakılır (Postgres `ILIKE`, collation'a saygılı); biz yalnızca
+ * kırpar ve sınırlarız.
+ */
+export function parseSearchQuery(raw: string | undefined): string | undefined {
+  if (raw === undefined) return undefined;
+  const trimmed = raw.trim();
+  return trimmed.length === 0 ? undefined : trimmed.slice(0, MAX_SEARCH_LENGTH);
+}
 
 /**
  * `?mood=calm,focus` → ['calm','focus']. Boş parçalar atılır, küçük harfe indirilir,

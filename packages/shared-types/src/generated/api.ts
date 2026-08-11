@@ -138,6 +138,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/admin/totp/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 2FA sıfırla (parola doğrulamalı) — yeni cihazda yeniden kur */
+        post: operations["AuthController_totpReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -412,6 +429,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feature flag tanımlarını listele (rollout görünürlüğü) */
+        get: operations["AdminController_listFlags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/flags/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Feature flag oluştur/değiştir (yalnızca owner) */
+        put: operations["AdminController_upsertFlag"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push kampanyası gönder (yalnızca owner) */
+        post: operations["AdminController_sendCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E-posta veya id ile kullanıcı ara (destek) */
+        get: operations["AdminController_searchUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/me": {
         parameters: {
             query?: never;
@@ -576,6 +661,40 @@ export interface paths {
         };
         /** En güncel haftalık soundscape yayını */
         get: operations["ContentController_weekly"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/content/audio-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ses dosyası kataloğu (tür/mood filtreli) — presigned URL İÇERMEZ */
+        get: operations["ContentController_assets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/content/audio-assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tek ses dosyası + kısa ömürlü presigned URL */
+        get: operations["ContentController_asset"];
         put?: never;
         post?: never;
         delete?: never;
@@ -789,6 +908,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/entitlement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kimliği doğrulanmış kullanıcının premium yetkilendirmesi */
+        get: operations["EntitlementController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kullanıcının tüm kişisel verisini JSON olarak dışa aktar */
+        get: operations["PrivacyController_export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -859,6 +1012,10 @@ export interface components {
              */
             code: string;
         };
+        ResetTotpDto: {
+            /** @description Mevcut parola — 2FA sıfırlamayı doğrular (#186) */
+            password: string;
+        };
         MeResponseDto: {
             /** Format: uuid */
             userId: string;
@@ -916,6 +1073,15 @@ export interface components {
             timezone: string;
             /** @example true */
             notificationsEnabled: boolean;
+            /**
+             * @description Yerel saat (0-23), null = kapalı
+             * @example 23
+             */
+            reminderHour: Record<string, never> | null;
+            /** @example 23 */
+            quietHoursStart: Record<string, never> | null;
+            /** @example 8 */
+            quietHoursEnd: Record<string, never> | null;
         };
         UpdateProfileDto: {
             displayName?: Record<string, never> | null;
@@ -930,6 +1096,15 @@ export interface components {
              * @example true
              */
             notificationsEnabled?: boolean;
+            /**
+             * @description Akşam hatırlatıcısı saati — KULLANICININ YEREL saati, UTC değil. null = kapalı.
+             * @example 23
+             */
+            reminderHour?: Record<string, never> | null;
+            /** @example 23 */
+            quietHoursStart?: Record<string, never> | null;
+            /** @example 8 */
+            quietHoursEnd?: Record<string, never> | null;
         };
         QuestionOptionDto: {
             id: string;
@@ -998,6 +1173,58 @@ export interface components {
             tagline: string;
             summary: string;
         };
+        AdminFlagDto: {
+            /** @description Flag anahtarı */
+            key: string;
+            /** @description Ham kurallar (enabled, rolloutPercentage, platforms, minAppVersion) */
+            rules: Record<string, never>;
+        };
+        UpsertFlagDto: {
+            /** @description Flag açık mı (kapalıysa hiç kimseye gitmez) */
+            enabled: boolean;
+            /** @description Tanımlıysa kova < yüzde alan kullanıcılar; tanımsız = herkes */
+            rolloutPercentage?: number;
+            /** @description Tanımlıysa yalnızca bu platformlar (ör. ['ios','android']) */
+            platforms?: string[];
+            /**
+             * @description Tanımlıysa istemci sürümü >= bu olmalı (semver benzeri)
+             * @example 1.4.0
+             */
+            minAppVersion?: string;
+        };
+        SendCampaignDto: {
+            /**
+             * @description Bildirim başlığı
+             * @example Yeni haftalık soundscape
+             */
+            title: string;
+            /**
+             * @description Bildirim gövdesi
+             * @example Bu haftanın ritüel sesi yayında.
+             */
+            body: string;
+            /**
+             * @description Tanımlıysa yalnızca bu platformun cihazları; boş = tüm push kullanıcıları
+             * @enum {string}
+             */
+            platform?: "ios" | "android";
+        };
+        CampaignResultDto: {
+            /** @description Segmentteki kullanıcı sayısı (push token'ı olanlar) */
+            recipients: number;
+            /** @description Teslim için kuyruğa alınan iş sayısı (fiili gönderim worker’da) */
+            queued: number;
+        };
+        AdminUserDto: {
+            /** @description Kullanıcı UUID */
+            id: string;
+            /** @enum {string} */
+            kind: "anonymous" | "registered" | "admin";
+            /** @description Kayıtlı e-posta (anonim kullanıcıda null) */
+            email: Record<string, never> | null;
+            /** @description ISO 8601 oluşturma zamanı (UTC) */
+            createdAt: string;
+        };
         AdminMeDto: {
             /** @description Admin kullanıcının id'si */
             userId: string;
@@ -1021,15 +1248,19 @@ export interface components {
             soundscapes: components["schemas"]["SoundscapeCountsDto"];
             /** @description Bekleme listesi kayıt sayısı */
             waitlist: number;
+            /** @description Erişilebilir push kitlesi — kayıtlı cihazı olan benzersiz kullanıcı (kampanya reach üst sınırı; opt-out fan-out'ta düşülür) */
+            pushAudience: number;
             /** @description Viral kanca sağlığı */
             shareFunnel: components["schemas"]["ShareFunnelDto"];
+            /** @description Son 30 günde silinen hesap (kimliksiz olay sayacı). Silme kaskadının işlediğini görmenin tek operasyonel yolu. */
+            deletedAccounts30d: number;
         };
         AuditEntryDto: {
             id: string;
             /** @description Eylemi yapan admin (hesap silinse de KORUNUR) */
             actorEmail: string;
             /** @enum {string} */
-            action: "soundscape.create" | "soundscape.update" | "soundscape.publish" | "soundscape.unpublish" | "soundscape.recipe";
+            action: "soundscape.create" | "soundscape.update" | "soundscape.publish" | "soundscape.unpublish" | "soundscape.recipe" | "flag.upsert" | "campaign.send";
             /** @description Hedef (soundscape slug) */
             target: string;
             /** @description Bağlam (PII yok) */
@@ -1093,7 +1324,7 @@ export interface components {
              */
             schemaVersion: number;
             /**
-             * @description Mikser katmanları (1–8); type: white|pink|brown, gain 0–1
+             * @description Mikser katmanları (1–8); type: white|pink|brown|waves|fire|rain|pad|pulseDelta|pulseTheta|pulseAlpha, gain 0–1
              * @example [
              *       {
              *         "id": "base",
@@ -1141,6 +1372,37 @@ export interface components {
             notes: Record<string, never> | null;
             soundscapes: components["schemas"]["SoundscapeDto"][];
         };
+        AudioAssetDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example Pad + Fire (demo) */
+            title: string;
+            /** @example ambient */
+            genre: string;
+            /**
+             * @example [
+             *       "calm",
+             *       "sleep"
+             *     ]
+             */
+            mood: string[];
+            /** @example 30 */
+            durationSeconds: number;
+            /**
+             * @description Lisans — ZORUNLU alan (mağaza uyumu, CLAUDE.md §6).
+             * @example self-produced
+             */
+            license: string;
+            /** @example NOCTA audio engine (tool/render_demo_asset.dart) */
+            source: string;
+        };
+        AudioAssetDetailDto: {
+            asset: components["schemas"]["AudioAssetDto"];
+            /** @description Kısa ömürlü presigned GET URL */
+            url: string;
+            /** @example 21600 */
+            expiresInSeconds: number;
+        };
         MixerLayerDto: {
             /**
              * @description Katman kimliği (preset içinde benzersiz)
@@ -1151,7 +1413,7 @@ export interface components {
              * @example pink
              * @enum {string}
              */
-            type: "white" | "pink" | "brown";
+            type: "white" | "pink" | "brown" | "waves" | "fire" | "rain" | "pad" | "pulseDelta" | "pulseTheta" | "pulseAlpha";
             /** @example 0.5 */
             gain: number;
         };
@@ -1247,12 +1509,10 @@ export interface components {
             nightDate: string;
             /** @example My night: 7h 42m */
             title: string;
-            /** @example Calm 85/100 · NOCTA sleep ritual */
+            /** @example NOCTA sleep ritual */
             subtitle: string;
             /** @example 7h 42m */
             durationText: string;
-            /** @example 85 */
-            calmScore: number;
             /** @example https://nocta.app */
             webUrl: string;
             /** @example nocta://report/2026-07-15 */
@@ -1310,11 +1570,6 @@ export interface components {
             movementEvents: number;
             /** @example 3 */
             soundEvents: number;
-            /**
-             * @description Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil
-             * @example 85
-             */
-            calmScore: number;
         };
         StreakDto: {
             /**
@@ -1369,6 +1624,19 @@ export interface components {
              * @example 5
              */
             nightsWithData: number;
+        };
+        EntitlementResponseDto: {
+            /**
+             * @description Kullanıcının katmanı.
+             * @example plus
+             * @enum {string}
+             */
+            tier: "free" | "plus" | "lifetime";
+            /**
+             * @description Premium kapısı — plus veya lifetime → true. İstemci gating için bunu okur.
+             * @example true
+             */
+            premium: boolean;
         };
     };
     responses: never;
@@ -1584,6 +1852,35 @@ export interface operations {
             };
         };
     };
+    AuthController_totpReset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetTotpDto"];
+            };
+        };
+        responses: {
+            /** @description 2FA kaldırıldı; yeniden kurulabilir */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Parola hatalı */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_logoutSession: {
         parameters: {
             query?: never;
@@ -1782,7 +2079,11 @@ export interface operations {
     ArchetypeController_questions: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "accept-language": string;
+                /** @description en (varsayılan) | tr */
+                "Accept-Language"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1862,7 +2163,11 @@ export interface operations {
     WebArchetypeController_questions: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "accept-language": string;
+                /** @description en (varsayilan) | tr */
+                "Accept-Language"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1925,7 +2230,11 @@ export interface operations {
     ArchetypeContentController_content: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "accept-language": string;
+                /** @description en (varsayılan) | tr */
+                "Accept-Language"?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1961,6 +2270,108 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    AdminController_listFlags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFlagDto"][];
+                };
+            };
+        };
+    };
+    AdminController_upsertFlag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertFlagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFlagDto"];
+                };
+            };
+            /** @description Yalnızca owner flag düzenler */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_sendCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendCampaignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignResultDto"];
+                };
+            };
+            /** @description Yalnızca owner kampanya gönderir */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_searchUsers: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserDto"][];
                 };
             };
         };
@@ -2287,6 +2698,52 @@ export interface operations {
             };
         };
     };
+    ContentController_assets: {
+        parameters: {
+            query?: {
+                genre?: string;
+                /** @description Virgülle ayrık; herhangi biri eşleşirse döner (örtüşme). */
+                mood?: string;
+                /** @description Serbest metin: başlık VEYA tür içinde geçer, harf duyarsız. */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioAssetDto"][];
+                };
+            };
+        };
+    };
+    ContentController_asset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioAssetDetailDto"];
+                };
+            };
+        };
+    };
     ContentController_detail: {
         parameters: {
             query?: never;
@@ -2557,6 +3014,43 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WeeklyTrendDto"];
                 };
+            };
+        };
+    };
+    EntitlementController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntitlementResponseDto"];
+                };
+            };
+        };
+    };
+    PrivacyController_export: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Kullanıcının verisi (profil, arketip, uyku, oturumlar). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -25,7 +25,20 @@
  * sebebi: liste ayrışırsa editör panelde geçerli görünen bir tarif kaydeder,
  * hata ancak KULLANICININ TELEFONUNDA çalma anında ortaya çıkar.
  */
-export const LAYER_SOURCES = ['white', 'pink', 'brown', 'waves', 'fire', 'rain', 'pad'] as const;
+export const LAYER_SOURCES = [
+  'white',
+  'pink',
+  'brown',
+  'waves',
+  'fire',
+  'rain',
+  'pad',
+  // F4 — frekans katmanları. Panelde ve uygulamada NÖTR etiketle görünür
+  // ("Delta · 2 Hz"); hiçbir sağlık iddiası taşımaz (CLAUDE.md §1.1).
+  'pulseDelta',
+  'pulseTheta',
+  'pulseAlpha',
+] as const;
 export type LayerSource = (typeof LAYER_SOURCES)[number];
 
 export interface MixerLayer {

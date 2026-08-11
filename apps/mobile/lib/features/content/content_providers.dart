@@ -60,9 +60,36 @@ final soundscapeDetailProvider = FutureProvider.family<SoundscapeDetail?, String
 ///
 /// **URL TAŞIMAZ** (sunucu listede imza dağıtmaz). Çalmak için seçilen kaydın
 /// [audioAssetDetailProvider]'ına gidilir.
-final audioAssetCatalogProvider = FutureProvider<List<AudioAsset>>((ref) async {
+/// Katalog filtresi — provider ailesinin anahtarı.
+///
+/// Record seçildi çünkü `==`/`hashCode` hazır gelir: aynı filtre iki kez
+/// istendiğinde Riverpod aynı örneği verir, ikinci ağ çağrısı yapılmaz. Sınıf
+/// yazsaydık eşitliği elle kurmak gerekirdi ve unutulduğu gün her karakterde
+/// yeni bir istek çıkardı.
+typedef AssetCatalogQuery = ({String? genre, String search});
+
+/// Filtresiz katalog — kategori şeritleri bunu okur (tam liste lazım).
+const AssetCatalogQuery kAllAssets = (genre: null, search: '');
+
+final audioAssetCatalogProvider =
+    FutureProvider.family<List<AudioAsset>, AssetCatalogQuery>((ref, q) async {
   if (!FlavorConfig.current.hasApi) return const <AudioAsset>[];
-  return ref.read(contentControllerProvider).audioAssets();
+  return ref
+      .read(contentControllerProvider)
+      .audioAssets(genre: q.genre, query: q.search);
+});
+
+/// Katalogtaki türler (kategori şeritleri) — **filtresiz** listeden türetilir.
+///
+/// Filtrelenmiş listeden türetseydik kullanıcı bir kategoriye bastığı anda diğer
+/// şeritler kaybolur, geri dönmenin yolu kalmazdı.
+final audioAssetGenresProvider = FutureProvider<List<String>>((ref) async {
+  final all = await ref.watch(audioAssetCatalogProvider(kAllAssets).future);
+  final genres = <String>{
+    for (final a in all)
+      if (a.genre.isNotEmpty) a.genre,
+  }.toList()..sort();
+  return genres;
 });
 
 /// Tek ses dosyası + KISA ÖMÜRLÜ presigned URL.

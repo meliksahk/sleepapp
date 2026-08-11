@@ -124,14 +124,26 @@
   "mixerLayerPad": "Warm pad",
   "@mixerLayerPad": { "description": "Melodik pad katmanı adı (sentezlenmiş)" },
 
+  "mixerLayerPulseDelta": "Delta · 2 Hz",
+  "@mixerLayerPulseDelta": { "description": "F4 frekans katmani. NOTR: yalnizca olcu. Saglik/beyin dalgasi iddiasi YOK" },
+
+  "mixerLayerPulseTheta": "Theta · 6 Hz",
+  "@mixerLayerPulseTheta": { "description": "F4 frekans katmani - notr etiket" },
+
+  "mixerLayerPulseAlpha": "Alpha · 10 Hz",
+  "@mixerLayerPulseAlpha": { "description": "F4 frekans katmani - notr etiket" },
+
+  "mixerPulseNotice": "A steady pulse at a set rate. It is just a sound — use it if you like how it feels.",
+  "@mixerPulseNotice": { "description": "Frekans katmani mikste varken gosterilen NOTR not. Rakipler burada iddia kuruyor; biz kurmuyoruz" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",
     "placeholders": { "percent": { "type": "int" } }
   },
 
-  "mixerStopgapNotice": "Early build: generated locally, looped. Sound quality is not final.",
-  "@mixerStopgapNotice": { "description": "Bu ses yolunun geçici olduğunu kullanıcıya söyleyen not — nihai native motor değil" },
+  "mixerStopgapNotice": "Generated on your phone and never repeated. Early build: sound quality is not final.",
+  "@mixerStopgapNotice": { "description": "Ses yolu notu. 'looped' ifadesi F2 ile YANLIS hale geldi: sentez katmanlari artik donguleneMIYOR, sonsuz uretiliyor" },
 
   "mixerFailed": "Sound could not start.",
   "@mixerFailed": { "description": "Ses başlatılamadığında" },
@@ -159,6 +171,42 @@
 
   "mixerAssetCatalogEmptyHow": "Add a sound file from your phone. It stays on your device and plays without internet.",
   "@mixerAssetCatalogEmptyHow": { "description": "Boş katalogda NE YAPILACAĞI. Artık cihazdan ekleme yolunu gösterir; geliştirici komutu DEĞİL" },
+
+  "catalogSearchHint": "Search sounds",
+  "@catalogSearchHint": { "description": "Ses kataloğu arama kutusu ipucu" },
+
+  "catalogGenreAll": "All",
+  "@catalogGenreAll": { "description": "Kategori şeridinde filtresiz seçenek" },
+
+  "catalogNoMatches": "Nothing matches that.",
+  "@catalogNoMatches": { "description": "Arama/kategori boş sonuç verdi — katalog boş DEĞİL" },
+
+  "recordTitle": "Record a place",
+  "@recordTitle": { "description": "Kendi kaydin ekrani basligi (F3)" },
+
+  "recordPrivacy": "The recording stays on your phone. It is not uploaded and not shared with anyone.",
+  "@recordPrivacy": { "description": "UGC ERTELENDI: kaydin nereye gitmedigi acikca soylenir" },
+
+  "recordStart": "Start recording",
+  "@recordStart": { "description": "Kayda basla" },
+
+  "recordStop": "Stop",
+  "@recordStop": { "description": "Kaydi bitir" },
+
+  "recordSave": "Save to my sounds",
+  "@recordSave": { "description": "Kaydi kutuphaneye al ve mikse koy" },
+
+  "recordPlaceHint": "Where is this? (kitchen, rain, the 6am train)",
+  "@recordPlaceHint": { "description": "Mekan etiketi ipucu — icerik adi, i18n disi bir deger uretir" },
+
+  "recordPermissionDenied": "Microphone access is needed to record.",
+  "@recordPermissionDenied": { "description": "Izin reddedildi" },
+
+  "recordFailed": "That recording could not be saved.",
+  "@recordFailed": { "description": "Kayit/kaydetme basarisiz" },
+
+  "recordLibraryFull": "Your sound library is full. Delete a sound to make room.",
+  "@recordLibraryFull": { "description": "150 MB tavani doldu" },
 
   "mixerLocalSectionTitle": "On this phone",
   "@mixerLocalSectionTitle": { "description": "Katalogtaki kullanıcının kendi dosyaları bölümü — ağ gerektirmez, her zaman çizilir" },
@@ -310,8 +358,6 @@
     "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
   },
 
-  "reportCardCalm": "Calm",
-  "@reportCardCalm": { "description": "Kartta dinginlik satırı etiketi" },
 
   "reportCardLoud": "Louder moments",
   "@reportCardLoud": { "description": "D-10: ölçtüğümüz şey bu — 'hareket' değil" },
@@ -322,7 +368,7 @@
   "reportCardIdentity": "Identity",
   "@reportCardIdentity": { "description": "Kartta uyku kimliği satırı" },
 
-  "reportCardDisclaimer": "An in-app calm measure for your sleep ritual. Not a health score.",
+  "reportCardDisclaimer": "A record of a night with your sleep ritual. Not a health score.",
   "@reportCardDisclaimer": { "description": "CLAUDE.md §1.1 — kart paylaşılıyor, uyarı kartın ÜSTÜNDE olmalı" },
 
   "reportShareText": "My night on NOCTA",
@@ -334,14 +380,8 @@
   "nightReportEmpty": "No sleep recorded for this night",
   "@nightReportEmpty": { "description": "O gece için oturum yokken gösterilen boş durum" },
 
-  "nightReportCalm": "Calm {score}/100",
-  "@nightReportCalm": {
-    "description": "Uygulama-içi göreli dinginlik ölçüsü (SAĞLIK ÖLÇÜSÜ DEĞİL)",
-    "placeholders": { "score": { "type": "int" } }
-  },
-
-  "nightReportCalmDisclaimer": "An in-app calm measure for your ritual — not a health score.",
-  "@nightReportCalmDisclaimer": {
+  "nightReportDisclaimer": "A record of your ritual — not a health score.",
+  "@nightReportDisclaimer": {
     "description": "Sağlık iddiası feragati (CLAUDE.md §1.1) — çeviride de KORUNMALI"
   },
 
@@ -440,6 +480,63 @@
 
   "paywallBenefitMore": "More premium features on the way",
   "@paywallBenefitMore": { "description": "Premium fayda: gelecek özellikler (dürüst — bugün yalnız trend gated)" },
+
+  "paywallFreeSection": "ALWAYS FREE",
+  "@paywallFreeSection": { "description": "Paywall ucretsiz bolum basligi" },
+
+  "paywallFreeMixer": "The whole mixer, every layer, no limits.",
+  "@paywallFreeMixer": { "description": "Ucretsiz kapsam" },
+
+  "paywallFreeRecordings": "Your own recordings, and the sleep timer.",
+  "@paywallFreeRecordings": { "description": "Ucretsiz kapsam" },
+
+  "paywallFreeLibrary": "{count} sounds from the library.",
+  "@paywallFreeLibrary": {
+    "description": "Ucretsiz kutuphane boyutu",
+    "placeholders": { "count": { "type": "String" } }
+  },
+
+  "paywallPremiumSection": "WITH PREMIUM",
+  "@paywallPremiumSection": { "description": "Paywall premium bolum basligi" },
+
+  "premiumFullLibrary": "The full sound library.",
+  "@premiumFullLibrary": { "description": "Premium ozellik" },
+
+  "premiumInfiniteExtension": "Sound that never repeats, all night.",
+  "@premiumInfiniteExtension": { "description": "Premium ozellik (F2)" },
+
+  "premiumOffline": "Offline listening.",
+  "@premiumOffline": { "description": "Premium ozellik" },
+
+  "premiumSmartAlarm": "The smart alarm.",
+  "@premiumSmartAlarm": { "description": "Premium ozellik" },
+
+  "premiumUnlimitedMixes": "Unlimited saved mixes (free keeps {count}).",
+  "@premiumUnlimitedMixes": {
+    "description": "Premium ozellik",
+    "placeholders": { "count": { "type": "String" } }
+  },
+
+  "premiumVideoExport": "Export a mix as video.",
+  "@premiumVideoExport": { "description": "Premium ozellik" },
+
+  "premiumWeeklyTrends": "Weekly trends.",
+  "@premiumWeeklyTrends": { "description": "Premium ozellik" },
+
+  "paywallTrialCta": "Try {days} days free",
+  "@paywallTrialCta": {
+    "description": "Deneme CTA - gercek satin alma YOK",
+    "placeholders": { "days": { "type": "int" } }
+  },
+
+  "paywallRestore": "Restore purchases",
+  "@paywallRestore": { "description": "Magaza kilavuzlari ister; bugun ise yaramaz ve bunu soyler" },
+
+  "paywallNoChargeYet": "Nothing is charged today: payments are not connected yet. When they are, the {days}-day trial starts before any payment.",
+  "@paywallNoChargeYet": {
+    "description": "DURUSTLUK: ekran gercek satin alma yapmiyor",
+    "placeholders": { "days": { "type": "int" } }
+  },
 
   "paywallCta": "Get Premium",
   "@paywallCta": { "description": "Paywall ana buton — gerçek IAP en son faz, şimdilik 'yakında'" },
@@ -625,6 +722,9 @@
   "loadFailed": "Could not load this. Check your connection and try again.",
   "@loadFailed": { "description": "Genel veri yukleme hatasi metni" },
 
+  "loadFailedNoServer": "This part needs an account connection, which isn't available yet. Sound, the mixer and your own recordings all work offline.",
+  "@loadFailedNoServer": { "description": "Ag katmani kapaliyken (apiBaseUrl bos) gosterilen hata metni — 'baglantini kontrol et' yaniltici olurdu" },
+
   "settingsLanguageSection": "Language",
   "@settingsLanguageSection": { "description": "Ayarlar dil bolumu basligi" },
   "settingsLanguageSystem": "System",
@@ -638,5 +738,119 @@
   "@soundscapePlay": { "description": "Soundscape detayinda birincil eylem: mikseri bu tarifle acar" },
 
   "mixerRecipeUnavailable": "We couldn't load this sound's recipe, so your default mix is playing.",
-  "@mixerRecipeUnavailable": { "description": "Slug cozulemedi, mikser varsayilan tarifle acildi" }
+  "@mixerRecipeUnavailable": { "description": "Slug cozulemedi, mikser varsayilan tarifle acildi" },
+
+  "privacySection": "Privacy",
+  "@privacySection": { "description": "Ayarlar bolum basligi: gizlilik ve hesap" },
+  "privacyExport": "DOWNLOAD MY DATA",
+  "@privacyExport": { "description": "Kisisel verinin tamamini disa aktarma eylemi (mono etiket)" },
+  "privacyExportHint": "Everything we hold about you, as one JSON file.",
+  "@privacyExportHint": { "description": "Disa aktarma aciklamasi" },
+  "privacyExporting": "PREPARING…",
+  "@privacyExporting": { "description": "Disa aktarma suruyor" },
+  "privacyExportFailed": "We couldn't prepare your data. Try again in a moment.",
+  "@privacyExportFailed": { "description": "Disa aktarma hatasi" },
+  "privacyDeleteEntry": "DELETE MY ACCOUNT",
+  "@privacyDeleteEntry": { "description": "Ayarlardan hesap silme ekranina giden eylem" },
+  "deleteAccountTitle": "Delete your account",
+  "@deleteAccountTitle": { "description": "Hesap silme ekrani basligi (serif)" },
+  "deleteAccountBody": "This can't be undone. Every night, mix, identity result and local sound file is erased.",
+  "@deleteAccountBody": { "description": "Silmenin geri alinamazligi" },
+  "deleteAccountItemNights": "Your nights and reports",
+  "@deleteAccountItemNights": { "description": "Silinecekler listesi" },
+  "deleteAccountItemMixes": "Your mixes and saved sounds",
+  "@deleteAccountItemMixes": { "description": "Silinecekler listesi" },
+  "deleteAccountItemIdentity": "Your sleep identity history",
+  "@deleteAccountItemIdentity": { "description": "Silinecekler listesi" },
+  "deleteAccountItemDevices": "Every signed-in device",
+  "@deleteAccountItemDevices": { "description": "Silinecekler listesi" },
+  "deleteAccountConfirm": "I understand there is no way back.",
+  "@deleteAccountConfirm": { "description": "Onay kutusu etiketi" },
+  "deleteAccountCta": "DELETE PERMANENTLY",
+  "@deleteAccountCta": { "description": "Yikici birincil eylem" },
+  "deleteAccountCancel": "KEEP MY ACCOUNT",
+  "@deleteAccountCancel": { "description": "Vazgecme eylemi" },
+  "deleteAccountDeleting": "DELETING…",
+  "@deleteAccountDeleting": { "description": "Silme suruyor" },
+  "deleteAccountFailed": "We couldn't delete your account. Nothing was removed.",
+  "@deleteAccountFailed": { "description": "Silme hatasi - hicbir sey silinmedi" },
+
+  "micPermissionTitle": "The microphone stays on. Nothing is recorded.",
+  "@micPermissionTitle": { "description": "Mikrofon izin gerek\u00e7esi ekrani basligi (serif)" },
+  "micPermissionFactCounts": "Your phone counts events — movement, sound, quiet. It never keeps the audio.",
+  "@micPermissionFactCounts": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionFactLocal": "Analysis happens on this device. Nothing is uploaded, not even once.",
+  "@micPermissionFactLocal": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionFactOptional": "Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.",
+  "@micPermissionFactOptional": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionAllow": "CONTINUE",
+  "@micPermissionAllow": { "description": "Izin akisini surdurur (sistem kutusu bundan SONRA cikar)" },
+  "micPermissionSkip": "NOT NOW",
+  "@micPermissionSkip": { "description": "Izin vermeden devam" },
+  "micPermissionDeniedTitle": "PERMISSION DENIED",
+  "@micPermissionDeniedTitle": { "description": "Reddedildi blo\u011fu basligi" },
+  "micPermissionDeniedBody": "The ritual still runs — only the night report won't be produced. You can turn it on later in your phone's settings.",
+  "@micPermissionDeniedBody": { "description": "Reddedildi blo\u011fu govdesi" },
+
+  "alarmLatestAt": "AT THE LATEST",
+  "@alarmLatestAt": { "description": "Alarm kurulum: secilen saatin anlami" },
+  "alarmWindowWidth": "WINDOW WIDTH",
+  "@alarmWindowWidth": { "description": "Alarm penceresi genisligi etiketi" },
+  "alarmWindowMinutes": "{minutes} MIN",
+  "@alarmWindowMinutes": { "description": "Pencere genisligi degeri", "placeholders": { "minutes": { "type": "int" } } },
+  "alarmSave": "SET THE ALARM",
+  "@alarmSave": { "description": "Alarm kurulum birincil eylem" },
+
+  "ritualTitle": "My ritual",
+  "@ritualTitle": { "description": "Rit\u00fcel/seri ekrani basligi" },
+  "ritualNightsInRow": "NIGHTS IN A ROW",
+  "@ritualNightsInRow": { "description": "Buyuk seri sayisinin altindaki etiket" },
+  "ritualLongest": "LONGEST",
+  "@ritualLongest": { "description": "Istatistik etiketi" },
+  "ritualTotalNights": "NIGHTS TOTAL",
+  "@ritualTotalNights": { "description": "Istatistik etiketi" },
+  "ritualAverage": "AVERAGE",
+  "@ritualAverage": { "description": "Istatistik etiketi" },
+  "ritualMonthLabel": "THIS MONTH",
+  "@ritualMonthLabel": { "description": "Ay izgarasi basligi" },
+  "ritualEmpty": "Your ritual hasn't started yet.",
+  "@ritualEmpty": { "description": "Hic gece yoksa" },
+
+  "studioTitle": "Share studio",
+  "@studioTitle": { "description": "Mix-to-video ekrani basligi" },
+  "studioLength": "LENGTH",
+  "@studioLength": { "description": "Sure secimi etiketi" },
+  "studioSeconds": "{seconds} SEC",
+  "@studioSeconds": { "description": "Sure secenegi", "placeholders": { "seconds": { "type": "int" } } },
+  "studioLengthHint": "Longer clips take longer to make — everything is rendered on this phone.",
+  "@studioLengthHint": { "description": "Sure secimi notu: cihazda uretiliyor" },
+  "studioExport": "MAKE THE VIDEO",
+  "@studioExport": { "description": "Birincil eylem" },
+
+  "notifSettingsTitle": "Notifications",
+  "@notifSettingsTitle": { "description": "Bildirim ayarlari ekrani basligi" },
+  "settingsNotificationsOpen": "Reminder & quiet hours",
+  "@settingsNotificationsOpen": { "description": "Ayarlardaki bildirim ekranini acan dugme — bolum basligiyla ayni ('Bildirimler/Bildirimler') olmamasi icin ICERIGI anlatir" },
+  "notifReminderSection": "EVENING REMINDER",
+  "@notifReminderSection": { "description": "Hatirlatici bolumu" },
+  "notifReminderOff": "No reminder",
+  "@notifReminderOff": { "description": "Hatirlatici kapali" },
+  "notifReminderAt": "Every evening at {hour}",
+  "@notifReminderAt": { "description": "Hatirlatici saati", "placeholders": {"hour": {"type": "String"}} },
+  "notifReminderHint": "A nudge to start the ritual — nothing else.",
+  "@notifReminderHint": { "description": "Hatirlatici aciklamasi" },
+  "notifQuietSection": "QUIET HOURS",
+  "@notifQuietSection": { "description": "Sessiz saatler bolumu" },
+  "notifQuietOff": "Off",
+  "@notifQuietOff": { "description": "Sessiz saat kapali" },
+  "notifQuietRange": "{start} — {end}",
+  "@notifQuietRange": { "description": "Sessiz saat araligi", "placeholders": {"start": {"type": "String"}, "end": {"type": "String"}} },
+  "notifQuietHint": "Nothing reaches you between these hours.",
+  "@notifQuietHint": { "description": "Sessiz saat aciklamasi" },
+  "notifSaveFailed": "Couldn't save. Your settings are unchanged.",
+  "@notifSaveFailed": { "description": "Kaydetme hatasi" },
+  "notifPick": "CHANGE",
+  "@notifPick": { "description": "Saat secme eylemi" },
+  "notifClear": "TURN OFF",
+  "@notifClear": { "description": "Tercihi kapatma" }
 }

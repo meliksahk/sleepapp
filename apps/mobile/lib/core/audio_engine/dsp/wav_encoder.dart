@@ -79,6 +79,56 @@ Uint8List encodeWav(
   return bytes;
 }
 
+/// **Uzunluğu bilinmeyen** WAV akışı için başlık (yalnız 44 bayt, veri yok).
+///
+/// Sonsuz jeneratif akışta (F2) toplam bayt sayısı önceden BİLİNEMEZ — ses
+/// kullanıcı durdurana kadar üretilir. RIFF/data boyut alanlarına yazılabilecek
+/// dürüst bir sayı yok; yaygın çözüm alanları azami değere (0xFFFFFFFF) sabitlemek
+/// ve çözücünün akışı dosya sonuna kadar okumasını sağlamak. ffmpeg, ExoPlayer ve
+/// AVFoundation bu deseni kabul eder (borularda üretilen WAV'ın standart hâli).
+///
+/// ⚠️ Bedeli: çalar toplam süreyi bilemez → arayüzde "kalan süre" göstergesi
+/// anlamsızdır. Mikserde zaten yok; zamanlayıcı ayrı bir sayaçtır.
+Uint8List wavStreamHeader({int sampleRate = 48000, int channels = 1}) {
+  const bitsPerSample = 16;
+  final bytesPerSample = bitsPerSample ~/ 8;
+  const maxUint32 = 0xFFFFFFFF;
+
+  final out = ByteData(wavHeaderBytes);
+  var pos = 0;
+  void writeAscii(String s) {
+    for (final c in s.codeUnits) {
+      out.setUint8(pos++, c);
+    }
+  }
+
+  void writeUint32(int v) {
+    out.setUint32(pos, v, Endian.little);
+    pos += 4;
+  }
+
+  void writeUint16(int v) {
+    out.setUint16(pos, v, Endian.little);
+    pos += 2;
+  }
+
+  writeAscii('RIFF');
+  writeUint32(maxUint32);
+  writeAscii('WAVE');
+  writeAscii('fmt ');
+  writeUint32(16);
+  writeUint16(1);
+  writeUint16(channels);
+  writeUint32(sampleRate);
+  writeUint32(sampleRate * channels * bytesPerSample);
+  writeUint16(channels * bytesPerSample);
+  writeUint16(bitsPerSample);
+  writeAscii('data');
+  writeUint32(maxUint32);
+
+  return out.buffer.asUint8List();
+}
+
 /// [samples] (Float32, [-1, 1]) → **başlıksız** 16-bit LE PCM.
 ///
 /// **NEDEN AYRI:** mix-to-video'nun AAC kodlayıcısı (viral kanca #3) ham PCM ister,

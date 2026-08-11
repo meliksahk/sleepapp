@@ -88,3 +88,24 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
     beacon: ref.read(sleepSessionBeaconProvider),
   );
 });
+
+/// Mikrofon gerekçe ekranının GÖSTERİLDİĞİ bilgisi.
+///
+/// **Neden kalıcı:** gerekçe her gece gösterilirse bir bilgi değil bir engel
+/// olur; kullanıcı üçüncü gece onu okumadan geçer. Bir kez gösterilir, kararı
+/// alınır, bir daha araya girmez.
+class MicRationaleFlag {
+  const MicRationaleFlag(this._store);
+
+  static const String _key = 'mic_rationale_seen';
+
+  final KeyValueStore _store;
+
+  Future<bool> seen() async => (await _store.read(_key)) == '1';
+
+  Future<void> markSeen() => _store.write(_key, '1');
+}
+
+final micRationaleFlagProvider = Provider<MicRationaleFlag>(
+  (ref) => MicRationaleFlag(ref.read(keyValueStoreProvider)),
+);

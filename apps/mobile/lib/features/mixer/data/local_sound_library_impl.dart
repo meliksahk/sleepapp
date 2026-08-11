@@ -198,6 +198,102 @@ class LocalSoundLibraryImpl implements LocalSoundLibrary {
   }
 
   @override
+  Future<String> newRecordingPath() async {
+    final dir = await _dir();
+    if (!await dir.exists()) await dir.create(recursive: true);
+    // `.part`: yarım kayıt hem uzlaştırmadan hem yeniden inşadan gizli kalır.
+    return p.join(dir.path, 'kayit-${_hex16()}.m4a.part');
+  }
+
+  @override
+  Future<LocalSoundImportResult> adoptRecording({
+    required String partPath,
+    required String title,
+    required int currentAssetLayerCount,
+  }) async {
+    if (currentAssetLayerCount >= kMaxImportedLayers) {
+      return const LocalSoundImportRejected(
+        LocalSoundImportFailure.tooManyLayers,
+      );
+    }
+
+    final part = File(partPath);
+    if (!await part.exists()) {
+      // Kayıt hiç yazılmadı (izin iptali, kodlayıcı hatası): "kaynak yok".
+      return const LocalSoundImportRejected(LocalSoundImportFailure.sourceGone);
+    }
+
+    final size = await part.length();
+    if (size <= 0) {
+      await _deleteQuietly(partPath);
+      return const LocalSoundImportRejected(LocalSoundImportFailure.sourceGone);
+    }
+    if (size > kMaxFileBytes) {
+      await _deleteQuietly(partPath);
+      return LocalSoundImportRejected(
+        LocalSoundImportFailure.tooLarge,
+        sizeBytes: size,
+      );
+    }
+    final used = await totalBytes();
+    if (used + size > kMaxLibraryBytes) {
+      await _deleteQuietly(partPath);
+      return LocalSoundImportRejected(
+        LocalSoundImportFailure.libraryFull,
+        sizeBytes: size,
+        usedBytes: used,
+      );
+    }
+
+    final hex = _hex16();
+    final safeTitle = title.trim().isEmpty ? 'Kayıt' : title.trim();
+    final fileName = LocalSoundStore.buildFileName(
+      hex: hex,
+      title: safeTitle,
+      extension: 'm4a',
+    );
+    final finalPath = p.join((await _dir()).path, fileName);
+
+    // İTHALLE AYNI SIRA, TEK FARKLA: kopyalama YOK — dosya zaten bizim
+    // dizinimizde, mikrofon oraya yazdı. Bu yüzden 2× disk tepesi de yok.
+    _importInFlight = true;
+    try {
+      await part.rename(finalPath);
+      // Kaydın çalınabilirliği sınanır: kodlayıcı yarıda kesilmişse (kullanıcı
+      // uygulamayı öldürdü) kütüphaneye çalınamayan bir kayıt girmemeli.
+      await probe.probe(finalPath);
+
+      final sound = LocalSound(
+        id: 'local-$hex',
+        title: safeTitle,
+        fileName: fileName,
+        sizeBytes: await File(finalPath).length(),
+        importedAt: DateTime.now().toUtc(),
+      );
+      await _store.mutate((current) => <LocalSound>[
+            for (final s in current)
+              if (s.id != sound.id) s,
+            sound,
+          ]);
+      return LocalSoundImported(sound);
+    } on LocalSoundImportFailure catch (reason) {
+      await _deleteQuietly(finalPath);
+      return LocalSoundImportRejected(reason);
+    } on FileSystemException catch (e) {
+      await _deleteQuietly(finalPath);
+      debugPrint('nocta.localsound: kayıt alınamadı: $e');
+      return const LocalSoundImportRejected(LocalSoundImportFailure.noSpace);
+    } catch (e, st) {
+      await _deleteQuietly(finalPath);
+      debugPrint('nocta.localsound: beklenmeyen kayıt hatası: $e\n$st');
+      return const LocalSoundImportRejected(LocalSoundImportFailure.unknown);
+    } finally {
+      await _deleteQuietly(partPath);
+      _importInFlight = false;
+    }
+  }
+
+  @override
   Future<bool> delete(String id) async {
     final index = await _store.read();
     if (index is! LocalSoundIndexOk) return false;

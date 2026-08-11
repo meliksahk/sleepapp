@@ -143,13 +143,26 @@ class AppL10nTr extends AppL10n {
   String get mixerLayerPad => 'Sıcak pad';
 
   @override
+  String get mixerLayerPulseDelta => 'Delta · 2 Hz';
+
+  @override
+  String get mixerLayerPulseTheta => 'Theta · 6 Hz';
+
+  @override
+  String get mixerLayerPulseAlpha => 'Alpha · 10 Hz';
+
+  @override
+  String get mixerPulseNotice =>
+      'Sabit hızda bir titreşim. Yalnızca bir ses — hoşuna gidiyorsa kullan.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }
 
   @override
   String get mixerStopgapNotice =>
-      'Erken sürüm: yerelde üretilip döngüleniyor. Ses kalitesi nihai değil.';
+      'Telefonunda üretiliyor ve hiç tekrar etmiyor. Erken sürüm: ses kalitesi nihai değil.';
 
   @override
   String get mixerFailed => 'Ses başlatılamadı.';
@@ -179,6 +192,45 @@ class AppL10nTr extends AppL10n {
   @override
   String get mixerAssetCatalogEmptyHow =>
       'Telefonundan bir ses dosyası ekle. Dosya cihazında kalır, internet olmadan da çalar.';
+
+  @override
+  String get catalogSearchHint => 'Ses ara';
+
+  @override
+  String get catalogGenreAll => 'Hepsi';
+
+  @override
+  String get catalogNoMatches => 'Buna uyan bir şey yok.';
+
+  @override
+  String get recordTitle => 'Bir yeri kaydet';
+
+  @override
+  String get recordPrivacy =>
+      'Kayıt telefonunda kalır. Hiçbir yere yüklenmez, kimseyle paylaşılmaz.';
+
+  @override
+  String get recordStart => 'Kaydı başlat';
+
+  @override
+  String get recordStop => 'Durdur';
+
+  @override
+  String get recordSave => 'Seslerime kaydet';
+
+  @override
+  String get recordPlaceHint => 'Burası neresi? (mutfak, yağmur, 06:00 treni)';
+
+  @override
+  String get recordPermissionDenied =>
+      'Kaydetmek için mikrofon erişimi gerekiyor.';
+
+  @override
+  String get recordFailed => 'Bu kayıt kaydedilemedi.';
+
+  @override
+  String get recordLibraryFull =>
+      'Ses kütüphanen dolu. Yer açmak için bir ses sil.';
 
   @override
   String get mixerLocalSectionTitle => 'Bu telefonda';
@@ -327,9 +379,6 @@ class AppL10nTr extends AppL10n {
   }
 
   @override
-  String get reportCardCalm => 'Dinginlik';
-
-  @override
   String get reportCardLoud => 'Yüksek anlar';
 
   @override
@@ -340,7 +389,7 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get reportCardDisclaimer =>
-      'Uyku ritüelin için uygulama içi bir dinginlik ölçüsü. Sağlık skoru değil.';
+      'Uyku ritüelinle geçen bir gecenin kaydı. Sağlık skoru değil.';
 
   @override
   String get reportShareText => 'NOCTA’daki gecem';
@@ -352,13 +401,7 @@ class AppL10nTr extends AppL10n {
   String get nightReportEmpty => 'Bu gece için uyku kaydı yok';
 
   @override
-  String nightReportCalm(int score) {
-    return 'Dinginlik $score/100';
-  }
-
-  @override
-  String get nightReportCalmDisclaimer =>
-      'Ritüelin için uygulama içi bir dinginlik ölçüsü — sağlık skoru değil.';
+  String get nightReportDisclaimer => 'Ritüelinin kaydı — sağlık skoru değil.';
 
   @override
   String get nightReportSessions => 'Oturumlar';
@@ -469,6 +512,59 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get paywallBenefitMore => 'Daha fazla premium özellik yolda';
+
+  @override
+  String get paywallFreeSection => 'HER ZAMAN ÜCRETSİZ';
+
+  @override
+  String get paywallFreeMixer => 'Mikserin tamamı, her katman, sınır yok.';
+
+  @override
+  String get paywallFreeRecordings => 'Kendi kayıtların ve uyku zamanlayıcısı.';
+
+  @override
+  String paywallFreeLibrary(String count) {
+    return 'Kütüphaneden $count ses.';
+  }
+
+  @override
+  String get paywallPremiumSection => 'PREMIUM İLE';
+
+  @override
+  String get premiumFullLibrary => 'Ses kütüphanesinin tamamı.';
+
+  @override
+  String get premiumInfiniteExtension => 'Sabaha kadar hiç tekrar etmeyen ses.';
+
+  @override
+  String get premiumOffline => 'Çevrimdışı dinleme.';
+
+  @override
+  String get premiumSmartAlarm => 'Akıllı alarm.';
+
+  @override
+  String premiumUnlimitedMixes(String count) {
+    return 'Sınırsız kayıtlı mix (ücretsizde $count).';
+  }
+
+  @override
+  String get premiumVideoExport => 'Mix\'i video olarak dışa aktar.';
+
+  @override
+  String get premiumWeeklyTrends => 'Haftalık trendler.';
+
+  @override
+  String paywallTrialCta(int days) {
+    return '$days gün ücretsiz dene';
+  }
+
+  @override
+  String get paywallRestore => 'Satın alımları geri yükle';
+
+  @override
+  String paywallNoChargeYet(int days) {
+    return 'Bugün hiçbir ücret alınmıyor: ödeme henüz bağlı değil. Bağlandığında $days günlük deneme her ödemeden önce başlayacak.';
+  }
 
   @override
   String get paywallCta => 'Premium\'a geç';
@@ -680,6 +776,10 @@ class AppL10nTr extends AppL10n {
       'Bu yüklenemedi. Bağlantını kontrol edip tekrar dene.';
 
   @override
+  String get loadFailedNoServer =>
+      'Bu bölüm hesap bağlantısı gerektiriyor; henüz kullanılamıyor. Ses, mikser ve kendi kayıtların bağlantısız çalışır.';
+
+  @override
   String get settingsLanguageSection => 'Dil';
 
   @override
@@ -697,4 +797,186 @@ class AppL10nTr extends AppL10n {
   @override
   String get mixerRecipeUnavailable =>
       'Bu sesin tarifi yüklenemedi; varsayılan mix\'in çalıyor.';
+
+  @override
+  String get privacySection => 'Gizlilik';
+
+  @override
+  String get privacyExport => 'VERİLERİMİ İNDİR';
+
+  @override
+  String get privacyExportHint =>
+      'Sende tuttuğumuz her şey, tek bir JSON dosyası olarak.';
+
+  @override
+  String get privacyExporting => 'HAZIRLANIYOR…';
+
+  @override
+  String get privacyExportFailed =>
+      'Verilerin hazırlanamadı. Birazdan tekrar dene.';
+
+  @override
+  String get privacyDeleteEntry => 'HESABIMI SİL';
+
+  @override
+  String get deleteAccountTitle => 'Hesabını sil';
+
+  @override
+  String get deleteAccountBody =>
+      'Bu geri alınamaz. Tüm geceler, mixler, kimlik sonuçların ve yerel ses dosyaların silinir.';
+
+  @override
+  String get deleteAccountItemNights => 'Geceler ve raporlar';
+
+  @override
+  String get deleteAccountItemMixes => 'Mixler ve kaydedilen sesler';
+
+  @override
+  String get deleteAccountItemIdentity => 'Uyku kimliği geçmişin';
+
+  @override
+  String get deleteAccountItemDevices => 'Giriş yapılmış tüm cihazlar';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Anladım, geri dönüşü olmadığını biliyorum.';
+
+  @override
+  String get deleteAccountCta => 'HESABI KALICI OLARAK SİL';
+
+  @override
+  String get deleteAccountCancel => 'HESABIMI TUT';
+
+  @override
+  String get deleteAccountDeleting => 'SİLİNİYOR…';
+
+  @override
+  String get deleteAccountFailed =>
+      'Hesabın silinemedi. Hiçbir şey kaldırılmadı.';
+
+  @override
+  String get micPermissionTitle =>
+      'Mikrofon açık kalır, hiçbir şey kaydedilmez.';
+
+  @override
+  String get micPermissionFactCounts =>
+      'Telefonun olayları sayar — hareket, ses, sessizlik. Sesin kendisini hiç tutmaz.';
+
+  @override
+  String get micPermissionFactLocal =>
+      'Çözümleme bu cihazda yapılır. Hiçbir şey yüklenmez, bir kez bile.';
+
+  @override
+  String get micPermissionFactOptional =>
+      'Hayır de, ritüel yine çalışır — ses ve alarm devam eder, yalnız gece raporu üretilmez.';
+
+  @override
+  String get micPermissionAllow => 'DEVAM';
+
+  @override
+  String get micPermissionSkip => 'ŞİMDİ DEĞİL';
+
+  @override
+  String get micPermissionDeniedTitle => 'İZİN REDDEDİLDİ';
+
+  @override
+  String get micPermissionDeniedBody =>
+      'Ritüel yine çalışır — yalnız gece raporu üretilmez. İstersen telefon ayarlarından sonra açabilirsin.';
+
+  @override
+  String get alarmLatestAt => 'EN GEÇ BU SAATTE';
+
+  @override
+  String get alarmWindowWidth => 'PENCERE GENİŞLİĞİ';
+
+  @override
+  String alarmWindowMinutes(int minutes) {
+    return '$minutes DK';
+  }
+
+  @override
+  String get alarmSave => 'ALARMI KUR';
+
+  @override
+  String get ritualTitle => 'Ritüelim';
+
+  @override
+  String get ritualNightsInRow => 'GECE ÜST ÜSTE';
+
+  @override
+  String get ritualLongest => 'EN UZUN';
+
+  @override
+  String get ritualTotalNights => 'TOPLAM GECE';
+
+  @override
+  String get ritualAverage => 'ORTALAMA';
+
+  @override
+  String get ritualMonthLabel => 'BU AY';
+
+  @override
+  String get ritualEmpty => 'Ritüelin henüz başlamadı.';
+
+  @override
+  String get studioTitle => 'Paylaşım stüdyosu';
+
+  @override
+  String get studioLength => 'SÜRE';
+
+  @override
+  String studioSeconds(int seconds) {
+    return '$seconds SN';
+  }
+
+  @override
+  String get studioLengthHint =>
+      'Uzun klip daha uzun sürede hazırlanır — her şey bu telefonda üretiliyor.';
+
+  @override
+  String get studioExport => 'VİDEOYU ÜRET';
+
+  @override
+  String get notifSettingsTitle => 'Bildirimler';
+
+  @override
+  String get settingsNotificationsOpen => 'Hatırlatıcı ve sessiz saatler';
+
+  @override
+  String get notifReminderSection => 'AKŞAM HATIRLATICISI';
+
+  @override
+  String get notifReminderOff => 'Hatırlatıcı yok';
+
+  @override
+  String notifReminderAt(String hour) {
+    return 'Her akşam $hour';
+  }
+
+  @override
+  String get notifReminderHint =>
+      'Ritüele başlaman için bir dürtme — başka bir şey değil.';
+
+  @override
+  String get notifQuietSection => 'SESSİZ SAATLER';
+
+  @override
+  String get notifQuietOff => 'Kapalı';
+
+  @override
+  String notifQuietRange(String start, String end) {
+    return '$start — $end';
+  }
+
+  @override
+  String get notifQuietHint => 'Bu saatler arasında sana hiçbir şey ulaşmaz.';
+
+  @override
+  String get notifSaveFailed => 'Kaydedilemedi. Ayarların değişmedi.';
+
+  @override
+  String get notifPick => 'DEĞİŞTİR';
+
+  @override
+  String get notifClear => 'KAPAT';
 }

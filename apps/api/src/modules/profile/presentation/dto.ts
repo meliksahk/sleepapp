@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { IsBcp47Locale, IsIanaTimeZone } from './field.validators';
 
 const CHRONOTYPES = ['lion', 'bear', 'wolf', 'dolphin'] as const;
@@ -34,6 +34,33 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsBoolean()
   notificationsEnabled?: boolean;
+
+  @ApiPropertyOptional({
+    example: 23,
+    minimum: 0,
+    maximum: 23,
+    nullable: true,
+    description: 'Akşam hatırlatıcısı saati — KULLANICININ YEREL saati, UTC değil. null = kapalı.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(23)
+  reminderHour?: number | null;
+
+  @ApiPropertyOptional({ example: 23, minimum: 0, maximum: 23, nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(23)
+  quietHoursStart?: number | null;
+
+  @ApiPropertyOptional({ example: 8, minimum: 0, maximum: 23, nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(23)
+  quietHoursEnd?: number | null;
 }
 
 export class ProfileResponseDto {
@@ -54,4 +81,13 @@ export class ProfileResponseDto {
 
   @ApiProperty({ example: true })
   notificationsEnabled!: boolean;
+
+  @ApiProperty({ example: 23, nullable: true, description: 'Yerel saat (0-23), null = kapalı' })
+  reminderHour!: number | null;
+
+  @ApiProperty({ example: 23, nullable: true })
+  quietHoursStart!: number | null;
+
+  @ApiProperty({ example: 8, nullable: true })
+  quietHoursEnd!: number | null;
 }

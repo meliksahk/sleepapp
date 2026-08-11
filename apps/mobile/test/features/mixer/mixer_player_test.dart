@@ -425,7 +425,9 @@ void main() {
     // sırasında sessizce düşmesi en kolay şeydi.
     expect(
       find.text(
-        'Early build: generated locally, looped. Sound quality is not final.',
+        // F2: "looped" ifadesi artık YANLIŞ — sentez katmanları döngülenmiyor.
+        'Generated on your phone and never repeated. '
+        'Early build: sound quality is not final.',
       ),
       findsOneWidget,
     );

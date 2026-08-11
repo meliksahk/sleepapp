@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nocta/core/design_system/design_system.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
@@ -207,7 +208,7 @@ void main() {
     expect(find.byKey(const Key('gain-brown')), findsOneWidget);
     expect(find.byKey(const Key('mixer-recipe-fallback')), findsOneWidget);
     // Çal butonu ETKİN — kullanıcı ağsız da ses açabilir.
-    final toggle = tester.widget<FilledButton>(
+    final toggle = tester.widget<NButton>(
       find.byKey(const Key('mixer-toggle')),
     );
     expect(toggle.onPressed, isNotNull);

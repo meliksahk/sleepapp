@@ -142,13 +142,26 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerPad => 'Warm pad';
 
   @override
+  String get mixerLayerPulseDelta => 'Delta · 2 Hz';
+
+  @override
+  String get mixerLayerPulseTheta => 'Theta · 6 Hz';
+
+  @override
+  String get mixerLayerPulseAlpha => 'Alpha · 10 Hz';
+
+  @override
+  String get mixerPulseNotice =>
+      'A steady pulse at a set rate. It is just a sound — use it if you like how it feels.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }
 
   @override
   String get mixerStopgapNotice =>
-      'Early build: generated locally, looped. Sound quality is not final.';
+      'Generated on your phone and never repeated. Early build: sound quality is not final.';
 
   @override
   String get mixerFailed => 'Sound could not start.';
@@ -178,6 +191,44 @@ class AppL10nEn extends AppL10n {
   @override
   String get mixerAssetCatalogEmptyHow =>
       'Add a sound file from your phone. It stays on your device and plays without internet.';
+
+  @override
+  String get catalogSearchHint => 'Search sounds';
+
+  @override
+  String get catalogGenreAll => 'All';
+
+  @override
+  String get catalogNoMatches => 'Nothing matches that.';
+
+  @override
+  String get recordTitle => 'Record a place';
+
+  @override
+  String get recordPrivacy =>
+      'The recording stays on your phone. It is not uploaded and not shared with anyone.';
+
+  @override
+  String get recordStart => 'Start recording';
+
+  @override
+  String get recordStop => 'Stop';
+
+  @override
+  String get recordSave => 'Save to my sounds';
+
+  @override
+  String get recordPlaceHint => 'Where is this? (kitchen, rain, the 6am train)';
+
+  @override
+  String get recordPermissionDenied => 'Microphone access is needed to record.';
+
+  @override
+  String get recordFailed => 'That recording could not be saved.';
+
+  @override
+  String get recordLibraryFull =>
+      'Your sound library is full. Delete a sound to make room.';
 
   @override
   String get mixerLocalSectionTitle => 'On this phone';
@@ -329,9 +380,6 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
-  String get reportCardCalm => 'Calm';
-
-  @override
   String get reportCardLoud => 'Louder moments';
 
   @override
@@ -342,7 +390,7 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get reportCardDisclaimer =>
-      'An in-app calm measure for your sleep ritual. Not a health score.';
+      'A record of a night with your sleep ritual. Not a health score.';
 
   @override
   String get reportShareText => 'My night on NOCTA';
@@ -354,13 +402,8 @@ class AppL10nEn extends AppL10n {
   String get nightReportEmpty => 'No sleep recorded for this night';
 
   @override
-  String nightReportCalm(int score) {
-    return 'Calm $score/100';
-  }
-
-  @override
-  String get nightReportCalmDisclaimer =>
-      'An in-app calm measure for your ritual — not a health score.';
+  String get nightReportDisclaimer =>
+      'A record of your ritual — not a health score.';
 
   @override
   String get nightReportSessions => 'Sessions';
@@ -471,6 +514,60 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get paywallBenefitMore => 'More premium features on the way';
+
+  @override
+  String get paywallFreeSection => 'ALWAYS FREE';
+
+  @override
+  String get paywallFreeMixer => 'The whole mixer, every layer, no limits.';
+
+  @override
+  String get paywallFreeRecordings =>
+      'Your own recordings, and the sleep timer.';
+
+  @override
+  String paywallFreeLibrary(String count) {
+    return '$count sounds from the library.';
+  }
+
+  @override
+  String get paywallPremiumSection => 'WITH PREMIUM';
+
+  @override
+  String get premiumFullLibrary => 'The full sound library.';
+
+  @override
+  String get premiumInfiniteExtension => 'Sound that never repeats, all night.';
+
+  @override
+  String get premiumOffline => 'Offline listening.';
+
+  @override
+  String get premiumSmartAlarm => 'The smart alarm.';
+
+  @override
+  String premiumUnlimitedMixes(String count) {
+    return 'Unlimited saved mixes (free keeps $count).';
+  }
+
+  @override
+  String get premiumVideoExport => 'Export a mix as video.';
+
+  @override
+  String get premiumWeeklyTrends => 'Weekly trends.';
+
+  @override
+  String paywallTrialCta(int days) {
+    return 'Try $days days free';
+  }
+
+  @override
+  String get paywallRestore => 'Restore purchases';
+
+  @override
+  String paywallNoChargeYet(int days) {
+    return 'Nothing is charged today: payments are not connected yet. When they are, the $days-day trial starts before any payment.';
+  }
 
   @override
   String get paywallCta => 'Get Premium';
@@ -681,6 +778,10 @@ class AppL10nEn extends AppL10n {
       'Could not load this. Check your connection and try again.';
 
   @override
+  String get loadFailedNoServer =>
+      'This part needs an account connection, which isn\'t available yet. Sound, the mixer and your own recordings all work offline.';
+
+  @override
   String get settingsLanguageSection => 'Language';
 
   @override
@@ -698,4 +799,184 @@ class AppL10nEn extends AppL10n {
   @override
   String get mixerRecipeUnavailable =>
       'We couldn\'t load this sound\'s recipe, so your default mix is playing.';
+
+  @override
+  String get privacySection => 'Privacy';
+
+  @override
+  String get privacyExport => 'DOWNLOAD MY DATA';
+
+  @override
+  String get privacyExportHint =>
+      'Everything we hold about you, as one JSON file.';
+
+  @override
+  String get privacyExporting => 'PREPARING…';
+
+  @override
+  String get privacyExportFailed =>
+      'We couldn\'t prepare your data. Try again in a moment.';
+
+  @override
+  String get privacyDeleteEntry => 'DELETE MY ACCOUNT';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account';
+
+  @override
+  String get deleteAccountBody =>
+      'This can\'t be undone. Every night, mix, identity result and local sound file is erased.';
+
+  @override
+  String get deleteAccountItemNights => 'Your nights and reports';
+
+  @override
+  String get deleteAccountItemMixes => 'Your mixes and saved sounds';
+
+  @override
+  String get deleteAccountItemIdentity => 'Your sleep identity history';
+
+  @override
+  String get deleteAccountItemDevices => 'Every signed-in device';
+
+  @override
+  String get deleteAccountConfirm => 'I understand there is no way back.';
+
+  @override
+  String get deleteAccountCta => 'DELETE PERMANENTLY';
+
+  @override
+  String get deleteAccountCancel => 'KEEP MY ACCOUNT';
+
+  @override
+  String get deleteAccountDeleting => 'DELETING…';
+
+  @override
+  String get deleteAccountFailed =>
+      'We couldn\'t delete your account. Nothing was removed.';
+
+  @override
+  String get micPermissionTitle =>
+      'The microphone stays on. Nothing is recorded.';
+
+  @override
+  String get micPermissionFactCounts =>
+      'Your phone counts events — movement, sound, quiet. It never keeps the audio.';
+
+  @override
+  String get micPermissionFactLocal =>
+      'Analysis happens on this device. Nothing is uploaded, not even once.';
+
+  @override
+  String get micPermissionFactOptional =>
+      'Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.';
+
+  @override
+  String get micPermissionAllow => 'CONTINUE';
+
+  @override
+  String get micPermissionSkip => 'NOT NOW';
+
+  @override
+  String get micPermissionDeniedTitle => 'PERMISSION DENIED';
+
+  @override
+  String get micPermissionDeniedBody =>
+      'The ritual still runs — only the night report won\'t be produced. You can turn it on later in your phone\'s settings.';
+
+  @override
+  String get alarmLatestAt => 'AT THE LATEST';
+
+  @override
+  String get alarmWindowWidth => 'WINDOW WIDTH';
+
+  @override
+  String alarmWindowMinutes(int minutes) {
+    return '$minutes MIN';
+  }
+
+  @override
+  String get alarmSave => 'SET THE ALARM';
+
+  @override
+  String get ritualTitle => 'My ritual';
+
+  @override
+  String get ritualNightsInRow => 'NIGHTS IN A ROW';
+
+  @override
+  String get ritualLongest => 'LONGEST';
+
+  @override
+  String get ritualTotalNights => 'NIGHTS TOTAL';
+
+  @override
+  String get ritualAverage => 'AVERAGE';
+
+  @override
+  String get ritualMonthLabel => 'THIS MONTH';
+
+  @override
+  String get ritualEmpty => 'Your ritual hasn\'t started yet.';
+
+  @override
+  String get studioTitle => 'Share studio';
+
+  @override
+  String get studioLength => 'LENGTH';
+
+  @override
+  String studioSeconds(int seconds) {
+    return '$seconds SEC';
+  }
+
+  @override
+  String get studioLengthHint =>
+      'Longer clips take longer to make — everything is rendered on this phone.';
+
+  @override
+  String get studioExport => 'MAKE THE VIDEO';
+
+  @override
+  String get notifSettingsTitle => 'Notifications';
+
+  @override
+  String get settingsNotificationsOpen => 'Reminder & quiet hours';
+
+  @override
+  String get notifReminderSection => 'EVENING REMINDER';
+
+  @override
+  String get notifReminderOff => 'No reminder';
+
+  @override
+  String notifReminderAt(String hour) {
+    return 'Every evening at $hour';
+  }
+
+  @override
+  String get notifReminderHint => 'A nudge to start the ritual — nothing else.';
+
+  @override
+  String get notifQuietSection => 'QUIET HOURS';
+
+  @override
+  String get notifQuietOff => 'Off';
+
+  @override
+  String notifQuietRange(String start, String end) {
+    return '$start — $end';
+  }
+
+  @override
+  String get notifQuietHint => 'Nothing reaches you between these hours.';
+
+  @override
+  String get notifSaveFailed => 'Couldn\'t save. Your settings are unchanged.';
+
+  @override
+  String get notifPick => 'CHANGE';
+
+  @override
+  String get notifClear => 'TURN OFF';
 }

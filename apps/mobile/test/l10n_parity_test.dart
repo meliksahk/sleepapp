@@ -63,7 +63,7 @@ void main() {
     final tr = jsonDecode(File('lib/l10n/app_tr.arb').readAsStringSync())
         as Map<String, dynamic>;
     expect(tr['reportCardDisclaimer'], contains('Sağlık skoru değil'));
-    expect(tr['nightReportCalmDisclaimer'], contains('sağlık skoru değil'));
+    expect(tr['nightReportDisclaimer'], contains('sağlık skoru değil'));
 
     // Yasak sağlık iddiaları TR metinlerine sızmamış olmalı.
     final allTrText = tr.entries
@@ -73,6 +73,33 @@ void main() {
     for (final banned in ['tedavi', 'iyileştir', 'şifa']) {
       expect(allTrText, isNot(contains(banned)),
           reason: 'yasak sağlık iddiası TR metninde: $banned');
+    }
+  });
+
+  test('ÇEKİRDEK: sağlık iddiası EN metinlerine de sızmamış (F4 kapısı)', () {
+    // F4 ile ürüne frekans katmanları girdi ("Delta · 2 Hz"). Rakipler tam da
+    // burada iddia kuruyor ("beyin dalgası", "tedavi"); bizim çizgimiz nötr
+    // ölçü. Bu kapı olmadan bir sonraki metin turunda çizgi sessizce aşılırdı.
+    final en = jsonDecode(File('lib/l10n/app_en.arb').readAsStringSync())
+        as Map<String, dynamic>;
+    final allEnText = en.entries
+        .where((e) => !e.key.startsWith('@'))
+        .map((e) => e.value.toString().toLowerCase())
+        .join(' ');
+    for (final banned in <String>[
+      'cure',
+      'treatment',
+      'therapy',
+      'clinically',
+      'medically',
+      'brainwave',
+      'brain wave',
+      'tinnitus',
+      'science-backed',
+      'scientifically proven',
+    ]) {
+      expect(allEnText, isNot(contains(banned)),
+          reason: 'yasak sağlık iddiası EN metninde: $banned');
     }
   });
 }

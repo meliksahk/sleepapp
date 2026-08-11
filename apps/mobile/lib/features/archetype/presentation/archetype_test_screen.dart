@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/media/card_renderer.dart';
@@ -141,13 +142,9 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        title: Text(
+        title: NMono(
           AppL10n.of(context).archetypeTestTitle,
-          style: TextStyle(
-            fontSize: NoctaFontSize.caption,
-            letterSpacing: 2.4,
-            color: NoctaColors.inkSecondary,
-          ),
+          track: NoctaTrack.wide,
         ),
       ),
       body: SafeArea(child: _body(context)),
@@ -161,10 +158,8 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
     if (_loading) return const _LoadingView();
     if (_error != null) {
       // Çıplak refresh ikonu DEĞİL: ne oldu / ne yapabilirim (NErrorState).
-      return NErrorState(
+      return NetworkErrorView(
         retryKey: const Key('archetype-retry'),
-        message: AppL10n.of(context).loadFailed,
-        retryLabel: AppL10n.of(context).offlineRetry,
         onRetry: _load,
       );
     }
@@ -189,14 +184,7 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Text(
-                      l10n.archetypeTestIntro,
-                      style: TextStyle(
-                        fontSize: NoctaFontSize.caption,
-                        height: 1.4,
-                        color: NoctaColors.inkSecondary,
-                      ),
-                    ),
+                    NMono(l10n.archetypeTestIntro, track: NoctaTrack.wide),
                     const SizedBox(height: NoctaSpace.s4),
                     _ProgressStrip(
                       answered: _answers.length,
@@ -214,6 +202,8 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
                       label: _submitting
                           ? l10n.archetypeTestScoring
                           : l10n.archetypeTestSeeResult,
+                      expand: true,
+                      rule: true,
                       onPressed: _allAnswered && !_submitting ? _submit : null,
                     ),
                   ],
@@ -242,14 +232,12 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
               Expanded(
                 // TEK `Text`: testler soru prompt'unu `find.text` ile arıyor —
                 // RichText'e bölmek ya da harf harf animasyon kırardı.
-                child: Text(
+                // Soru serif: Elegy'de soru bir "başlık", arayüz metni değil.
+                // TEK `Text`: testler prompt'u `find.text` ile arıyor.
+                child: NDisplay(
                   q.prompt,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.body,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                    color: NoctaColors.inkPrimary,
-                  ),
+                  size: NoctaFontSize.h2 - 4,
+                  height: 1.16,
                 ),
               ),
             ],
@@ -280,27 +268,22 @@ class _QuestionBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Elegy'de tik ikonu yok: cevaplanan soru DOLU bir kızıl blok olur,
+    // cevaplanmayan çerçeveli bir numara. Ayrım şekilde, yalnız renkte değil.
     return Container(
       width: 26,
       height: 26,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: answered
-            ? NoctaColors.accentAurora.withValues(alpha: 0.18)
-            : NoctaColors.bgOverlay,
+        color: answered ? NoctaColors.accentAurora : Colors.transparent,
+        border: Border.all(
+          color: answered ? NoctaColors.accentAurora : NoctaColors.lineStrong,
+        ),
       ),
       child: answered
-          ? Icon(Icons.check, size: 15, color: NoctaColors.accentAurora)
-          : Text(
-              // Rakam — çevrilen bir metin değil, sıra numarası.
-              '$number',
-              style: TextStyle(
-                fontSize: NoctaFontSize.caption,
-                fontWeight: FontWeight.w600,
-                color: NoctaColors.inkFaint,
-              ),
-            ),
+          ? null
+          // Rakam — çevrilen bir metin değil, sıra numarası.
+          : NMono('$number', track: 0, height: 1),
     );
   }
 }
@@ -314,33 +297,33 @@ class _ProgressStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double ratio = total == 0 ? 0 : (answered / total).clamp(0.0, 1.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Text(
-          AppL10n.of(context).archetypeTestProgress(answered, total),
-          style: TextStyle(
-            fontSize: NoctaFontSize.micro,
-            letterSpacing: 1.2,
-            color: NoctaColors.inkFaint,
-          ),
-        ),
+        NMono(AppL10n.of(context).archetypeTestProgress(answered, total)),
         const SizedBox(height: NoctaSpace.s2),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(NoctaRadius.full),
-          child: SizedBox(
-            height: 4,
-            child: Stack(
-              children: <Widget>[
-                Container(color: NoctaColors.bgOverlay),
-                FractionallySizedBox(
-                  widthFactor: ratio,
-                  child: Container(color: NoctaColors.accentAurora),
+        // Tasarımdaki tik şeridi: her soru bir çentik. Dolum çubuğundan farkı,
+        // kullanıcının KAÇ soru kaldığını tek bakışta sayabilmesi.
+        SizedBox(
+          height: 12,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              for (var i = 0; i < total; i++)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 5),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 350),
+                      height: i < answered ? 12 : 3,
+                      color: i < answered
+                          ? NoctaColors.inkPrimary
+                          : NoctaColors.lineStrong,
+                    ),
+                  ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ],
@@ -528,32 +511,40 @@ class _ResultViewState extends ConsumerState<_ResultView> {
                     ),
                     if (info != null) ...<Widget>[
                       const SizedBox(height: NoctaSpace.s4),
-                      NCard(
-                        padding: const EdgeInsets.all(NoctaSpace.s5),
-                        child: Text(
-                          info.summary,
-                          style: TextStyle(
-                            fontSize: NoctaFontSize.body,
-                            height: 1.45,
-                            color: NoctaColors.inkSecondary,
-                          ),
+                      Text(
+                        info.summary,
+                        style: const TextStyle(
+                          fontSize: NoctaFontSize.body,
+                          height: 1.7,
+                          color: NoctaColors.inkSecondary,
                         ),
                       ),
                     ],
                     const SizedBox(height: NoctaSpace.s6),
-                    NButton(
-                      key: const Key('archetype-share'),
-                      label: _sharing
-                          ? l10n.archetypeShareSharing
-                          : l10n.archetypeShareButton,
-                      onPressed: _sharing ? null : _share,
-                    ),
-                    const SizedBox(height: NoctaSpace.s3),
-                    NButton(
-                      key: const Key('archetype-retake'),
-                      label: l10n.archetypeRetakeTest,
-                      variant: NButtonVariant.ghost,
-                      onPressed: widget.onRetake,
+                    // Tasarımda iki eylem YAN YANA: paylaş (kağıt) + tekrar çöz
+                    // (çerçeve). Alt alta iki tam genişlik buton, ekranın tek
+                    // asıl eylemi olan paylaşımı zayıflatıyordu.
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: NButton(
+                            key: const Key('archetype-share'),
+                            label: _sharing
+                                ? l10n.archetypeShareSharing
+                                : l10n.archetypeShareButton,
+                            onPressed: _sharing ? null : _share,
+                          ),
+                        ),
+                        const SizedBox(width: NoctaSpace.s3),
+                        Expanded(
+                          child: NButton(
+                            key: const Key('archetype-retake'),
+                            label: l10n.archetypeRetakeTest,
+                            variant: NButtonVariant.ghost,
+                            onPressed: widget.onRetake,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -591,58 +582,70 @@ class _IdentityReveal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final BorderRadius radius = BorderRadius.circular(NoctaRadius.card);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: archetypeGradientForSlug(slug),
-        borderRadius: radius,
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          // Kontrast örtüsü — açık gradyan uçlarında metni okunur tutar.
-          color: NoctaColors.bgBase.withValues(alpha: 0.28),
-          borderRadius: radius,
-        ),
-        padding: const EdgeInsets.all(NoctaSpace.s6),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: NoctaFontSize.micro,
-                letterSpacing: 1.2,
-                color: NoctaColors.inkPrimary.withValues(alpha: 0.75),
+    // Elegy: kimlik bir gradyan KUTU değil. Tuvalin üstünde iki organik leke
+    // (krem + arketibin tenti) ve altında serif ad duruyor. Metin artık
+    // gradyanın ÜSTÜNDE değil, o yüzden kontrast örtüsüne (scrim) gerek yok —
+    // ad her arketipte inkPrimary/bgBase kontrastında (15:1).
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        SizedBox(
+          // 250 → 190: küçük ekranda (ve widget testinin 600px penceresinde)
+          // leke, altındaki iki eylemi ekran dışına itiyordu.
+          height: 190,
+          child: Stack(
+            children: <Widget>[
+              Positioned(
+                left: 10,
+                top: 0,
+                child: Container(
+                  width: 142,
+                  height: 186,
+                  decoration: BoxDecoration(
+                    color: NoctaColors.bgPaper,
+                    borderRadius: BorderRadius.circular(NoctaRadius.full),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: NoctaSpace.s3),
-            // TEK `Text` + değişmeden yazılan ad: testler `find.text` ile arıyor.
-            Text(
-              name,
-              key: const Key('archetype-result'),
-              style: TextStyle(
-                fontSize: NoctaFontSize.display,
-                fontWeight: FontWeight.w600,
-                height: 1.15,
-                color: NoctaColors.inkPrimary,
-              ),
-            ),
-            if (tagline != null && tagline!.isNotEmpty) ...<Widget>[
-              const SizedBox(height: NoctaSpace.s2),
-              Text(
-                tagline!,
-                key: const Key('archetype-tagline'),
-                style: TextStyle(
-                  fontSize: NoctaFontSize.body,
-                  height: 1.4,
-                  color: NoctaColors.inkPrimary.withValues(alpha: 0.85),
+              Positioned(
+                left: 96,
+                top: 62,
+                child: Container(
+                  width: 92,
+                  height: 122,
+                  decoration: BoxDecoration(
+                    gradient: archetypeGradientForSlug(slug),
+                    borderRadius: BorderRadius.circular(NoctaRadius.full),
+                  ),
                 ),
               ),
             ],
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: NoctaSpace.s6),
+        NMono(label, track: NoctaTrack.wide),
+        const SizedBox(height: NoctaSpace.s3),
+        // TEK `Text` + değişmeden yazılan ad: testler `find.text` ile arıyor.
+        NDisplay(
+          name,
+          key: const Key('archetype-result'),
+          size: 46,
+          height: 1.05,
+        ),
+        if (tagline != null && tagline!.isNotEmpty) ...<Widget>[
+          const SizedBox(height: NoctaSpace.s3),
+          Text(
+            tagline!,
+            key: const Key('archetype-tagline'),
+            style: const TextStyle(
+              fontSize: NoctaFontSize.body,
+              height: 1.6,
+              color: NoctaColors.inkSecondary,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

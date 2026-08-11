@@ -31,6 +31,18 @@ export class PrismaAudioAssetRepository implements AudioAssetRepository {
         ...(filter.moods && filter.moods.length > 0
           ? { mood: { hasSome: [...filter.moods] } }
           : {}),
+        // Arama başlık VEYA tür içinde geçer: kullanıcı "rain" yazdığında hem
+        // "Rainfall on a tin roof" hem de tür olarak 'rain' işaretli dosyaları
+        // bekler. Harf duyarsızlığı DB'ye bırakılır (`insensitive` → ILIKE);
+        // JS tarafında toLowerCase yapmak Türkçe'de I/ı'yı bozardı.
+        ...(filter.query
+          ? {
+              OR: [
+                { title: { contains: filter.query, mode: 'insensitive' as const } },
+                { genre: { contains: filter.query, mode: 'insensitive' as const } },
+              ],
+            }
+          : {}),
       },
       orderBy: { created_at: 'desc' },
     });

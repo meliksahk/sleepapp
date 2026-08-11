@@ -33,7 +33,8 @@
     "check:env-example": "node tooling/check-env-example.mjs",
     "check:archetype-drift": "node tooling/check-archetype-drift.mjs",
     "check:content-drift": "node tooling/check-content-drift.mjs",
-    "check:layer-source-drift": "node tooling/check-layer-source-drift.mjs"
+    "check:layer-source-drift": "node tooling/check-layer-source-drift.mjs",
+    "check:premium-plan-drift": "node tooling/check-premium-plan-drift.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

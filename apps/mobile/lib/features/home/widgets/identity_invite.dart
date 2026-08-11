@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../archetype/archetype_gradient.dart';
 
 /// Kimlik daveti — testi henüz çözmemiş kullanıcı için.
 ///
@@ -20,48 +19,44 @@ class IdentityInvite extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: archetypeGradientForSlug(null), // nötr varsayılan gradyan
-        borderRadius: BorderRadius.circular(NoctaRadius.card),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          // Daha güçlü örtü → solgun/"henüz senin değil" hissi.
-          color: NoctaColors.bgBase.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(NoctaRadius.card),
-          border: Border.all(color: NoctaColors.inkPrimary.withValues(alpha: 0.06)),
-        ),
-        padding: const EdgeInsets.all(NoctaSpace.s5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+    // Elegy: davet de kutu degil. Ayni organik leke, ama SOLGUN ve BOS
+    // cerceveli — "henuz senin degil" ayrimi doygunlukla anlatiliyor.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Row(
           children: <Widget>[
-            Text(
-              l10n.homeTagline,
-              style: TextStyle(
-                fontSize: NoctaFontSize.h2,
-                color: NoctaColors.inkPrimary,
+            Container(
+              width: 44,
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(NoctaRadius.full),
+                border: Border.all(color: NoctaColors.lineStrong),
               ),
             ),
-            const SizedBox(height: NoctaSpace.s2),
-            Text(
-              l10n.homeIdentityInviteBody,
-              style: TextStyle(
-                fontSize: NoctaFontSize.caption,
-                color: NoctaColors.inkSecondary,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: NoctaSpace.s4),
-            NButton(
-              key: const Key('archetype-cta'),
-              label: l10n.homeFindIdentity,
-              onPressed: () => context.push('/archetype'),
-            ),
+            const SizedBox(width: NoctaSpace.s4),
+            Expanded(child: NDisplay(l10n.homeTagline, size: NoctaFontSize.h2)),
           ],
         ),
-      ),
+        const SizedBox(height: NoctaSpace.s3),
+        Text(
+          l10n.homeIdentityInviteBody,
+          style: const TextStyle(
+            fontSize: NoctaFontSize.caption,
+            color: NoctaColors.inkSecondary,
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: NoctaSpace.s4),
+        NButton(
+          key: const Key('archetype-cta'),
+          label: l10n.homeFindIdentity,
+          expand: true,
+          rule: true,
+          onPressed: () => context.push('/archetype'),
+        ),
+      ],
     );
   }
 }
