@@ -625,12 +625,6 @@ abstract class AppL10n {
   /// **'{hours}h {minutes}m'**
   String reportCardDuration(int hours, int minutes);
 
-  /// Kartta dinginlik satırı etiketi
-  ///
-  /// In en, this message translates to:
-  /// **'Calm'**
-  String get reportCardCalm;
-
   /// D-10: ölçtüğümüz şey bu — 'hareket' değil
   ///
   /// In en, this message translates to:
@@ -652,7 +646,7 @@ abstract class AppL10n {
   /// CLAUDE.md §1.1 — kart paylaşılıyor, uyarı kartın ÜSTÜNDE olmalı
   ///
   /// In en, this message translates to:
-  /// **'An in-app calm measure for your sleep ritual. Not a health score.'**
+  /// **'A record of a night with your sleep ritual. Not a health score.'**
   String get reportCardDisclaimer;
 
   /// Gece raporu paylaşım metni
@@ -673,17 +667,11 @@ abstract class AppL10n {
   /// **'No sleep recorded for this night'**
   String get nightReportEmpty;
 
-  /// Uygulama-içi göreli dinginlik ölçüsü (SAĞLIK ÖLÇÜSÜ DEĞİL)
-  ///
-  /// In en, this message translates to:
-  /// **'Calm {score}/100'**
-  String nightReportCalm(int score);
-
   /// Sağlık iddiası feragati (CLAUDE.md §1.1) — çeviride de KORUNMALI
   ///
   /// In en, this message translates to:
-  /// **'An in-app calm measure for your ritual — not a health score.'**
-  String get nightReportCalmDisclaimer;
+  /// **'A record of your ritual — not a health score.'**
+  String get nightReportDisclaimer;
 
   /// O gecedeki uyku oturumu sayısı etiketi
   ///
@@ -1207,6 +1195,12 @@ abstract class AppL10n {
   /// **'Could not load this. Check your connection and try again.'**
   String get loadFailed;
 
+  /// Ag katmani kapaliyken (apiBaseUrl bos) gosterilen hata metni — 'baglantini kontrol et' yaniltici olurdu
+  ///
+  /// In en, this message translates to:
+  /// **'This part needs an account connection, which isn\'t available yet. Sound, the mixer and your own recordings all work offline.'**
+  String get loadFailedNoServer;
+
   /// Ayarlar dil bolumu basligi
   ///
   /// In en, this message translates to:
@@ -1494,6 +1488,12 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Notifications'**
   String get notifSettingsTitle;
+
+  /// Ayarlardaki bildirim ekranini acan dugme — bolum basligiyla ayni ('Bildirimler/Bildirimler') olmamasi icin ICERIGI anlatir
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder & quiet hours'**
+  String get settingsNotificationsOpen;
 
   /// Hatirlatici bolumu
   ///

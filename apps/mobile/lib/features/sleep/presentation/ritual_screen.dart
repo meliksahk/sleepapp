@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../sleep_models.dart';
@@ -31,10 +32,8 @@ class RitualScreen extends ConsumerWidget {
       body: SafeArea(
         child: streak.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => NErrorState(
+          error: (error, stack) => NetworkErrorView(
             retryKey: const Key('ritual-retry'),
-            message: l10n.loadFailed,
-            retryLabel: l10n.offlineRetry,
             onRetry: () => ref.invalidate(streakProvider),
           ),
           data: (s) => s.totalNights == 0

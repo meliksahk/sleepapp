@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/audio_engine/dsp/mix_render.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../content/content_models.dart';
@@ -145,10 +146,8 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                     error: (error, stack) => <Widget>[
                       const SizedBox(height: NoctaSpace.s5),
                       _sectionTitle(l10n.mixerRemoteSectionTitle),
-                      NErrorState(
+                      NetworkErrorView(
                         retryKey: const Key('asset-catalog-retry'),
-                        message: l10n.loadFailed,
-                        retryLabel: l10n.offlineRetry,
                         onRetry: () =>
                             ref.invalidate(audioAssetCatalogProvider),
                       ),

@@ -95,17 +95,15 @@
 
   "reportCardHeader": "Gece makbuzu",
   "reportCardDuration": "{hours}sa {minutes}dk",
-  "reportCardCalm": "Dinginlik",
   "reportCardLoud": "Yüksek anlar",
   "reportCardStreak": "Gece serisi",
   "reportCardIdentity": "Kimlik",
-  "reportCardDisclaimer": "Uyku ritüelin için uygulama içi bir dinginlik ölçüsü. Sağlık skoru değil.",
+  "reportCardDisclaimer": "Uyku ritüelinle geçen bir gecenin kaydı. Sağlık skoru değil.",
   "reportShareText": "NOCTA’daki gecem",
 
   "nightReportTitle": "Gece raporu",
   "nightReportEmpty": "Bu gece için uyku kaydı yok",
-  "nightReportCalm": "Dinginlik {score}/100",
-  "nightReportCalmDisclaimer": "Ritüelin için uygulama içi bir dinginlik ölçüsü — sağlık skoru değil.",
+  "nightReportDisclaimer": "Ritüelinin kaydı — sağlık skoru değil.",
   "nightReportSessions": "Oturumlar",
   "nightReportLoudHint": "Uygulamanın duyduğu kısa ses patlamaları. Hareket değil — onu ölçmüyoruz.",
   "nightReportMovementEvents": "Hareket olayları",
@@ -211,6 +209,7 @@
   "settingsSoundSection": "Ses",
 
   "loadFailed": "Bu yüklenemedi. Bağlantını kontrol edip tekrar dene.",
+  "loadFailedNoServer": "Bu bölüm hesap bağlantısı gerektiriyor; henüz kullanılamıyor. Ses, mikser ve kendi kayıtların bağlantısız çalışır.",
 
   "settingsLanguageSection": "Dil",
   "settingsLanguageSystem": "Sistem",
@@ -268,6 +267,7 @@
   "studioExport": "VİDEOYU ÜRET",
 
   "notifSettingsTitle": "Bildirimler",
+  "settingsNotificationsOpen": "Hatırlatıcı ve sessiz saatler",
   "notifReminderSection": "AKŞAM HATIRLATICISI",
   "notifReminderOff": "Hatırlatıcı yok",
   "notifReminderAt": "Her akşam {hour}",

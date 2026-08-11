@@ -14,7 +14,6 @@ export const ARCHETYPE_RESULT_READER = Symbol('ArchetypeResultReader');
 export interface NightReportView {
   readonly nightDate: string;
   readonly totalDurationMinutes: number;
-  readonly calmScore: number;
 }
 
 export interface NightReportReader {

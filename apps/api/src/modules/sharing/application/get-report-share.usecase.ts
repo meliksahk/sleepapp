@@ -16,7 +16,6 @@ export class GetReportShareUseCase {
       {
         nightDate: report.nightDate,
         totalDurationMinutes: report.totalDurationMinutes,
-        calmScore: report.calmScore,
       },
       this.urls,
     );

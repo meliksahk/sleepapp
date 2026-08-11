@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/media/card_renderer.dart';
@@ -157,10 +158,8 @@ class _ArchetypeTestScreenState extends ConsumerState<ArchetypeTestScreen> {
     if (_loading) return const _LoadingView();
     if (_error != null) {
       // Çıplak refresh ikonu DEĞİL: ne oldu / ne yapabilirim (NErrorState).
-      return NErrorState(
+      return NetworkErrorView(
         retryKey: const Key('archetype-retry'),
-        message: AppL10n.of(context).loadFailed,
-        retryLabel: AppL10n.of(context).offlineRetry,
         onRetry: _load,
       );
     }

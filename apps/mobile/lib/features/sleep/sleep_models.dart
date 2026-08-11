@@ -103,7 +103,6 @@ class NightReport {
     required this.totalDurationMinutes,
     required this.movementEvents,
     required this.soundEvents,
-    required this.calmScore,
   });
 
   final String nightDate;
@@ -111,7 +110,6 @@ class NightReport {
   final int totalDurationMinutes;
   final int movementEvents;
   final int soundEvents;
-  final int calmScore;
 
   factory NightReport.fromJson(Map<String, dynamic> json) => NightReport(
     nightDate: json['nightDate'] as String,
@@ -119,7 +117,6 @@ class NightReport {
     totalDurationMinutes: json['totalDurationMinutes'] as int,
     movementEvents: json['movementEvents'] as int,
     soundEvents: json['soundEvents'] as int,
-    calmScore: json['calmScore'] as int,
   );
 }
 
@@ -130,7 +127,6 @@ class NightReportShare {
     required this.title,
     required this.subtitle,
     required this.durationText,
-    required this.calmScore,
     required this.webUrl,
     required this.deepLink,
   });
@@ -139,7 +135,6 @@ class NightReportShare {
   final String title;
   final String subtitle;
   final String durationText;
-  final int calmScore;
   final String webUrl;
   final String deepLink;
 
@@ -149,7 +144,6 @@ class NightReportShare {
         title: json['title'] as String,
         subtitle: json['subtitle'] as String,
         durationText: json['durationText'] as String,
-        calmScore: json['calmScore'] as int,
         webUrl: json['webUrl'] as String,
         deepLink: json['deepLink'] as String,
       );

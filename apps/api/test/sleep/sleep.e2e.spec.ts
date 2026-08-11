@@ -132,7 +132,7 @@ describe('Sleep e2e (HTTP)', () => {
     expect(res.body.sessionCount).toBe(1);
     expect(res.body.totalDurationMinutes).toBe(360);
     expect(res.body.movementEvents).toBe(4);
-    expect(typeof res.body.calmScore).toBe('number');
+    expect(res.body).not.toHaveProperty('calmScore'); // F0: sabit skor kaldırıldı
   });
 
   it('oturum olmayan gece → 404 no_report', async () => {

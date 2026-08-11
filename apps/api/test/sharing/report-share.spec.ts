@@ -20,11 +20,13 @@ describe('formatDuration', () => {
 describe('buildNightReportShare', () => {
   it('başlık/alt başlık + deep link + web CTA', () => {
     const share = buildNightReportShare(
-      { nightDate: '2026-07-15', totalDurationMinutes: 462, calmScore: 85 },
+      { nightDate: '2026-07-15', totalDurationMinutes: 462 },
       urls,
     );
     expect(share.title).toBe('My night: 7h 42m');
-    expect(share.subtitle).toContain('85/100');
+    // F0: alt başlıkta "Calm 85/100" YOK — o skor üretimde sabitti.
+    expect(share.subtitle).toBe('NOCTA sleep ritual');
+    expect(share).not.toHaveProperty('calmScore');
     expect(share.durationText).toBe('7h 42m');
     expect(share.deepLink).toBe('nocta://report/2026-07-15');
     expect(share.webUrl).toBe('https://nocta.app'); // kişisel sayfa yok → indirme CTA
@@ -32,10 +34,7 @@ describe('buildNightReportShare', () => {
 
   it('SAĞLIK İDDİASI YOK', () => {
     const blob = JSON.stringify(
-      buildNightReportShare(
-        { nightDate: '2026-07-15', totalDurationMinutes: 300, calmScore: 70 },
-        urls,
-      ),
+      buildNightReportShare({ nightDate: '2026-07-15', totalDurationMinutes: 300 }, urls),
     ).toLowerCase();
     for (const banned of ['cure', 'treat', 'therapy', 'clinically', 'medical', 'disease']) {
       expect(blob).not.toContain(banned);

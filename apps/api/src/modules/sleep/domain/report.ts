@@ -2,9 +2,13 @@ import type { SleepSession } from './sleep-session.entity';
 
 /**
  * Gece raporu — bir gecenin oturumlarının özeti (docs/02). Saf domain.
- * `calmScore` UYGULAMA-İÇİ göreli bir dinginlik göstergesidir (0-100): saat
- * başına daha az rahatsızlık (hareket+ses olayı) → daha yüksek. SAĞLIK ÖLÇÜSÜ
- * DEĞİL — "relaxation & sleep ritual" çerçevesi (CLAUDE.md §1.1).
+ *
+ * **`calmScore` KALDIRILDI (F0).** 0-100 arası "göreli dinginlik" alanı,
+ * girdisi olan rahatsızlık sayacı üretimde hiç dolmadığı için gerçek veride
+ * SABİTTİ (olay sayısı 0 → skor daima 100). Sabit bir sayıyı skor diye
+ * göstermek, ölçmediğimiz bir şeyi ölçmüş gibi sunmaktır — kartta "Calm 100/100"
+ * yazması, dürüstlük protokolünün (CLAUDE.md §0) ihlaliydi. Olay sayacı gerçekten
+ * çalıştığı gün geri gelebilir; o gün ölçüme dayanır.
  */
 export interface NightReport {
   readonly nightDate: string;
@@ -12,18 +16,6 @@ export interface NightReport {
   readonly totalDurationMinutes: number;
   readonly movementEvents: number;
   readonly soundEvents: number;
-  readonly calmScore: number;
-}
-
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, n));
-}
-
-/** Göreli dinginlik göstergesi (0-100). Saf/deterministik. */
-export function calmScore(totalDurationMinutes: number, disturbances: number): number {
-  const hours = Math.max(totalDurationMinutes / 60, 0.5);
-  const ratePerHour = disturbances / hours;
-  return clamp(Math.round(100 - ratePerHour * 10), 0, 100);
 }
 
 /** Gecenin oturumlarını tek rapora indirger. Oturum yoksa null (rapor yok). */
@@ -41,6 +33,5 @@ export function buildNightReport(
     totalDurationMinutes,
     movementEvents,
     soundEvents,
-    calmScore: calmScore(totalDurationMinutes, movementEvents + soundEvents),
   };
 }

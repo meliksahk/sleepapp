@@ -1,4 +1,4 @@
-import { buildNightReport, calmScore } from '../../src/modules/sleep/domain/report';
+import { buildNightReport } from '../../src/modules/sleep/domain/report';
 import type { SleepSession } from '../../src/modules/sleep/domain/sleep-session.entity';
 
 const session = (over: Partial<SleepSession>): SleepSession => ({
@@ -12,19 +12,6 @@ const session = (over: Partial<SleepSession>): SleepSession => ({
   soundEvents: 0,
   createdAt: new Date(),
   ...over,
-});
-
-describe('calmScore (göreli, 0-100)', () => {
-  it('rahatsızlık yoksa 100', () => {
-    expect(calmScore(360, 0)).toBe(100);
-  });
-  it('daha çok rahatsızlık → daha düşük skor', () => {
-    expect(calmScore(360, 60)).toBeLessThan(calmScore(360, 6));
-  });
-  it('0-100 arasına sıkıştırır', () => {
-    expect(calmScore(30, 10_000)).toBe(0);
-    expect(calmScore(600, 0)).toBe(100);
-  });
 });
 
 describe('buildNightReport', () => {
@@ -42,7 +29,12 @@ describe('buildNightReport', () => {
     expect(report!.totalDurationMinutes).toBe(360);
     expect(report!.movementEvents).toBe(6);
     expect(report!.soundEvents).toBe(2);
-    expect(report!.calmScore).toBeGreaterThanOrEqual(0);
-    expect(report!.calmScore).toBeLessThanOrEqual(100);
+  });
+
+  // F0: sabit "dinginlik skoru" kaldırıldı — rapor artık yalnızca SAYDIĞI şeyi
+  // taşır. Alan geri sızarsa bu test yakalar.
+  it('skor alanı TAŞIMAZ (ölçmediğimizi raporlamayız)', () => {
+    const report = buildNightReport('2026-01-10', [session({})]);
+    expect(report).not.toHaveProperty('calmScore');
   });
 });

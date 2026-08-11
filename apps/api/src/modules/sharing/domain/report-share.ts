@@ -2,15 +2,17 @@ import type { ShareUrls } from './share';
 
 /**
  * Gece raporu paylaşım kartı — saf domain (viral kanca #2). SAĞLIK İDDİASI YOK:
- * "relaxation & sleep ritual" çerçevesi; süre + göreli calm skoru (sağlık ölçüsü
- * değil). Web hedefi kişisel değil — indirme CTA'sı (site) + uygulama deep-link'i.
+ * "relaxation & sleep ritual" çerçevesi; yalnızca süre. Web hedefi kişisel değil
+ * — indirme CTA'sı (site) + uygulama deep-link'i.
+ *
+ * `calmScore` F0'da kaldırıldı (bkz. `sleep/domain/report.ts`): üretimde sabit
+ * bir sayıydı, kartta "Calm 100/100" diye görünüyordu.
  */
 export interface NightReportShare {
   readonly nightDate: string;
   readonly title: string;
   readonly subtitle: string;
   readonly durationText: string;
-  readonly calmScore: number;
   readonly webUrl: string;
   readonly deepLink: string;
 }
@@ -25,7 +27,7 @@ export function formatDuration(totalMinutes: number): string {
 }
 
 export function buildNightReportShare(
-  input: { nightDate: string; totalDurationMinutes: number; calmScore: number },
+  input: { nightDate: string; totalDurationMinutes: number },
   urls: ShareUrls,
 ): NightReportShare {
   const durationText = formatDuration(input.totalDurationMinutes);
@@ -33,9 +35,8 @@ export function buildNightReportShare(
   return {
     nightDate: input.nightDate,
     title: `My night: ${durationText}`,
-    subtitle: `Calm ${input.calmScore}/100 · NOCTA sleep ritual`,
+    subtitle: 'NOCTA sleep ritual',
     durationText,
-    calmScore: input.calmScore,
     webUrl: base, // indirme CTA (kişisel rapor sayfası yok)
     deepLink: `${urls.appScheme}://report/${input.nightDate}`,
   };

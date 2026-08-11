@@ -211,6 +211,37 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/admin/totp/reset": {
+      "post": {
+        "operationId": "AuthController_totpReset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetTotpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "2FA kaldırıldı; yeniden kurulabilir"
+          },
+          "401": {
+            "description": "Parola hatalı"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "2FA sıfırla (parola doğrulamalı) — yeni cihazda yeniden kur",
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/logout": {
       "post": {
         "operationId": "AuthController_logoutSession",
@@ -467,7 +498,25 @@
     "/v1/archetype/questions": {
       "get": {
         "operationId": "ArchetypeController_questions",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en (varsayılan) | tr",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -580,7 +629,25 @@
     "/v1/archetype/web/questions": {
       "get": {
         "operationId": "WebArchetypeController_questions",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en (varsayilan) | tr",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -659,7 +726,25 @@
     "/v1/archetype/content": {
       "get": {
         "operationId": "ArchetypeContentController_content",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accept-language",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en (varsayılan) | tr",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -724,6 +809,156 @@
         ],
         "summary": "Kullanıcı + context için değerlendirilmiş feature flag haritası",
         "tags": ["flags"]
+      }
+    },
+    "/v1/admin/flags": {
+      "get": {
+        "operationId": "AdminController_listFlags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminFlagDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Feature flag tanımlarını listele (rollout görünürlüğü)",
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/flags/{key}": {
+      "put": {
+        "operationId": "AdminController_upsertFlag",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertFlagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminFlagDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yalnızca owner flag düzenler"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Feature flag oluştur/değiştir (yalnızca owner)",
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/campaigns": {
+      "post": {
+        "operationId": "AdminController_sendCampaign",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendCampaignDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignResultDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yalnızca owner kampanya gönderir"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Push kampanyası gönder (yalnızca owner)",
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "operationId": "AdminController_searchUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminUserDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "E-posta veya id ile kullanıcı ara (destek)",
+        "tags": ["admin"]
       }
     },
     "/v1/admin/me": {
@@ -1145,6 +1380,86 @@
         "tags": ["content"]
       }
     },
+    "/v1/content/audio-assets": {
+      "get": {
+        "operationId": "ContentController_assets",
+        "parameters": [
+          {
+            "name": "genre",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mood",
+            "required": false,
+            "in": "query",
+            "description": "Virgülle ayrık; herhangi biri eşleşirse döner (örtüşme).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AudioAssetDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ses dosyası kataloğu (tür/mood filtreli) — presigned URL İÇERMEZ",
+        "tags": ["content"]
+      }
+    },
+    "/v1/content/audio-assets/{id}": {
+      "get": {
+        "operationId": "ContentController_asset",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioAssetDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tek ses dosyası + kısa ömürlü presigned URL",
+        "tags": ["content"]
+      }
+    },
     "/v1/content/soundscapes/{slug}": {
       "get": {
         "operationId": "ContentController_detail",
@@ -1557,6 +1872,49 @@
         "summary": "Son 7 gecenin uyku trendi (gece-başına süre, grafik için)",
         "tags": ["sleep"]
       }
+    },
+    "/v1/me/entitlement": {
+      "get": {
+        "operationId": "EntitlementController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntitlementResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kimliği doğrulanmış kullanıcının premium yetkilendirmesi",
+        "tags": ["entitlement"]
+      }
+    },
+    "/v1/me/export": {
+      "get": {
+        "operationId": "PrivacyController_export",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Kullanıcının verisi (profil, arketip, uyku, oturumlar)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Kullanıcının tüm kişisel verisini JSON olarak dışa aktar",
+        "tags": ["privacy"]
+      }
     }
   },
   "info": {
@@ -1684,6 +2042,16 @@
         },
         "required": ["code"]
       },
+      "ResetTotpDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "Mevcut parola — 2FA sıfırlamayı doğrular (#186)"
+          }
+        },
+        "required": ["password"]
+      },
       "MeResponseDto": {
         "type": "object",
         "properties": {
@@ -1805,6 +2173,22 @@
           "notificationsEnabled": {
             "type": "boolean",
             "example": true
+          },
+          "reminderHour": {
+            "type": "object",
+            "example": 23,
+            "nullable": true,
+            "description": "Yerel saat (0-23), null = kapalı"
+          },
+          "quietHoursStart": {
+            "type": "object",
+            "example": 23,
+            "nullable": true
+          },
+          "quietHoursEnd": {
+            "type": "object",
+            "example": 8,
+            "nullable": true
           }
         },
         "required": [
@@ -1813,7 +2197,10 @@
           "chronotype",
           "locale",
           "timezone",
-          "notificationsEnabled"
+          "notificationsEnabled",
+          "reminderHour",
+          "quietHoursStart",
+          "quietHoursEnd"
         ]
       },
       "UpdateProfileDto": {
@@ -1843,6 +2230,28 @@
             "type": "boolean",
             "example": true,
             "description": "Push bildirim tercihi"
+          },
+          "reminderHour": {
+            "type": "object",
+            "example": 23,
+            "minimum": 0,
+            "maximum": 23,
+            "nullable": true,
+            "description": "Akşam hatırlatıcısı saati — KULLANICININ YEREL saati, UTC değil. null = kapalı."
+          },
+          "quietHoursStart": {
+            "type": "object",
+            "example": 23,
+            "minimum": 0,
+            "maximum": 23,
+            "nullable": true
+          },
+          "quietHoursEnd": {
+            "type": "object",
+            "example": 8,
+            "minimum": 0,
+            "maximum": 23,
+            "nullable": true
           }
         }
       },
@@ -1994,6 +2403,106 @@
         },
         "required": ["slug", "name", "tagline", "summary"]
       },
+      "AdminFlagDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Flag anahtarı"
+          },
+          "rules": {
+            "type": "object",
+            "description": "Ham kurallar (enabled, rolloutPercentage, platforms, minAppVersion)"
+          }
+        },
+        "required": ["key", "rules"]
+      },
+      "UpsertFlagDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Flag açık mı (kapalıysa hiç kimseye gitmez)"
+          },
+          "rolloutPercentage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Tanımlıysa kova < yüzde alan kullanıcılar; tanımsız = herkes"
+          },
+          "platforms": {
+            "description": "Tanımlıysa yalnızca bu platformlar (ör. ['ios','android'])",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minAppVersion": {
+            "type": "string",
+            "example": "1.4.0",
+            "description": "Tanımlıysa istemci sürümü >= bu olmalı (semver benzeri)"
+          }
+        },
+        "required": ["enabled"]
+      },
+      "SendCampaignDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Yeni haftalık soundscape",
+            "description": "Bildirim başlığı"
+          },
+          "body": {
+            "type": "string",
+            "example": "Bu haftanın ritüel sesi yayında.",
+            "description": "Bildirim gövdesi"
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["ios", "android"],
+            "description": "Tanımlıysa yalnızca bu platformun cihazları; boş = tüm push kullanıcıları"
+          }
+        },
+        "required": ["title", "body"]
+      },
+      "CampaignResultDto": {
+        "type": "object",
+        "properties": {
+          "recipients": {
+            "type": "number",
+            "description": "Segmentteki kullanıcı sayısı (push token'ı olanlar)"
+          },
+          "queued": {
+            "type": "number",
+            "description": "Teslim için kuyruğa alınan iş sayısı (fiili gönderim worker’da)"
+          }
+        },
+        "required": ["recipients", "queued"]
+      },
+      "AdminUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Kullanıcı UUID"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["anonymous", "registered", "admin"]
+          },
+          "email": {
+            "type": "object",
+            "nullable": true,
+            "description": "Kayıtlı e-posta (anonim kullanıcıda null)"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "ISO 8601 oluşturma zamanı (UTC)"
+          }
+        },
+        "required": ["id", "kind", "email", "createdAt"]
+      },
       "AdminMeDto": {
         "type": "object",
         "properties": {
@@ -2056,6 +2565,10 @@
             "type": "number",
             "description": "Bekleme listesi kayıt sayısı"
           },
+          "pushAudience": {
+            "type": "number",
+            "description": "Erişilebilir push kitlesi — kayıtlı cihazı olan benzersiz kullanıcı (kampanya reach üst sınırı; opt-out fan-out'ta düşülür)"
+          },
           "shareFunnel": {
             "description": "Viral kanca sağlığı",
             "allOf": [
@@ -2063,9 +2576,13 @@
                 "$ref": "#/components/schemas/ShareFunnelDto"
               }
             ]
+          },
+          "deletedAccounts30d": {
+            "type": "number",
+            "description": "Son 30 günde silinen hesap (kimliksiz olay sayacı). Silme kaskadının işlediğini görmenin tek operasyonel yolu."
           }
         },
-        "required": ["soundscapes", "waitlist", "shareFunnel"]
+        "required": ["soundscapes", "waitlist", "pushAudience", "shareFunnel", "deletedAccounts30d"]
       },
       "AuditEntryDto": {
         "type": "object",
@@ -2084,7 +2601,9 @@
               "soundscape.update",
               "soundscape.publish",
               "soundscape.unpublish",
-              "soundscape.recipe"
+              "soundscape.recipe",
+              "flag.upsert",
+              "campaign.send"
             ]
           },
           "target": {
@@ -2219,7 +2738,7 @@
           },
           "layers": {
             "type": "array",
-            "description": "Mikser katmanları (1–8); type: white|pink|brown, gain 0–1",
+            "description": "Mikser katmanları (1–8); type: white|pink|brown|waves|fire|rain|pad, gain 0–1",
             "example": [
               {
                 "id": "base",
@@ -2319,6 +2838,61 @@
         },
         "required": ["weekStart", "notes", "soundscapes"]
       },
+      "AudioAssetDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "example": "Pad + Fire (demo)"
+          },
+          "genre": {
+            "type": "string",
+            "example": "ambient"
+          },
+          "mood": {
+            "example": ["calm", "sleep"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "durationSeconds": {
+            "type": "number",
+            "example": 30
+          },
+          "license": {
+            "type": "string",
+            "example": "self-produced",
+            "description": "Lisans — ZORUNLU alan (mağaza uyumu, CLAUDE.md §6)."
+          },
+          "source": {
+            "type": "string",
+            "example": "NOCTA audio engine (tool/render_demo_asset.dart)"
+          }
+        },
+        "required": ["id", "title", "genre", "mood", "durationSeconds", "license", "source"]
+      },
+      "AudioAssetDetailDto": {
+        "type": "object",
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AudioAssetDto"
+          },
+          "url": {
+            "type": "string",
+            "description": "Kısa ömürlü presigned GET URL"
+          },
+          "expiresInSeconds": {
+            "type": "number",
+            "example": 21600
+          }
+        },
+        "required": ["asset", "url", "expiresInSeconds"]
+      },
       "MixerLayerDto": {
         "type": "object",
         "properties": {
@@ -2329,7 +2903,7 @@
           },
           "type": {
             "type": "string",
-            "enum": ["white", "pink", "brown"],
+            "enum": ["white", "pink", "brown", "waves", "fire", "rain", "pad"],
             "example": "pink"
           },
           "gain": {
@@ -2535,15 +3109,11 @@
           },
           "subtitle": {
             "type": "string",
-            "example": "Calm 85/100 · NOCTA sleep ritual"
+            "example": "NOCTA sleep ritual"
           },
           "durationText": {
             "type": "string",
             "example": "7h 42m"
-          },
-          "calmScore": {
-            "type": "number",
-            "example": 85
           },
           "webUrl": {
             "type": "string",
@@ -2554,15 +3124,7 @@
             "example": "nocta://report/2026-07-15"
           }
         },
-        "required": [
-          "nightDate",
-          "title",
-          "subtitle",
-          "durationText",
-          "calmScore",
-          "webUrl",
-          "deepLink"
-        ]
+        "required": ["nightDate", "title", "subtitle", "durationText", "webUrl", "deepLink"]
       },
       "RecordSleepSessionDto": {
         "type": "object",
@@ -2655,11 +3217,6 @@
           "soundEvents": {
             "type": "number",
             "example": 3
-          },
-          "calmScore": {
-            "type": "number",
-            "example": 85,
-            "description": "Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil"
           }
         },
         "required": [
@@ -2667,8 +3224,7 @@
           "sessionCount",
           "totalDurationMinutes",
           "movementEvents",
-          "soundEvents",
-          "calmScore"
+          "soundEvents"
         ]
       },
       "StreakDto": {
@@ -2749,6 +3305,23 @@
           }
         },
         "required": ["nights", "averageDurationMinutes", "nightsWithData"]
+      },
+      "EntitlementResponseDto": {
+        "type": "object",
+        "properties": {
+          "tier": {
+            "type": "string",
+            "enum": ["free", "plus", "lifetime"],
+            "example": "plus",
+            "description": "Kullanıcının katmanı."
+          },
+          "premium": {
+            "type": "boolean",
+            "example": true,
+            "description": "Premium kapısı — plus veya lifetime → true. İstemci gating için bunu okur."
+          }
+        },
+        "required": ["tier", "premium"]
       }
     }
   }

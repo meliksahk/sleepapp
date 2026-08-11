@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../content_models.dart';
@@ -20,10 +21,8 @@ class SoundscapeLibraryScreen extends ConsumerWidget {
         child: feed.when(
           data: (list) => _list(context, list),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => NErrorState(
+          error: (error, stack) => NetworkErrorView(
             retryKey: const Key('soundscape-retry'),
-            message: AppL10n.of(context).loadFailed,
-            retryLabel: AppL10n.of(context).offlineRetry,
             onRetry: () => ref.invalidate(soundscapeFeedProvider),
           ),
         ),
@@ -59,14 +58,12 @@ class SoundscapeLibraryScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s4),
             child: Row(
               children: [
-                // Sesin dokusu: her tarif kendi kucuk dokulu karesiyle anilir.
-                Container(
-                  width: 40,
-                  height: 40,
-                  color: NoctaColors.bgOverlay,
-                  child: CustomPaint(
-                    painter: _TexturePainter(seed: s.slug.hashCode),
-                  ),
+                // Sesin dokusu: desen tarifin BASKIN katmanindan gelir
+                // (n_sound_texture.dart) — yedi tarif yedi ayri yuz.
+                NSoundTexture(
+                  key: Key('soundscape-texture-${s.slug}'),
+                  spec: s.mixSpec,
+                  seed: s.slug.hashCode,
                 ),
                 const SizedBox(width: NoctaSpace.s4),
                 Expanded(
@@ -93,31 +90,4 @@ class SoundscapeLibraryScreen extends ConsumerWidget {
       },
     );
   }
-}
-
-/// Tarif karesinin dokusu — her slug kendi deterministik desenini alır.
-/// Görsel varlık indirmeden "her sesin bir yüzü var" hissini verir.
-class _TexturePainter extends CustomPainter {
-  const _TexturePainter({required this.seed});
-
-  final int seed;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = NoctaColors.inkSecondary
-      ..strokeWidth = 1;
-    final int step = 3 + (seed.abs() % 4);
-    final bool diagonal = seed.isEven;
-    for (double i = -size.height; i < size.width; i += step + 2) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(diagonal ? i + size.height : i, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TexturePainter old) => old.seed != seed;
 }
