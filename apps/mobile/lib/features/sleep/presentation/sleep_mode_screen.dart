@@ -122,6 +122,53 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   String _formatTime(BuildContext context, DateTime at) =>
       TimeOfDay.fromDateTime(at).format(context);
 
+  /// RİTÜEL SESİ bölümü — 4. özellik "tek tuş"un görünür yüzü.
+  ///
+  /// **Opt-in ve kalıcı:** varsayılan kapalıdır (uyurken habersiz ses = kötü
+  /// sürpriz); kullanıcı bir gece açtıysa tercih hatırlanır. Kayıt sırasında da
+  /// değiştirilebilir: yatakta "ses fazla geldi" diyebilmelidir.
+  Widget _soundSection(AppL10n l10n, SleepModeState s) {
+    final statusText = s.soundFailed
+        ? l10n.sleepSoundFailed
+        : (s.soundEnabled ? l10n.sleepSoundOn : l10n.sleepSoundOff);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(color: NoctaColors.nightLine),
+        const SizedBox(height: NoctaSpace.s4),
+        NMono(l10n.sleepSoundTitle, color: NoctaColors.nightFaint),
+        const SizedBox(height: NoctaSpace.s2),
+        Text(
+          statusText,
+          key: const Key('sleep-sound-status'),
+          style: TextStyle(
+            fontFamily: NoctaFont.mono,
+            fontSize: NoctaFontSize.caption,
+            letterSpacing: NoctaTrack.tight,
+            color: s.soundFailed ? NoctaColors.lineDanger : NoctaColors.nightInk,
+          ),
+        ),
+        const SizedBox(height: NoctaSpace.s2),
+        Text(
+          l10n.sleepSoundHint,
+          style: const TextStyle(
+            fontSize: NoctaFontSize.caption,
+            height: 1.6,
+            color: NoctaColors.nightFaint,
+          ),
+        ),
+        const SizedBox(height: NoctaSpace.s3),
+        _NightAction(
+          key: const Key('sleep-sound-toggle'),
+          label: s.soundEnabled ? l10n.sleepSoundTurnOff : l10n.sleepSoundTurnOn,
+          boxed: true,
+          onTap: () => widget.controller
+              .setSoundEnabled(!widget.controller.state.soundEnabled),
+        ),
+      ],
+    );
+  }
+
   Future<void> _pickAlarm(BuildContext context) async {
     // Kurulum ekranı varsa oraya: saat + PENCERE birlikte ayarlanır. Sistemin
     // diyaloğu pencereyi soramaz, yani ürünün farkını gizler.
@@ -305,6 +352,7 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
                       ],
 
                       _alarmSection(context, l10n, s),
+                      _soundSection(l10n, s),
                     ],
                   ),
                 ),

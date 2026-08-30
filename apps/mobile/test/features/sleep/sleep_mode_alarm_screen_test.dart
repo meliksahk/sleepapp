@@ -57,7 +57,7 @@ void main() {
   testWidgets('ÇEKİRDEK: alarm varsayılan KAPALI (opt-in)', (t) async {
     await pump(t);
     // Varsayılan bir saat uydurmak, kullanıcıyı beklemediği anda uyandırmak olurdu.
-    expect(find.text('Off'), findsOneWidget);
+    expect(t.widget<Text>(find.byKey(const Key('alarm-status'))).data, 'Off');
     expect(find.byKey(const Key('alarm-clear')), findsNothing);
   });
 
@@ -92,7 +92,7 @@ void main() {
     await t.tap(find.byKey(const Key('alarm-clear')));
     await t.pump();
 
-    expect(find.text('Off'), findsOneWidget);
+    expect(t.widget<Text>(find.byKey(const Key('alarm-status'))).data, 'Off');
     expect(controller.state.alarmAt, isNull);
   });
 

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio_engine/dsp/mix_render.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../community/community_providers.dart';
+import '../../community/community_share_service.dart';
 import '../../content/content_models.dart';
 import '../../content/content_providers.dart';
 import '../data/local_sound_library_impl.dart'
@@ -363,6 +365,15 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                   ],
                 ),
               ),
+              // "Topluluğa sun" — silmenin YANINDA ama ayırt edilir ikonla.
+              // Paylaşım OPT-IN'dir: hiçbir ses otomatik yüklenmez (§6).
+              IconButton(
+                key: Key('local-sound-share-${sound.id}'),
+                onPressed: () => _shareToCommunity(l10n, sound),
+                tooltip: l10n.communityShareAction,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                icon: Icon(Icons.cloud_upload_outlined, size: 20, color: NoctaColors.inkSecondary),
+              ),
               IconButton(
                 key: Key('local-sound-delete-${sound.id}'),
                 onPressed: () => _confirmDelete(l10n, sound),
@@ -383,6 +394,7 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
   }
 
   Widget _remoteRow(AudioAsset asset) {
+    final l10n = AppL10n.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: NoctaSpace.s3),
       child: InkWell(
@@ -402,14 +414,28 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
               ),
               if (_metaLine(asset).isNotEmpty) ...<Widget>[
                 const SizedBox(height: NoctaSpace.s1),
-                Text(
-                  _metaLine(asset),
-                  key: Key('asset-catalog-meta-${asset.id}'),
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.caption,
-                    color: NoctaColors.inkSecondary,
-                  ),
-                ),
+                // Topluluk sesi (genre='community', 3a köprüsü) ROZETLE ayrılır:
+                // kullanıcının ürettiği içerik, küratör içeriğiyle aynı görünüp
+                // karışmamalı — kaynak farkı görünür kalmalıdır.
+                asset.genre == 'community'
+                    ? Text(
+                        l10n.communityBadge,
+                        key: const Key('asset-catalog-community-badge'),
+                        style: TextStyle(
+                          fontFamily: NoctaFont.mono,
+                          fontSize: NoctaFontSize.micro,
+                          letterSpacing: NoctaTrack.tight,
+                          color: NoctaColors.accentDawn,
+                        ),
+                      )
+                    : Text(
+                        _metaLine(asset),
+                        key: Key('asset-catalog-meta-${asset.id}'),
+                        style: TextStyle(
+                          fontSize: NoctaFontSize.caption,
+                          color: NoctaColors.inkSecondary,
+                        ),
+                      ),
               ],
             ],
           ),
@@ -526,6 +552,133 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
       setState(() => _error = l10n.mixerLocalDeleteFailed);
     }
   }
+
+  /// Topluluk paylaşımı — başlık diyaloğu → üç adımlı yükleme → sonuç.
+  ///
+  /// **Paylaşım OPT-IN'dir ve iki onum vardır:** buton + diyalogdaki onay.
+  /// Süre, paylaşım anında dosyadan PROBE edilir ([AudioProbe]) — uydurulan
+  /// bir süre göndermek, moderatörün yanlış meta ile karşılaşması demektir.
+  Future<void> _shareToCommunity(AppL10n l10n, LocalSound sound) async {
+    final titleController = TextEditingController(text: sound.title);
+    var sharing = false;
+    String? dialogError;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: !sharing,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: NoctaColors.bgRaised,
+          title: Text(l10n.communityShareTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              TextField(
+                key: const Key('community-share-title'),
+                controller: titleController,
+                maxLength: 80,
+                enabled: !sharing,
+                decoration: InputDecoration(labelText: l10n.communityShareTitleField),
+              ),
+              const SizedBox(height: NoctaSpace.s2),
+              Text(
+                l10n.communityShareTerms,
+                key: const Key('community-share-terms'),
+                style: TextStyle(
+                  fontSize: NoctaFontSize.caption,
+                  color: NoctaColors.inkSecondary,
+                  height: 1.4,
+                ),
+              ),
+              if (dialogError != null) ...<Widget>[
+                const SizedBox(height: NoctaSpace.s2),
+                Text(
+                  dialogError!,
+                  key: const Key('community-share-error'),
+                  style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.danger),
+                ),
+              ],
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: sharing ? null : () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              key: const Key('community-share-confirm'),
+              onPressed: sharing
+                  ? null
+                  : () async {
+                      final title = titleController.text.trim();
+                      if (title.isEmpty) return;
+                      setDialogState(() {
+                        sharing = true;
+                        dialogError = null;
+                      });
+
+                      // Süre: cihazda probe edilir. null → dürüstçe reddet,
+                      // uydurulan süre gönderilmez (sunucu 1..7200 zorunlu).
+                      final library = ref.read(localSoundLibraryProvider);
+                      final path = await library.pathOf(sound);
+                      if (!dialogContext.mounted) return;
+                      final duration =
+                          await ref.read(audioProbeProvider).probe(path);
+                      if (duration == null) {
+                        setDialogState(() {
+                          sharing = false;
+                          dialogError = l10n.communityShareDurationUnknown;
+                        });
+                        return;
+                      }
+
+                      final outcome = await ref
+                          .read(communityShareServiceProvider)
+                          .share(
+                            filePath: path,
+                            title: title,
+                            sizeBytes: sound.sizeBytes,
+                            durationSeconds: duration.inSeconds,
+                          );
+                      if (!dialogContext.mounted) return;
+                      switch (outcome) {
+                        case CommunityShared():
+                          Navigator.of(dialogContext).pop(true);
+                        case CommunityShareRejected(:final reason):
+                          setDialogState(() {
+                            sharing = false;
+                            dialogError = _shareFailureText(l10n, reason);
+                          });
+                      }
+                    },
+              child: Text(sharing
+                  ? l10n.communitySharing
+                  : l10n.communityShareConfirm),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.communitySharedDone)),
+    );
+  }
+
+  String _shareFailureText(AppL10n l10n, CommunityShareFailure reason) =>
+      switch (reason) {
+        CommunityShareFailure.pendingLimit => l10n.communitySharePendingLimit,
+        CommunityShareFailure.uploadFailed => l10n.communityShareUploadFailed,
+        CommunityShareFailure.durationUnknown => l10n.communityShareDurationUnknown,
+        CommunityShareFailure.fileGone => l10n.mixerLocalImportSourceGone,
+        CommunityShareFailure.offline => l10n.offlineBanner,
+        CommunityShareFailure.invalidMeta ||
+        CommunityShareFailure.unauthorized ||
+        CommunityShareFailure.unknown =>
+          l10n.communityShareFailed,
+      };
 
   String _failureText(
     AppL10n l10n,

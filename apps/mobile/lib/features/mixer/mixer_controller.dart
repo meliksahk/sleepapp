@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../core/audio_engine/dsp/mix_render.dart';
+import '../../core/audio_engine/dsp/tone.dart' show toneMaxHz, toneMinHz;
 import '../../core/audio_engine/master_limiter.dart';
 import '../../core/audio_engine/mix_player.dart';
 import '../../core/media/mix_video_channel.dart';
+import '../../core/storage/key_value_store.dart';
+import '../mixer/data/mix_state_store.dart';
+import '../mixer/domain/melodic_preset_store.dart';
 import 'mix_video_exporter.dart';
 
 /// Hatanın hangi işten geldiği.
@@ -26,7 +30,27 @@ enum MixerErrorKind {
   /// [assetAdd]'den ayrı: ortada arıza yok, yalnızca yapılacak bir şey yok — ama
   /// kullanıcıya SÖYLENMESİ gerekir. Eskiden bu yol sessizce hiçbir şey yapmıyordu.
   assetDuplicate,
+
+  /// Katman tavanı dolu: yeni bir sentez katmanı eklenemez.
+  ///
+  /// [assetAdd]'den ayrı: dosya yüklemesi değil, BÜTÇE reddi. CPU/RAM bütçesi
+  /// (katman başına ~2.8 MB RAM + render süresi) sunucu sözleşmesindeki
+  /// MAX_MIXER_LAYERS ile aynı sayıda tutulur; aşılırsa sessizce eklememek,
+  /// kullanıcıya "dolu" demekten beterdir.
+  layerLimit,
 }
+
+/// [MixerController.addToneLayer] sonucu. `duplicate` YOK: id'yi controller
+/// üretir, çakışma imkânsızdır — enum'da olmayan durum, olmayan koddur.
+enum AddToneOutcome { added, full }
+
+/// [MixerController.addSource] sonucu.
+enum AddSourceOutcome { added, duplicate, full }
+
+/// Kullanıcının yeniden ekleyebileceği kaynakların varsayılan kazancı.
+///
+/// 0.25: tek başına duyulur ama mevcut mix'in üstüne çıkmaz.
+const double defaultSourceGain = 0.25;
 
 /// [MixerController.addAsset] sonucu.
 ///
@@ -41,6 +65,7 @@ class MixerState {
     required this.layers,
     required this.gains,
     this.assets = const <AssetLayer>[],
+    this.userAddedSynthIds = const <String>[],
     this.assetsUnavailable = false,
     this.isPlaying = false,
     this.isPreparing = false,
@@ -51,6 +76,11 @@ class MixerState {
   });
 
   final List<MixLayer> layers;
+
+  /// Kullanıcının kendisinin eklediği SENTEZ katmanlarının id'leri (bugün yalnız
+  /// tone). Bu id'ler kaldırılabilir; tarifle gelen sentez katmanları gelmez —
+  /// onlar tarifin kendisidir (sürgü 0'a çekilebilir ama satır silinemez).
+  final List<String> userAddedSynthIds;
 
   /// DOSYA katmanları — sentez katmanlarıyla aynı mikserde, aynı sürgü davranışıyla.
   final List<AssetLayer> assets;
@@ -99,6 +129,7 @@ class MixerState {
   MixerState copyWith({
     List<MixLayer>? layers,
     List<AssetLayer>? assets,
+    List<String>? userAddedSynthIds,
     bool? assetsUnavailable,
     Map<String, double>? gains,
     bool? isPlaying,
@@ -113,6 +144,7 @@ class MixerState {
     return MixerState(
       layers: layers ?? this.layers,
       assets: assets ?? this.assets,
+      userAddedSynthIds: userAddedSynthIds ?? this.userAddedSynthIds,
       assetsUnavailable: assetsUnavailable ?? this.assetsUnavailable,
       gains: gains ?? this.gains,
       isPlaying: isPlaying ?? this.isPlaying,
@@ -153,11 +185,12 @@ MixSpec defaultMixSpec() => const MixSpec([
 /// **Render PAHALI** (katman başına 30 sn @48kHz) ve yalnızca [prepare]'de bir kez
 /// yapılır; slider `setLayerGain`'e gider → yeniden render YOK, ses kesilmez.
 class MixerController {
-  MixerController({MixPlayer? player, MixSpec? spec, MixVideoExporter? exporter})
+  MixerController({MixPlayer? player, MixSpec? spec, MixVideoExporter? exporter, MixStateStore? stateStore})
       : _player = player ?? MixPlayer(),
         _exporter = exporter ??
             const MixVideoExporter(encoder: PlatformMixVideoEncoder()),
-        _spec = spec ?? defaultMixSpec() {
+        _spec = spec ?? defaultMixSpec(),
+        _stateStore = stateStore {
     _state = MixerState(
       layers: _spec.layers,
       assets: _spec.assets,
@@ -181,6 +214,8 @@ class MixerController {
   final MixPlayer _player;
   final MixVideoExporter _exporter;
   final MixSpec _spec;
+  final MixStateStore? _stateStore;
+
 
   late MixerState _state;
   MixerState get state => _state;
@@ -191,6 +226,29 @@ class MixerController {
   void _emit(MixerState next) {
     _state = next;
     onChanged?.call();
+  }
+
+  /// Kayıtlı son mix'i yükler (varsa) ve state'i günceller.
+  ///
+  /// Mikser ekranının initState'inden çağrılır: kullanıcı uygulama kapatıp
+  /// açtığında SON mix'i görmeli, her seferinde varsayılana sıfırlanmamalı
+  /// (kullanıcı isteği).
+  Future<void> initFromStore() async {
+    final store = _stateStore;
+    if (store == null) return;
+    final saved = await store.load();
+    if (saved == null || saved.layers.isEmpty) return;
+    // _spec DOKUNULMAZ (final): savedSpec state'e yazılır, currentSpec()
+    // artık _savedSpec ?? _spec mantığıyla çalışır.
+    _emit(MixerState(
+      layers: saved.layers,
+      gains: {for (final l in saved.layers) l.id: l.gain},
+    ));
+  }
+
+  /// Mevcut mix'i KALICI kaydeder — her gain değişiminde çağrılır.
+  Future<void> _persistState() async {
+    await _stateStore?.save(currentSpec());
   }
 
   /// Katmanları render edip player'lara yükler. İlk seste bir kez.
@@ -281,6 +339,17 @@ class MixerController {
     ));
   }
 
+  /// Katman tavanı doldu — "Ton ekleyemedim" demenin tek dürüst yolu.
+  ///
+  /// Renk/ton ayrımı UI'da: bu bir arıza değil BÜTÇE bildirimidir
+  /// ([MixerErrorKind.layerLimit]), danger değil inkSecondary gösterilir.
+  void reportLayerLimit() {
+    _emit(_state.copyWith(
+      error: 'layer limit reached',
+      errorKind: MixerErrorKind.layerLimit,
+    ));
+  }
+
   /// Katman EKLENEMEDİ — dosyanın adresi çözülemedi (404: dosya silinmiş, 401:
   /// oturum düştü, ya da ağ yok).
   ///
@@ -316,11 +385,179 @@ class MixerController {
     ));
   }
 
+  /// Kullanıcının ekleyebileceği TOPLAM katman sınırı (sentez + dosya).
+  ///
+  /// Sunucu sözleşmesindeki MAX_MIXER_LAYERS ile aynı sayı: tarifte 8'i geçen
+  /// mix reddediliyorsa lokalde de aynı bütçe geçerli olmalı — aksi hâlde
+  /// "kayıtlı tarifle açılır, elle genişletilmiş hâliyle çökmez" ayrımı doğar.
+  static const int maxTotalLayers = 8;
+
+  /// Yeni tone katmanının varsayılan kazancı.
+  ///
+  /// Düşük tutuldu (dosyanın 0.3'üne yakın mantık): saf sinüs algısal olarak
+  /// gürültüden baskındır; kullanıcının mevcut mix'inin üstüne BİRDEN binen bir
+  /// uğultu gece yarısı uyandırır. Sürgüyle yükseltir.
+  static const double defaultToneGain = 0.20;
+
+  /// Kullanıcıdan gelen Hz (+ opsiyonel binaural vuru) ile **tone** katmanı ekler.
+  ///
+  /// - [beatHz] null veya 0 → mono ton; > 0 → katman STEREO çalar (L/R farklı
+  ///   perde, kulakta vuru). Vuru değeri motorda ızgaraya oturur.
+  /// - Mix hazır değilse yalnızca state'e girer ([prepare] ilk çalışta yükler —
+  ///   `addAsset`'in iki-hâl sözleşmesiyle aynı).
+  /// - Mix hazırsa katman CANLI eklenir, çalıyorsa hemen başlar.
+  /// - Tavan doluysa hiçbir şey eklenmez ve [AddToneOutcome.full] döner; UI
+  ///   kullanıcıya söyler. Sessiz başarısızlık yasak (§0).
+  Future<AddToneOutcome> addToneLayer(double frequencyHz, {double? beatHz}) async {
+    final clamped = frequencyHz.clamp(toneMinHz, toneMaxHz);
+    if (_state.layers.length + _state.assets.length >= maxTotalLayers) {
+      return AddToneOutcome.full;
+    }
+
+    final id = _uniqueToneId();
+    final layer = MixLayer(
+      id: id,
+      type: LayerSource.tone,
+      gain: defaultToneGain,
+      frequencyHz: clamped.toDouble(),
+      beatHz: (beatHz != null && beatHz > 0) ? beatHz : null,
+    );
+
+    if (_player.voiceCount > 0) {
+      await _player.addSynthLayer(layer, autoPlay: _state.isPlaying);
+    }
+
+    _emit(_state.copyWith(
+      layers: <MixLayer>[..._state.layers, layer],
+      gains: <String, double>{..._state.gains, layer.id: layer.gain},
+      userAddedSynthIds: <String>[..._state.userAddedSynthIds, layer.id],
+      clearError: true,
+    ));
+    return AddToneOutcome.added;
+  }
+
+  /// 'tone', 'tone-2', ... — çakışmayan ilk id. Tariften gelen bir katman da
+  /// 'tone' adını taşıyabilir (sunucu id benzersizliğini kendi içinde garanti
+  /// eder); o yüzden MEVCUT tüm katmanlara bakıyoruz.
+  String _uniqueToneId() {
+    if (!_state.gains.containsKey('tone')) return 'tone';
+    var n = 2;
+    while (_state.gains.containsKey('tone-$n')) {
+      n++;
+    }
+    return 'tone-$n';
+  }
+
+  /// Herhangi bir SENTEZ katmanını çıkarır — tarifle gelenler DAHİL.
+  ///
+  /// **Tasarım değişikliği (kullanıcı isteği):** mikser serbest bir araçtır,
+  /// tarif yalnızca BAŞLANGIÇ noktasıdır. Kullanıcı brown'u kaldırıp sonra
+  /// geri ekleyebilmelidir. Kaldırılan katman `addSource` ile geri eklenir.
+  ///
+  /// Dosya katmanları için [removeAsset] ayrıdır (kaynağı dosyadır).
+  Future<void> removeLayer(String id) async {
+    final layer = _state.layers.where((l) => l.id == id).firstOrNull;
+    if (layer == null) return;
+    await _player.removeVoice(id);
+    final gains = Map<String, double>.from(_state.gains)..remove(id);
+    _emit(_state.copyWith(
+      layers: <MixLayer>[
+        for (final l in _state.layers)
+          if (l.id != id) l,
+      ],
+      gains: gains,
+      userAddedSynthIds: <String>[
+        for (final s in _state.userAddedSynthIds)
+          if (s != id) s,
+      ],
+    ));
+  }
+
+  /// Kaldırılan bir sentez kaynağını yeniden ekler.
+  ///
+  /// Aynı türden zaten varsa duplicate döner (iki brown katmanı anlamsızdır);
+  /// tone hariç — farklı frekanslarda birden fazla tone geçerlidir.
+  Future<AddSourceOutcome> addSource(LayerSource type) async {
+    if (_state.layers.length + _state.assets.length >= maxTotalLayers) {
+      return AddSourceOutcome.full;
+    }
+    // Tone birden fazla olabilir; diğerleri tekil.
+    if (type != LayerSource.tone &&
+        type != LayerSource.chords &&
+        type != LayerSource.arpeggio &&
+        _state.layers.any((l) => l.type == type)) {
+      return AddSourceOutcome.duplicate;
+    }
+
+    final id = type == LayerSource.tone ? _uniqueToneId() : type.name;
+    // Çakışma kontrolü (tone-2 vs tone-3 gibi id'ler için).
+    if (_state.gains.containsKey(id)) return AddSourceOutcome.duplicate;
+
+    final layer = MixLayer(
+      id: id,
+      type: type,
+      gain: defaultSourceGain,
+    );
+
+    if (_player.voiceCount > 0) {
+      await _player.addSynthLayer(layer, autoPlay: _state.isPlaying);
+    }
+
+    _emit(_state.copyWith(
+      layers: <MixLayer>[..._state.layers, layer],
+      gains: <String, double>{..._state.gains, layer.id: layer.gain},
+      userAddedSynthIds: <String>[..._state.userAddedSynthIds, layer.id],
+      clearError: true,
+    ));
+    return AddSourceOutcome.added;
+  }
+
+  /// Kullanıcı-parametreli akor/arpej katmanı ekler (melodi editöründen).
+  Future<AddSourceOutcome> addMelodicLayer(MelodicPreset preset) async {
+    if (_state.layers.length + _state.assets.length >= maxTotalLayers) {
+      return AddSourceOutcome.full;
+    }
+    final type = preset.isChords ? LayerSource.chords : LayerSource.arpeggio;
+    final id = '${type.name}-${DateTime.now().millisecondsSinceEpoch % 10000}';
+
+    final layer = MixLayer(
+      id: id,
+      type: type,
+      gain: defaultToneGain,
+      rootSemi: preset.rootSemi,
+      waveform: preset.waveform,
+      tempoScale: preset.tempoScale,
+      patternIdx: preset.patternIdx,
+    );
+
+    if (_player.voiceCount > 0) {
+      await _player.addSynthLayer(layer, autoPlay: _state.isPlaying);
+    }
+
+    _emit(_state.copyWith(
+      layers: <MixLayer>[..._state.layers, layer],
+      gains: <String, double>{..._state.gains, layer.id: layer.gain},
+      userAddedSynthIds: <String>[..._state.userAddedSynthIds, layer.id],
+      clearError: true,
+    ));
+    return AddSourceOutcome.added;
+  }
+
+  /// Mikste OLMAYAN sentez kaynaklarını döndürür — kaynak seçicisi bunu listeler.
+  List<LayerSource> missingSources() {
+    const all = LayerSource.values;
+    final present = _state.layers.map((l) => l.type).toSet();
+    return [for (final t in all) if (!present.contains(t)) t];
+  }
+
   /// Slider'ın çağırdığı yer. Render YOK — yalnızca ses seviyesi.
   Future<void> setGain(String id, double gain) async {
     final next = Map<String, double>.from(_state.gains)..[id] = gain;
     _emit(_state.copyWith(gains: next));
     await _player.setLayerGain(id, gain);
+    // Her kazanç değişiminde KALICI kaydet: kullanıcı uygulama öldürse bile
+    // son mix'i kaybolmaz.
+    await _persistState();
   }
 
   /// Kullanıcının ŞU AN duyduğu mix.
@@ -333,7 +570,16 @@ class MixerController {
   MixSpec currentSpec() => MixSpec(
         [
           for (final l in _state.layers)
-            MixLayer(id: l.id, type: l.type, gain: _state.gains[l.id] ?? l.gain),
+            MixLayer(
+              id: l.id,
+              type: l.type,
+              gain: _state.gains[l.id] ?? l.gain,
+              // Frekans/vuru KAYBEDİLMEZ: tone katmanında null kalan frekans
+              // export yolunda render assert'ini kırar; vuru kaybolursa kullanıcı
+              // duyduğundan farklı bir mix paylaşmış olurdu.
+              frequencyHz: l.frequencyHz,
+              beatHz: l.beatHz,
+            ),
         ],
         assets: [
           for (final a in _state.assets) a.copyWith(gain: _state.gains[a.id] ?? a.gain),

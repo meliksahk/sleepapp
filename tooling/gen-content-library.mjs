@@ -171,6 +171,7 @@ export function buildLibraryJson() {
       archetypeAffinity: parsePgTextArray(row.archetype_affinity, context),
       // Seed `version` yazmıyor → sütun DEFAULT'u. Yazarsa ona saygı duyulur.
       version: typeof row.version === 'number' ? row.version : versionDefault,
+      category: row.category ?? 'nature',
       engineParams,
     };
 

@@ -1,5 +1,7 @@
 import '../../core/audio_engine/engine_params.dart';
 import '../../core/audio_engine/dsp/mix_render.dart';
+import '../../core/audio_engine/dsp/tone.dart'
+    show toneBeatMaxHz, toneBeatMinHz, toneMaxHz, toneMinHz;
 
 // İçerik modelleri (docs/04). Kimlik doğrulamalı /v1/content uçları.
 // Üretilen Dart client (B-3) gelince değişir.
@@ -12,6 +14,7 @@ class Soundscape {
     required this.archetypeAffinity,
     required this.version,
     this.mixSpec,
+    this.category = 'nature',
   });
 
   final String id;
@@ -19,6 +22,7 @@ class Soundscape {
   final Map<String, String> titleI18n;
   final List<String> archetypeAffinity;
   final int version;
+  final String category;
 
   /// Ses tarifi (`engine_params` → [MixSpec]). **null olabilir:** tarif boş
   /// (taslak), bozuk, ya da BU UYGULAMANIN TANIMADIĞI bir şema sürümünde olabilir
@@ -44,6 +48,7 @@ class Soundscape {
         archetypeAffinity:
             (json['archetypeAffinity'] as List<dynamic>).map((e) => e as String).toList(),
         version: json['version'] as int,
+        category: (json['category'] as String?) ?? 'nature',
         // Tarif AYRIŞTIRILAMAZSA kayıt yine de listelenir (başlık/affinity geçerli);
         // yalnızca çalınamaz. Tüm kaydı düşürmek, kütüphaneyi sessizce boşaltırdı.
         mixSpec: parseEngineParams(json['engineParams']),
@@ -59,11 +64,26 @@ String _humanizeSlug(String slug) => slug
 
 /// Preset'in tek katmanı — sunucu sözleşmesiyle birebir (docs/02 mixer_state).
 class MixerLayerState {
-  const MixerLayerState({required this.id, required this.type, required this.gain});
+  const MixerLayerState({
+    required this.id,
+    required this.type,
+    required this.gain,
+    this.frequencyHz,
+    this.beatHz,
+  });
 
   final String id;
   final LayerSource type;
   final double gain;
+
+  /// `tone` katmanının frekansı. Kurallar sunucu `parseLayer` ile aynıdır:
+  /// ton'da ZORUNLU, ton dışında YASAK, aralık [toneMinHz, toneMaxHz].
+  /// İhlal → tüm preset null (kısmi kabul yok).
+  final double? frequencyHz;
+
+  /// Binaural vuru — MOBİL-ÖZEL alan: sunucu bugün taşımaz; savunmacı parse.
+  /// Yalnızca tone'da, (0, toneBeatMaxHz]. İhlal → preset null.
+  final double? beatHz;
 }
 
 /// Preset mixer durumu → ses motorunun [MixSpec]'ine çevrilebilir.
@@ -97,15 +117,50 @@ class MixerState {
       final gain = raw['gain'];
       if (id is! String || id.isEmpty || type == null) return null;
       if (gain is! num || !gain.isFinite || gain < 0 || gain > 1) return null;
+
+      // frequencyHz: tone'da zorunlu, ton dışında yasak (engine_params ile aynı).
+      final rawFreq = raw['frequencyHz'];
+      double? frequencyHz;
+      if (rawFreq != null) {
+        if (rawFreq is! num || !rawFreq.isFinite) return null;
+        frequencyHz = rawFreq.toDouble();
+        if (frequencyHz < toneMinHz || frequencyHz > toneMaxHz) return null;
+        if (type != LayerSource.tone) return null;
+      }
+      if (type == LayerSource.tone && frequencyHz == null) return null;
+
+      // beatHz: sunucu sözleşmesiyle aynı (tone'da [0.5, 20], ton dışında yasak).
+      final rawBeat = raw['beatHz'];
+      double? beatHz;
+      if (rawBeat != null) {
+        if (rawBeat is! num || !rawBeat.isFinite) return null;
+        beatHz = rawBeat.toDouble();
+        if (type != LayerSource.tone) return null;
+        if (beatHz < toneBeatMinHz || beatHz > toneBeatMaxHz) return null;
+      }
+
       if (!seen.add(id)) return null; // tekrar eden id → belirsiz mix
-      layers.add(MixerLayerState(id: id, type: type, gain: gain.toDouble()));
+      layers.add(MixerLayerState(
+        id: id,
+        type: type,
+        gain: gain.toDouble(),
+        frequencyHz: frequencyHz,
+        beatHz: beatHz,
+      ));
     }
     return MixerState(layers);
   }
 
   /// Motorun render girdisi.
   MixSpec toMixSpec() => MixSpec([
-    for (final l in layers) MixLayer(id: l.id, type: l.type, gain: l.gain),
+    for (final l in layers)
+      MixLayer(
+        id: l.id,
+        type: l.type,
+        gain: l.gain,
+        frequencyHz: l.frequencyHz,
+        beatHz: l.beatHz,
+      ),
   ]);
 }
 

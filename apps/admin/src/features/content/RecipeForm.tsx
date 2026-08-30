@@ -4,7 +4,17 @@ import { useActionState, useState } from 'react';
 import { Button, Input } from '@nocta/ui';
 import { useT } from '@/shared/i18n/I18nProvider';
 import { setRecipeAction, type RecipeState } from './actions';
-import { MAX_LAYERS, LAYER_SOURCES, type LayerSource, type RecipeLayer } from './recipe-form';
+import {
+  MAX_LAYERS,
+  LAYER_SOURCES,
+  TONE_BEAT_MAX_HZ,
+  TONE_BEAT_MIN_HZ,
+  TONE_MAX_HZ,
+  TONE_MIN_HZ,
+  normalizeLayers,
+  type LayerSource,
+  type RecipeLayer,
+} from './recipe-form';
 
 const INITIAL: RecipeState = {};
 
@@ -42,8 +52,9 @@ export function RecipeForm({
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="slug" value={slug} />
       {/* Katmanlar JSON olarak: dinamik satırları düz FormData alanlarıyla ifade etmek
-          ad çakışması ve sıra hataları üretirdi. */}
-      <input type="hidden" name="layers" value={JSON.stringify(layers)} />
+          ad çakışması ve sıra hataları üretirdi. normalizeLayers, tip değişikliğinde
+          yetim kalan frekans alanını temizler (sunucu kapısı onu reddederdi). */}
+      <input type="hidden" name="layers" value={JSON.stringify(normalizeLayers(layers))} />
 
       {layers.length === 0 && (
         <p className="text-body text-ink-secondary">{t('content.noLayers')}</p>
@@ -80,6 +91,37 @@ export function RecipeForm({
             value={String(layer.gain)}
             onChange={(e) => update(i, { gain: Number(e.target.value) })}
           />
+          {/* Frekans ve vuru YALNIZCA tone katmanında görünür ve yazılır:
+              sunucu sözleşmesi ton dışı katmandaki alanları reddeder
+              (mixer-state.ts). Vuru boş bırakılırsa normalizeLayers alanı
+              SİLER — "0 göndermek" yerine yokluk mono'nun tel ifadesidir. */}
+          {layer.type === 'tone' && (
+            <>
+              <Input
+                label={t('content.layerFrequencyHz')}
+                type="number"
+                min={TONE_MIN_HZ}
+                max={TONE_MAX_HZ}
+                step="1"
+                value={String(layer.frequencyHz ?? '')}
+                onChange={(e) => update(i, { frequencyHz: Number(e.target.value) })}
+              />
+              <Input
+                label={t('content.layerBeatHz')}
+                type="number"
+                min={TONE_BEAT_MIN_HZ}
+                max={TONE_BEAT_MAX_HZ}
+                step="0.5"
+                placeholder="—"
+                value={layer.beatHz != null ? String(layer.beatHz) : ''}
+                onChange={(e) =>
+                  update(i, {
+                    beatHz: e.target.value === '' ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+            </>
+          )}
           <Button type="button" variant="ghost" onClick={() => remove(i)}>
             {t('content.layerRemove')}
           </Button>

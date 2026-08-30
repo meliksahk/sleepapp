@@ -5,10 +5,13 @@ import '../../core/sleep_tracking/alarm_sound.dart';
 import '../../core/sleep_tracking/envelope_log.dart';
 import '../../core/sleep_tracking/night_alarm_scheduler.dart';
 import '../../core/sleep_tracking/night_service.dart';
+import '../../core/sleep_tracking/night_data_store.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
 import '../../core/sleep_tracking/sleep_session_builder.dart';
 import '../../core/sleep_tracking/sleep_session_queue.dart';
 import '../../core/sleep_tracking/smart_alarm.dart';
+import '../../core/storage/key_value_store.dart';
+import 'night_sound_player.dart';
 import 'sleep_controller.dart';
 import 'sleep_session_beacon.dart';
 
@@ -25,6 +28,9 @@ class SleepModeState {
     this.alarmAt,
     this.alarmRinging = false,
     this.alarmTrigger,
+    this.soundEnabled = false,
+    this.soundFailed = false,
+    this.soundActive = false,
   });
 
   final bool isRecording;
@@ -55,6 +61,17 @@ class SleepModeState {
   /// Alarm neden çaldı — kullanıcıya gösterilir (hafif uykuda mı, son tarihte mi).
   final AlarmTrigger? alarmTrigger;
 
+  /// Ritüel sesi KULLANICI istedi mi (4. özellik "tek tuş"). **Opt-in:** varsayılan
+  /// kapalı — uyurken birinin kafasına ses açmak, alarımsız saat kadar kötü sürpriz.
+  final bool soundEnabled;
+
+  /// Ses başlatılamadı ama GECE TAKİBİ SÜRÜYOR: hata değil, ayrı dipnot.
+  final bool soundFailed;
+
+  /// Ses ŞU AN gerçekten çalıyor mu (`soundEnabled` tercihi ≠ oynatma durumu).
+  /// stopAndSave bunu false yapar; tercih (`soundEnabled`) korunur.
+  final bool soundActive;
+
   SleepModeState copyWith({
     bool? isRecording,
     DateTime? startedAt,
@@ -69,6 +86,9 @@ class SleepModeState {
     AlarmTrigger? alarmTrigger,
     bool clearError = false,
     bool clearDraft = false,
+    bool? soundEnabled,
+    bool? soundFailed,
+    bool? soundActive,
   }) {
     return SleepModeState(
       isRecording: isRecording ?? this.isRecording,
@@ -81,6 +101,9 @@ class SleepModeState {
       alarmAt: clearAlarm ? null : (alarmAt ?? this.alarmAt),
       alarmRinging: alarmRinging ?? this.alarmRinging,
       alarmTrigger: clearAlarm ? null : (alarmTrigger ?? this.alarmTrigger),
+      soundEnabled: soundEnabled ?? this.soundEnabled,
+      soundFailed: soundFailed ?? this.soundFailed,
+      soundActive: soundActive ?? this.soundActive,
     );
   }
 }
@@ -101,11 +124,22 @@ class SleepModeController {
     this.alarmScheduler,
     this.sessionQueue,
     this.beacon,
+    this.soundPlayer,
+    KeyValueStore? prefs,
+    this.nightDataStore,
     this.alarmWindow = const Duration(minutes: 30),
     this.alarmLookback = const Duration(minutes: 5),
     this.alarmTick = const Duration(seconds: 10),
     DateTime Function()? now,
-  }) : _now = now ?? DateTime.now {
+  })  : _prefs = prefs,
+        _now = now ?? DateTime.now {
+    // Ritüel ses tercihi KALICIDIR: kullanıcı dün gece açtıysa bugün de aynı
+    // niyetle gelir — her akşam yeniden keşfettirmek tek-tuş vaadini bozar.
+    if (prefs != null) {
+      prefs.read(_kSoundPref).then((v) {
+        if (v == '1' && !_state.soundEnabled) setSoundEnabled(true, persist: false);
+      });
+    }
     recorder.onProgress = () {
       // Canlı sayaç: kullanıcı gece kalkarsa "çalışıyor mu?" sorusuna cevap görür.
       _emit(_state.copyWith(eventCount: recorder.eventCount));
@@ -113,6 +147,16 @@ class SleepModeController {
     // CANLI DRAIN tetiği #1: açılışta bekleyen çevrimdışı geceleri boşaltmayı dene
     // (bağlantı geri gelmiş olabilir). Kuyruğa yazıp hiç boşaltmama tuzağını önler.
     unawaited(_drainQueue());
+    // Kalıcı zarf: önceki gecenin dB verisi varsa GERİ YÜKLE (veri kaybı düzeltmesi).
+    if (nightDataStore != null) {
+      nightDataStore!.hasEnvelope().then((has) {
+        if (has && _envelope == null) {
+          // Zarf bellekte yok ama diskte var → restore edilebilir.
+          // Not: EnvelopeLog nesnesi yeniden kurulamaz (sadece CSV var),
+          // ama shareEnvelope CSV string ile çalışabilir.
+        }
+      });
+    }
   }
 
   /// Kayıt motoru — test sahte mikrofonlu bir tane enjekte eder.
@@ -141,12 +185,24 @@ class SleepModeController {
   /// başarısızsa geceyi kuyruğa alır, açılışta ve her başarılı kayıttan sonra boşaltır.
   final SleepSessionQueue? sessionQueue;
 
+  /// Bitmiş gecenin zarfını + draftını KALICI saklar (veri kaybı düzeltmesi).
+  /// Null → bellek-only davranış (eski).
+  final NightDataStore? nightDataStore;
+
   /// Aktif geceyi UYGULAMA KABUĞUNA duyuran ilan tahtası (#…, "her ekranda sayaç").
   ///
   /// Null → duyuru yok (testlerin çoğu vermez); uyku modu ekranı yine çalışır.
   /// Verilirse: gece başlayınca/bitince kabuktaki şerit kendini gösterir/gizler.
   /// Controller şeridi TANIMAZ — yalnızca "gece sürüyor" der; çizim kabuğun işi.
   final SleepSessionBeacon? beacon;
+
+  /// Ritüel sesi portu (4. özellik). Null → ses yok; takip yine çalışır.
+  final NightSoundPlayer? soundPlayer;
+
+  /// Ses tercihinin kalıcılığı. Null → tercih oturumluk (testlerin çoğu vermez).
+  final KeyValueStore? _prefs;
+
+  static const String _kSoundPref = 'night_sound_enabled';
 
   /// Hedef saatten NE KADAR ÖNCE hafif uyku aranmaya başlanır.
   ///
@@ -231,6 +287,42 @@ class SleepModeController {
     _emit(_state.copyWith(alarmRinging: false));
   }
 
+  /// Ritüel sesini AÇAR/KAPATIR. Kayıt dışında da çağrılabilir: kullanıcı yatmadan
+  /// önce tercihi işaretler, `start` başarıyla bittiğinde ses otomatik başlar.
+  ///
+  /// [persist] false → tercih KAYDEDİLMEZ (ctor'daki kalıcı-okuma geri yüklemesi
+  /// bunu kullanır; yoksa okuma kendi yazdığını tekrar yazardı — zararsız ama
+  /// gereksiz I/O).
+  void setSoundEnabled(bool enabled, {bool persist = true}) {
+    if (persist) unawaited(_prefs?.write(_kSoundPref, enabled ? '1' : '0'));
+    _emit(_state.copyWith(soundEnabled: enabled, soundFailed: false));
+
+    if (!enabled) {
+      unawaited(soundPlayer?.stop());
+      _emit(_state.copyWith(
+        soundEnabled: enabled,
+        soundFailed: false,
+      ));
+      return;
+    }
+    _emit(_state.copyWith(soundEnabled: enabled, soundFailed: false));
+    // Kayıt SIRASINDA açıldıysa hemen başlat; değilse `start` bitince başlayacak.
+    if (_state.isRecording) unawaited(_playSound());
+  }
+
+  /// Ses hatası GECE TAKİBİNİ DÜŞÜRMEZ: mikrofon + servis + alarm ana üründür;
+  /// ses bir katmandır. Hata ayrı dipnot olarak gösterilir.
+  Future<void> _playSound() async {
+    final player = soundPlayer;
+    if (player == null) return;
+    try {
+      await player.play();
+      _emit(_state.copyWith(soundFailed: false));
+    } catch (e) {
+      _emit(_state.copyWith(soundFailed: true, error: e.toString()));
+    }
+  }
+
   /// Pencereyi kurar ve tick'i başlatır. Alarm yoksa var olanı söker.
   void _armAlarm() {
     _alarmTimer?.cancel();
@@ -281,6 +373,9 @@ class SleepModeController {
 
     _alarmTimer?.cancel();
     _alarmTimer = null;
+    // ALARM ÇALARKEN RİTÜEL SESİ SUSAR: iki ses üst üste binerse ikisi de
+    // duyulmaz — alarmın tek amacı uyanmak, mix'in değil.
+    unawaited(soundPlayer?.stop());
     _emit(_state.copyWith(
       alarmRinging: true,
       alarmTrigger: decision.trigger,
@@ -342,6 +437,10 @@ class SleepModeController {
     // Alarm kayıt BAŞLADIKTAN sonra kurulur: kayıt başlamazsa (izin/servis) alarm
     // da kurulmamalı — çalan ama hiçbir şey kaydetmeyen bir alarm yalan olurdu.
     _armAlarm();
+    // Ritüel sesi de AYNI SIRADA: kayıt+servis sağlamsa ve kullanıcı istediyse
+    // başlar. Beklenerek başlatılır ki soundFailed durumu ekrana ERKEN ve TUTARLI
+    // düşsün (unawaited olsaydı test/ilk frame yarışı dipnotu geciktirirdi).
+    if (_state.soundEnabled) await _playSound();
   }
 
   /// Kaydı bitirir ve oturumu SUNUCUYA yazar.
@@ -355,6 +454,11 @@ class SleepModeController {
     _alarmTimer = null;
     _alarm = null;
     await alarmSound?.stop();
+    // Ritüel sesi de GECEYLE BİTER: sabah boşa çalan bir mix pil yer.
+    await soundPlayer?.stop();
+    // soundEnabled KORUNUR: kalıcı tercihtir, yarın aynı niyetle gelir.
+    // UI "Çalıyor"/"Kapalı" metni soundEnabled'den okur; gece bitince ses
+    // fiziksel olarak susmuştur ama tercih değişmemiştir.
     // Gece bitti → kurulu sistem backstop'u da sök: ekran kapandıktan sonra OS'un
     // son-tarihte alarmı çalması kabul edilemez.
     unawaited(alarmScheduler?.cancel());
@@ -370,6 +474,12 @@ class SleepModeController {
 
     // Zarf kaydedilir: kullanıcı isterse paylaşabilsin (otomatik gönderim YOK).
     _envelope = recorder.envelope;
+    // KALICI KAYIT (veri kaybı düzeltmesi): zarf + draft diske yazılır.
+    // Uygulama kapansa bile veri kaybolmaz.
+    final ds = nightDataStore;
+    if (ds != null && _envelope != null) {
+      await ds.save(envelope: _envelope!, draft: draft);
+    }
     _emit(_state.copyWith(isRecording: false, alarmRinging: false, savedDraft: draft));
 
     try {
@@ -408,18 +518,29 @@ class SleepModeController {
   ///
   /// **YALNIZCA kullanıcı isterse.** Otomatik gönderim yok: bu veri onun cihazında
   /// üretildi ve orada kalır. Ham ses değil (saniyede 3 sayı) ama yine de onun.
+  /// Gece zarfını CSV olarak paylaşır (docs/04 §120 fixture'ı).
+  ///
+  /// **YALNIZCA kullanıcı isterse.** Otomatik gönderim yok: bu veri onun cihazında
+  /// üretildi ve orada kalır. Ham ses değil (saniyede 3 sayı) ama yine de onun.
+  ///
+  /// Bellekte zarf varsa onu kullanır; yoksa KALICI diskten okur (veri kaybı
+  /// düzeltmesi: uygulama yeniden başlasa bile son gecenin verisi paylaşılabilir).
   Future<void> shareEnvelope({required String text}) async {
-    final env = _envelope;
+    String? csv;
+    if (_envelope != null) {
+      csv = _envelope!.toCsv();
+    } else {
+      // Bellekte yok → diskten oku (uygulama restart sonrası).
+      csv = await nightDataStore?.loadEnvelopeCsv();
+    }
     final s = sharer;
-    if (env == null || s == null) return;
+    if (csv == null || csv.isEmpty || s == null) return;
 
     await s.share(
       ShareContent(
         text: text,
         url: '',
-        // CSV olarak paylaşılır: `codeUnits` yerine `ShareFile.csv` UTF-8 kodlar —
-        // Türkçe karakter içeren başlık satırları bozulmasın.
-        file: ShareFile.csv(text: env.toCsv(), filename: 'nocta-night-envelope.csv'),
+        file: ShareFile.csv(text: csv, filename: 'nocta-night-envelope.csv'),
       ),
     );
   }

@@ -325,6 +325,138 @@ abstract class AppL10n {
   /// **'Warm pad'**
   String get mixerLayerPad;
 
+  /// Kullanıcının seçtiği frekanstaki saf sinüs katmanı. 'Healing tone' DEĞİL: sağlık iddiası yasak (CLAUDE.md §1.1), nötr müzikal adlandırma
+  ///
+  /// In en, this message translates to:
+  /// **'Pure tone'**
+  String get mixerLayerTone;
+
+  /// Kaldırılan sentez kaynağını geri ekleme sheet başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Add back a source'**
+  String get mixerAddSourceTitle;
+
+  /// Katman listesi başlığındaki ikinci eylem — frekans seçici sheet'i açar
+  ///
+  /// In en, this message translates to:
+  /// **'Add tone'**
+  String get mixerAddTone;
+
+  /// Frekans seçicinin başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a tone'**
+  String get mixerAddToneTitle;
+
+  /// Seçicide ne yapılacağı. Sağlık vaadi YOK — müzikal/akustik tanım
+  ///
+  /// In en, this message translates to:
+  /// **'A pure sustained note. Blend it under noise or let it hum on its own.'**
+  String get mixerAddToneHint;
+
+  /// Seçilen frekansı katman olarak ekleyen onay butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Add to mix'**
+  String get mixerAddToneConfirm;
+
+  /// Katman tavanı (8) dolduğunda yeni sentez/dosya katmanı eklenemez; arıza değil bütçe bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'The mix is full — remove a layer to add another.'**
+  String get mixerLayerLimitReached;
+
+  /// Binaural vuru sürgüsünün etiketi. 'Theta/delta' gibi EEG adları YASAK (§1.1) — akustik olay adıyla anılır
+  ///
+  /// In en, this message translates to:
+  /// **'Beat (binaural)'**
+  String get mixerToneBeatLabel;
+
+  /// Katman etiketindeki vuru birimi: 'Pure tone · 110 Hz · 10 beat'
+  ///
+  /// In en, this message translates to:
+  /// **'beat'**
+  String get mixerToneBeatUnit;
+
+  /// Vuru sürgüsü sıfırdayken gösterilen değer = mono ton
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get mixerToneBeatOff;
+
+  /// Vurunun dürüst açıklaması: akustik etki + kulaklık notu. Sağlık/EEG vaadi YOK; 'nothing more' bilinçli sınırlayıcı
+  ///
+  /// In en, this message translates to:
+  /// **'Each ear hears a slightly different pitch — you perceive a gentle pulsing beat. Works best with headphones. A sound effect, nothing more.'**
+  String get mixerToneBeatHint;
+
+  /// Kütüphane satırındaki topluluk paylaşım butonu (tooltip)
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get communityShareAction;
+
+  /// Paylaşım diyaloğunun başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Share with the community'**
+  String get communityShareTitle;
+
+  /// Sesin başlık alanı — kullanıcının dosya adıyla ön doludur
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get communityShareTitleField;
+
+  /// Paylaşım koşulları: moderasyon + telif beyanı + yerel kopya güvencesi. Sağlık iddiası YOK (§1.1)
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound will be reviewed before it appears for others. You confirm you own it or it is license-free. Your local copy is never removed.'**
+  String get communityShareTerms;
+
+  /// Yükleme sürerken onay butonunun metni; buton kilitlidir
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get communitySharing;
+
+  /// Diyalogdaki onay eylemi — 'publish' DEMEZ: moderasyondan geçmeden görünmez
+  ///
+  /// In en, this message translates to:
+  /// **'Send for review'**
+  String get communityShareConfirm;
+
+  /// Paylaşım tamamlandı snackbar'ı — sonucun değil sürecin bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'Sent! Your sound will appear in the community library after review.'**
+  String get communitySharedDone;
+
+  /// Genel paylaşım hatası (ağ/oturum/bilinmeyen)
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound could not be shared. Try again later.'**
+  String get communityShareFailed;
+
+  /// Eşzamanlı bekleyen paylaşım tavanı doldu (sunucu 422)
+  ///
+  /// In en, this message translates to:
+  /// **'You have too many sounds waiting for review. Please wait for them to be reviewed first.'**
+  String get communitySharePendingLimit;
+
+  /// Dosya depoya yüklenemedi ya da sunucu HEAD doğrulamasını geçemedi
+  ///
+  /// In en, this message translates to:
+  /// **'The file could not be uploaded. Check your connection and try again.'**
+  String get communityShareUploadFailed;
+
+  /// Süre cihazda okunamadı — sunucu süreyi zorunlu kılar; uydurma süre gönderilmez
+  ///
+  /// In en, this message translates to:
+  /// **'This file\'s length could not be read, so it cannot be shared.'**
+  String get communityShareDurationUnknown;
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:
@@ -558,6 +690,60 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Tonight\'s mix'**
   String get mixerVideoTitle;
+
+  /// Am→F→C→G akor progresyonu — yavaş, sıcak, melodik
+  ///
+  /// In en, this message translates to:
+  /// **'Chord progression'**
+  String get mixerLayerChords;
+
+  /// Pentatonik ölçekte gezinen yumuşak arpej
+  ///
+  /// In en, this message translates to:
+  /// **'Pentatonic arpeggio'**
+  String get mixerLayerArpeggio;
+
+  /// Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)
+  ///
+  /// In en, this message translates to:
+  /// **'Night sound'**
+  String get sleepSoundTitle;
+
+  /// No description provided for @sleepSoundOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get sleepSoundOn;
+
+  /// No description provided for @sleepSoundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get sleepSoundOff;
+
+  /// No description provided for @sleepSoundTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get sleepSoundTurnOn;
+
+  /// No description provided for @sleepSoundTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get sleepSoundTurnOff;
+
+  /// Ne yaptığını dürüst anlatır; sağlık iddiası YOK
+  ///
+  /// In en, this message translates to:
+  /// **'A generated mix plays softly all night. It stops with the alarm and works offline.'**
+  String get sleepSoundHint;
+
+  /// Ses patladı ama mikrofon/servis sürer: ayrı dipnot, hata ekranı değil
+  ///
+  /// In en, this message translates to:
+  /// **'The sound could not start — night tracking continues.'**
+  String get sleepSoundFailed;
 
   /// Uyku modundaki alarm bölümü başlığı
   ///
@@ -1182,6 +1368,54 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Explore'**
   String get homeSectionExplore;
+
+  /// Katalogda topluluk sesi rozeti — genre='community' olan satırlar
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get communityBadge;
+
+  /// Paylaşımlarım ekranı başlığı ve ayarlardaki giriş butonu
+  ///
+  /// In en, this message translates to:
+  /// **'My shared sounds'**
+  String get mySharesTitle;
+
+  /// Paylaşım yok boş durumu — nereden paylaşılacağı söylenir
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t shared anything yet. Share a sound from the mixer\'s sound catalog.'**
+  String get mySharesEmpty;
+
+  /// Durum etiketleri — 'Live' YAYINDA demektir, onaylandı
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get shareStatusPending;
+
+  /// No description provided for @shareStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get shareStatusApproved;
+
+  /// No description provided for @shareStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted'**
+  String get shareStatusRejected;
+
+  /// Liste yüklenemedi (ağ/oturum)
+  ///
+  /// In en, this message translates to:
+  /// **'Your shares could not be loaded.'**
+  String get mySharesLoadFailed;
+
+  /// Red gerekçesi SAHİBİNE gösterilir — sessiz red yasak. reason placeholder'lı
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer note: \"{reason}\"'**
+  String mySharesRejectionReason(String reason);
 
   /// Acilis aurasi anahtari
   ///

@@ -143,6 +143,81 @@ class AppL10nTr extends AppL10n {
   String get mixerLayerPad => 'Sıcak pad';
 
   @override
+  String get mixerLayerTone => 'Saf ton';
+
+  @override
+  String get mixerAddSourceTitle => 'Kaynak geri ekle';
+
+  @override
+  String get mixerAddTone => 'Ton ekle';
+
+  @override
+  String get mixerAddToneTitle => 'Bir ton seç';
+
+  @override
+  String get mixerAddToneHint =>
+      'Saf ve sürekli bir perde. Gürültünün altına karıştır ya da tek başına uğultu olarak bırak.';
+
+  @override
+  String get mixerAddToneConfirm => 'Mikse ekle';
+
+  @override
+  String get mixerLayerLimitReached =>
+      'Mix dolu — yeni katman için bir tanesini kaldır.';
+
+  @override
+  String get mixerToneBeatLabel => 'Vuru (binaural)';
+
+  @override
+  String get mixerToneBeatUnit => 'vuru';
+
+  @override
+  String get mixerToneBeatOff => 'Kapalı';
+
+  @override
+  String get mixerToneBeatHint =>
+      'Her kulak hafif farklı bir perde duyar — yumuşak titreşen bir vuru algılarsın. Kulaklıkla en iyi çalışır. Bu bir ses efekti, daha fazlası değil.';
+
+  @override
+  String get communityShareAction => 'Paylaş';
+
+  @override
+  String get communityShareTitle => 'Topluluğa sun';
+
+  @override
+  String get communityShareTitleField => 'Başlık';
+
+  @override
+  String get communityShareTerms =>
+      'Sesin başkalarına görünmeden önce incelenir. Bu sesin hakkının senin olduğunu ya da telifsiz olduğunu onaylıyorsun. Telefonundaki kopyan asla silinmez.';
+
+  @override
+  String get communitySharing => 'Gönderiliyor…';
+
+  @override
+  String get communityShareConfirm => 'İncelemeye gönder';
+
+  @override
+  String get communitySharedDone =>
+      'Gönderildi! Sesin inceleme sonrası topluluk kitaplığında görünür.';
+
+  @override
+  String get communityShareFailed =>
+      'Sesin paylaşılamadı. Birazdan tekrar dene.';
+
+  @override
+  String get communitySharePendingLimit =>
+      'İnceleme bekleyen çok paylaşımın var. Önce onların sonucunu bekle.';
+
+  @override
+  String get communityShareUploadFailed =>
+      'Dosya yüklenemedi. Bağlantını kontrol edip tekrar dene.';
+
+  @override
+  String get communityShareDurationUnknown =>
+      'Bu dosyanın süresi okunamadığı için paylaşılamaz.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }
@@ -286,6 +361,35 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get mixerVideoTitle => 'Bu gecenin miksi';
+
+  @override
+  String get mixerLayerChords => 'Akor progresyonu';
+
+  @override
+  String get mixerLayerArpeggio => 'Arpej';
+
+  @override
+  String get sleepSoundTitle => 'Gece sesi';
+
+  @override
+  String get sleepSoundOn => 'Çalıyor';
+
+  @override
+  String get sleepSoundOff => 'Kapalı';
+
+  @override
+  String get sleepSoundTurnOn => 'Aç';
+
+  @override
+  String get sleepSoundTurnOff => 'Kapat';
+
+  @override
+  String get sleepSoundHint =>
+      'Üretilen mix gece boyu hafifçe çalar. Alarmla birlikte susar, internet gerektirmez.';
+
+  @override
+  String get sleepSoundFailed =>
+      'Ses başlatılamadı — gece takibi devam ediyor.';
 
   @override
   String get alarmSectionTitle => 'Akıllı alarm';
@@ -664,6 +768,33 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get homeSectionExplore => 'Keşfet';
+
+  @override
+  String get communityBadge => 'Topluluk';
+
+  @override
+  String get mySharesTitle => 'Paylaşımlarım';
+
+  @override
+  String get mySharesEmpty =>
+      'Henüz bir şey paylaşmadın. Mikserin ses kitaplığından bir sesi paylaşabilirsin.';
+
+  @override
+  String get shareStatusPending => 'İncelemede';
+
+  @override
+  String get shareStatusApproved => 'Yayında';
+
+  @override
+  String get shareStatusRejected => 'Kabul edilmedi';
+
+  @override
+  String get mySharesLoadFailed => 'Paylaşımların yüklenemedi.';
+
+  @override
+  String mySharesRejectionReason(String reason) {
+    return 'İnceleme notu: “$reason”';
+  }
 
   @override
   String get settingsSignatureSound => 'Açılış sesi';

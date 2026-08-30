@@ -139,10 +139,12 @@ model soundscapes {
   created_by         String?        @db.Uuid
   version            Int            @default(1)
   created_at         DateTime       @default(now()) @db.Timestamptz(6)
+  category           String   @default("nature")
   preview_asset_key  String?
   presets            presets[]
 
   @@index([status], map: "idx_soundscapes_status")
+  @@index([category], map: "idx_soundscapes_category")
 }
 
 model waitlist {
@@ -258,6 +260,25 @@ enum content_status {
   draft
   scheduled
   published
+}
+
+/// Topluluk sesleri — kullanıcı yüklemesi + moderasyon durum makinesi.
+/// Migration: 20260822000001_add_user_sounds.sql (yorumlar orada).
+model user_sounds {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String    @db.Uuid
+  title            String
+  storage_key      String    @unique
+  byte_size        BigInt?
+  duration_seconds Int       @default(0)
+  status           String    @default("pending")
+  rejection_reason String?
+  moderated_at     DateTime? @db.Timestamptz(6)
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([user_id, created_at(sort: Desc)], map: "idx_user_sounds_user")
+  @@index([status, created_at(sort: Desc)], map: "idx_user_sounds_status")
 }
 
 /// Hesap silme SAYACI — kullanıcı kimliği BİLEREK yok (bkz. migration yorumu).

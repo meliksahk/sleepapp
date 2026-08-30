@@ -34,8 +34,17 @@ void main() {
     LayerSource.pad: padPeakBound,
   };
 
+  /// Genel kaynak taramaları TÜM `LayerSource.values`'ı gezer; tone katmanı
+  /// frekans ister (sözleşme) → tek istisna burada, bir yerde.
+  double? freqFor(LayerSource t) =>
+      t == LayerSource.tone ? 220 : null;
+
   Float32List gen(LayerSource t, {int seed = 1234, int samples = n, int? loop}) =>
-      renderSource(t, samples, seed: seed, sampleRate: sr, loopSamples: loop ?? n);
+      renderSource(t, samples,
+          seed: seed,
+          sampleRate: sr,
+          loopSamples: loop ?? n,
+          frequencyHz: freqFor(t));
 
   double peak(Float32List b) {
     var m = 0.0;
@@ -190,7 +199,12 @@ void main() {
       final out = renderMix(
         MixSpec([
           for (final t in LayerSource.values)
-            MixLayer(id: t.name, type: t, gain: 1.0 / LayerSource.values.length),
+            MixLayer(
+              id: t.name,
+              type: t,
+              gain: 1.0 / LayerSource.values.length,
+              frequencyHz: freqFor(t),
+            ),
         ]),
         seconds: 5,
         sampleRate: sr,
@@ -364,7 +378,7 @@ void main() {
       expect(padAc, greaterThan(0.6), reason: 'pad tonal değil: ac=$padAc');
 
       for (final t in LayerSource.values) {
-        if (t == LayerSource.pad) continue;
+        if (t == LayerSource.pad || t == LayerSource.chords || t == LayerSource.arpeggio) continue;
         expect(autocorr(gen(t), lag), lessThan(0.55), reason: '$t');
       }
     });
@@ -410,7 +424,14 @@ void main() {
       // olmamalı — çünkü kullanıcı bunu tık olarak duyar.
       for (final t in LayerSource.values) {
         final b = renderSeamlessLoop(
-          MixSpec([MixLayer(id: 'l', type: t, gain: 1.0)]),
+          MixSpec([
+            MixLayer(
+              id: 'l',
+              type: t,
+              gain: 1.0,
+              frequencyHz: freqFor(t),
+            ),
+          ]),
           loopSeconds: 10,
           seed: 1234,
         );
@@ -469,7 +490,14 @@ void main() {
       for (final t in LayerSource.values) {
         for (final seed in [7, 4242]) {
           final b = renderSeamlessLoop(
-            MixSpec([MixLayer(id: 'a', type: t, gain: 1.0)]),
+            MixSpec([
+              MixLayer(
+                id: 'a',
+                type: t,
+                gain: 1.0,
+                frequencyHz: freqFor(t),
+              ),
+            ]),
             loopSeconds: loopSec,
             sampleRate: sr,
             seed: seed,

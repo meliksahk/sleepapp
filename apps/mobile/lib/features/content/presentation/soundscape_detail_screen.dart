@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../core/design_system/responsive.dart';
 import '../../../l10n/app_localizations.dart';
 import '../content_models.dart';
 import '../content_providers.dart';
@@ -41,8 +42,9 @@ class SoundscapeDetailScreen extends ConsumerWidget {
   );
 
   Widget _detail(BuildContext context, SoundscapeDetail d) {
+    final r = Responsive.of(context);
     return Padding(
-      padding: const EdgeInsets.all(NoctaSpace.s6),
+      padding: r.horizontalPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -50,7 +52,7 @@ class SoundscapeDetailScreen extends ConsumerWidget {
           NDisplay(
             d.soundscape.title('en'),
             key: const Key('soundscape-detail-title'),
-            size: 44,
+            size: r.isWide ? 56 : 44,
             height: 1.02,
           ),
           const SizedBox(height: NoctaSpace.s3),
@@ -63,18 +65,11 @@ class SoundscapeDetailScreen extends ConsumerWidget {
             NMono(
               AppL10n.of(context).soundscapePreviewAvailable,
               key: const Key('soundscape-preview'),
-              // Vurgu METNI acilmis kizil: ham #C1442E koyu zeminde 3.4:1.
               color: NoctaColors.accentAuroraInk,
               track: NoctaTrack.tight,
             ),
           ],
           const Spacer(),
-          // Ekranın birincil eylemi: sesi DUYMAK. Mikseri bu tarifle açar —
-          // ayrı bir mini oynatıcı değil, çünkü kullanıcı orada sesi kendi
-          // mix'ine çevirip video olarak paylaşabilir (viral kanca #3).
-          //
-          // **Otomatik çalma YOK** (uyku uygulaması): ekran açılınca ses başlamaz,
-          // mikserde de kullanıcı ayrıca çal'a basar.
           NButton(
             key: const Key('soundscape-play'),
             label: AppL10n.of(context).soundscapePlay,

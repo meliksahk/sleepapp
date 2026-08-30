@@ -142,6 +142,81 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerPad => 'Warm pad';
 
   @override
+  String get mixerLayerTone => 'Pure tone';
+
+  @override
+  String get mixerAddSourceTitle => 'Add back a source';
+
+  @override
+  String get mixerAddTone => 'Add tone';
+
+  @override
+  String get mixerAddToneTitle => 'Choose a tone';
+
+  @override
+  String get mixerAddToneHint =>
+      'A pure sustained note. Blend it under noise or let it hum on its own.';
+
+  @override
+  String get mixerAddToneConfirm => 'Add to mix';
+
+  @override
+  String get mixerLayerLimitReached =>
+      'The mix is full — remove a layer to add another.';
+
+  @override
+  String get mixerToneBeatLabel => 'Beat (binaural)';
+
+  @override
+  String get mixerToneBeatUnit => 'beat';
+
+  @override
+  String get mixerToneBeatOff => 'Off';
+
+  @override
+  String get mixerToneBeatHint =>
+      'Each ear hears a slightly different pitch — you perceive a gentle pulsing beat. Works best with headphones. A sound effect, nothing more.';
+
+  @override
+  String get communityShareAction => 'Share';
+
+  @override
+  String get communityShareTitle => 'Share with the community';
+
+  @override
+  String get communityShareTitleField => 'Title';
+
+  @override
+  String get communityShareTerms =>
+      'Your sound will be reviewed before it appears for others. You confirm you own it or it is license-free. Your local copy is never removed.';
+
+  @override
+  String get communitySharing => 'Uploading…';
+
+  @override
+  String get communityShareConfirm => 'Send for review';
+
+  @override
+  String get communitySharedDone =>
+      'Sent! Your sound will appear in the community library after review.';
+
+  @override
+  String get communityShareFailed =>
+      'Your sound could not be shared. Try again later.';
+
+  @override
+  String get communitySharePendingLimit =>
+      'You have too many sounds waiting for review. Please wait for them to be reviewed first.';
+
+  @override
+  String get communityShareUploadFailed =>
+      'The file could not be uploaded. Check your connection and try again.';
+
+  @override
+  String get communityShareDurationUnknown =>
+      'This file\'s length could not be read, so it cannot be shared.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }
@@ -288,6 +363,35 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get mixerVideoTitle => 'Tonight\'s mix';
+
+  @override
+  String get mixerLayerChords => 'Chord progression';
+
+  @override
+  String get mixerLayerArpeggio => 'Pentatonic arpeggio';
+
+  @override
+  String get sleepSoundTitle => 'Night sound';
+
+  @override
+  String get sleepSoundOn => 'Playing';
+
+  @override
+  String get sleepSoundOff => 'Off';
+
+  @override
+  String get sleepSoundTurnOn => 'Turn on';
+
+  @override
+  String get sleepSoundTurnOff => 'Turn off';
+
+  @override
+  String get sleepSoundHint =>
+      'A generated mix plays softly all night. It stops with the alarm and works offline.';
+
+  @override
+  String get sleepSoundFailed =>
+      'The sound could not start — night tracking continues.';
 
   @override
   String get alarmSectionTitle => 'Smart alarm';
@@ -665,6 +769,33 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get homeSectionExplore => 'Explore';
+
+  @override
+  String get communityBadge => 'Community';
+
+  @override
+  String get mySharesTitle => 'My shared sounds';
+
+  @override
+  String get mySharesEmpty =>
+      'You haven\'t shared anything yet. Share a sound from the mixer\'s sound catalog.';
+
+  @override
+  String get shareStatusPending => 'In review';
+
+  @override
+  String get shareStatusApproved => 'Live';
+
+  @override
+  String get shareStatusRejected => 'Not accepted';
+
+  @override
+  String get mySharesLoadFailed => 'Your shares could not be loaded.';
+
+  @override
+  String mySharesRejectionReason(String reason) {
+    return 'Reviewer note: \"$reason\"';
+  }
 
   @override
   String get settingsSignatureSound => 'Opening sound';

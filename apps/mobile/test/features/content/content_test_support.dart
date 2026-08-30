@@ -38,7 +38,7 @@ ContentLibrarySource brokenLibrarySource() {
 /// (seed.sql değişirse tek bir dosya güncellenir, altı test değil.)
 class LibraryFixture {
   /// `db/seed.sql`'deki yayınlanmış soundscape sayısı.
-  static const int soundscapeCount = 7;
+  static const int soundscapeCount = 16;
 
   /// #215'te eklenen tam demo tarif — müzik (pad) + gürültü (white) + efekt (fire).
   /// Bu iş öncesinde YALNIZCA seed'de yaşıyordu, kurulan APK'da yoktu.

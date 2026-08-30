@@ -59,6 +59,7 @@ import 'package:just_audio/just_audio.dart';
 
 import 'dsp/mix_loop.dart';
 import 'dsp/mix_render.dart';
+import 'dsp/tone.dart' show toneBeatMaxHz, toneBinauralSource;
 import 'dsp/wav_encoder.dart';
 import 'master_limiter.dart';
 
@@ -268,11 +269,15 @@ class MixPlayer {
           loopSeconds: loopSeconds,
           sampleRate: sampleRate,
           seed: i * 104729, // asal: katmanlar arası benzerlik olmasın
+          frequencyHz: layer.frequencyHz,
+          beatHz: layer.beatHz,
         ),
       );
 
       final player = _newPlayer();
-      await player.setAudioSource(BytesAudioSource(encodeWav(pcm, sampleRate: sampleRate)));
+      await player.setAudioSource(BytesAudioSource(
+        encodeWav(pcm, sampleRate: sampleRate, channels: _channelsFor(layer)),
+      ));
       await player.setLoopMode(LoopMode.one);
       // Ses seviyesi burada DEĞİL aşağıda, tüm katmanlar kurulduktan sonra
       // verilir: master ölçek TOPLAMA bağlı ve toplam ancak son katman
@@ -358,6 +363,75 @@ class MixPlayer {
       return false;
     }
   }
+
+  /// TEK bir SENTEZ katmanını **çalarken** mikse ekler (`tone` için).
+  ///
+  /// `addAsset`'in sentez karşılığıdır ve onun gerekçelerini paylaşır:
+  /// `load()` yeniden çağrılmaz (tüm katmanlar yeniden render edilip ses
+  /// kesilirdi); yeni katman kendi player'ında yaşar. Fark: buffer'ı dosyadan
+  /// değil [renderLoopSync]'in ürettiği dikişsiz döngüden alır.
+  ///
+  /// **Seed:** tonun içinde rastgelelik yoktur; bugün bu yoldan geçen tek
+  /// kaynak tone olduğu için sabit seed yeterlidir. İleride rastgelelikli bir
+  /// kaynak eklenirse seed stratejisi o işte karara bağlanmalıdır.
+  ///
+  /// Dönüş her zaman true'dur: render deterministiktir, IO yoktur, düşecek
+  /// dosya yoktur. (İmza addAsset ile paralel kalsın diye Future.)
+  ///
+  /// [autoPlay] true ise mix çalıyorken yeni katman da hemen başlar.
+  Future<bool> addSynthLayer(MixLayer layer, {bool autoPlay = false}) async {
+    final player = _newPlayer();
+    try {
+      final pcm = await _renderLoop(
+        LoopRequest(
+          type: layer.type,
+          id: layer.id,
+          loopSeconds: loopSeconds,
+          sampleRate: sampleRate,
+          seed: 0,
+          frequencyHz: layer.frequencyHz,
+          beatHz: layer.beatHz,
+        ),
+      );
+      await player.setAudioSource(BytesAudioSource(
+        encodeWav(pcm, sampleRate: sampleRate, channels: _channelsFor(layer)),
+      ));
+      await player.setLoopMode(LoopMode.one);
+      final voice = _LayerVoice(layer.id, player, layer.gain.clamp(0.0, 1.0));
+      _voices.add(voice);
+      // Yeni katman MEVCUT ölçekle girer; toplam değişti → rampalı hedefe yürür.
+      // (Gerekçe addAsset'tekiyle aynı: ölçeksiz giriş seviye basamağı üretir.)
+      await player.setVolume(_appliedVolume(voice));
+      if (autoPlay) unawaited(player.play());
+      _scheduleLimiter();
+      return true;
+    } catch (e) {
+      // Render/codec patlaması YUTULMAZ (CLAUDE.md §4) ama mix'i de düşürmez:
+      // katman eklenmez, log'a yazılır. UI tarafı state'i zaten güncellemiyor;
+      // buradaki tek görev yarım player sızmasını önlemek.
+      try {
+        await player.dispose();
+      } catch (disposeError) {
+        // ignore: avoid_print
+        print('MixPlayer: sentez katmanı player kapatılamadı (${layer.id}): $disposeError');
+      }
+      // ignore: avoid_print
+      print('MixPlayer: sentez katmanı yüklenemedi (${layer.id}): $e');
+      return false;
+    }
+  }
+
+  /// Bir sentez katmanının WAV kanal sayısı: binaural tone → 2, diğer her şey → 1.
+  ///
+  /// `LoopRequest.channels` ile AYNI hesap iki yerde yaşayamazdı — tek kaynak
+  /// bu getter, LoopRequest kendisini buradan besler (bkz. load/addSynthLayer).
+  int _channelsFor(MixLayer layer) =>
+      (layer.type == LayerSource.tone &&
+              layer.beatHz != null &&
+              layer.beatHz! > 0 &&
+              layer.beatHz! <= toneBeatMaxHz)
+          ? 2
+          : 1;
 
   /// Katmanı mikserden ÇIKARIR ve player'ını kapatır.
   ///
@@ -534,6 +608,8 @@ class LoopRequest {
     required this.loopSeconds,
     required this.sampleRate,
     required this.seed,
+    this.frequencyHz,
+    this.beatHz,
   });
 
   final LayerSource type;
@@ -541,15 +617,58 @@ class LoopRequest {
   final int loopSeconds;
   final int sampleRate;
   final int seed;
+
+  /// `tone` katmanının temel frekansı. Diğer kaynaklarda null — ama tone'da
+  /// null geçmek render'da assert kırar (sözleşme, `renderSource`).
+  final double? frequencyHz;
+
+  /// `tone` için binaural vuru (Hz/s). null/0 → mono.
+  ///
+  /// **> 0 ise bu katman STEREO üretilir** (`[toneBinauralSource]`, interleaved)
+  /// ve WAV 2 kanalla yazılır — binaural vuru tek player'da, kanallar ASLA
+  /// OS mikserinde birbirine karışmadan. İki ayrı player'a bölmek (L birinde,
+  /// R ötekinde) reddedildi: bağımsız player'lar arasında sabit olmayan faz/
+  /// zaman farkı, vuru hızını belirsizleştirirdi.
+  final double? beatHz;
+
+  /// Bu isteğin üreteceği kanal sayısı: beat > 0 → 2, aksi hâlde 1.
+  int get channels => (beatHz != null && beatHz! > 0) ? 2 : 1;
 }
 
 /// Üretim yolu: render'ı ayrı isolate'e taşır.
 Future<Float32List> _computeLoop(LoopRequest r) => compute(renderLoopSync, r);
 
 /// Testlerin de kullanabildiği SENKRON render (isolate giriş noktası).
-Float32List renderLoopSync(LoopRequest r) => renderSeamlessLoop(
-      MixSpec([MixLayer(id: r.id, type: r.type, gain: 1.0)]),
-      loopSeconds: r.loopSeconds,
+///
+/// Binaural tone (`beatHz > 0`) INTERLEAVED stereo döner (uzunluk 2n) — çağıran
+/// `encodeWav(channels: 2)` ile paketler. Diğer her hâl mono (uzunluk n).
+Float32List renderLoopSync(LoopRequest r) {
+  // Stereo yol: yalnızca binaural tone. Her iki frekans ızgarada olduğu için
+  // crossfade'siz doğrudan üretilir (periyodiklik yapısal garanti).
+  if (r.type == LayerSource.tone &&
+      r.frequencyHz != null &&
+      r.beatHz != null &&
+      r.beatHz! > 0) {
+    return toneBinauralSource(
+      r.sampleRate * r.loopSeconds,
+      baseHz: r.frequencyHz!,
+      beatHz: r.beatHz!,
       sampleRate: r.sampleRate,
-      seed: r.seed,
+      loopSamples: r.sampleRate * r.loopSeconds,
     );
+  }
+  return renderSeamlessLoop(
+    MixSpec([
+      MixLayer(
+        id: r.id,
+        type: r.type,
+        gain: 1.0,
+        frequencyHz: r.frequencyHz,
+        beatHz: r.beatHz,
+      ),
+    ]),
+    loopSeconds: r.loopSeconds,
+    sampleRate: r.sampleRate,
+    seed: r.seed,
+  );
+}

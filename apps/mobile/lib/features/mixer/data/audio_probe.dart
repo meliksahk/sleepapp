@@ -24,8 +24,10 @@ import '../domain/local_sound.dart';
 /// TİPLİ ve sınayıcı `MixPlayer.playerFactory` deseniyle aynı biçimde enjekte
 /// edilebilir.
 abstract class AudioProbe {
-  /// Çalınabiliyorsa sessizce döner; değilse [LocalSoundImportFailure] atar.
-  Future<void> probe(String path);
+  /// Çalınabiliyorsa SÜREYİ döner; çalınamıyorsa [LocalSoundImportFailure] atar.
+  /// Süre bilinemiyorsa null — çağıran kararı buna göre verir (ör. topluluk
+  /// paylaşımı süreyi ZORUNLU kılar; null'da paylaşım reddedilir).
+  Future<Duration?> probe(String path);
 }
 
 /// Üretim: kısa ömürlü bir `AudioPlayer` açar, kaynağı çözdürür, kapatır.
@@ -36,12 +38,12 @@ class JustAudioProbe implements AudioProbe {
   final AudioPlayer Function()? playerFactory;
 
   @override
-  Future<void> probe(String path) async {
+  Future<Duration?> probe(String path) async {
     final player = (playerFactory ?? AudioPlayer.new)();
     try {
-      // setAudioSource kaynağı GERÇEKTEN çözer (süre döner); biçim
+      // setAudioSource kaynağı GERÇEKTEN çözer ve SÜREYİ döner; biçim
       // desteklenmiyorsa burada atar. Çalmaya gerek yok.
-      await player.setAudioSource(AudioSource.file(path));
+      return await player.setAudioSource(AudioSource.file(path));
     } on PlayerException catch (e) {
       debugPrint('nocta.localsound: çalınamadı ($path): ${e.code} ${e.message}');
       throw LocalSoundImportFailure.notAudio;
@@ -61,16 +63,21 @@ class JustAudioProbe implements AudioProbe {
   }
 }
 
-/// Test sınayıcısı. Varsayılan: her dosya çalınabilir.
+/// Test sınayıcısı. Varsayılan: her dosya çalınabilir, 3 dakika.
 class FakeAudioProbe implements AudioProbe {
-  FakeAudioProbe({this.failWith});
+  FakeAudioProbe({this.failWith, this.duration});
 
   LocalSoundImportFailure? failWith;
+
+  /// probe() dönüşü; null verilirse "süre bilinemedi" senaryosu test edilir.
+  Duration? duration = const Duration(minutes: 3);
+
   final List<String> probed = <String>[];
 
   @override
-  Future<void> probe(String path) async {
+  Future<Duration?> probe(String path) async {
     probed.add(path);
     if (failWith != null) throw failWith!;
+    return duration;
   }
 }

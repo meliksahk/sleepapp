@@ -2,6 +2,10 @@ import {
   LAYER_SOURCES,
   MAX_MIXER_LAYERS,
   parseMixerState,
+  TONE_BEAT_MAX_HZ,
+  TONE_BEAT_MIN_HZ,
+  TONE_MAX_HZ,
+  TONE_MIN_HZ,
 } from '../../src/modules/content/domain/mixer-state';
 import { InvalidRecipeError } from '../../src/modules/content/domain/errors';
 
@@ -130,6 +134,128 @@ describe('meditatif kaynaklar (#213) — sözleşme genişledi', () => {
     const msg = new InvalidRecipeError().message;
     for (const t of LAYER_SOURCES) {
       expect(msg).toContain(t);
+    }
+  });
+});
+
+describe('tone kaynağı — frekans sözleşmesi', () => {
+  it('tone + geçerli frekans kabul edilir ve değer KORUNUR', () => {
+    const parsed = parseMixerState({
+      layers: [{ id: 'hum', type: 'tone', gain: 0.2, frequencyHz: 110 }],
+    });
+    expect(parsed).not.toBeNull();
+    expect(parsed?.layers[0]).toEqual({
+      id: 'hum',
+      type: 'tone',
+      gain: 0.2,
+      frequencyHz: 110,
+    });
+  });
+
+  it.each([
+    ['frekans YOK (ton için zorunlu)', { id: 'l', type: 'tone', gain: 0.2 }],
+    [
+      `aralık altı (< ${TONE_MIN_HZ})`,
+      { id: 'l', type: 'tone', gain: 0.2, frequencyHz: TONE_MIN_HZ - 0.1 },
+    ],
+    [
+      `aralık üstü (> ${TONE_MAX_HZ})`,
+      { id: 'l', type: 'tone', gain: 0.2, frequencyHz: TONE_MAX_HZ + 1 },
+    ],
+    ['frekans NaN', { id: 'l', type: 'tone', gain: 0.2, frequencyHz: Number.NaN }],
+    [
+      'frekans Infinity',
+      { id: 'l', type: 'tone', gain: 0.2, frequencyHz: Number.POSITIVE_INFINITY },
+    ],
+    ['frekans string', { id: 'l', type: 'tone', gain: 0.2, frequencyHz: '110' }],
+    // Ton DIŞI katmana frekans iliştirmek sözleşme ihlalidir: sessizce yok
+    // saymak, editörün hatasını duyulmayan bir sapmaya çevirirdi.
+    ['gürültü katmanına frekans', { id: 'l', type: 'brown', gain: 0.5, frequencyHz: 110 }],
+  ])('%s → null', (_name, layer) => {
+    expect(parseMixerState({ layers: [layer] })).toBeNull();
+  });
+
+  it('sınır frekanslar (tam TONE_MIN_HZ ve TONE_MAX_HZ) geçerli', () => {
+    for (const hz of [TONE_MIN_HZ, TONE_MAX_HZ]) {
+      expect(
+        parseMixerState({ layers: [{ id: 'l', type: 'tone', gain: 0.2, frequencyHz: hz }] }),
+      ).not.toBeNull();
+    }
+  });
+
+  it('tone + gürültü karışık tarif geçerli (kullanıcının "istenilen frekans" isteği)', () => {
+    const parsed = parseMixerState({
+      layers: [
+        { id: 'body', type: 'brown', gain: 0.55 },
+        { id: 'hum', type: 'tone', gain: 0.18, frequencyHz: 110 },
+        { id: 'air', type: 'pink', gain: 0.12 },
+      ],
+    });
+    expect(parsed?.layers).toHaveLength(3);
+    expect(parsed?.layers[1]?.frequencyHz).toBe(110);
+  });
+
+  it('tek katman bozuksa (ton frekansı eksik) TÜM state reddedilir', () => {
+    expect(
+      parseMixerState({
+        layers: [
+          { id: 'ok', type: 'brown', gain: 0.5 },
+          { id: 'bad', type: 'tone', gain: 0.3 }, // frequencyHz yok
+        ],
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('beatHz — binaural vuru sözleşmesi', () => {
+  it('tone + beat kabul edilir ve değer KORUNUR', () => {
+    const parsed = parseMixerState({
+      layers: [{ id: 'b', type: 'tone', gain: 0.18, frequencyHz: 200, beatHz: 8 }],
+    });
+    expect(parsed?.layers[0]).toEqual({
+      id: 'b',
+      type: 'tone',
+      gain: 0.18,
+      frequencyHz: 200,
+      beatHz: 8,
+    });
+  });
+
+  it('beat YOKLUĞU mono demektir ve alan TELDE HİÇ GÖRÜNMEZ', () => {
+    // "0 göndermek" yerine yokluk: JSON'da beatHz anahtarı olmamalı.
+    const parsed = parseMixerState({
+      layers: [{ id: 'mono', type: 'tone', gain: 0.2, frequencyHz: 110 }],
+    });
+    expect(parsed?.layers[0]).not.toHaveProperty('beatHz');
+  });
+
+  it.each([
+    [
+      'beat = 0 (yasak — mono alanın yokluğudur)',
+      { id: 'l', type: 'tone', gain: 0.2, frequencyHz: 110, beatHz: 0 },
+    ],
+    [
+      `beat aralık altı (< ${TONE_BEAT_MIN_HZ})`,
+      { id: 'l', type: 'tone', gain: 0.2, frequencyHz: 110, beatHz: 0.1 },
+    ],
+    [
+      `beat aralık üstü (> ${TONE_BEAT_MAX_HZ})`,
+      { id: 'l', type: 'tone', gain: 0.2, frequencyHz: 110, beatHz: 25 },
+    ],
+    ['beat NaN', { id: 'l', type: 'tone', gain: 0.2, frequencyHz: 110, beatHz: Number.NaN }],
+    ['beat string', { id: 'l', type: 'tone', gain: 0.2, frequencyHz: 110, beatHz: '8' }],
+    ['ton DIŞI katmanda beat', { id: 'l', type: 'brown', gain: 0.5, beatHz: 8 }],
+  ])('%s → null', (_name, layer) => {
+    expect(parseMixerState({ layers: [layer] })).toBeNull();
+  });
+
+  it(`sınır vuru (tam ${TONE_BEAT_MIN_HZ} ve ${TONE_BEAT_MAX_HZ}) geçerli`, () => {
+    for (const b of [TONE_BEAT_MIN_HZ, TONE_BEAT_MAX_HZ]) {
+      expect(
+        parseMixerState({
+          layers: [{ id: 'l', type: 'tone', gain: 0.2, frequencyHz: 200, beatHz: b }],
+        }),
+      ).not.toBeNull();
     }
   });
 });

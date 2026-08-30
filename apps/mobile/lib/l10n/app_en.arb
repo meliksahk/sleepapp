@@ -124,6 +124,72 @@
   "mixerLayerPad": "Warm pad",
   "@mixerLayerPad": { "description": "Melodik pad katmanı adı (sentezlenmiş)" },
 
+  "mixerLayerTone": "Pure tone",
+  "@mixerLayerTone": { "description": "Kullanıcının seçtiği frekanstaki saf sinüs katmanı. 'Healing tone' DEĞİL: sağlık iddiası yasak (CLAUDE.md §1.1), nötr müzikal adlandırma" },
+
+    "mixerAddSourceTitle": "Add back a source",
+  "@mixerAddSourceTitle": { "description": "Kaldırılan sentez kaynağını geri ekleme sheet başlığı" },
+
+  "mixerAddTone": "Add tone",
+  "@mixerAddTone": { "description": "Katman listesi başlığındaki ikinci eylem — frekans seçici sheet'i açar" },
+
+  "mixerAddToneTitle": "Choose a tone",
+  "@mixerAddToneTitle": { "description": "Frekans seçicinin başlığı" },
+
+  "mixerAddToneHint": "A pure sustained note. Blend it under noise or let it hum on its own.",
+  "@mixerAddToneHint": { "description": "Seçicide ne yapılacağı. Sağlık vaadi YOK — müzikal/akustik tanım" },
+
+  "mixerAddToneConfirm": "Add to mix",
+  "@mixerAddToneConfirm": { "description": "Seçilen frekansı katman olarak ekleyen onay butonu" },
+
+  "mixerLayerLimitReached": "The mix is full — remove a layer to add another.",
+  "@mixerLayerLimitReached": { "description": "Katman tavanı (8) dolduğunda yeni sentez/dosya katmanı eklenemez; arıza değil bütçe bildirimi" },
+
+  "mixerToneBeatLabel": "Beat (binaural)",
+  "@mixerToneBeatLabel": { "description": "Binaural vuru sürgüsünün etiketi. 'Theta/delta' gibi EEG adları YASAK (§1.1) — akustik olay adıyla anılır" },
+
+  "mixerToneBeatUnit": "beat",
+  "@mixerToneBeatUnit": { "description": "Katman etiketindeki vuru birimi: 'Pure tone · 110 Hz · 10 beat'" },
+
+  "mixerToneBeatOff": "Off",
+  "@mixerToneBeatOff": { "description": "Vuru sürgüsü sıfırdayken gösterilen değer = mono ton" },
+
+  "mixerToneBeatHint": "Each ear hears a slightly different pitch — you perceive a gentle pulsing beat. Works best with headphones. A sound effect, nothing more.",
+  "@mixerToneBeatHint": { "description": "Vurunun dürüst açıklaması: akustik etki + kulaklık notu. Sağlık/EEG vaadi YOK; 'nothing more' bilinçli sınırlayıcı" },
+
+  "communityShareAction": "Share",
+  "@communityShareAction": { "description": "Kütüphane satırındaki topluluk paylaşım butonu (tooltip)" },
+
+  "communityShareTitle": "Share with the community",
+  "@communityShareTitle": { "description": "Paylaşım diyaloğunun başlığı" },
+
+  "communityShareTitleField": "Title",
+  "@communityShareTitleField": { "description": "Sesin başlık alanı — kullanıcının dosya adıyla ön doludur" },
+
+  "communityShareTerms": "Your sound will be reviewed before it appears for others. You confirm you own it or it is license-free. Your local copy is never removed.",
+  "@communityShareTerms": { "description": "Paylaşım koşulları: moderasyon + telif beyanı + yerel kopya güvencesi. Sağlık iddiası YOK (§1.1)" },
+
+  "communitySharing": "Uploading…",
+  "@communitySharing": { "description": "Yükleme sürerken onay butonunun metni; buton kilitlidir" },
+
+  "communityShareConfirm": "Send for review",
+  "@communityShareConfirm": { "description": "Diyalogdaki onay eylemi — 'publish' DEMEZ: moderasyondan geçmeden görünmez" },
+
+  "communitySharedDone": "Sent! Your sound will appear in the community library after review.",
+  "@communitySharedDone": { "description": "Paylaşım tamamlandı snackbar'ı — sonucun değil sürecin bildirimi" },
+
+  "communityShareFailed": "Your sound could not be shared. Try again later.",
+  "@communityShareFailed": { "description": "Genel paylaşım hatası (ağ/oturum/bilinmeyen)" },
+
+  "communitySharePendingLimit": "You have too many sounds waiting for review. Please wait for them to be reviewed first.",
+  "@communitySharePendingLimit": { "description": "Eşzamanlı bekleyen paylaşım tavanı doldu (sunucu 422)" },
+
+  "communityShareUploadFailed": "The file could not be uploaded. Check your connection and try again.",
+  "@communityShareUploadFailed": { "description": "Dosya depoya yüklenemedi ya da sunucu HEAD doğrulamasını geçemedi" },
+
+  "communityShareDurationUnknown": "This file's length could not be read, so it cannot be shared.",
+  "@communityShareDurationUnknown": { "description": "Süre cihazda okunamadı — sunucu süreyi zorunlu kılar; uydurma süre gönderilmez" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",
@@ -268,7 +334,27 @@
   "mixerVideoTitle": "Tonight's mix",
   "@mixerVideoTitle": { "description": "Videonun üstünde görünen başlık" },
 
-  "alarmSectionTitle": "Smart alarm",
+      "mixerLayerChords": "Chord progression",
+  "@mixerLayerChords": { "description": "Am→F→C→G akor progresyonu — yavaş, sıcak, melodik" },
+
+  "mixerLayerArpeggio": "Pentatonic arpeggio",
+  "@mixerLayerArpeggio": { "description": "Pentatonik ölçekte gezinen yumuşak arpej" },
+
+"sleepSoundTitle": "Night sound",
+  "@sleepSoundTitle": { "description": "Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)" },
+
+  "sleepSoundOn": "Playing",
+  "sleepSoundOff": "Off",
+  "sleepSoundTurnOn": "Turn on",
+  "sleepSoundTurnOff": "Turn off",
+
+  "sleepSoundHint": "A generated mix plays softly all night. It stops with the alarm and works offline.",
+  "@sleepSoundHint": { "description": "Ne yaptığını dürüst anlatır; sağlık iddiası YOK" },
+
+  "sleepSoundFailed": "The sound could not start — night tracking continues.",
+  "@sleepSoundFailed": { "description": "Ses patladı ama mikrofon/servis sürer: ayrı dipnot, hata ekranı değil" },
+
+"alarmSectionTitle": "Smart alarm",
   "@alarmSectionTitle": { "description": "Uyku modundaki alarm bölümü başlığı" },
 
   "alarmOff": "Off",
@@ -614,7 +700,30 @@
   "homeSectionExplore": "Explore",
   "@homeSectionExplore": { "description": "Ikincil navigasyon rafinin bolum etiketi" },
 
-  "settingsSignatureSound": "Opening sound",
+    "communityBadge": "Community",
+  "@communityBadge": { "description": "Katalogda topluluk sesi rozeti — genre='community' olan satırlar" },
+
+  "mySharesTitle": "My shared sounds",
+  "@mySharesTitle": { "description": "Paylaşımlarım ekranı başlığı ve ayarlardaki giriş butonu" },
+
+  "mySharesEmpty": "You haven't shared anything yet. Share a sound from the mixer's sound catalog.",
+  "@mySharesEmpty": { "description": "Paylaşım yok boş durumu — nereden paylaşılacağı söylenir" },
+
+  "shareStatusPending": "In review",
+  "shareStatusApproved": "Live",
+  "shareStatusRejected": "Not accepted",
+  "@shareStatusPending": { "description": "Durum etiketleri — 'Live' YAYINDA demektir, onaylandı" },
+
+  "mySharesLoadFailed": "Your shares could not be loaded.",
+  "@mySharesLoadFailed": { "description": "Liste yüklenemedi (ağ/oturum)" },
+
+  "mySharesRejectionReason": "Reviewer note: \"{reason}\"",
+  "@mySharesRejectionReason": {
+    "description": "Red gerekçesi SAHİBİNE gösterilir — sessiz red yasak. reason placeholder'lı",
+    "placeholders": { "reason": { "type": "String" } }
+  },
+
+"settingsSignatureSound": "Opening sound",
   "@settingsSignatureSound": { "description": "Acilis aurasi anahtari" },
   "settingsSignatureSoundHint": "A short ambience when the app opens.",
   "@settingsSignatureSoundHint": { "description": "Acilis sesi aciklamasi" },

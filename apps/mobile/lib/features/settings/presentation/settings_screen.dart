@@ -165,6 +165,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onPressed: () => context.push('/settings/notifications'),
               ),
 
+              const SizedBox(height: NoctaSpace.s3),
+              NButton(
+                key: const Key('community-shares-open'),
+                label: l10n.mySharesTitle,
+                variant: NButtonVariant.ghost,
+                onPressed: () => context.push('/settings/community-shares'),
+              ),
+
               const SizedBox(height: NoctaSpace.s5),
               const Divider(color: NoctaColors.lineHairline),
               const SizedBox(height: NoctaSpace.s3),

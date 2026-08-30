@@ -21,9 +21,10 @@ ON CONFLICT (device_fingerprint) DO NOTHING;
 -- `engine_params` bir reçetedir ve sesi telefon kendi üretir (docs/04 §78).
 -- Tarif sözleşmesi (apps/api .../content/domain/engine-params.ts):
 --   { "schemaVersion": 1, "layers": [ { "id": ..., "type": ..., "gain": ... } ] }
--- Motor ŞU AN yalnızca üç jeneratif kaynak tanıyor: white / pink / brown.
--- Bunun dışında bir "type" yazmak, tarifi okuma yolunda geçersiz kılar ve
--- soundscape istemciye HİÇ ulaşmaz (parseLayers → null → içerik elenir).
+-- Motor kaynakları: white / pink / brown / waves / fire / rain / pad / tone.
+-- (tone ek katman alanı taşır: "frequencyHz" — mixer-state.ts sözleşmesi.)
+-- Tanınmayan bir "type" veya ton'da eksik frekans, tarifi okuma yolunda geçersiz
+-- kılar ve soundscape istemciye HİÇ ulaşmaz (parseLayers → null → içerik elenir).
 -- Kurallar: 1..8 katman, katman id'leri benzersiz, gain ∈ [0,1].
 --
 -- Katman sayısı ve gain dengesi tarifin karakteridir:
@@ -165,8 +166,166 @@ VALUES
     '[]'::jsonb,
     '{overthinker,delta-drifter}',
     'published', now(), NULL, NULL
+  ),
+
+  -- ==========================================================================
+  -- Deep Hum — TONE kaynağının referans tarifi.
+  --
+  -- NEDEN BU KAYIT VAR (#215 dersi): motora yeni bir kaynak eklemek YETMEZ —
+  -- onu kullanan İÇERİK yoksa kullanıcı mikserde/kütüphanede onu HİÇ görmez
+  -- ve yetenek görünmez kalır. Bu kayıt tone'un çalıştığını GÖSTEREN tariftir.
+  --
+  -- tone = A2 (110 Hz) saf sinüs, döngü ızgarasına kilitli (30 sn'de tam
+  -- 3300 periyot → dikiş yok). Frekans seçimi MÜZİKALDİR: org pedal noktası
+  -- bölgesi; sağlık iddiası YOKTUR (CLAUDE.md §1.1). Brown gövde altına
+  -- gömülmüş ton "derin uğultu" hissi verir.
+  -- Toplam kazanç 0.55+0.18+0.12 = 0.85 < 1.0 → kırpma payı korunuyor.
+  (
+    'a0000000-0000-4000-8000-000000000008',
+    'deep-hum',
+    '{"en": "Deep Hum", "tr": "Derin Uğultu"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "body", "type": "brown", "gain": 0.55},
+        {"id": "hum",  "type": "tone",  "gain": 0.18, "frequencyHz": 110},
+        {"id": "air",  "type": "pink",  "gain": 0.12}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,delta-drifter}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Soft Beat — BINAURAL vuru içeren referans tarif.
+  --
+  -- `beatHz` SÖZLEŞME ÜYESİDİR (mixer-state.ts + mobil engine_params aynı
+  -- kurallar: yalnızca tone'da, 0.5–20 Hz, yokluk=mono). API bu tarifi olduğu
+  -- gibi taşır; telefon katmanı STEREO çalar (L=200 Hz, R=208 Hz → kulakta
+  -- ~8 Hz vuru). Vuru seçimi algısaldır; EEG adı/iddiası YOKTUR (§1.1).
+  (
+    'a0000000-0000-4000-8000-000000000009',
+    'soft-beat',
+    '{"en": "Soft Beat", "tr": "Yumuşak Vuru"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "bed",  "type": "brown", "gain": 0.45},
+        {"id": "beat", "type": "tone",  "gain": 0.18, "frequencyHz": 200, "beatHz": 8},
+        {"id": "air",  "type": "pink",  "gain": 0.10}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{overthinker,dawn-chaser}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Cathedral Hum — pad + tone: org nefesi gibi, mekânsal derinlik.
+  -- Pad melodik gövde sağlar; A2 tonu alt oktavda temel verir. Pink hava.
+  (
+    'a0000000-0000-4000-8000-00000000000a',
+    'cathedral-hum',
+    '{"en": "Cathedral Hum", "tr": "Katedral Uğultusu"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "organ", "type": "pad",   "gain": 0.30},
+        {"id": "root",  "type": "tone",  "gain": 0.16, "frequencyHz": 110},
+        {"id": "air",   "type": "pink",  "gain": 0.10}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,dawn-chaser}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Rain Chapel — yağmur + düşük ton: dışarıda yağmur, içeride sıcaklık.
+  -- Brown zemin, E2 tonu sıcak bir temel; white damla dokusunu unutturmaz.
+  (
+    'a0000000-0000-4000-8000-00000000000b',
+    'rain-chapel',
+    '{"en": "Rain Chapel", "tr": "Yağmur Şapeli"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "shower", "type": "rain", "gain": 0.40},
+        {"id": "warm",   "type": "tone", "gain": 0.14, "frequencyHz": 82.4},
+        {"id": "ground", "type": "brown","gain": 0.28}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{overthinker,delta-drifter}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Night Bell — ateş + pad + G2 tonu: gece kampı hissi.
+  -- Fire çıtırtısı canlılık verir; pad atmosferik zarf; G2 tonu temel.
+  (
+    'a0000000-0000-4000-8000-00000000000c',
+    'night-bell',
+    '{"en": "Night Bell", "tr": "Gece Çanı"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "ember",  "type": "fire", "gain": 0.22},
+        {"id": "veil",   "type": "pad",  "gain": 0.24},
+        {"id": "bell",   "type": "tone", "gain": 0.14, "frequencyHz": 98},
+        {"id": "carpet", "type": "pink", "gain": 0.12}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{dawn-chaser,delta-drifter}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Midnight Garden — akor + arpej: melodik uyku müziğinin tam örneği.
+  -- Chords yavaş harmonik zemin; arpeggi pentatonik gezinti; brown maske.
+  (
+    'a0000000-0000-4000-8000-00000000000d',
+    'midnight-garden',
+    '{"en": "Midnight Garden", "tr": "Gece Bahçesi"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "harmony",  "type": "chords",   "gain": 0.22},
+        {"id": "melody",   "type": "arpeggio", "gain": 0.14},
+        {"id": "blanket",  "type": "brown",    "gain": 0.24}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{dawn-chaser,deep-ocean}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Ocean Dream — dalga + akor + ton: okyanus üzerinde melodi.
+  -- Waves kabarma hissi verir; chords sıcak harmoni; C3 tonu derin temel.
+  (
+    'a0000000-0000-4000-8000-00000000000e',
+    'ocean-dream',
+    '{"en": "Ocean Dream", "tr": "Okyanus Rüyası"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "surf",     "type": "waves", "gain": 0.28},
+        {"id": "dream",    "type": "chords","gain": 0.20},
+        {"id": "deep",     "type": "tone",  "gain": 0.12, "frequencyHz": 130.8}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,delta-drifter}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Ceramic Drift — seramik top yuvarlanması: modal rezonans, sürtünme pırıltıları.
+  -- Noise'dan tamamen ayrı kategori (relaxing); brown yatağı YOK — saf malzeme sesi.
+  (
+    'a0000000-0000-4000-8000-00000000000f',
+    'ceramic-drift',
+    '{"en": "Ceramic Drift", "tr": "Seramik Sürükleniş"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "ceramic", "type": "ceramic", "gain": 0.52},
+        {"id": "air",     "type": "pink",    "gain": 0.10}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,delta-drifter}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Chime Haven — bambu/metal rüzgar çanı: inharmonik sönümlü vuruşlar, seyrek rüzgâr.
+  (
+    'a0000000-0000-4000-8000-000000000010',
+    'chime-haven',
+    '{"en": "Chime Haven", "tr": "Çan Sığınağı"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "chimes", "type": "chimes", "gain": 0.50},
+        {"id": "veil",   "type": "pad",    "gain": 0.18}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{dawn-chaser,delta-drifter}',
+    'published', now(), NULL, NULL
   )
 ON CONFLICT (slug) DO NOTHING;
+
+UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('ceramic-drift','chime-haven') AND category <> 'relaxing';
 
 -- ============================================================================
 -- PRESET'LER — archetype başına mikser başlangıç noktası

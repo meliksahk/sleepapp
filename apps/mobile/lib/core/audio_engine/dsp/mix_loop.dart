@@ -145,6 +145,8 @@ Float32List _renderPerLayerLoop(
       seed: layerSeed(seed, i),
       sampleRate: sampleRate,
       loopSamples: n,
+      frequencyHz: layer.frequencyHz,
+      beatHz: layer.beatHz,
     );
 
     final lay = Float32List(n);

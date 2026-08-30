@@ -16,6 +16,7 @@ import { useT } from '../i18n/I18nProvider';
 const NAV: ReadonlyArray<{ key: MessageKey; href?: string }> = [
   { key: 'nav.dashboard', href: '/' },
   { key: 'nav.content', href: '/content' },
+  { key: 'nav.community', href: '/community' },
   { key: 'nav.users', href: '/users' },
   { key: 'nav.analytics' },
   { key: 'nav.flags', href: '/flags' },

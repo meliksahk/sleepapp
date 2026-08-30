@@ -8,6 +8,7 @@ import '../features/content/presentation/soundscape_library_screen.dart';
 import '../features/entitlement/presentation/paywall_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/mixer/presentation/mixer_route.dart';
+import '../features/community/presentation/my_shares_screen.dart';
 import '../features/settings/presentation/delete_account_screen.dart';
 import '../features/settings/presentation/notification_settings_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
@@ -126,6 +127,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/settings/delete-account',
       builder: (context, state) => const DeleteAccountScreen(),
+    ),
+    GoRoute(
+      path: '/settings/community-shares',
+      builder: (context, state) => const MySharesScreen(),
     ),
     GoRoute(
       path: '/paywall',

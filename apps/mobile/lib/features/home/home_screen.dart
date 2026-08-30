@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/flavor.dart';
 import '../../core/design_system/design_system.dart';
+import '../../core/design_system/responsive.dart';
 import '../../l10n/app_localizations.dart';
 import '../archetype/archetype_providers.dart';
 import '../content/content_providers.dart';
@@ -63,15 +64,13 @@ class HomeScreen extends ConsumerWidget {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Align(
                 alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      NoctaSpace.s5,
-                      NoctaSpace.s4,
-                      NoctaSpace.s5,
-                      NoctaSpace.s8,
-                    ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    Responsive.of(context).isWide ? 32 : NoctaSpace.s5,
+                    NoctaSpace.s4,
+                    Responsive.of(context).isWide ? 32 : NoctaSpace.s5,
+                    NoctaSpace.s8,
+                  ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
@@ -239,7 +238,6 @@ class HomeScreen extends ConsumerWidget {
                           ),
                       ],
                     ),
-                  ),
                 ),
               ),
             ),

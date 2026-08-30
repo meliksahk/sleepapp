@@ -237,9 +237,8 @@ void main() {
       expect(find.byKey(const Key('mixer-asset-loop-notice')), findsNothing);
       // Sentez katmanına dokunulmadı.
       expect(find.byKey(const Key('gain-brown')), findsOneWidget);
-      // Kaldırma düğmesi YALNIZCA dosya katmanlarında: sentez katmanı tarifin
-      // kendisidir, silinemez.
-      expect(find.byKey(const Key('remove-brown')), findsNothing);
+      // HER sentez katmanında kaldırma butonu VAR (mikser serbest araç).
+      expect(find.byKey(const Key('remove-brown')), findsOneWidget);
     });
 
     testWidgets('URL çözülemezse katman EKLENMEZ ve hata SÖYLENİR',

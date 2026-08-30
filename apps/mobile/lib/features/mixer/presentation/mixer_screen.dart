@@ -6,13 +6,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/ambient/ambient.dart';
 import '../../../core/audio_engine/dsp/mix_render.dart';
+import '../../../core/audio_engine/dsp/tone.dart'
+    show toneGridBeat, toneGridHz, toneHzText;
 import '../../../core/design_system/design_system.dart';
+import '../../../core/storage/key_value_store.dart';
 import '../../../core/share/sharer.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../archetype/archetype_gradient.dart';
 import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
 import 'asset_catalog_sheet.dart';
+import 'melodic_editor_sheet.dart';
+import '../../../core/storage/key_value_store.dart' show SecureKeyValueStore;
+import '../domain/melodic_preset_store.dart';
+import 'mixer_add_tone_sheet.dart';
 import 'share_studio_screen.dart';
 
 /// Mikser **PLAYER'ı** — uygulamanın ses çıkardığı ekran.
@@ -269,6 +276,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
   void initState() {
     super.initState();
     _c = widget.controller ?? MixerController(spec: widget.spec);
+    // Kayıtlı son mix'i yükle (varsa) — kullanıcı uygulama kapatıp açtığında
+    // son mix'i görmeli, her seferinde varsayılana sıfırlanmamalı.
+    if (widget.spec == null) _c.initFromStore();
     _c.onChanged = () {
       if (mounted) setState(() {});
       // Stüdyo AYRI bir rotada: parent'ın setState'i onu yeniden çizmez.
@@ -304,7 +314,27 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         return l10n.mixerLayerRain;
       case LayerSource.pad:
         return l10n.mixerLayerPad;
+      case LayerSource.tone:
+        return l10n.mixerLayerTone;
+      case LayerSource.chords:
+        return l10n.mixerLayerChords;
+      case LayerSource.arpeggio:
+        return l10n.mixerLayerArpeggio;
     }
+  }
+
+  /// Tone katmanının tam etiketi: "Saf ton · 110 Hz" (+ "· 8 vuru").
+  ///
+  /// Hz, motorun DUYULAN (ızgaraya oturmuş) değeridir — kullanıcının sürgüyle
+  /// verdiği ham değer değil. Ekranda yazan ile çalan farklı olsaydı bu bir
+  /// yalan olurdu; fark algısal sıfır olsa bile sayılar farklıdır. Vuru da
+  /// aynı kuralla oturmuş değeriyle yazar (0 → hiç gösterilmez).
+  String _toneLabel(AppL10n l10n, MixLayer layer) {
+    final base =
+        '${l10n.mixerLayerTone} · ${toneHzText(toneGridHz(layer.frequencyHz!, 30))} Hz';
+    final beat = layer.beatHz;
+    if (beat == null || beat <= 0) return base;
+    return '$base · ${toneHzText(toneGridBeat(beat, 30))} ${l10n.mixerToneBeatUnit}';
   }
 
   @override
@@ -329,6 +359,18 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         foregroundColor: NoctaColors.inkPrimary,
+        // "Ton ekle" AppBar aksiyonunda — başlık satırına koymak ölçülmüştü,
+        // kaydırılan alandan ~44 px çalıyordu. AppBar maliyeti SIFIR.
+        actions: <Widget>[
+          IconButton(
+            key: const Key('mixer-add-tone'),
+            onPressed: _addTone,
+            tooltip: l10n.mixerAddTone,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            color: NoctaColors.inkPrimary,
+            icon: const Icon(Icons.music_note_outlined),
+          ),
+        ],
       ),
       body: TickerMode(
         enabled: s.isPlaying,
@@ -578,12 +620,15 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                             MixerErrorKind.assetAdd => l10n.mixerAssetAddFailed,
                             MixerErrorKind.assetDuplicate =>
                               l10n.mixerAssetAlreadyInMix,
+                            MixerErrorKind.layerLimit =>
+                              l10n.mixerLayerLimitReached,
                             _ => l10n.mixerFailed,
                           },
-                          // Çift ekleme bir ARIZA değil: kırmızı yerine ikincil
-                          // renk. Kullanıcıyı bir şeyin bozulduğuna inandırmak
-                          // istemiyoruz, yalnızca ne olduğunu söylüyoruz.
-                          color: s.errorKind == MixerErrorKind.assetDuplicate
+                          // Çift ekleme ve dolu tavan ARIZA değil: kırmızı
+                          // yerine ikincil renk. Kullanıcıyı bir şeyin bozulduğuna
+                          // inandırmak istemiyoruz, yalnızca ne olduğunu söylüyoruz.
+                          color: s.errorKind == MixerErrorKind.assetDuplicate ||
+                                  s.errorKind == MixerErrorKind.layerLimit
                               ? NoctaColors.inkSecondary
                               : NoctaColors.danger,
                           noticeKey: const Key('mixer-error'),
@@ -643,10 +688,15 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
 
                       for (final layer in s.layers)
                         _gainRow(
-                          label: _layerLabel(l10n, layer.type),
+                          label: layer.type == LayerSource.tone && layer.frequencyHz != null
+                              ? _toneLabel(l10n, layer)
+                              : _layerLabel(l10n, layer.type),
                           id: layer.id,
                           l10n: l10n,
                           s: s,
+                          // HER sentez katmanı kaldırılabilir: mikser serbest
+                          // araçtır, tarif yalnızca başlangıç noktasıdır.
+                          onRemove: () => _c.removeLayer(layer.id),
                         ),
                       // DOSYA katmanları sentezin ALTINDA, aynı sürgü bileşeniyle:
                       // kullanıcı için ikisi de "bir katman"dır. Etiket i18n'den
@@ -661,6 +711,37 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                           // katmanları tarifin kendisi (sürgüsü 0'a çekilebilir).
                           // Ekleyip vazgeçememek kabul edilemezdi.
                           onRemove: () => _c.removeAsset(asset.id),
+                        ),
+                      // ── KAYNAK EKLE — kaldırılan sentez kaynakları geri gelsin ──
+                      //
+                      // Mikser serbest araçtır: brown'u kaldıran kullanıcı buradan
+                      // geri ekleyebilmelidir. Yalnızca MISSLING kaynaklar gösterilir;
+                      // Wrap sığmazsa alt satıra iner (mevcut desen).
+                      if (_c.missingSources().where((s) => s != LayerSource.tone).isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                          child: Wrap(
+                            spacing: NoctaSpace.s2,
+                            runSpacing: NoctaSpace.s1,
+                            children: <Widget>[
+                              for (final missing
+                                  in _c.missingSources().where((s) => s != LayerSource.tone))
+                                ActionChip(
+                                  key: Key('mixer-add-source-${missing.name}'),
+                                  label: Text(
+                                    '+ ${_layerLabel(l10n, missing)}',
+                                    style: TextStyle(
+                                      fontSize: NoctaFontSize.caption,
+                                      color: NoctaColors.inkFaint,
+                                    ),
+                                  ),
+                                  onPressed: () => _addSource(missing),
+                                  backgroundColor: NoctaColors.bgOverlay,
+                                  side: BorderSide(color: NoctaColors.lineDashed),
+                                  materialTapTargetSize: MaterialTapTargetSize.padded,
+                                ),
+                            ],
+                          ),
                         ),
                       // ── Master limitleyici göstergesi ──
                       //
@@ -1008,6 +1089,51 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     if (!mounted) return;
     if (outcome == AddAssetOutcome.duplicate) {
       _c.reportDuplicateAsset();
+    }
+  }
+
+  /// Ton seçicisini açar ve sonucu mikse ekler.
+  Future<void> _addTone() async {
+    if (_c.state.layers.length + _c.state.assets.length >=
+        MixerController.maxTotalLayers) {
+      _c.reportLayerLimit();
+      return;
+    }
+    final pick = await showAddToneSheet(context);
+    if (pick == null || !mounted) return;
+    final outcome = await _c.addToneLayer(pick.frequencyHz, beatHz: pick.beatHz);
+    if (!mounted) return;
+    if (outcome == AddToneOutcome.full) {
+      _c.reportLayerLimit();
+    }
+  }
+
+  /// Kaldırılan sentez kaynağını geri ekler. chords/arpeggio ise EDITÖR açılır
+  /// (kullanıcı kök nota/ölçek/tempo/enstrüman seçer), diğerleri doğrudan eklenir.
+  Future<void> _addSource(LayerSource type) async {
+    if (type == LayerSource.chords || type == LayerSource.arpeggio) {
+      final result = await showModalBottomSheet<MelodicPreset>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: NoctaColors.bgBase,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(NoctaRadius.sheet)),
+        ),
+        builder: (_) => MelodicEditorSheet(
+          isChords: type == LayerSource.chords,
+          presetStore: MelodicPresetStore(SecureKeyValueStore()),
+        ),
+      );
+      if (result == null || !mounted) return;
+      final outcome = await _c.addMelodicLayer(result);
+      if (!mounted) return;
+      if (outcome == AddSourceOutcome.full) _c.reportLayerLimit();
+      return;
+    }
+    final outcome = await _c.addSource(type);
+    if (!mounted) return;
+    if (outcome == AddSourceOutcome.full) {
+      _c.reportLayerLimit();
     }
   }
 

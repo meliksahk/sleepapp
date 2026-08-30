@@ -77,16 +77,17 @@ kaydımız. Motora bir "asset katmanı" tipi eklenir ve sentez katmanlarıyla ya
 
 Motorun kaynak listesi (`LayerSource`, `core/audio_engine/dsp/mix_render.dart`):
 
-| kaynak                 | yapı                                                      | tepe sınırı (kapalı form) |
-| ---------------------- | --------------------------------------------------------- | ------------------------- |
-| `white`/`pink`/`brown` | düz gürültü (`noise.dart`)                                | 1.00 (tepe-normalize)     |
-| `waves`                | kahverengi yatak + yavaş zarf + zarfa bağlı alçak geçiren | 0.96                      |
-| `fire`                 | kahverengi yatak + kısa çıtırtı transientleri             | 0.80                      |
-| `rain`                 | filtrelenmiş beyaz yatak + sık damla transientleri        | 0.64                      |
-| `pad`                  | tamamen tonal (kısmi tonlar + parıltı), gürültü YOK       | 0.491                     |
+| kaynak                 | yapı                                                                                                                                                       | tepe sınırı (kapalı form) |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `white`/`pink`/`brown` | düz gürültü (`noise.dart`)                                                                                                                                 | 1.00 (tepe-normalize)     |
+| `waves`                | kahverengi yatak + yavaş zarf + zarfa bağlı alçak geçiren                                                                                                  | 0.96                      |
+| `fire`                 | kahverengi yatak + kısa çıtırtı transientleri                                                                                                              | 0.80                      |
+| `rain`                 | filtrelenmiş beyaz yatak + sık damla transientleri                                                                                                         | 0.64                      |
+| `pad`                  | tamamen tonal (kısmi tonlar + parıltı), gürültü YOK                                                                                                        | 0.491                     |
+| `tone`                 | kullanıcının seçtiği frekansta saf sinüs; opsiyonel binaural vuru (`beatHz`) → MixPlayer'da STEREO (L/R farklı perde), export'ta tremololu mono indirgemek | kanal başına 0.50         |
 
-Sınırlar `meditative.dart`'ta kanıtlanır ve testle doğrulanır; **hiçbir kaynakta
-`clamp` yoktur** — clamp gerekiyorsa sınır yanlıştır.
+Sınırlar `meditative.dart`/`tone.dart`'ta kanıtlanır ve testle doğrulanır;
+**hiçbir kaynakta `clamp` yoktur** — clamp gerekiyorsa sınır yanlıştır.
 
 **DÖNGÜ KİLİDİ — pazarlıksız kural.** `MixPlayer` 30 sn'lik buffer'ı döngüler.
 `renderSeamlessLoop`'un eşit-güç crossfade'i **korelasyonsuz gürültü** için dikiş
