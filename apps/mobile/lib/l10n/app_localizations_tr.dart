@@ -369,6 +369,12 @@ class AppL10nTr extends AppL10n {
   String get mixerLayerArpeggio => 'Arpej';
 
   @override
+  String get mixerLayerCeramic => 'Seramik kase';
+
+  @override
+  String get mixerLayerChimes => 'Rüzgar çanı';
+
+  @override
   String get sleepSoundTitle => 'Gece sesi';
 
   @override

@@ -703,6 +703,18 @@ abstract class AppL10n {
   /// **'Pentatonic arpeggio'**
   String get mixerLayerArpeggio;
 
+  /// Seramik kase modal sentez — malzeme sesi
+  ///
+  /// In en, this message translates to:
+  /// **'Ceramic bowl'**
+  String get mixerLayerCeramic;
+
+  /// Rüzgar çanı modal sentez — malzeme sesi
+  ///
+  /// In en, this message translates to:
+  /// **'Wind chimes'**
+  String get mixerLayerChimes;
+
   /// Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)
   ///
   /// In en, this message translates to:

@@ -371,6 +371,12 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerArpeggio => 'Pentatonic arpeggio';
 
   @override
+  String get mixerLayerCeramic => 'Ceramic bowl';
+
+  @override
+  String get mixerLayerChimes => 'Wind chimes';
+
+  @override
   String get sleepSoundTitle => 'Night sound';
 
   @override

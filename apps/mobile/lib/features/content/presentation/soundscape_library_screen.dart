@@ -21,7 +21,7 @@ class _SoundscapeLibraryScreenState extends ConsumerState<SoundscapeLibraryScree
   String _category = 'all';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final feed = ref.watch(soundscapeFeedProvider);
     return Scaffold(
       appBar: AppBar(title: NMono(AppL10n.of(context).libraryTitle)),

@@ -340,6 +340,12 @@
   "mixerLayerArpeggio": "Pentatonic arpeggio",
   "@mixerLayerArpeggio": { "description": "Pentatonik ölçekte gezinen yumuşak arpej" },
 
+  "mixerLayerCeramic": "Ceramic bowl",
+  "@mixerLayerCeramic": { "description": "Seramik kase modal sentez — malzeme sesi" },
+
+  "mixerLayerChimes": "Wind chimes",
+  "@mixerLayerChimes": { "description": "Rüzgar çanı modal sentez — malzeme sesi" },
+
 "sleepSoundTitle": "Night sound",
   "@sleepSoundTitle": { "description": "Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)" },
 

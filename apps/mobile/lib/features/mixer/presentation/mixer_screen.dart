@@ -320,6 +320,10 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         return l10n.mixerLayerChords;
       case LayerSource.arpeggio:
         return l10n.mixerLayerArpeggio;
+      case LayerSource.ceramic:
+        return l10n.mixerLayerCeramic;
+      case LayerSource.chimes:
+        return l10n.mixerLayerChimes;
     }
   }
 
