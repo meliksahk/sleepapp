@@ -137,12 +137,17 @@ double _grainEnv(double u, double attack, double decay) =>
 /// açmayacak kadar sık olan aralık. Estetik seçim, iddiasız.
 const double wavesSwellSeconds = 10.0;
 
-const double _wavesDeepAmp = 0.55;
-const double _wavesFoamAmp = 0.08;
+const double _wavesDeepAmp = 0.52;
+const double _wavesFoamAmp = 0.07;
+const double _wavesSurfAmp = 0.07;
+const double _wavesSurfAttack = 0.04;
+const double _wavesSurfDecay = 0.18;
+const double _wavesSurfTail = 4 * _wavesSurfDecay; // 0.72 s
 
-/// **|çıkış| ≤ 0.63.** Kanıt: derin kat = 0.55·(zarf ≤ 1)·(alçak geçiren ≤ 1),
-/// köpük katı = 0.08·(zarf ≤ 1)·(pembe ≤ 1). Toplam 0.55 + 0.08 = 0.63 < 1.
-const double wavesPeakBound = _wavesDeepAmp + _wavesFoamAmp;
+/// **|çıkış| ≤ 0.66.** Kanıt: derin 0.52 + köpük 0.07 + surf 0.07 = 0.66 < 1.
+/// Surf granülleri üst üste binmez (tepeye kilitli, ≥0.72 s aralıklı) ve
+/// granüler sörf hissi dalga tepesine eşlik eden kısa beyaz patlamalardır.
+const double wavesPeakBound = _wavesDeepAmp + _wavesFoamAmp + _wavesSurfAmp;
 
 /// Dalga: kahverengi yatak + yavaş genlik zarfı + zarfla değişen alçak geçiren.
 ///
@@ -185,22 +190,43 @@ Float32List wavesSource(
 
     out[i] = _wavesDeepAmp * deep * lp + _wavesFoamAmp * foamEnv * foam[i];
   }
+  // Granüler sörf: her kabarma tepesine kısa beyaz patlama (kıyıya vuran köpük).
+  // Tepeye kilitli olduğu için dikişte süreksizlik yok; tail guard ile dikişten önce biter.
+  final surfRng = Lcg(seed ^ 0x5A17 ^ 0x33);
+  final surfTailSamples = (_wavesSurfTail * sampleRate).round();
+  // Kabarma tepe zamanları: period/2 + n*period (+ küçük jitter)
+  for (var n = 0; n * period < loopSeconds; n++) {
+    final baseT = n * period + period / 2;
+    final jitter = surfRng.nextRange(-0.25, 0.25);
+    final tSurf = baseT + jitter;
+    if (tSurf < 0.2 || tSurf + _wavesSurfTail > loopSeconds) continue;
+    final start = (tSurf * sampleRate).round();
+    if (start < 0 || start >= samples) continue;
+    final amp = 0.55 + surfRng.nextRange(0, 0.45);
+    final end = math.min(samples, start + surfTailSamples);
+    for (var i = start; i < end; i++) {
+      final u = (i - start) / sampleRate;
+      final env = _grainEnv(u, _wavesSurfAttack, _wavesSurfDecay);
+      // Yüksek geçiren hissi: foam kaynağı zaten pembeden daha tiz; doğrudan ekle.
+      out[i] += _wavesSurfAmp * amp * env * foam[i];
+    }
+  }
   return out;
 }
 
 // ─────────────────────────── fire (ateş) ───────────────────────────
 
 const double _fireBedAmp = 0.14;
-const double _fireCrackleAmp = 0.38;
+const double _fireCrackleAmp = 0.44; // band-pass daraldığı için telafi (+0.06)
 
 /// Çıtırtı sönüm sabiti (sn) ve zarf kuyruğu.
 const double _fireDecay = 0.018;
 const double _fireAttack = 0.0015;
 const double _fireTail = 4 * _fireDecay; // 72 ms'de −34 dB: pratik olarak bitmiş
 
-/// 2. nesil: odun kavite rezonansı eklendi (180–300 Hz kısa tınlama).
-/// **|çıkış| ≤ 0.60.** Kanıt: yatak 0.14; çıtırtı 0.38; rezonans 0.08; binme yok →
-/// toplam 0.14+0.38+0.08=0.60 < 1.
+/// 2. nesil derin: band-pass taşıyıcı (90–600 Hz) + odun kavite rezonansı.
+/// **|çıkış| ≤ 0.66.** Kanıt: yatak 0.14; çıtırtı 0.44·(≤1); rezonans 0.08; binme yok →
+/// toplam 0.14+0.44+0.08=0.66 < 1.
 const double firePeakBound = _fireBedAmp + _fireCrackleAmp + 0.08;
 
 /// Ateş — 2. nesil: kahverengi yatak (ince uğultu) + çıtırtı + odun rezonansı.
@@ -219,13 +245,18 @@ Float32List fireSource(
 }) {
   final bed = brownNoise(samples, seed: seed);
 
-  // Çıtırtı taşıyıcısı: alçak geçirenden geçmiş beyaz → "odun", "cam" değil.
+  // Çıtırtı taşıyıcısı — 2. nesil odun band-pass: 90–600 Hz arası.
+  // Alçak geçiren (0.08 ≈ 600 Hz) - alçak geçiren (0.012 ≈ 90 Hz) farkı → orta
+  // bantta kalan "odun tok" bölgesi. 0.5 ölçekleme ile |taşıyıcı| ≤ 1 korunur
+  // (|lpHi|≤1, |lpLo|≤1 → |fark|≤2 → |0.5·fark|≤1).
   final rawCarrier = whiteNoise(samples, seed: seed ^ 0x1CE7);
   final carrier = Float32List(samples);
-  var c = 0.0;
+  var lpHi = 0.0, lpLo = 0.0;
   for (var i = 0; i < samples; i++) {
-    c += 0.25 * (rawCarrier[i] - c); // |c| ≤ 1
-    carrier[i] = c;
+    final x = rawCarrier[i];
+    lpHi += 0.08 * (x - lpHi);
+    lpLo += 0.012 * (x - lpLo);
+    carrier[i] = 0.5 * (lpHi - lpLo); // |carrier| ≤ 1 (0.5·|fark|≤1)
   }
 
   final rng = Lcg(seed ^ 0x5A17);
