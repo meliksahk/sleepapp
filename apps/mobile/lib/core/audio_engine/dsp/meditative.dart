@@ -198,16 +198,17 @@ const double _fireDecay = 0.018;
 const double _fireAttack = 0.0015;
 const double _fireTail = 4 * _fireDecay; // 72 ms'de −34 dB: pratik olarak bitmiş
 
-/// **|çıkış| ≤ 0.52.** Kanıt: yatak 0.14·(kahverengi ≤ 1); çıtırtılar üst üste
-/// BİNMEZ (bkz. `_scheduleTransients`) → anlık en çok bir tane, 0.38·(zarf ≤ 1)·
-/// (taşıyıcı ≤ 1). Toplam 0.14 + 0.38 = 0.52 < 1.
-const double firePeakBound = _fireBedAmp + _fireCrackleAmp;
+/// 2. nesil: odun kavite rezonansı eklendi (180–300 Hz kısa tınlama).
+/// **|çıkış| ≤ 0.60.** Kanıt: yatak 0.14; çıtırtı 0.38; rezonans 0.08; binme yok →
+/// toplam 0.14+0.38+0.08=0.60 < 1.
+const double firePeakBound = _fireBedAmp + _fireCrackleAmp + 0.08;
 
-/// Ateş: kahverengi yatak (uğultu) + kısa çıtırtı transientleri.
+/// Ateş — 2. nesil: kahverengi yatak (ince uğultu) + çıtırtı + odun rezonansı.
 ///
 /// **Uyandırmama kısıtı (uyku uygulaması):** çıtırtı genliği yatağın yarısı
-/// mertebesindedir (0.22 vs 0.55) ve taşıyıcısı alçak geçirenden geçirilmiş
-/// beyazdır — yani ani, parlak bir "klik" değil, yumuşatılmış bir patlama.
+/// mertebesindedir ve taşıyıcısı alçak geçirenden geçirilmiş beyazdır — yani
+/// ani, parlak bir "klik" değil, yumuşatılmış bir patlama. Rezonans katmanı
+/// odun kavitesinin kısa tınlamasıdır (180–300 Hz).
 /// Bunun ÖLÇÜLEBİLİR karşılığı crest faktörüdür ve testte raporlanır.
 /// ⚠️ Bu ölçüm sesin ürkütücü OLMADIĞINI kanıtlamaz; onu ancak kulak söyler (§1.1).
 Float32List fireSource(
@@ -247,9 +248,15 @@ Float32List fireSource(
   final tailSamples = (_fireTail * sampleRate).round();
   for (final g in grains) {
     final end = math.min(samples, g.start + tailSamples);
+    // Odun rezonansı: g.start'a göre 180/210/240/270/300 Hz.
+    final fres = 180 + (g.start % 5) * 30;
+    final omWood = 2 * math.pi * fres / sampleRate;
     for (var i = g.start; i < end; i++) {
       final u = (i - g.start) / sampleRate;
-      out[i] += _fireCrackleAmp * g.amp * _grainEnv(u, _fireAttack, _fireDecay) * carrier[i];
+      final env = _grainEnv(u, _fireAttack, _fireDecay);
+      out[i] += _fireCrackleAmp * g.amp * env * carrier[i];
+      final woodEnv = env * math.exp(-u / 0.028);
+      out[i] += 0.08 * g.amp * woodEnv * math.sin(omWood * (i - g.start));
     }
   }
   return out;
@@ -264,16 +271,18 @@ const double _rainDecay = 0.0040;
 const double _rainAttack = 0.0004;
 const double _rainTail = 4 * _rainDecay; // 16 ms
 
-/// **|çıkış| ≤ 0.46.** Kanıt: yatak 0.12·(alçak geçiren ≤ 1); damlalar binmez →
-/// 0.34·(zarf ≤ 1)·(beyaz ≤ 1). Toplam 0.12 + 0.34 = 0.46 < 1.
-const double rainPeakBound = _rainBedAmp + _rainDropAmp;
+/// 2. nesil: damla + yüzey rezonansı (yaprak/su birikintisi tınlaması).
+/// **|çıkış| ≤ 0.54.** Kanıt: yatak 0.12·(≤1); damla 0.34·(≤1); rezonans 0.08·(≤1);
+/// damlalar binmez → toplam 0.12+0.34+0.08=0.54 < 1.
+const double rainPeakBound = _rainBedAmp + _rainDropAmp + 0.08;
 
-/// Yağmur: filtrelenmiş beyaz yatak + sık, kısa damla transientleri.
+/// Yağmur — 2. nesil: filtrelenmiş beyaz yatak + granüler damlalar + yüzey rezonansı.
 ///
 /// Ateşten farkı ÖLÇÜLEBİLİR: damla sönümü 4.5× daha hızlı (4 ms vs 18 ms) ve
 /// taşıyıcı ham beyaz (ateşinki alçak geçirenden geçmiş) → ardışık örnek farkı
 /// (`meanAbsDelta`, spektral eğim vekili) belirgin biçimde büyüktür. Sıklık da
-/// ~5× fazladır (~27/sn vs ~5.5/sn).
+/// ~5× fazladır (~27/sn vs ~5.5/sn). 2. nesil ek: her damlaya kısa rezonans
+/// tınısı (900–1700 Hz, yaprak rezonansı) — gürültü hissini kırar.
 Float32List rainSource(
   int samples, {
   required int seed,
@@ -311,9 +320,16 @@ Float32List rainSource(
   final tailSamples = (_rainTail * sampleRate).round();
   for (final g in grains) {
     final end = math.min(samples, g.start + tailSamples);
+    // Yüzey rezonansı: g.start'a göre deterministik frekans (900/1200/1500 Hz).
+    final fres = 900 + (g.start % 3) * 300;
+    final omRes = 2 * math.pi * fres / sampleRate;
     for (var i = g.start; i < end; i++) {
       final u = (i - g.start) / sampleRate;
-      out[i] += _rainDropAmp * g.amp * _grainEnv(u, _rainAttack, _rainDecay) * carrier[i];
+      final env = _grainEnv(u, _rainAttack, _rainDecay);
+      out[i] += _rainDropAmp * g.amp * env * carrier[i];
+      // Kısa rezonans kuyruğu: aynı zarfın daha hızlı sönümü (12 ms) ile tınlar.
+      final resEnv = env * math.exp(-u / 0.012);
+      out[i] += 0.08 * g.amp * resEnv * math.sin(omRes * (i - g.start));
     }
   }
   return out;
