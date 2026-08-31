@@ -137,11 +137,11 @@ double _grainEnv(double u, double attack, double decay) =>
 /// açmayacak kadar sık olan aralık. Estetik seçim, iddiasız.
 const double wavesSwellSeconds = 10.0;
 
-const double _wavesDeepAmp = 0.76;
-const double _wavesFoamAmp = 0.20;
+const double _wavesDeepAmp = 0.55;
+const double _wavesFoamAmp = 0.08;
 
-/// **|çıkış| ≤ 0.96.** Kanıt: derin kat = 0.76·(zarf ≤ 1)·(alçak geçiren ≤ 1),
-/// köpük katı = 0.20·(zarf ≤ 1)·(pembe ≤ 1). Toplam 0.76 + 0.20 = 0.96 < 1.
+/// **|çıkış| ≤ 0.63.** Kanıt: derin kat = 0.55·(zarf ≤ 1)·(alçak geçiren ≤ 1),
+/// köpük katı = 0.08·(zarf ≤ 1)·(pembe ≤ 1). Toplam 0.55 + 0.08 = 0.63 < 1.
 const double wavesPeakBound = _wavesDeepAmp + _wavesFoamAmp;
 
 /// Dalga: kahverengi yatak + yavaş genlik zarfı + zarfla değişen alçak geçiren.
@@ -190,17 +190,17 @@ Float32List wavesSource(
 
 // ─────────────────────────── fire (ateş) ───────────────────────────
 
-const double _fireBedAmp = 0.48;
-const double _fireCrackleAmp = 0.32;
+const double _fireBedAmp = 0.14;
+const double _fireCrackleAmp = 0.38;
 
 /// Çıtırtı sönüm sabiti (sn) ve zarf kuyruğu.
 const double _fireDecay = 0.018;
 const double _fireAttack = 0.0015;
 const double _fireTail = 4 * _fireDecay; // 72 ms'de −34 dB: pratik olarak bitmiş
 
-/// **|çıkış| ≤ 0.80.** Kanıt: yatak 0.48·(kahverengi ≤ 1); çıtırtılar üst üste
-/// BİNMEZ (bkz. `_scheduleTransients`) → anlık en çok bir tane, 0.32·(zarf ≤ 1)·
-/// (taşıyıcı ≤ 1). Toplam 0.48 + 0.32 = 0.80 < 1.
+/// **|çıkış| ≤ 0.52.** Kanıt: yatak 0.14·(kahverengi ≤ 1); çıtırtılar üst üste
+/// BİNMEZ (bkz. `_scheduleTransients`) → anlık en çok bir tane, 0.38·(zarf ≤ 1)·
+/// (taşıyıcı ≤ 1). Toplam 0.14 + 0.38 = 0.52 < 1.
 const double firePeakBound = _fireBedAmp + _fireCrackleAmp;
 
 /// Ateş: kahverengi yatak (uğultu) + kısa çıtırtı transientleri.
@@ -257,15 +257,15 @@ Float32List fireSource(
 
 // ─────────────────────────── rain (yağmur) ───────────────────────────
 
-const double _rainBedAmp = 0.40;
-const double _rainDropAmp = 0.24;
+const double _rainBedAmp = 0.12;
+const double _rainDropAmp = 0.34;
 
 const double _rainDecay = 0.0040;
 const double _rainAttack = 0.0004;
 const double _rainTail = 4 * _rainDecay; // 16 ms
 
-/// **|çıkış| ≤ 0.64.** Kanıt: yatak 0.40·(alçak geçiren ≤ 1); damlalar binmez →
-/// 0.24·(zarf ≤ 1)·(beyaz ≤ 1). Toplam 0.40 + 0.24 = 0.64 < 1.
+/// **|çıkış| ≤ 0.46.** Kanıt: yatak 0.12·(alçak geçiren ≤ 1); damlalar binmez →
+/// 0.34·(zarf ≤ 1)·(beyaz ≤ 1). Toplam 0.12 + 0.34 = 0.46 < 1.
 const double rainPeakBound = _rainBedAmp + _rainDropAmp;
 
 /// Yağmur: filtrelenmiş beyaz yatak + sık, kısa damla transientleri.
