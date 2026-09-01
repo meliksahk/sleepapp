@@ -346,6 +346,12 @@
   "mixerLayerChimes": "Wind chimes",
   "@mixerLayerChimes": { "description": "Rüzgar çanı modal sentez — malzeme sesi" },
 
+  "mixerLayerTopSpin": "Spinning top",
+  "@mixerLayerTopSpin": { "description": "Topaç vızıltısı — ahşap dönen topaç" },
+
+  "mixerLayerFriction": "Ceramic friction",
+  "@mixerLayerFriction": { "description": "İki seramik topun sürtme sesi" },
+
 "sleepSoundTitle": "Night sound",
   "@sleepSoundTitle": { "description": "Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)" },
 

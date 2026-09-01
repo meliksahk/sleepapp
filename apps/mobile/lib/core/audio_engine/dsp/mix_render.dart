@@ -44,6 +44,8 @@ enum LayerSource {
   arpeggio,
   ceramic,
   chimes,
+  topSpin,
+  friction,
 }
 
 /// Kaynak, döngü periyoduna **kilitli** mi (kuyruk ile baş birebir aynı mı)?
@@ -61,7 +63,9 @@ bool isLoopPeriodic(LayerSource type) =>
     type == LayerSource.chords ||
     type == LayerSource.arpeggio ||
     type == LayerSource.ceramic ||
-    type == LayerSource.chimes;
+    type == LayerSource.chimes ||
+    type == LayerSource.topSpin ||
+    type == LayerSource.friction;
 
 /// Tek bir mikser katmanı: hangi kaynak, hangi kazanç.
 class MixLayer {
@@ -243,6 +247,10 @@ Float32List renderSource(
       return ceramicSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
     case LayerSource.chimes:
       return chimesSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.topSpin:
+      return topSpinSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.friction:
+      return frictionSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
   }
 }
 

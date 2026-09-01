@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/audio_engine/dsp/mix_render.dart';
@@ -71,6 +73,7 @@ class MixerState {
     this.isPreparing = false,
     this.limiterScale = 1.0,
     this.exportProgress,
+    this.ritualRemainingSeconds,
     this.error,
     this.errorKind,
   });
@@ -121,6 +124,12 @@ class MixerState {
 
   bool get isExporting => exportProgress != null;
 
+  /// Ritüel zamanlayıcı: kalan saniye, null → zamanlayıcı yok.
+  final int? ritualRemainingSeconds;
+
+  /// Ritüel aktif mi.
+  bool get isRitualActive => ritualRemainingSeconds != null;
+
   final String? error;
 
   /// [error] non-null ise dolu.
@@ -137,6 +146,8 @@ class MixerState {
     double? limiterScale,
     double? exportProgress,
     bool clearExport = false,
+    int? ritualRemainingSeconds,
+    bool clearRitual = false,
     String? error,
     MixerErrorKind? errorKind,
     bool clearError = false,
@@ -152,6 +163,8 @@ class MixerState {
       limiterScale: limiterScale ?? this.limiterScale,
       exportProgress:
           clearExport ? null : (exportProgress ?? this.exportProgress),
+      ritualRemainingSeconds:
+          clearRitual ? null : (ritualRemainingSeconds ?? this.ritualRemainingSeconds),
       error: clearError ? null : (error ?? this.error),
       errorKind: clearError ? null : (errorKind ?? this.errorKind),
     );
@@ -228,6 +241,50 @@ class MixerController {
     onChanged?.call();
   }
 
+  // ─────────────────────────── ritüel zamanlayıcı (10 dk fade) ───────────────────────────
+
+  Timer? _ritualTimer;
+  int _ritualTotal = 0;
+
+  /// 10 dk’lık uyku ritüeli — ses yavaşça solar, telefon bırakılır.
+  /// [duration] varsayılan 10 dk, test için kısa verilebilir.
+  void startRitual({Duration duration = const Duration(minutes: 10)}) {
+    cancelRitual();
+    final secs = duration.inSeconds;
+    if (secs <= 0) return;
+    _ritualTotal = secs;
+    _emit(_state.copyWith(ritualRemainingSeconds: secs));
+    _player.setRitualScale(1.0);
+    _ritualTimer = Timer.periodic(const Duration(seconds: 1), (_) => _tickRitual());
+  }
+
+  void cancelRitual() {
+    _ritualTimer?.cancel();
+    _ritualTimer = null;
+    _ritualTotal = 0;
+    unawaited(_player.setRitualScale(1.0));
+    if (_state.isRitualActive) _emit(_state.copyWith(clearRitual: true));
+  }
+
+  Future<void> _tickRitual() async {
+    final remaining = (_state.ritualRemainingSeconds ?? 0) - 1;
+    if (remaining <= 0) {
+      _ritualTimer?.cancel();
+      _ritualTimer = null;
+      _ritualTotal = 0;
+      await _player.setRitualScale(0.0);
+      await _player.pause();
+      _emit(_state.copyWith(isPlaying: false, clearRitual: true));
+      await _player.setRitualScale(1.0);
+      return;
+    }
+    final scale = (remaining / _ritualTotal).clamp(0.0, 1.0);
+    // Fade eğrisi: son 2 dk daha yumuşak (quadratik)
+    final curved = scale < 0.2 ? scale * scale * 5 : scale;
+    await _player.setRitualScale(curved);
+    _emit(_state.copyWith(ritualRemainingSeconds: remaining));
+  }
+
   /// Kayıtlı son mix'i yükler (varsa) ve state'i günceller.
   ///
   /// Mikser ekranının initState'inden çağrılır: kullanıcı uygulama kapatıp
@@ -280,6 +337,7 @@ class MixerController {
 
   Future<void> toggle() async {
     if (_state.isPlaying) {
+      cancelRitual();
       await _player.pause();
       _emit(_state.copyWith(isPlaying: false));
       return;
@@ -622,7 +680,8 @@ class MixerController {
   }
 
   Future<void> dispose() {
-    // Rampa hâlâ sürüyor olabilir; kapatılmış bir controller'a state basmasın.
+    _ritualTimer?.cancel();
+    _ritualTimer = null;
     _player.onLimiterChanged = null;
     return _player.dispose();
   }

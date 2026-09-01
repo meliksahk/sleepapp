@@ -14,6 +14,8 @@ export const LAYER_SOURCES = [
   'arpeggio',
   'ceramic',
   'chimes',
+  'topSpin',
+  'friction',
 ] as const;
 export type LayerSource = (typeof LAYER_SOURCES)[number];
 export const MAX_LAYERS = 8;

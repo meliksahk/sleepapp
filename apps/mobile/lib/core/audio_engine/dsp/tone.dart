@@ -46,18 +46,22 @@ const double toneMaxHz = 2000.0;
 const double toneBeatMinHz = 0.5;
 const double toneBeatMaxHz = 20.0;
 
-/// Tepe genliği. **|çıkış| ≤ [tonePeakAmp] < 1** — kapalı formda ispat:
-/// |sin| ≤ 1 olduğundan |x[i]| ≤ [tonePeakAmp]. Clamp YOKTUR; kaynak zincirinin
-/// "kırpma yapısal olarak imkânsız" sözleşmesi (meditative.dart) burada da geçerli.
+/// Tepe genliği — **sıcak ton**: temel + 2. harmonik + kısa slap.
+/// **|çıkış| ≤ 0.64.** Kanıt: temel 0.50 + 2. harm 0.065 (0.13×0.50) + slap 0.07
+/// (0.14×0.50) = 0.635 < 1, harmonikler aynı fazda toplanırsa bile. Clamp YOKTUR.
 ///
-/// Neden 0.50: saf sinüsün tepe faktörü gürültüye göre yüksektir (RMS/tepe = 1/√2),
-/// yani aynı tepe genliğinde gürültüden DAHA BASKIN duyulur. 0.50, sürgü %100'de
-/// bile diğer katmanların üstüne çıkmayan ama tek başına net işitilen bir seviyedir.
-/// Estetik karar — ölçülebilir karşılığı testte raporlanır.
+/// Neden 0.50 taban: saf sinüsün tepe faktörü gürültüye göre yüksektir (1/√2),
+/// yani aynı tepede gürültüden baskın duyulur. 0.50 sürgü %100’de bile diğer
+/// katmanların üstüne çıkmayan ama tek başına net işitilen seviyedir.
+/// Harmonik, soğuk sinüsü “ahşap”laştırır; slap (120 ms) odayı hissettirir —
+/// ikisi de sağlık iddiası değil, akustik sıcaklık.
 const double tonePeakAmp = 0.50;
+const double _toneHarmWeight = 0.13;
+const double _toneSlapGain = 0.14;
+const double tonePeakBound = 0.635;
 
 /// Binaural kanalların her biri AYRI tonPeakAmp ile üretilir → kanal başına
-/// |x| ≤ 0.5. İki kanal ASLA toplanmaz (stereo WAV'ta yan yana yaşar), yani
+/// |x| ≤ 0.50. İki kanal ASLA toplanmaz (stereo WAV'ta yan yana yaşar), yani
 /// toplam genlik sınırları kanal başına geçerlidir.
 const double toneStereoPeakBound = tonePeakAmp;
 
@@ -82,11 +86,21 @@ Float32List toneSource(
   // Izgara kilidi: döngüde tam sayıda periyot. (Pad ile aynı fonksiyon.)
   final f = loopLockedHz(frequencyHz, loopSamples / sampleRate);
 
-  final out = Float32List(samples);
+  final dry = Float32List(samples);
   final twoPiOverSr = 2 * math.pi / sampleRate;
   final omega = twoPiOverSr * f;
+  final omega2 = omega * 2;
   for (var i = 0; i < samples; i++) {
-    out[i] = tonePeakAmp * math.sin(omega * i);
+    dry[i] = tonePeakAmp *
+        (math.sin(omega * i) + _toneHarmWeight * math.sin(omega2 * i));
+  }
+  // Slap: 256’da 1’i — döngüyü tam böler → periyodik kalır (crossfade gerekmez).
+  // 30 sn’de 117 ms, 15 sn’de 58 ms — oda hissi.
+  final delay = (loopSamples ~/ 256).clamp(1, samples - 1);
+  final out = Float32List(samples);
+  for (var i = 0; i < samples; i++) {
+    final delayed = dry[(i - delay + samples) % samples];
+    out[i] = dry[i] + _toneSlapGain * delayed;
   }
   return out;
 }

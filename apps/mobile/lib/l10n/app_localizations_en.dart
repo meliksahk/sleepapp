@@ -377,6 +377,12 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerChimes => 'Wind chimes';
 
   @override
+  String get mixerLayerTopSpin => 'Spinning top';
+
+  @override
+  String get mixerLayerFriction => 'Ceramic friction';
+
+  @override
   String get sleepSoundTitle => 'Night sound';
 
   @override

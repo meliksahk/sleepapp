@@ -324,6 +324,10 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         return l10n.mixerLayerCeramic;
       case LayerSource.chimes:
         return l10n.mixerLayerChimes;
+      case LayerSource.topSpin:
+        return l10n.mixerLayerTopSpin;
+      case LayerSource.friction:
+        return l10n.mixerLayerFriction;
     }
   }
 
@@ -1000,6 +1004,43 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             ),
           ),
 
+          // Ritüel zamanlayıcı — 10 dk fade (amaç: telefonu bırakıp uykuya geç).
+          // Çalarken görünür, duraklatılınca gizlenir. Aktifken kalan süre + iptal.
+          if (s.isPlaying) ...<Widget>[
+            const SizedBox(height: NoctaSpace.s2),
+            s.isRitualActive
+                ? Row(
+                    key: const Key('mixer-ritual-active'),
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Ritüel: ${_formatRitual(s.ritualRemainingSeconds!)} kaldı — yavaşça soluyor',
+                          key: const Key('mixer-ritual-countdown'),
+                          style: TextStyle(
+                            fontFamily: NoctaFont.mono,
+                            fontSize: NoctaFontSize.caption,
+                            color: NoctaColors.inkSecondary,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        key: const Key('mixer-ritual-cancel'),
+                        onPressed: () => _c.cancelRitual(),
+                        child: Text(l10n.commonCancel),
+                      ),
+                    ],
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    child: NButton(
+                      key: const Key('mixer-ritual-start'),
+                      variant: NButtonVariant.ghost,
+                      onPressed: () => _c.startRitual(),
+                      label: '10 dk ritüel — yavaşça sönsün',
+                    ),
+                  ),
+          ],
+
           // Viral kanca #3 (docs/04 §131). iOS'ta gizli: native kodlayıcı yok.
           if (_canExportVideo) ...<Widget>[
             const SizedBox(height: NoctaSpace.s2),
@@ -1225,6 +1266,12 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
       final wobble = 0.6 + 0.4 * (((i * 37) % 11) / 10);
       return (g * wobble).clamp(0.05, 1.0);
     });
+  }
+
+  String _formatRitual(int secs) {
+    final m = secs ~/ 60;
+    final s = secs % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   Future<void> _exportVideo({int seconds = 15}) async {

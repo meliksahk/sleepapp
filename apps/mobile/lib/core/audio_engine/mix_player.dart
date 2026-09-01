@@ -208,6 +208,12 @@ class MixPlayer {
   /// Rampa sürerken hedeften farklıdır (bilinçli: gösterge de yumuşak geçsin).
   double get limiterScale => _limiterScale;
 
+  double _ritualScale = 1.0;
+
+  /// Ritüel fade ölçeği — 1.0 tam ses, 0.0 sessiz. Limiter ile ÇARPILIR,
+  /// sürgü değerlerine dokunmaz.
+  double get ritualScale => _ritualScale;
+
   /// Kullanıcıya gösterge gösterilmeli mi.
   bool get isLimiting => isLimiterEngaged(_limiterScale);
 
@@ -492,8 +498,15 @@ class MixPlayer {
   /// Ölçek burada, tek noktada uygulanır: `setVolume` çağıran her yol (yükleme,
   /// sürgü, dosya ekleme, rampa) buradan geçer. Ölçeği çağrı yerlerine dağıtmak,
   /// birinin unutulduğu gün limitleyicinin sessizce yarım çalışması demekti.
+  /// Ritual scale de burada çarpılır — sürgü değerleri korunur, çıkış yavaşça solar.
   double _appliedVolume(_LayerVoice v) =>
-      (v.gain * _limiterScale).clamp(0.0, 1.0);
+      (v.gain * _limiterScale * _ritualScale).clamp(0.0, 1.0);
+
+  /// Ritüel fade ölçeğini ayarla — anında tüm katmanlara uygulanır.
+  Future<void> setRitualScale(double scale) async {
+    _ritualScale = scale.clamp(0.0, 1.0);
+    await _applyAllVolumes();
+  }
 
   Future<void> _applyAllVolumes() async {
     if (_disposed) return;

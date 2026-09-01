@@ -715,6 +715,18 @@ abstract class AppL10n {
   /// **'Wind chimes'**
   String get mixerLayerChimes;
 
+  /// Topaç vızıltısı — ahşap dönen topaç
+  ///
+  /// In en, this message translates to:
+  /// **'Spinning top'**
+  String get mixerLayerTopSpin;
+
+  /// İki seramik topun sürtme sesi
+  ///
+  /// In en, this message translates to:
+  /// **'Ceramic friction'**
+  String get mixerLayerFriction;
+
   /// Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)
   ///
   /// In en, this message translates to:
