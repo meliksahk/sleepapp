@@ -124,11 +124,18 @@ class HomeScreen extends ConsumerWidget {
                                   rule: true,
                                   onPressed: () => context.push('/sleep-mode'),
                                 ),
-                                const SizedBox(height: NoctaSpace.s4),
+                                const SizedBox(height: NoctaSpace.s3),
                                 _PaperLink(
                                   key: const Key('mixer-cta'),
                                   label: l10n.homeOpenMixer,
                                   onTap: () => context.push('/mixer'),
+                                ),
+                                const SizedBox(height: NoctaSpace.s1),
+                                _PaperLink(
+                                  key: const Key('ritual-try-cta'),
+                                  label: 'Try 10-min ritual — Top & Friction',
+                                  onTap: () => context.push(
+                                      '/mixer?soundscape=ritual-top-friction'),
                                 ),
                               ],
                             ),

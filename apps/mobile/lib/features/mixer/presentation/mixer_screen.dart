@@ -380,12 +380,14 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
           ),
         ],
       ),
-      body: TickerMode(
-        enabled: s.isPlaying,
-        child: AmbientBackdrop(
-          gradient: archetypeGradientForSlug(slug),
-          gains: s.gains,
-          child: SafeArea(
+      body: Stack(
+        children: [
+          TickerMode(
+            enabled: s.isPlaying,
+            child: AmbientBackdrop(
+              gradient: archetypeGradientForSlug(slug),
+              gains: s.gains,
+              child: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final height = constraints.maxHeight;
@@ -453,6 +455,17 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             ),
           ),
         ),
+          ),
+          if (s.isRitualActive)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  key: const Key('mixer-ritual-dim'),
+                  color: NoctaColors.bgBase.withValues(alpha: 0.30),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
