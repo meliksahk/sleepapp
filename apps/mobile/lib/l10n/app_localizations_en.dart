@@ -749,11 +749,11 @@ class AppL10nEn extends AppL10n {
       'Take the free sleep archetype test and see how your nights actually work. No account needed.';
 
   @override
-  String get onboardingRitualTitle => 'Build your night ritual';
+  String get onboardingRitualTitle => 'Your 10-minute ritual';
 
   @override
   String get onboardingRitualBody =>
-      'Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.';
+      'Pick rain, a pure hum, ceramic friction or a spinning top — mix your own sleep sound. Tap 10-minute fade and the sound slowly disappears while you fall asleep. Everything is made on your phone, offline.';
 
   @override
   String get onboardingAlarmTitle => 'Wake up gently';
@@ -770,7 +770,7 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get homeRitualSubtitle =>
-      'Sound, and a gentler wake-up. Works with no connection.';
+      'Mix your ritual in seconds. 10-minute fade puts the phone to sleep with you. Works offline.';
 
   @override
   String get homeStartRitual => 'Start tonight';

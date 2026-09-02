@@ -748,11 +748,11 @@ class AppL10nTr extends AppL10n {
       'Ücretsiz uyku arketipi testini çöz, gecelerinin gerçekte nasıl işlediğini gör. Hesap gerekmez.';
 
   @override
-  String get onboardingRitualTitle => 'Gece ritüelini kur';
+  String get onboardingRitualTitle => '10 dakikalık ritüelin';
 
   @override
   String get onboardingRitualBody =>
-      'Jeneratif sesleri kendin miksle — yağmur, drone, yumuşak gürültü. Her şey telefonunda üretilir ve internetsiz çalışır.';
+      'Yağmur, saf ton, seramik sürtme ya da topaç — kendi uyku sesini saniyelerde miksle. 10 dakikalık sönmeye bas, ses yavaşça kaybolurken sen uykuya dal. Her şey telefonunda, internetsiz.';
 
   @override
   String get onboardingAlarmTitle => 'Nazikçe uyan';
@@ -769,7 +769,7 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get homeRitualSubtitle =>
-      'Ses ve daha yumuşak bir uyanış. Bağlantı gerekmez.';
+      'Ritüelini saniyelerde miksle. 10 dakikalık sönme telefonla birlikte uykuya geçirir. İnternetsiz.';
 
   @override
   String get homeStartRitual => 'Bu geceyi başlat';

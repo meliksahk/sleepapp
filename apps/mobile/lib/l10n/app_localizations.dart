@@ -1333,16 +1333,16 @@ abstract class AppL10n {
   /// **'Take the free sleep archetype test and see how your nights actually work. No account needed.'**
   String get onboardingIdentityBody;
 
-  /// Karşılama 2 — ritüel/ses
+  /// Karşılama 2 — ritüel/ses, yeni amaç: 10dk telefonsuz uyku
   ///
   /// In en, this message translates to:
-  /// **'Build your night ritual'**
+  /// **'Your 10-minute ritual'**
   String get onboardingRitualTitle;
 
-  /// Karşılama 2 gövde
+  /// Karşılama 2 gövde — araç seti + 10dk fade
   ///
   /// In en, this message translates to:
-  /// **'Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.'**
+  /// **'Pick rain, a pure hum, ceramic friction or a spinning top — mix your own sleep sound. Tap 10-minute fade and the sound slowly disappears while you fall asleep. Everything is made on your phone, offline.'**
   String get onboardingRitualBody;
 
   /// Karşılama 3 — alarm + mikrofon izni priming
@@ -1369,10 +1369,10 @@ abstract class AppL10n {
   /// **'Start your night ritual'**
   String get homeRitualTitle;
 
-  /// Ritualin ne oldugu + cevrimdisi calistigi; ozellik tarifi
+  /// Ritualin ne oldugu + 10dk fade + offline
   ///
   /// In en, this message translates to:
-  /// **'Sound, and a gentler wake-up. Works with no connection.'**
+  /// **'Mix your ritual in seconds. 10-minute fade puts the phone to sleep with you. Works offline.'**
   String get homeRitualSubtitle;
 
   /// Birincil buton etiketi -> /sleep-mode

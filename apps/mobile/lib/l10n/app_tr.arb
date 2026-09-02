@@ -230,15 +230,15 @@
   "onboardingIdentityTitle": "Gecenin bir kimliği var",
   "onboardingIdentityBody": "Ücretsiz uyku arketipi testini çöz, gecelerinin gerçekte nasıl işlediğini gör. Hesap gerekmez.",
 
-  "onboardingRitualTitle": "Gece ritüelini kur",
-  "onboardingRitualBody": "Jeneratif sesleri kendin miksle — yağmur, drone, yumuşak gürültü. Her şey telefonunda üretilir ve internetsiz çalışır.",
+  "onboardingRitualTitle": "10 dakikalık ritüelin",
+  "onboardingRitualBody": "Yağmur, saf ton, seramik sürtme ya da topaç — kendi uyku sesini saniyelerde miksle. 10 dakikalık sönmeye bas, ses yavaşça kaybolurken sen uykuya dal. Her şey telefonunda, internetsiz.",
 
   "onboardingAlarmTitle": "Nazikçe uyan",
   "onboardingAlarmBody": "İzin verirsen NOCTA alarmı zamanlamak için hafif uykuyu dinler. Analiz telefonunda yapılır — ham ses hiçbir yere gitmez.",
 
   "homeTonightLabel": "Bu gece",
   "homeRitualTitle": "Gece ritüelini başlat",
-  "homeRitualSubtitle": "Ses ve daha yumuşak bir uyanış. Bağlantı gerekmez.",
+  "homeRitualSubtitle": "Ritüelini saniyelerde miksle. 10 dakikalık sönme telefonla birlikte uykuya geçirir. İnternetsiz.",
   "homeStartRitual": "Bu geceyi başlat",
   "homeIdentityInviteBody": "İki dakika, hesap gerekmez. Gecelerini paylaşabileceğin bir karta dönüştür.",
   "homeSectionExplore": "Keşfet",

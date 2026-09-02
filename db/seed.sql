@@ -322,10 +322,29 @@ VALUES
     '[]'::jsonb,
     '{dawn-chaser,delta-drifter}',
     'published', now(), NULL, NULL
+  ),
+
+  -- Ritual: Top & Friction — 10dk ritüel preset’i (amaç cümlesinin sesi).
+  -- Topaç vızıltısı (odak) + seramik sürtme (ritmik) + seramik kase (tok temel) + pembe hava.
+  -- Yeni malzeme kaynaklarını tek tarife koyan, 10dk fade ile telefonu bırakma ritüelinin
+  -- hazır sesi. Toplam 0.96 <1. Kategori relaxing (malzeme).
+  (
+    'a0000000-0000-4000-8000-000000000011',
+    'ritual-top-friction',
+    '{"en": "Ritual: Top & Friction", "tr": "Ritüel: Topaç ve Sürtme"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "top",      "type": "topSpin",  "gain": 0.34},
+        {"id": "friction", "type": "friction", "gain": 0.32},
+        {"id": "ceramic",  "type": "ceramic",  "gain": 0.22},
+        {"id": "air",      "type": "pink",     "gain": 0.08}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,delta-drifter,overthinker}',
+    'published', now(), NULL, NULL
   )
 ON CONFLICT (slug) DO NOTHING;
 
-UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('ceramic-drift','chime-haven') AND category <> 'relaxing';
+UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('ceramic-drift','chime-haven','ritual-top-friction') AND category <> 'relaxing';
 
 -- ============================================================================
 -- PRESET'LER — archetype başına mikser başlangıç noktası
@@ -392,10 +411,11 @@ INSERT INTO weekly_releases (week_start, soundscape_ids, notes)
 VALUES (
   date_trunc('week', now())::date,
   ARRAY[
+    'a0000000-0000-4000-8000-000000000011'::uuid,  -- Ritual: Top & Friction (yeni amaç)
     'a0000000-0000-4000-8000-000000000005'::uuid,  -- Night Train
     'a0000000-0000-4000-8000-000000000002'::uuid,  -- Rainfall Window
     'a0000000-0000-4000-8000-000000000004'::uuid   -- First Light
   ],
-  'Lokal geliştirme yayını: katmanlı, maskeleyen ve ince — üç farklı tarif karakteri.'
+  'Lokal geliştirme yayını: 10dk ritüel + katmanlı, maskeleyen ve ince.'
 )
 ON CONFLICT (week_start) DO NOTHING;

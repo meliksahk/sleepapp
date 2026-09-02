@@ -702,11 +702,56 @@
       },
       "presets": [],
       "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000011",
+        "slug": "ritual-top-friction",
+        "titleI18n": {
+          "en": "Ritual: Top & Friction",
+          "tr": "Ritüel: Topaç ve Sürtme"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter",
+          "overthinker"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.34
+            },
+            {
+              "id": "friction",
+              "type": "friction",
+              "gain": 0.32
+            },
+            {
+              "id": "ceramic",
+              "type": "ceramic",
+              "gain": 0.22
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.08
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
     }
   ],
   "weekly": {
-    "notes": "Lokal geliştirme yayını: katmanlı, maskeleyen ve ince — üç farklı tarif karakteri.",
+    "notes": "Lokal geliştirme yayını: 10dk ritüel + katmanlı, maskeleyen ve ince.",
     "soundscapeSlugs": [
+      "ritual-top-friction",
       "night-train",
       "rainfall-window",
       "first-light"
