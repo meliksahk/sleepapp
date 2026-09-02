@@ -612,6 +612,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
+                      if (s.isPreparing)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: NoctaSpace.s3),
+                          child: LinearProgressIndicator(
+                            key: Key('mixer-preparing-shimmer'),
+                            minHeight: 2,
+                            backgroundColor: NoctaColors.bgOverlay,
+                            color: NoctaColors.accentAurora,
+                          ),
+                        ),
                       if (widget.recipeUnavailable)
                         _notice(
                           // Dürüstlük: kullanıcı istediği sesi seçti ama başka

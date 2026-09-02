@@ -746,6 +746,276 @@
       },
       "presets": [],
       "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000012",
+        "slug": "top-spin-solo",
+        "titleI18n": {
+          "en": "Top Spin Solo",
+          "tr": "Topaç Solo"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.58
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000013",
+        "slug": "friction-solo",
+        "titleI18n": {
+          "en": "Friction Solo",
+          "tr": "Sürtme Solo"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "overthinker"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "rub",
+              "type": "friction",
+              "gain": 0.6
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000014",
+        "slug": "ceramic-friction-duo",
+        "titleI18n": {
+          "en": "Ceramic & Friction",
+          "tr": "Seramik ve Sürtme"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "bowl",
+              "type": "ceramic",
+              "gain": 0.42
+            },
+            {
+              "id": "rub",
+              "type": "friction",
+              "gain": 0.38
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000015",
+        "slug": "wind-chime-night",
+        "titleI18n": {
+          "en": "Wind Chime Night",
+          "tr": "Rüzgar Çanlı Gece"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "chimes",
+              "type": "chimes",
+              "gain": 0.4
+            },
+            {
+              "id": "rain",
+              "type": "rain",
+              "gain": 0.35
+            },
+            {
+              "id": "pad",
+              "type": "pad",
+              "gain": 0.14
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000016",
+        "slug": "low-hum-top",
+        "titleI18n": {
+          "en": "Low Hum Top",
+          "tr": "Alçak Uğultu ve Topaç"
+        },
+        "archetypeAffinity": [
+          "delta-drifter",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "hum",
+              "type": "tone",
+              "gain": 0.18,
+              "frequencyHz": 82.4
+            },
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.42
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.12
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000017",
+        "slug": "pink-ceramic-mist",
+        "titleI18n": {
+          "en": "Pink Ceramic Mist",
+          "tr": "Pembe Seramik Sisi"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "pink",
+              "type": "pink",
+              "gain": 0.45
+            },
+            {
+              "id": "ceramic",
+              "type": "ceramic",
+              "gain": 0.38
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000018",
+        "slug": "brown-friction-ground",
+        "titleI18n": {
+          "en": "Brown Friction Ground",
+          "tr": "Kahverengi Sürtme Zemini"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "ground",
+              "type": "brown",
+              "gain": 0.48
+            },
+            {
+              "id": "rub",
+              "type": "friction",
+              "gain": 0.36
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000019",
+        "slug": "arpeggio-garden-top",
+        "titleI18n": {
+          "en": "Arpeggio Garden Top",
+          "tr": "Arpej Bahçesi ve Topaç"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "garden",
+              "type": "arpeggio",
+              "gain": 0.28
+            },
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.32
+            },
+            {
+              "id": "blanket",
+              "type": "brown",
+              "gain": 0.22
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
     }
   ],
   "weekly": {

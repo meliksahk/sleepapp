@@ -221,7 +221,39 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         weekly.maybeWhen(
                           data: (w) => w == null
-                              ? const SizedBox.shrink()
+                              ? Padding(
+                                  padding: const EdgeInsets.only(top: NoctaSpace.s4),
+                                  child: Container(
+                                    key: const Key('offline-library-badge'),
+                                    padding: const EdgeInsets.all(NoctaSpace.s3),
+                                    decoration: BoxDecoration(
+                                      color: NoctaColors.accentAurora
+                                          .withValues(alpha: 0.10),
+                                      border: Border.all(
+                                          color: NoctaColors.accentAurora
+                                              .withValues(alpha: 0.30)),
+                                    ),
+                                    child: Row(
+                                      children: <Widget>[
+                                        Container(
+                                            width: 8,
+                                            height: 8,
+                                            color: NoctaColors.accentAurora),
+                                        const SizedBox(width: NoctaSpace.s2),
+                                        Expanded(
+                                          child: Text(
+                                            'Çevrimdışı kütüphane hazır — 25 ses, internetsiz çalar',
+                                            style: TextStyle(
+                                              fontFamily: NoctaFont.mono,
+                                              fontSize: NoctaFontSize.caption,
+                                              color: NoctaColors.inkPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
                               : Padding(
                                   padding: const EdgeInsets.only(
                                     top: NoctaSpace.s4,

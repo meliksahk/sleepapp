@@ -341,10 +341,124 @@ VALUES
     '[]'::jsonb,
     '{deep-ocean,delta-drifter,overthinker}',
     'published', now(), NULL, NULL
+  ),
+
+  -- Top Spin Solo — saf topaç, tek katman. Fan’cı için değil, odak arayan için.
+  (
+    'a0000000-0000-4000-8000-000000000012',
+    'top-spin-solo',
+    '{"en": "Top Spin Solo", "tr": "Topaç Solo"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "top", "type": "topSpin", "gain": 0.58}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,delta-drifter}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Friction Solo — iki seramik topun yavaş sürtmesi, tek katman.
+  (
+    'a0000000-0000-4000-8000-000000000013',
+    'friction-solo',
+    '{"en": "Friction Solo", "tr": "Sürtme Solo"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "rub", "type": "friction", "gain": 0.60}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,overthinker}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Ceramic & Friction — seramik kase + sürtme, çift malzeme, çok dokulu.
+  (
+    'a0000000-0000-4000-8000-000000000014',
+    'ceramic-friction-duo',
+    '{"en": "Ceramic & Friction", "tr": "Seramik ve Sürtme"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "bowl", "type": "ceramic",  "gain": 0.42},
+        {"id": "rub",  "type": "friction", "gain": 0.38}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{deep-ocean,dawn-chaser}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Wind Chime Night — rüzgar çanı + yağmur, gece bahçesi hissi.
+  (
+    'a0000000-0000-4000-8000-000000000015',
+    'wind-chime-night',
+    '{"en": "Wind Chime Night", "tr": "Rüzgar Çanlı Gece"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "chimes", "type": "chimes", "gain": 0.40},
+        {"id": "rain",   "type": "rain",   "gain": 0.35},
+        {"id": "pad",    "type": "pad",    "gain": 0.14}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{dawn-chaser,deep-ocean}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Low Hum Top — topaç üstüne 82Hz ton, derin temel.
+  (
+    'a0000000-0000-4000-8000-000000000016',
+    'low-hum-top',
+    '{"en": "Low Hum Top", "tr": "Alçak Uğultu ve Topaç"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "hum", "type": "tone",    "gain": 0.18, "frequencyHz": 82.4},
+        {"id": "top", "type": "topSpin", "gain": 0.42},
+        {"id": "air", "type": "pink",    "gain": 0.12}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{delta-drifter,deep-ocean}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Pink Ceramic Mist — pembe sis + seramik, yumuşak malzeme.
+  (
+    'a0000000-0000-4000-8000-000000000017',
+    'pink-ceramic-mist',
+    '{"en": "Pink Ceramic Mist", "tr": "Pembe Seramik Sisi"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "pink",    "type": "pink",    "gain": 0.45},
+        {"id": "ceramic", "type": "ceramic", "gain": 0.38}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{overthinker,dawn-chaser}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Brown Friction Ground — kahverengi zemin + sürtme, maskeleyici + dokulu.
+  (
+    'a0000000-0000-4000-8000-000000000018',
+    'brown-friction-ground',
+    '{"en": "Brown Friction Ground", "tr": "Kahverengi Sürtme Zemini"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "ground", "type": "brown",    "gain": 0.48},
+        {"id": "rub",    "type": "friction", "gain": 0.36}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{overthinker,deep-ocean}',
+    'published', now(), NULL, NULL
+  ),
+
+  -- Arpeggio Garden Top — arpej + topaç, melodik + odak.
+  (
+    'a0000000-0000-4000-8000-000000000019',
+    'arpeggio-garden-top',
+    '{"en": "Arpeggio Garden Top", "tr": "Arpej Bahçesi ve Topaç"}'::jsonb,
+    '{"schemaVersion": 1, "layers": [
+        {"id": "garden", "type": "arpeggio", "gain": 0.28},
+        {"id": "top",    "type": "topSpin",  "gain": 0.32},
+        {"id": "blanket","type": "brown",    "gain": 0.22}
+     ]}'::jsonb,
+    '[]'::jsonb,
+    '{dawn-chaser,deep-ocean}',
+    'published', now(), NULL, NULL
   )
 ON CONFLICT (slug) DO NOTHING;
 
-UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('ceramic-drift','chime-haven','ritual-top-friction') AND category <> 'relaxing';
+UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('ceramic-drift','chime-haven','ritual-top-friction','top-spin-solo','friction-solo','ceramic-friction-duo','pink-ceramic-mist') AND category <> 'relaxing';
+UPDATE soundscapes SET category = 'nature' WHERE slug IN ('wind-chime-night') AND category <> 'nature';
 
 -- ============================================================================
 -- PRESET'LER — archetype başına mikser başlangıç noktası
