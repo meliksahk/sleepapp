@@ -51,18 +51,17 @@ Float32List ceramicSource(
   final out = Float32List(samples);
   final twoPi = 2 * math.pi;
 
-  // 1. Roll: yavaş genlik + hafif frekans wobble (yuvarlanma pürüzü)
+  // 1. Roll: yavaş genlik + hafif frekans wobble (yuvarlanma pürüzü) — döngüye kilitli
+  final wobbleFreq = loopLockedHz(0.37, loopSeconds);
   for (var i = 0; i < samples; i++) {
     final t = i / sampleRate;
     final rollEnv = 0.65 + 0.35 * (0.5 - 0.5 * math.cos(twoPi * t / rollPeriod));
-    // Topun dönüş hızındaki mikro değişim → faz modülasyonu (≤ 0.08 rad)
-    final wobble = 0.08 * math.sin(twoPi * 0.37 * t);
+    final wobble = 0.08 * math.sin(twoPi * wobbleFreq * t);
     var v = 0.0;
     for (var k = 0; k < freqs.length; k++) {
       final ph = twoPi * freqs[k] * t + wobble * (k + 1);
       v += weights[k] * _osc(ph);
     }
-    // Roll zarfı ve genel seviye
     out[i] = 0.58 * rollEnv * v;
   }
 
@@ -161,14 +160,13 @@ Float32List topSpinSource(
   const weights = [0.42, 0.24, 0.18, 0.16];
   final out = Float32List(samples);
   final twoPi = 2 * math.pi;
+  final wobbleFreq = loopLockedHz(0.62, loopSeconds);
+  final hissFreq = loopLockedHz(11.3, loopSeconds);
   for (var i = 0; i < samples; i++) {
     final t = i / sampleRate;
-    // Dönüş yavaşlama zarfı: 1.0 → 0.65, periyodik (topaç düşer, sonra tekrar fırlatılır gibi döngüsel)
     final spinEnv = 0.65 + 0.35 * (0.5 + 0.5 * math.cos(twoPi * t / period));
-    // Presesyon yalpası: 0.6 Hz, faz modülasyonu 0.12 rad (masa üstünde yalpalama)
-    final wobble = 0.12 * math.sin(twoPi * 0.62 * t);
-    // Sürtünme hışırtısı: çok hafif, yüksek frekansın genliğini modüle eder
-    final hiss = 0.04 * math.sin(twoPi * 11.3 * t);
+    final wobble = 0.12 * math.sin(twoPi * wobbleFreq * t);
+    final hiss = 0.04 * math.sin(twoPi * hissFreq * t);
     var v = 0.0;
     for (var k = 0; k < freqs.length; k++) {
       v += weights[k] * math.sin(twoPi * freqs[k] * t + wobble * (k + 1));
@@ -206,15 +204,14 @@ Float32List frictionSource(
   final out = Float32List(samples);
   var lo = 0.0, hi = 0.0;
   final twoPi = 2 * math.pi;
+  final handFreq = loopLockedHz(0.22, loopSeconds);
   for (var i = 0; i < samples; i++) {
     final x = raw[i];
     hi += _frictionBandHiA * (x - hi);
     lo += _frictionBandLoA * (x - lo);
     final band = 0.5 * (hi - lo); // |band| ≤ 1
     final t = i / sampleRate;
-    // El hareketi: 0.22 Hz, 0.45–1.0 arası (avuç içi daire çiziyor)
-    final hand = 0.45 + 0.55 * (0.5 + 0.5 * math.sin(twoPi * 0.22 * t + 0.7));
-    // Grit: el hızının tepe yaptığı yerde hafif pürüz
+    final hand = 0.45 + 0.55 * (0.5 + 0.5 * math.sin(twoPi * handFreq * t + 0.7));
     final gritEnv = math.pow(hand, 3).toDouble();
     out[i] = 0.58 * hand * band + 0.08 * gritEnv * band;
   }
