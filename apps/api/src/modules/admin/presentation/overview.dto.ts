@@ -44,4 +44,11 @@ export class OverviewDto {
 
   @ApiProperty({ type: ShareFunnelDto, description: 'Viral kanca sağlığı' })
   shareFunnel!: ShareFunnelDto;
+
+  @ApiProperty({
+    description:
+      'Son 30 günde silinen hesap (kimliksiz olay sayacı). Silme kaskadının ' +
+      'işlediğini görmenin tek operasyonel yolu.',
+  })
+  deletedAccounts30d!: number;
 }

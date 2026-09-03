@@ -2,9 +2,12 @@ import 'dart:typed_data';
 
 import 'asset_layer.dart';
 import 'dc_blocker.dart';
+import 'material.dart';
 import 'meditative.dart';
 import 'mixer.dart';
 import 'noise.dart';
+import 'tone.dart';
+import 'user_melodic.dart';
 
 export 'asset_layer.dart' show AssetLayer;
 
@@ -36,6 +39,13 @@ enum LayerSource {
   fire,
   rain,
   pad,
+  tone,
+  chords,
+  arpeggio,
+  ceramic,
+  chimes,
+  topSpin,
+  friction,
 }
 
 /// Kaynak, döngü periyoduna **kilitli** mi (kuyruk ile baş birebir aynı mı)?
@@ -44,17 +54,68 @@ enum LayerSource {
 /// kaynağa eşit-güç crossfade uygulamak zararlıdır: aynı sinyalin kendisiyle
 /// sin+cos ağırlıklı toplamı √2'ye kadar çıkar → döngü başında +3 dB kabarma.
 /// Kilitli kaynakta crossfade'e GEREK de yoktur, çünkü süreklilik zaten sağlanır.
-bool isLoopPeriodic(LayerSource type) => type == LayerSource.pad;
+///
+/// `tone` pad ile AYNI gerekçeyle kilitlidir: saf sinüstür ve frekansı
+/// `loopLockedHz` ile ızgaraya oturtulur → kuyruk = baş (bkz. `tone.dart`).
+bool isLoopPeriodic(LayerSource type) =>
+    type == LayerSource.pad ||
+    type == LayerSource.tone ||
+    type == LayerSource.chords ||
+    type == LayerSource.arpeggio ||
+    type == LayerSource.ceramic ||
+    type == LayerSource.chimes ||
+    type == LayerSource.topSpin ||
+    type == LayerSource.friction;
 
 /// Tek bir mikser katmanı: hangi kaynak, hangi kazanç.
 class MixLayer {
-  const MixLayer({required this.id, required this.type, required this.gain});
+  const MixLayer({
+    required this.id,
+    required this.type,
+    required this.gain,
+    this.frequencyHz,
+    this.beatHz,
+    this.rootSemi,
+    this.waveform,
+    this.tempoScale,
+    this.patternIdx,
+  });
 
   final String id;
   final LayerSource type;
 
   /// [0,1] — mikser zaten sıkıştırır.
   final double gain;
+
+  /// `tone` için temel frekans (Hz). Diğer kaynaklarda **null OLMALI** —
+  /// sunucu sözleşmesi de öyle doğrular (`mixer-state.ts`): ton dışı katmanda
+  /// alan varsa tarif reddedilir, ton katmanında alan YOKSA reddedilir.
+  ///
+  /// Değer kullanıcının İSTEDİĞİ frekanstır; motor onu döngü ızgarasına
+  /// oturtur. Duyulan gerçek değer `toneGridHz` ile hesaplanır (UI etiketi).
+  final double? frequencyHz;
+
+  /// `tone` için opsiyonel **binaural vuru** (Hz/s). null → mono ton; > 0 →
+  /// MixPlayer bu katmanı STEREO ses olarak çalar (L=taban, R=taban+vuru);
+  /// `renderMix` (mono referans/export) ise iki kanalın indirgemesini üretir
+  /// (tremololu mono — fark bilinçli ve belgeli; tone.dart).
+  ///
+  /// Sunucu sözleşmesiyle BİREBİR (mixer-state.ts `beatHz`): yalnızca tone'da,
+  /// (0.5, 20] Hz, yokluk = mono. Alan sözleşme üyesidir — parse edilmiş tarif
+  /// yazılırken düşürülseydi editörün binaural tarifi sessizce mono olurdu.
+  final double? beatHz;
+
+  /// `chords`/`arpeggio`: kök nota kayması (yarım-ses, A2'den). Mobil-özel.
+  final int? rootSemi;
+
+  /// `chords`/`arpeggio`: dalga şekli ('sine','triangle','saw','square'). Mobil-özel.
+  final String? waveform;
+
+  /// `chords`/`arpeggio`: tempo ölçeği (1.0=normal, 2.0=2× hızlı). Mobil-özel.
+  final double? tempoScale;
+
+  /// `chords`: progresyon indeksi. `arpeggio`: ölçek indeksi. Mobil-özel.
+  final int? patternIdx;
 }
 
 /// Bir mix'in tanımı (preset). Katman sırası render'ı etkilemez (toplama).
@@ -113,6 +174,12 @@ Float32List renderSource(
   required int seed,
   required int sampleRate,
   required int loopSamples,
+  double? frequencyHz,
+  double? beatHz,
+  int? rootSemi,
+  String? waveform,
+  double? tempoScale,
+  int? patternIdx,
 }) {
   switch (type) {
     case LayerSource.white:
@@ -133,6 +200,57 @@ Float32List renderSource(
     case LayerSource.pad:
       return padSource(samples,
           seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.tone:
+      // Tonun içinde rastgelelik yok → seed anlamsızdır (bkz. tone.dart).
+      // frequencyHz null olamaz: sunucu sözleşmesi ton katmanında alanı
+      // ZORUNLU kılar; buraya null gelirse çağıran sözleşmeyi bozmuştur.
+      assert(frequencyHz != null, 'tone katmanı frequencyHz olmadan render edilemez');
+      if (beatHz != null && beatHz > 0) {
+        // MONO yol = binaural'ın TAM indirgemesi (tremololu taşıyıcı). Stereo
+        // çalma MixPlayer'da olur; bu fonksiyon export/native-referans yoludur.
+        return toneMonoFromBinaural(
+          samples,
+          baseHz: frequencyHz ?? (toneMinHz + toneMaxHz) / 2,
+          beatHz: beatHz,
+          sampleRate: sampleRate,
+          loopSamples: loopSamples,
+        );
+      }
+      return toneSource(
+        samples,
+        frequencyHz: frequencyHz ?? (toneMinHz + toneMaxHz) / 2,
+        sampleRate: sampleRate,
+        loopSamples: loopSamples,
+      );
+    case LayerSource.chords:
+      return userChordsSource(
+        samples,
+        sampleRate: sampleRate,
+        loopSamples: loopSamples,
+        rootSemi: rootSemi ?? 0,
+        progressionIdx: patternIdx ?? 0,
+        waveform: waveform != null ? Waveform.values.firstWhere((w) => w.name == waveform, orElse: () => Waveform.sine) : Waveform.sine,
+        tempoScale: tempoScale ?? 1.0,
+      );
+    case LayerSource.arpeggio:
+      return userArpeggioSource(
+        samples,
+        seed: seed,
+        sampleRate: sampleRate,
+        loopSamples: loopSamples,
+        rootSemi: rootSemi ?? 0,
+        scaleIdx: patternIdx ?? 0,
+        waveform: waveform != null ? Waveform.values.firstWhere((w) => w.name == waveform, orElse: () => Waveform.sine) : Waveform.sine,
+        tempoScale: tempoScale ?? 1.0,
+      );
+    case LayerSource.ceramic:
+      return ceramicSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.chimes:
+      return chimesSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.topSpin:
+      return topSpinSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
+    case LayerSource.friction:
+      return frictionSource(samples, seed: seed, sampleRate: sampleRate, loopSamples: loopSamples);
   }
 }
 
@@ -211,6 +329,12 @@ Float32List renderMix(
       seed: layerSeed(seed, i),
       sampleRate: sampleRate,
       loopSamples: loopSamples,
+      frequencyHz: layer.frequencyHz,
+      beatHz: layer.beatHz,
+      rootSemi: layer.rootSemi,
+      waveform: layer.waveform,
+      tempoScale: layer.tempoScale,
+      patternIdx: layer.patternIdx,
     );
   }
 

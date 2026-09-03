@@ -325,6 +325,138 @@ abstract class AppL10n {
   /// **'Warm pad'**
   String get mixerLayerPad;
 
+  /// Kullanıcının seçtiği frekanstaki saf sinüs katmanı. 'Healing tone' DEĞİL: sağlık iddiası yasak (CLAUDE.md §1.1), nötr müzikal adlandırma
+  ///
+  /// In en, this message translates to:
+  /// **'Pure tone'**
+  String get mixerLayerTone;
+
+  /// Kaldırılan sentez kaynağını geri ekleme sheet başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Add back a source'**
+  String get mixerAddSourceTitle;
+
+  /// Katman listesi başlığındaki ikinci eylem — frekans seçici sheet'i açar
+  ///
+  /// In en, this message translates to:
+  /// **'Add tone'**
+  String get mixerAddTone;
+
+  /// Frekans seçicinin başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a tone'**
+  String get mixerAddToneTitle;
+
+  /// Seçicide ne yapılacağı. Sağlık vaadi YOK — müzikal/akustik tanım
+  ///
+  /// In en, this message translates to:
+  /// **'A pure sustained note. Blend it under noise or let it hum on its own.'**
+  String get mixerAddToneHint;
+
+  /// Seçilen frekansı katman olarak ekleyen onay butonu
+  ///
+  /// In en, this message translates to:
+  /// **'Add to mix'**
+  String get mixerAddToneConfirm;
+
+  /// Katman tavanı (8) dolduğunda yeni sentez/dosya katmanı eklenemez; arıza değil bütçe bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'The mix is full — remove a layer to add another.'**
+  String get mixerLayerLimitReached;
+
+  /// Binaural vuru sürgüsünün etiketi. 'Theta/delta' gibi EEG adları YASAK (§1.1) — akustik olay adıyla anılır
+  ///
+  /// In en, this message translates to:
+  /// **'Beat (binaural)'**
+  String get mixerToneBeatLabel;
+
+  /// Katman etiketindeki vuru birimi: 'Pure tone · 110 Hz · 10 beat'
+  ///
+  /// In en, this message translates to:
+  /// **'beat'**
+  String get mixerToneBeatUnit;
+
+  /// Vuru sürgüsü sıfırdayken gösterilen değer = mono ton
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get mixerToneBeatOff;
+
+  /// Vurunun dürüst açıklaması: akustik etki + kulaklık notu. Sağlık/EEG vaadi YOK; 'nothing more' bilinçli sınırlayıcı
+  ///
+  /// In en, this message translates to:
+  /// **'Each ear hears a slightly different pitch — you perceive a gentle pulsing beat. Works best with headphones. A sound effect, nothing more.'**
+  String get mixerToneBeatHint;
+
+  /// Kütüphane satırındaki topluluk paylaşım butonu (tooltip)
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get communityShareAction;
+
+  /// Paylaşım diyaloğunun başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Share with the community'**
+  String get communityShareTitle;
+
+  /// Sesin başlık alanı — kullanıcının dosya adıyla ön doludur
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get communityShareTitleField;
+
+  /// Paylaşım koşulları: moderasyon + telif beyanı + yerel kopya güvencesi. Sağlık iddiası YOK (§1.1)
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound will be reviewed before it appears for others. You confirm you own it or it is license-free. Your local copy is never removed.'**
+  String get communityShareTerms;
+
+  /// Yükleme sürerken onay butonunun metni; buton kilitlidir
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get communitySharing;
+
+  /// Diyalogdaki onay eylemi — 'publish' DEMEZ: moderasyondan geçmeden görünmez
+  ///
+  /// In en, this message translates to:
+  /// **'Send for review'**
+  String get communityShareConfirm;
+
+  /// Paylaşım tamamlandı snackbar'ı — sonucun değil sürecin bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'Sent! Your sound will appear in the community library after review.'**
+  String get communitySharedDone;
+
+  /// Genel paylaşım hatası (ağ/oturum/bilinmeyen)
+  ///
+  /// In en, this message translates to:
+  /// **'Your sound could not be shared. Try again later.'**
+  String get communityShareFailed;
+
+  /// Eşzamanlı bekleyen paylaşım tavanı doldu (sunucu 422)
+  ///
+  /// In en, this message translates to:
+  /// **'You have too many sounds waiting for review. Please wait for them to be reviewed first.'**
+  String get communitySharePendingLimit;
+
+  /// Dosya depoya yüklenemedi ya da sunucu HEAD doğrulamasını geçemedi
+  ///
+  /// In en, this message translates to:
+  /// **'The file could not be uploaded. Check your connection and try again.'**
+  String get communityShareUploadFailed;
+
+  /// Süre cihazda okunamadı — sunucu süreyi zorunlu kılar; uydurma süre gönderilmez
+  ///
+  /// In en, this message translates to:
+  /// **'This file\'s length could not be read, so it cannot be shared.'**
+  String get communityShareDurationUnknown;
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:
@@ -558,6 +690,84 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Tonight\'s mix'**
   String get mixerVideoTitle;
+
+  /// Am→F→C→G akor progresyonu — yavaş, sıcak, melodik
+  ///
+  /// In en, this message translates to:
+  /// **'Chord progression'**
+  String get mixerLayerChords;
+
+  /// Pentatonik ölçekte gezinen yumuşak arpej
+  ///
+  /// In en, this message translates to:
+  /// **'Pentatonic arpeggio'**
+  String get mixerLayerArpeggio;
+
+  /// Seramik kase modal sentez — malzeme sesi
+  ///
+  /// In en, this message translates to:
+  /// **'Ceramic bowl'**
+  String get mixerLayerCeramic;
+
+  /// Rüzgar çanı modal sentez — malzeme sesi
+  ///
+  /// In en, this message translates to:
+  /// **'Wind chimes'**
+  String get mixerLayerChimes;
+
+  /// Topaç vızıltısı — ahşap dönen topaç
+  ///
+  /// In en, this message translates to:
+  /// **'Spinning top'**
+  String get mixerLayerTopSpin;
+
+  /// İki seramik topun sürtme sesi
+  ///
+  /// In en, this message translates to:
+  /// **'Ceramic friction'**
+  String get mixerLayerFriction;
+
+  /// Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)
+  ///
+  /// In en, this message translates to:
+  /// **'Night sound'**
+  String get sleepSoundTitle;
+
+  /// No description provided for @sleepSoundOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get sleepSoundOn;
+
+  /// No description provided for @sleepSoundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get sleepSoundOff;
+
+  /// No description provided for @sleepSoundTurnOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get sleepSoundTurnOn;
+
+  /// No description provided for @sleepSoundTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get sleepSoundTurnOff;
+
+  /// Ne yaptığını dürüst anlatır; sağlık iddiası YOK
+  ///
+  /// In en, this message translates to:
+  /// **'A generated mix plays softly all night. It stops with the alarm and works offline.'**
+  String get sleepSoundHint;
+
+  /// Ses patladı ama mikrofon/servis sürer: ayrı dipnot, hata ekranı değil
+  ///
+  /// In en, this message translates to:
+  /// **'The sound could not start — night tracking continues.'**
+  String get sleepSoundFailed;
 
   /// Uyku modundaki alarm bölümü başlığı
   ///
@@ -1123,16 +1333,16 @@ abstract class AppL10n {
   /// **'Take the free sleep archetype test and see how your nights actually work. No account needed.'**
   String get onboardingIdentityBody;
 
-  /// Karşılama 2 — ritüel/ses
+  /// Karşılama 2 — ritüel/ses, yeni amaç: 10dk telefonsuz uyku
   ///
   /// In en, this message translates to:
-  /// **'Build your night ritual'**
+  /// **'Your 10-minute ritual'**
   String get onboardingRitualTitle;
 
-  /// Karşılama 2 gövde
+  /// Karşılama 2 gövde — araç seti + 10dk fade
   ///
   /// In en, this message translates to:
-  /// **'Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.'**
+  /// **'Pick rain, a pure hum, ceramic friction or a spinning top — mix your own sleep sound. Tap 10-minute fade and the sound slowly disappears while you fall asleep. Everything is made on your phone, offline.'**
   String get onboardingRitualBody;
 
   /// Karşılama 3 — alarm + mikrofon izni priming
@@ -1159,10 +1369,10 @@ abstract class AppL10n {
   /// **'Start your night ritual'**
   String get homeRitualTitle;
 
-  /// Ritualin ne oldugu + cevrimdisi calistigi; ozellik tarifi
+  /// Ritualin ne oldugu + 10dk fade + offline
   ///
   /// In en, this message translates to:
-  /// **'Sound, and a gentler wake-up. Works with no connection.'**
+  /// **'Mix your ritual in seconds. 10-minute fade puts the phone to sleep with you. Works offline.'**
   String get homeRitualSubtitle;
 
   /// Birincil buton etiketi -> /sleep-mode
@@ -1182,6 +1392,54 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'Explore'**
   String get homeSectionExplore;
+
+  /// Katalogda topluluk sesi rozeti — genre='community' olan satırlar
+  ///
+  /// In en, this message translates to:
+  /// **'Community'**
+  String get communityBadge;
+
+  /// Paylaşımlarım ekranı başlığı ve ayarlardaki giriş butonu
+  ///
+  /// In en, this message translates to:
+  /// **'My shared sounds'**
+  String get mySharesTitle;
+
+  /// Paylaşım yok boş durumu — nereden paylaşılacağı söylenir
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t shared anything yet. Share a sound from the mixer\'s sound catalog.'**
+  String get mySharesEmpty;
+
+  /// Durum etiketleri — 'Live' YAYINDA demektir, onaylandı
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get shareStatusPending;
+
+  /// No description provided for @shareStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get shareStatusApproved;
+
+  /// No description provided for @shareStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted'**
+  String get shareStatusRejected;
+
+  /// Liste yüklenemedi (ağ/oturum)
+  ///
+  /// In en, this message translates to:
+  /// **'Your shares could not be loaded.'**
+  String get mySharesLoadFailed;
+
+  /// Red gerekçesi SAHİBİNE gösterilir — sessiz red yasak. reason placeholder'lı
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer note: \"{reason}\"'**
+  String mySharesRejectionReason(String reason);
 
   /// Acilis aurasi anahtari
   ///
@@ -1242,6 +1500,324 @@ abstract class AppL10n {
   /// In en, this message translates to:
   /// **'We couldn\'t load this sound\'s recipe, so your default mix is playing.'**
   String get mixerRecipeUnavailable;
+
+  /// Ayarlar bolum basligi: gizlilik ve hesap
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacySection;
+
+  /// Kisisel verinin tamamini disa aktarma eylemi (mono etiket)
+  ///
+  /// In en, this message translates to:
+  /// **'DOWNLOAD MY DATA'**
+  String get privacyExport;
+
+  /// Disa aktarma aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'Everything we hold about you, as one JSON file.'**
+  String get privacyExportHint;
+
+  /// Disa aktarma suruyor
+  ///
+  /// In en, this message translates to:
+  /// **'PREPARING…'**
+  String get privacyExporting;
+
+  /// Disa aktarma hatasi
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t prepare your data. Try again in a moment.'**
+  String get privacyExportFailed;
+
+  /// Ayarlardan hesap silme ekranina giden eylem
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE MY ACCOUNT'**
+  String get privacyDeleteEntry;
+
+  /// Hesap silme ekrani basligi (serif)
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account'**
+  String get deleteAccountTitle;
+
+  /// Silmenin geri alinamazligi
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone. Every night, mix, identity result and local sound file is erased.'**
+  String get deleteAccountBody;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your nights and reports'**
+  String get deleteAccountItemNights;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your mixes and saved sounds'**
+  String get deleteAccountItemMixes;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your sleep identity history'**
+  String get deleteAccountItemIdentity;
+
+  /// Silinecekler listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Every signed-in device'**
+  String get deleteAccountItemDevices;
+
+  /// Onay kutusu etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'I understand there is no way back.'**
+  String get deleteAccountConfirm;
+
+  /// Yikici birincil eylem
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE PERMANENTLY'**
+  String get deleteAccountCta;
+
+  /// Vazgecme eylemi
+  ///
+  /// In en, this message translates to:
+  /// **'KEEP MY ACCOUNT'**
+  String get deleteAccountCancel;
+
+  /// Silme suruyor
+  ///
+  /// In en, this message translates to:
+  /// **'DELETING…'**
+  String get deleteAccountDeleting;
+
+  /// Silme hatasi - hicbir sey silinmedi
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t delete your account. Nothing was removed.'**
+  String get deleteAccountFailed;
+
+  /// Mikrofon izin gerekçesi ekrani basligi (serif)
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone stays on. Nothing is recorded.'**
+  String get micPermissionTitle;
+
+  /// Izin gerekcesi maddesi
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone counts events — movement, sound, quiet. It never keeps the audio.'**
+  String get micPermissionFactCounts;
+
+  /// Izin gerekcesi maddesi
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis happens on this device. Nothing is uploaded, not even once.'**
+  String get micPermissionFactLocal;
+
+  /// Izin gerekcesi maddesi
+  ///
+  /// In en, this message translates to:
+  /// **'Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.'**
+  String get micPermissionFactOptional;
+
+  /// Izin akisini surdurur (sistem kutusu bundan SONRA cikar)
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE'**
+  String get micPermissionAllow;
+
+  /// Izin vermeden devam
+  ///
+  /// In en, this message translates to:
+  /// **'NOT NOW'**
+  String get micPermissionSkip;
+
+  /// Reddedildi bloğu basligi
+  ///
+  /// In en, this message translates to:
+  /// **'PERMISSION DENIED'**
+  String get micPermissionDeniedTitle;
+
+  /// Reddedildi bloğu govdesi
+  ///
+  /// In en, this message translates to:
+  /// **'The ritual still runs — only the night report won\'t be produced. You can turn it on later in your phone\'s settings.'**
+  String get micPermissionDeniedBody;
+
+  /// Alarm kurulum: secilen saatin anlami
+  ///
+  /// In en, this message translates to:
+  /// **'AT THE LATEST'**
+  String get alarmLatestAt;
+
+  /// Alarm penceresi genisligi etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'WINDOW WIDTH'**
+  String get alarmWindowWidth;
+
+  /// Pencere genisligi degeri
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} MIN'**
+  String alarmWindowMinutes(int minutes);
+
+  /// Alarm kurulum birincil eylem
+  ///
+  /// In en, this message translates to:
+  /// **'SET THE ALARM'**
+  String get alarmSave;
+
+  /// Ritüel/seri ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'My ritual'**
+  String get ritualTitle;
+
+  /// Buyuk seri sayisinin altindaki etiket
+  ///
+  /// In en, this message translates to:
+  /// **'NIGHTS IN A ROW'**
+  String get ritualNightsInRow;
+
+  /// Istatistik etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'LONGEST'**
+  String get ritualLongest;
+
+  /// Istatistik etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'NIGHTS TOTAL'**
+  String get ritualTotalNights;
+
+  /// Istatistik etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'AVERAGE'**
+  String get ritualAverage;
+
+  /// Ay izgarasi basligi
+  ///
+  /// In en, this message translates to:
+  /// **'THIS MONTH'**
+  String get ritualMonthLabel;
+
+  /// Hic gece yoksa
+  ///
+  /// In en, this message translates to:
+  /// **'Your ritual hasn\'t started yet.'**
+  String get ritualEmpty;
+
+  /// Mix-to-video ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Share studio'**
+  String get studioTitle;
+
+  /// Sure secimi etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'LENGTH'**
+  String get studioLength;
+
+  /// Sure secenegi
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} SEC'**
+  String studioSeconds(int seconds);
+
+  /// Sure secimi notu: cihazda uretiliyor
+  ///
+  /// In en, this message translates to:
+  /// **'Longer clips take longer to make — everything is rendered on this phone.'**
+  String get studioLengthHint;
+
+  /// Birincil eylem
+  ///
+  /// In en, this message translates to:
+  /// **'MAKE THE VIDEO'**
+  String get studioExport;
+
+  /// Bildirim ayarlari ekrani basligi
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifSettingsTitle;
+
+  /// Hatirlatici bolumu
+  ///
+  /// In en, this message translates to:
+  /// **'EVENING REMINDER'**
+  String get notifReminderSection;
+
+  /// Hatirlatici kapali
+  ///
+  /// In en, this message translates to:
+  /// **'No reminder'**
+  String get notifReminderOff;
+
+  /// Hatirlatici saati
+  ///
+  /// In en, this message translates to:
+  /// **'Every evening at {hour}'**
+  String notifReminderAt(String hour);
+
+  /// Hatirlatici aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'A nudge to start the ritual — nothing else.'**
+  String get notifReminderHint;
+
+  /// Sessiz saatler bolumu
+  ///
+  /// In en, this message translates to:
+  /// **'QUIET HOURS'**
+  String get notifQuietSection;
+
+  /// Sessiz saat kapali
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get notifQuietOff;
+
+  /// Sessiz saat araligi
+  ///
+  /// In en, this message translates to:
+  /// **'{start} — {end}'**
+  String notifQuietRange(String start, String end);
+
+  /// Sessiz saat aciklamasi
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing reaches you between these hours.'**
+  String get notifQuietHint;
+
+  /// Kaydetme hatasi
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save. Your settings are unchanged.'**
+  String get notifSaveFailed;
+
+  /// Saat secme eylemi
+  ///
+  /// In en, this message translates to:
+  /// **'CHANGE'**
+  String get notifPick;
+
+  /// Tercihi kapatma
+  ///
+  /// In en, this message translates to:
+  /// **'TURN OFF'**
+  String get notifClear;
 }
 
 class _AppL10nDelegate extends LocalizationsDelegate<AppL10n> {

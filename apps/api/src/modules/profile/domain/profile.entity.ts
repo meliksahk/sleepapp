@@ -7,6 +7,15 @@ export interface Profile {
   readonly timezone: string;
   /** Push bildirim tercihi (opt-out). Varsayılan açık. */
   readonly notificationsEnabled: boolean;
+  /**
+   * Akşam hatırlatıcısının saati — KULLANICININ YEREL saati (0-23), UTC değil.
+   * null = hatırlatıcı yok. "23:00'te hatırlat" kullanıcının duvar saatidir;
+   * UTC'de saklasaydık seyahatte ve yaz saatinde kayardı.
+   */
+  readonly reminderHour: number | null;
+  /** Sessiz saat aralığı (yerel, 0-23). İkisi de null = sessiz saat yok. */
+  readonly quietHoursStart: number | null;
+  readonly quietHoursEnd: number | null;
 }
 
 /** Henüz satırı olmayan kullanıcı için varsayılan projeksiyon (persist edilmez). */
@@ -18,6 +27,9 @@ export function defaultProfile(userId: string): Profile {
     locale: 'en',
     timezone: 'UTC',
     notificationsEnabled: true,
+    reminderHour: null,
+    quietHoursStart: null,
+    quietHoursEnd: null,
   };
 }
 
@@ -28,4 +40,7 @@ export interface ProfileUpdate {
   readonly locale?: string;
   readonly timezone?: string;
   readonly notificationsEnabled?: boolean;
+  readonly reminderHour?: number | null;
+  readonly quietHoursStart?: number | null;
+  readonly quietHoursEnd?: number | null;
 }

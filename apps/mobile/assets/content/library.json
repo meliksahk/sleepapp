@@ -14,6 +14,7 @@
           "deep-ocean"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -64,6 +65,7 @@
           "delta-drifter"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -123,6 +125,7 @@
           "delta-drifter"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -149,6 +152,7 @@
           "dawn-chaser"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -199,6 +203,7 @@
           "overthinker"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -296,6 +301,7 @@
           "deep-ocean"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -328,6 +334,7 @@
           "delta-drifter"
         ],
         "version": 1,
+        "category": "nature",
         "engineParams": {
           "schemaVersion": 1,
           "layers": [
@@ -351,11 +358,670 @@
       },
       "presets": [],
       "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000008",
+        "slug": "deep-hum",
+        "titleI18n": {
+          "en": "Deep Hum",
+          "tr": "Derin Uğultu"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "body",
+              "type": "brown",
+              "gain": 0.55
+            },
+            {
+              "id": "hum",
+              "type": "tone",
+              "gain": 0.18,
+              "frequencyHz": 110
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.12
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000009",
+        "slug": "soft-beat",
+        "titleI18n": {
+          "en": "Soft Beat",
+          "tr": "Yumuşak Vuru"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "bed",
+              "type": "brown",
+              "gain": 0.45
+            },
+            {
+              "id": "beat",
+              "type": "tone",
+              "gain": 0.18,
+              "frequencyHz": 200,
+              "beatHz": 8
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.1
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-00000000000a",
+        "slug": "cathedral-hum",
+        "titleI18n": {
+          "en": "Cathedral Hum",
+          "tr": "Katedral Uğultusu"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "organ",
+              "type": "pad",
+              "gain": 0.3
+            },
+            {
+              "id": "root",
+              "type": "tone",
+              "gain": 0.16,
+              "frequencyHz": 110
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.1
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-00000000000b",
+        "slug": "rain-chapel",
+        "titleI18n": {
+          "en": "Rain Chapel",
+          "tr": "Yağmur Şapeli"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "shower",
+              "type": "rain",
+              "gain": 0.4
+            },
+            {
+              "id": "warm",
+              "type": "tone",
+              "gain": 0.14,
+              "frequencyHz": 82.4
+            },
+            {
+              "id": "ground",
+              "type": "brown",
+              "gain": 0.28
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-00000000000c",
+        "slug": "night-bell",
+        "titleI18n": {
+          "en": "Night Bell",
+          "tr": "Gece Çanı"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "ember",
+              "type": "fire",
+              "gain": 0.22
+            },
+            {
+              "id": "veil",
+              "type": "pad",
+              "gain": 0.24
+            },
+            {
+              "id": "bell",
+              "type": "tone",
+              "gain": 0.14,
+              "frequencyHz": 98
+            },
+            {
+              "id": "carpet",
+              "type": "pink",
+              "gain": 0.12
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-00000000000d",
+        "slug": "midnight-garden",
+        "titleI18n": {
+          "en": "Midnight Garden",
+          "tr": "Gece Bahçesi"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "harmony",
+              "type": "chords",
+              "gain": 0.22
+            },
+            {
+              "id": "melody",
+              "type": "arpeggio",
+              "gain": 0.14
+            },
+            {
+              "id": "blanket",
+              "type": "brown",
+              "gain": 0.24
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-00000000000e",
+        "slug": "ocean-dream",
+        "titleI18n": {
+          "en": "Ocean Dream",
+          "tr": "Okyanus Rüyası"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "surf",
+              "type": "waves",
+              "gain": 0.28
+            },
+            {
+              "id": "dream",
+              "type": "chords",
+              "gain": 0.2
+            },
+            {
+              "id": "deep",
+              "type": "tone",
+              "gain": 0.12,
+              "frequencyHz": 130.8
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-00000000000f",
+        "slug": "ceramic-drift",
+        "titleI18n": {
+          "en": "Ceramic Drift",
+          "tr": "Seramik Sürükleniş"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "ceramic",
+              "type": "ceramic",
+              "gain": 0.52
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.1
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000010",
+        "slug": "chime-haven",
+        "titleI18n": {
+          "en": "Chime Haven",
+          "tr": "Çan Sığınağı"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "chimes",
+              "type": "chimes",
+              "gain": 0.5
+            },
+            {
+              "id": "veil",
+              "type": "pad",
+              "gain": 0.18
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000011",
+        "slug": "ritual-top-friction",
+        "titleI18n": {
+          "en": "Ritual: Top & Friction",
+          "tr": "Ritüel: Topaç ve Sürtme"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter",
+          "overthinker"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.34
+            },
+            {
+              "id": "friction",
+              "type": "friction",
+              "gain": 0.32
+            },
+            {
+              "id": "ceramic",
+              "type": "ceramic",
+              "gain": 0.22
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.08
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000012",
+        "slug": "top-spin-solo",
+        "titleI18n": {
+          "en": "Top Spin Solo",
+          "tr": "Topaç Solo"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "delta-drifter"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.58
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000013",
+        "slug": "friction-solo",
+        "titleI18n": {
+          "en": "Friction Solo",
+          "tr": "Sürtme Solo"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "overthinker"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "rub",
+              "type": "friction",
+              "gain": 0.6
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000014",
+        "slug": "ceramic-friction-duo",
+        "titleI18n": {
+          "en": "Ceramic & Friction",
+          "tr": "Seramik ve Sürtme"
+        },
+        "archetypeAffinity": [
+          "deep-ocean",
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "bowl",
+              "type": "ceramic",
+              "gain": 0.42
+            },
+            {
+              "id": "rub",
+              "type": "friction",
+              "gain": 0.38
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000015",
+        "slug": "wind-chime-night",
+        "titleI18n": {
+          "en": "Wind Chime Night",
+          "tr": "Rüzgar Çanlı Gece"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "chimes",
+              "type": "chimes",
+              "gain": 0.4
+            },
+            {
+              "id": "rain",
+              "type": "rain",
+              "gain": 0.35
+            },
+            {
+              "id": "pad",
+              "type": "pad",
+              "gain": 0.14
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000016",
+        "slug": "low-hum-top",
+        "titleI18n": {
+          "en": "Low Hum Top",
+          "tr": "Alçak Uğultu ve Topaç"
+        },
+        "archetypeAffinity": [
+          "delta-drifter",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "hum",
+              "type": "tone",
+              "gain": 0.18,
+              "frequencyHz": 82.4
+            },
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.42
+            },
+            {
+              "id": "air",
+              "type": "pink",
+              "gain": 0.12
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000017",
+        "slug": "pink-ceramic-mist",
+        "titleI18n": {
+          "en": "Pink Ceramic Mist",
+          "tr": "Pembe Seramik Sisi"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "dawn-chaser"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "pink",
+              "type": "pink",
+              "gain": 0.45
+            },
+            {
+              "id": "ceramic",
+              "type": "ceramic",
+              "gain": 0.38
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000018",
+        "slug": "brown-friction-ground",
+        "titleI18n": {
+          "en": "Brown Friction Ground",
+          "tr": "Kahverengi Sürtme Zemini"
+        },
+        "archetypeAffinity": [
+          "overthinker",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "ground",
+              "type": "brown",
+              "gain": 0.48
+            },
+            {
+              "id": "rub",
+              "type": "friction",
+              "gain": 0.36
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
+    },
+    {
+      "soundscape": {
+        "id": "a0000000-0000-4000-8000-000000000019",
+        "slug": "arpeggio-garden-top",
+        "titleI18n": {
+          "en": "Arpeggio Garden Top",
+          "tr": "Arpej Bahçesi ve Topaç"
+        },
+        "archetypeAffinity": [
+          "dawn-chaser",
+          "deep-ocean"
+        ],
+        "version": 1,
+        "category": "nature",
+        "engineParams": {
+          "schemaVersion": 1,
+          "layers": [
+            {
+              "id": "garden",
+              "type": "arpeggio",
+              "gain": 0.28
+            },
+            {
+              "id": "top",
+              "type": "topSpin",
+              "gain": 0.32
+            },
+            {
+              "id": "blanket",
+              "type": "brown",
+              "gain": 0.22
+            }
+          ]
+        }
+      },
+      "presets": [],
+      "previewUrl": null
     }
   ],
   "weekly": {
-    "notes": "Lokal geliştirme yayını: katmanlı, maskeleyen ve ince — üç farklı tarif karakteri.",
+    "notes": "Lokal geliştirme yayını: 10dk ritüel + katmanlı, maskeleyen ve ince.",
     "soundscapeSlugs": [
+      "ritual-top-friction",
       "night-train",
       "rainfall-window",
       "first-light"

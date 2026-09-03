@@ -22,42 +22,52 @@ you produce must feel like ONE product across all three.
 
 ## Core Design Tokens (single source of truth — never invent new hex values)
 
-### Color — dark-first. The app lives at night.
-- bg/base:        #0A0E1A   (near-black indigo — main app background)
-- bg/raised:      #111629   (cards, sheets)
-- bg/overlay:     #1A2138   (modals, elevated surfaces)
-- ink/primary:    #F2F4FF   (primary text — never pure white)
-- ink/secondary:  #9AA3C7   (secondary text)
-- ink/faint:      #5A6284   (hints, disabled)
-- accent/aurora:  #7C6CFF   (primary brand violet — CTAs, active states)
-- accent/dawn:    #FFB489   (warm peach — wake/morning moments, streaks)
-- accent/deep:    #2EC5B6   (teal — success, "in session" states)
-- danger:         #FF6B7A
-- Archetype palette (each sleep identity owns a gradient; use ONLY for
-  identity cards, report headers, and archetype accents):
-  deep-ocean  #1B3B6F→#0FA3B1 | overthinker #4A2C6F→#7C6CFF
-  delta-drifter #0F2E2A→#2EC5B6 | dawn-chaser #6F3A2C→#FFB489
-  (extend the same recipe: dark base → luminous tint)
-- Light mode exists ONLY for marketing site and admin panel (bg #F7F8FD,
-  ink #14182B, same accents). The mobile app is dark-only by design.
+### Color — "Elegy" collage. Dark-first; the app lives at night.
+Warm near-black canvas + torn cream paper + one Motherwell red. Not indigo,
+not neon. Every value below is generated from `packages/design-tokens/tokens.json`.
+- bg/base:        #08080A   (night canvas — main app background)
+- bg/raised:      #0E0D0C   (panels, layer cards)
+- bg/overlay:     #131210   (sheets, hover, skeletons)
+- bg/paper:       #E9E2D4   (TORN PAPER surface — the founding element)
+- ink/primary:    #E9E2D4   (primary text, warm cream — never pure white)
+- ink/secondary:  #A49E92
+- ink/faint:      #8E877C   (mono micro-labels — AA at 5.9:1)
+- ink/mute:       #6B655C   (NON-TEXT only: rules, ticks, dividers — 3.4:1)
+- ink/onPaper:    #14140F   (text on bg/paper)  · ink/onPaperSoft: #57544A
+- line/hairline #1C1A17 · soft #26241F · strong #3A362F · dashed #33302A
+- accent/aurora:  #C1442E   (the red — fills, marks, active bars. NOT small text)
+- accent/auroraInk: #E0765F (accent TEXT on dark — AA)
+- accent/dawn:    #B98A34   (amber — wake, timer, streak)
+- accent/deep:    #8A8F7A   (sage — success, "in session")
+- danger:         #C1442E   (same family; danger surface #170F0D, border #7A4038)
+- Archetype: identity is carried by a GENERATIVE CONSTELLATION pattern (seeded
+  per archetype), not by hue. Each still owns a dark base → tint pair so the
+  four never render identically.
+- Light mode exists ONLY for marketing site and admin panel (bg #F3EFE6,
+  ink #14140F). The mobile app is dark-only by design.
 
-### Typography
-- Display/headers: "Clash Display" (or geometric humanist fallback: Space
-  Grotesk) — used sparingly, large, generous letter-spacing on labels.
+### Typography — three voices
+- Display/headers: **Instrument Serif** — large, quiet, never bold.
+- Micro-labels: **IBM Plex Mono**, uppercase, wide tracking (1–3px). This is
+  the system's signature; section labels, meta rows, button labels are mono.
 - Body/UI: Inter. Numeric data (sleep stats): Inter tabular-nums.
-- Scale (mobile): display 34/40, h1 28/34, h2 22/28, body 16/24,
-  caption 13/18, micro 11/14. Never below 11.
+- Scale (mobile): display 42/44, h1 33/38, h2 26/29, body 15/24,
+  caption 13/20, micro 11/16. Never below 11 — the source design proposed
+  9–10px mono labels; 11 is the accessibility floor and it wins.
+- NEVER call `toUpperCase()` in code: Dart's locale-free mapping gives Turkish
+  `i → I` (must be `İ`). Uppercase belongs in the i18n string.
 - Tone of voice in UI copy: warm, second person, short. "Ready when you are."
   not "Initialize sleep session". FORBIDDEN words in any copy: cure, treat,
   therapy, clinically proven, doctor-approved.
 
 ### Shape, Space, Depth
-- Spacing unit 4px; screen padding 20px; card padding 16–20px.
-- Radius: cards 20, sheets 28 (top), buttons 16, chips 12, full-round for
-  play controls.
-- Elevation via subtle 1px inner borders (#FFFFFF at 6% opacity) + soft glow
-  for active audio elements (accent color at 20% blur 24px). No hard drop
-  shadows on dark surfaces.
+- Spacing unit 4px; screen padding 24px; card padding 16–20px.
+- **Radius 0.** Cards, buttons and chips are rectangles; the only curves are
+  the sheet's top (28) and true circles (play control, organic blobs).
+- Edges are either sharp-cut or TORN (`NPaper` — deterministic jagged clip).
+- Depth comes from 1px lines and the paper/canvas contrast, never from shadow.
+- A fine static grain sits on paper surfaces (`NGrain`). It does not animate:
+  full-screen animated noise costs battery all night for no meaning.
 - Iconography: 1.5px stroke, rounded caps (Lucide style), never filled except
   active tab.
 
@@ -110,6 +120,27 @@ for any data-driven screen.
 ### Not — TR kullanım
 
 Prompt'taki marka/eser isimleri (NOCTA, archetype adları) çalışma adlarıdır; isim netleşince tek yerden değiştir. UI metin örnekleri EN'dir; TR yerelleştirmede ton kuralı aynen geçer: sıcak, ikinci tekil, kısa ("Hazır olduğunda başlayalım").
+
+### Elegy'nin uygulanma durumu (2 Ağu 2026)
+
+Sistem `packages/design-tokens/tokens.json` → `NoctaColors/NoctaFont/NoctaTrack/...`
+üzerinden **var olan 15 ekranın tamamına** uygulandı. Ortak bileşenler:
+`NPaper` (yırtık kağıt + tanecik), `NGrain`, `NMono`, `NDisplay`, `NEmptyState`,
+`NightReceipt` (gece makbuzu — ekran ve paylaşım kartı aynı anatomiyi kullanır).
+
+**Uygulanmayan üç kural ve gerekçesi** (tasarımdan bilinçli sapma):
+
+1. Mono mikro etiketler `#6B655C` / 9–10px önerilmişti → `#8E877C` / 11px
+   (3.4:1 → 5.9:1; AA ve 11px tabanı kazanır). `ink.mute` metin için kullanılmaz.
+2. Kızıl üstü küçük metin → `accent.auroraInk` (#E0765F) eklendi.
+3. Tanecik animasyonu → statik (gece boyunca açık ekranda pil bütçesi).
+
+**Uyku modu ekranı AA'nın dışındadır** (`color.night.*`): kullanıcı uyumak üzere,
+ekran ışık kaynağı olmamalı. Bu istisna yalnızca o ekranda geçerlidir.
+
+**Henüz ÜRETİLMEMİŞ ekranlar** (tasarımda var, uygulamada yok — ürün işi, cila değil):
+mikrofon izin gerekçesi, akıllı alarm kurulumu, hesap silme, Share Studio,
+preset yönetimi, katman detayı, ritüel/seri ekranı, bildirim ayarları.
 
 ### Bu promptun bakımı
 

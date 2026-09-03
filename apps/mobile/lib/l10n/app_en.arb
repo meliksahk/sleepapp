@@ -124,6 +124,72 @@
   "mixerLayerPad": "Warm pad",
   "@mixerLayerPad": { "description": "Melodik pad katmanı adı (sentezlenmiş)" },
 
+  "mixerLayerTone": "Pure tone",
+  "@mixerLayerTone": { "description": "Kullanıcının seçtiği frekanstaki saf sinüs katmanı. 'Healing tone' DEĞİL: sağlık iddiası yasak (CLAUDE.md §1.1), nötr müzikal adlandırma" },
+
+    "mixerAddSourceTitle": "Add back a source",
+  "@mixerAddSourceTitle": { "description": "Kaldırılan sentez kaynağını geri ekleme sheet başlığı" },
+
+  "mixerAddTone": "Add tone",
+  "@mixerAddTone": { "description": "Katman listesi başlığındaki ikinci eylem — frekans seçici sheet'i açar" },
+
+  "mixerAddToneTitle": "Choose a tone",
+  "@mixerAddToneTitle": { "description": "Frekans seçicinin başlığı" },
+
+  "mixerAddToneHint": "A pure sustained note. Blend it under noise or let it hum on its own.",
+  "@mixerAddToneHint": { "description": "Seçicide ne yapılacağı. Sağlık vaadi YOK — müzikal/akustik tanım" },
+
+  "mixerAddToneConfirm": "Add to mix",
+  "@mixerAddToneConfirm": { "description": "Seçilen frekansı katman olarak ekleyen onay butonu" },
+
+  "mixerLayerLimitReached": "The mix is full — remove a layer to add another.",
+  "@mixerLayerLimitReached": { "description": "Katman tavanı (8) dolduğunda yeni sentez/dosya katmanı eklenemez; arıza değil bütçe bildirimi" },
+
+  "mixerToneBeatLabel": "Beat (binaural)",
+  "@mixerToneBeatLabel": { "description": "Binaural vuru sürgüsünün etiketi. 'Theta/delta' gibi EEG adları YASAK (§1.1) — akustik olay adıyla anılır" },
+
+  "mixerToneBeatUnit": "beat",
+  "@mixerToneBeatUnit": { "description": "Katman etiketindeki vuru birimi: 'Pure tone · 110 Hz · 10 beat'" },
+
+  "mixerToneBeatOff": "Off",
+  "@mixerToneBeatOff": { "description": "Vuru sürgüsü sıfırdayken gösterilen değer = mono ton" },
+
+  "mixerToneBeatHint": "Each ear hears a slightly different pitch — you perceive a gentle pulsing beat. Works best with headphones. A sound effect, nothing more.",
+  "@mixerToneBeatHint": { "description": "Vurunun dürüst açıklaması: akustik etki + kulaklık notu. Sağlık/EEG vaadi YOK; 'nothing more' bilinçli sınırlayıcı" },
+
+  "communityShareAction": "Share",
+  "@communityShareAction": { "description": "Kütüphane satırındaki topluluk paylaşım butonu (tooltip)" },
+
+  "communityShareTitle": "Share with the community",
+  "@communityShareTitle": { "description": "Paylaşım diyaloğunun başlığı" },
+
+  "communityShareTitleField": "Title",
+  "@communityShareTitleField": { "description": "Sesin başlık alanı — kullanıcının dosya adıyla ön doludur" },
+
+  "communityShareTerms": "Your sound will be reviewed before it appears for others. You confirm you own it or it is license-free. Your local copy is never removed.",
+  "@communityShareTerms": { "description": "Paylaşım koşulları: moderasyon + telif beyanı + yerel kopya güvencesi. Sağlık iddiası YOK (§1.1)" },
+
+  "communitySharing": "Uploading…",
+  "@communitySharing": { "description": "Yükleme sürerken onay butonunun metni; buton kilitlidir" },
+
+  "communityShareConfirm": "Send for review",
+  "@communityShareConfirm": { "description": "Diyalogdaki onay eylemi — 'publish' DEMEZ: moderasyondan geçmeden görünmez" },
+
+  "communitySharedDone": "Sent! Your sound will appear in the community library after review.",
+  "@communitySharedDone": { "description": "Paylaşım tamamlandı snackbar'ı — sonucun değil sürecin bildirimi" },
+
+  "communityShareFailed": "Your sound could not be shared. Try again later.",
+  "@communityShareFailed": { "description": "Genel paylaşım hatası (ağ/oturum/bilinmeyen)" },
+
+  "communitySharePendingLimit": "You have too many sounds waiting for review. Please wait for them to be reviewed first.",
+  "@communitySharePendingLimit": { "description": "Eşzamanlı bekleyen paylaşım tavanı doldu (sunucu 422)" },
+
+  "communityShareUploadFailed": "The file could not be uploaded. Check your connection and try again.",
+  "@communityShareUploadFailed": { "description": "Dosya depoya yüklenemedi ya da sunucu HEAD doğrulamasını geçemedi" },
+
+  "communityShareDurationUnknown": "This file's length could not be read, so it cannot be shared.",
+  "@communityShareDurationUnknown": { "description": "Süre cihazda okunamadı — sunucu süreyi zorunlu kılar; uydurma süre gönderilmez" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",
@@ -268,7 +334,39 @@
   "mixerVideoTitle": "Tonight's mix",
   "@mixerVideoTitle": { "description": "Videonun üstünde görünen başlık" },
 
-  "alarmSectionTitle": "Smart alarm",
+      "mixerLayerChords": "Chord progression",
+  "@mixerLayerChords": { "description": "Am→F→C→G akor progresyonu — yavaş, sıcak, melodik" },
+
+  "mixerLayerArpeggio": "Pentatonic arpeggio",
+  "@mixerLayerArpeggio": { "description": "Pentatonik ölçekte gezinen yumuşak arpej" },
+
+  "mixerLayerCeramic": "Ceramic bowl",
+  "@mixerLayerCeramic": { "description": "Seramik kase modal sentez — malzeme sesi" },
+
+  "mixerLayerChimes": "Wind chimes",
+  "@mixerLayerChimes": { "description": "Rüzgar çanı modal sentez — malzeme sesi" },
+
+  "mixerLayerTopSpin": "Spinning top",
+  "@mixerLayerTopSpin": { "description": "Topaç vızıltısı — ahşap dönen topaç" },
+
+  "mixerLayerFriction": "Ceramic friction",
+  "@mixerLayerFriction": { "description": "İki seramik topun sürtme sesi" },
+
+"sleepSoundTitle": "Night sound",
+  "@sleepSoundTitle": { "description": "Ritüel sesi bölümü — gece boyu jeneratif mix (opt-in, kalıcı tercih)" },
+
+  "sleepSoundOn": "Playing",
+  "sleepSoundOff": "Off",
+  "sleepSoundTurnOn": "Turn on",
+  "sleepSoundTurnOff": "Turn off",
+
+  "sleepSoundHint": "A generated mix plays softly all night. It stops with the alarm and works offline.",
+  "@sleepSoundHint": { "description": "Ne yaptığını dürüst anlatır; sağlık iddiası YOK" },
+
+  "sleepSoundFailed": "The sound could not start — night tracking continues.",
+  "@sleepSoundFailed": { "description": "Ses patladı ama mikrofon/servis sürer: ayrı dipnot, hata ekranı değil" },
+
+"alarmSectionTitle": "Smart alarm",
   "@alarmSectionTitle": { "description": "Uyku modundaki alarm bölümü başlığı" },
 
   "alarmOff": "Off",
@@ -591,10 +689,10 @@
   "onboardingIdentityBody": "Take the free sleep archetype test and see how your nights actually work. No account needed.",
   "@onboardingIdentityBody": { "description": "Karşılama 1 gövde" },
 
-  "onboardingRitualTitle": "Build your night ritual",
-  "@onboardingRitualTitle": { "description": "Karşılama 2 — ritüel/ses" },
-  "onboardingRitualBody": "Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.",
-  "@onboardingRitualBody": { "description": "Karşılama 2 gövde" },
+  "onboardingRitualTitle": "Your 10-minute ritual",
+  "@onboardingRitualTitle": { "description": "Karşılama 2 — ritüel/ses, yeni amaç: 10dk telefonsuz uyku" },
+  "onboardingRitualBody": "Pick rain, a pure hum, ceramic friction or a spinning top — mix your own sleep sound. Tap 10-minute fade and the sound slowly disappears while you fall asleep. Everything is made on your phone, offline.",
+  "@onboardingRitualBody": { "description": "Karşılama 2 gövde — araç seti + 10dk fade" },
 
   "onboardingAlarmTitle": "Wake up gently",
   "@onboardingAlarmTitle": { "description": "Karşılama 3 — alarm + mikrofon izni priming" },
@@ -605,8 +703,8 @@
   "@homeTonightLabel": { "description": "Ana ekran birincil eylem bolumunun etiketi" },
   "homeRitualTitle": "Start your night ritual",
   "@homeRitualTitle": { "description": "Ana ekranin tek display basligi; ritual dili, saglik iddiasi yok" },
-  "homeRitualSubtitle": "Sound, and a gentler wake-up. Works with no connection.",
-  "@homeRitualSubtitle": { "description": "Ritualin ne oldugu + cevrimdisi calistigi; ozellik tarifi" },
+  "homeRitualSubtitle": "Mix your ritual in seconds. 10-minute fade puts the phone to sleep with you. Works offline.",
+  "@homeRitualSubtitle": { "description": "Ritualin ne oldugu + 10dk fade + offline" },
   "homeStartRitual": "Start tonight",
   "@homeStartRitual": { "description": "Birincil buton etiketi -> /sleep-mode" },
   "homeIdentityInviteBody": "Two minutes, no account. Turn your nights into a card you can share.",
@@ -614,7 +712,30 @@
   "homeSectionExplore": "Explore",
   "@homeSectionExplore": { "description": "Ikincil navigasyon rafinin bolum etiketi" },
 
-  "settingsSignatureSound": "Opening sound",
+    "communityBadge": "Community",
+  "@communityBadge": { "description": "Katalogda topluluk sesi rozeti — genre='community' olan satırlar" },
+
+  "mySharesTitle": "My shared sounds",
+  "@mySharesTitle": { "description": "Paylaşımlarım ekranı başlığı ve ayarlardaki giriş butonu" },
+
+  "mySharesEmpty": "You haven't shared anything yet. Share a sound from the mixer's sound catalog.",
+  "@mySharesEmpty": { "description": "Paylaşım yok boş durumu — nereden paylaşılacağı söylenir" },
+
+  "shareStatusPending": "In review",
+  "shareStatusApproved": "Live",
+  "shareStatusRejected": "Not accepted",
+  "@shareStatusPending": { "description": "Durum etiketleri — 'Live' YAYINDA demektir, onaylandı" },
+
+  "mySharesLoadFailed": "Your shares could not be loaded.",
+  "@mySharesLoadFailed": { "description": "Liste yüklenemedi (ağ/oturum)" },
+
+  "mySharesRejectionReason": "Reviewer note: \"{reason}\"",
+  "@mySharesRejectionReason": {
+    "description": "Red gerekçesi SAHİBİNE gösterilir — sessiz red yasak. reason placeholder'lı",
+    "placeholders": { "reason": { "type": "String" } }
+  },
+
+"settingsSignatureSound": "Opening sound",
   "@settingsSignatureSound": { "description": "Acilis aurasi anahtari" },
   "settingsSignatureSoundHint": "A short ambience when the app opens.",
   "@settingsSignatureSoundHint": { "description": "Acilis sesi aciklamasi" },
@@ -638,5 +759,117 @@
   "@soundscapePlay": { "description": "Soundscape detayinda birincil eylem: mikseri bu tarifle acar" },
 
   "mixerRecipeUnavailable": "We couldn't load this sound's recipe, so your default mix is playing.",
-  "@mixerRecipeUnavailable": { "description": "Slug cozulemedi, mikser varsayilan tarifle acildi" }
+  "@mixerRecipeUnavailable": { "description": "Slug cozulemedi, mikser varsayilan tarifle acildi" },
+
+  "privacySection": "Privacy",
+  "@privacySection": { "description": "Ayarlar bolum basligi: gizlilik ve hesap" },
+  "privacyExport": "DOWNLOAD MY DATA",
+  "@privacyExport": { "description": "Kisisel verinin tamamini disa aktarma eylemi (mono etiket)" },
+  "privacyExportHint": "Everything we hold about you, as one JSON file.",
+  "@privacyExportHint": { "description": "Disa aktarma aciklamasi" },
+  "privacyExporting": "PREPARING…",
+  "@privacyExporting": { "description": "Disa aktarma suruyor" },
+  "privacyExportFailed": "We couldn't prepare your data. Try again in a moment.",
+  "@privacyExportFailed": { "description": "Disa aktarma hatasi" },
+  "privacyDeleteEntry": "DELETE MY ACCOUNT",
+  "@privacyDeleteEntry": { "description": "Ayarlardan hesap silme ekranina giden eylem" },
+  "deleteAccountTitle": "Delete your account",
+  "@deleteAccountTitle": { "description": "Hesap silme ekrani basligi (serif)" },
+  "deleteAccountBody": "This can't be undone. Every night, mix, identity result and local sound file is erased.",
+  "@deleteAccountBody": { "description": "Silmenin geri alinamazligi" },
+  "deleteAccountItemNights": "Your nights and reports",
+  "@deleteAccountItemNights": { "description": "Silinecekler listesi" },
+  "deleteAccountItemMixes": "Your mixes and saved sounds",
+  "@deleteAccountItemMixes": { "description": "Silinecekler listesi" },
+  "deleteAccountItemIdentity": "Your sleep identity history",
+  "@deleteAccountItemIdentity": { "description": "Silinecekler listesi" },
+  "deleteAccountItemDevices": "Every signed-in device",
+  "@deleteAccountItemDevices": { "description": "Silinecekler listesi" },
+  "deleteAccountConfirm": "I understand there is no way back.",
+  "@deleteAccountConfirm": { "description": "Onay kutusu etiketi" },
+  "deleteAccountCta": "DELETE PERMANENTLY",
+  "@deleteAccountCta": { "description": "Yikici birincil eylem" },
+  "deleteAccountCancel": "KEEP MY ACCOUNT",
+  "@deleteAccountCancel": { "description": "Vazgecme eylemi" },
+  "deleteAccountDeleting": "DELETING…",
+  "@deleteAccountDeleting": { "description": "Silme suruyor" },
+  "deleteAccountFailed": "We couldn't delete your account. Nothing was removed.",
+  "@deleteAccountFailed": { "description": "Silme hatasi - hicbir sey silinmedi" },
+
+  "micPermissionTitle": "The microphone stays on. Nothing is recorded.",
+  "@micPermissionTitle": { "description": "Mikrofon izin gerek\u00e7esi ekrani basligi (serif)" },
+  "micPermissionFactCounts": "Your phone counts events — movement, sound, quiet. It never keeps the audio.",
+  "@micPermissionFactCounts": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionFactLocal": "Analysis happens on this device. Nothing is uploaded, not even once.",
+  "@micPermissionFactLocal": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionFactOptional": "Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.",
+  "@micPermissionFactOptional": { "description": "Izin gerekcesi maddesi" },
+  "micPermissionAllow": "CONTINUE",
+  "@micPermissionAllow": { "description": "Izin akisini surdurur (sistem kutusu bundan SONRA cikar)" },
+  "micPermissionSkip": "NOT NOW",
+  "@micPermissionSkip": { "description": "Izin vermeden devam" },
+  "micPermissionDeniedTitle": "PERMISSION DENIED",
+  "@micPermissionDeniedTitle": { "description": "Reddedildi blo\u011fu basligi" },
+  "micPermissionDeniedBody": "The ritual still runs — only the night report won't be produced. You can turn it on later in your phone's settings.",
+  "@micPermissionDeniedBody": { "description": "Reddedildi blo\u011fu govdesi" },
+
+  "alarmLatestAt": "AT THE LATEST",
+  "@alarmLatestAt": { "description": "Alarm kurulum: secilen saatin anlami" },
+  "alarmWindowWidth": "WINDOW WIDTH",
+  "@alarmWindowWidth": { "description": "Alarm penceresi genisligi etiketi" },
+  "alarmWindowMinutes": "{minutes} MIN",
+  "@alarmWindowMinutes": { "description": "Pencere genisligi degeri", "placeholders": { "minutes": { "type": "int" } } },
+  "alarmSave": "SET THE ALARM",
+  "@alarmSave": { "description": "Alarm kurulum birincil eylem" },
+
+  "ritualTitle": "My ritual",
+  "@ritualTitle": { "description": "Rit\u00fcel/seri ekrani basligi" },
+  "ritualNightsInRow": "NIGHTS IN A ROW",
+  "@ritualNightsInRow": { "description": "Buyuk seri sayisinin altindaki etiket" },
+  "ritualLongest": "LONGEST",
+  "@ritualLongest": { "description": "Istatistik etiketi" },
+  "ritualTotalNights": "NIGHTS TOTAL",
+  "@ritualTotalNights": { "description": "Istatistik etiketi" },
+  "ritualAverage": "AVERAGE",
+  "@ritualAverage": { "description": "Istatistik etiketi" },
+  "ritualMonthLabel": "THIS MONTH",
+  "@ritualMonthLabel": { "description": "Ay izgarasi basligi" },
+  "ritualEmpty": "Your ritual hasn't started yet.",
+  "@ritualEmpty": { "description": "Hic gece yoksa" },
+
+  "studioTitle": "Share studio",
+  "@studioTitle": { "description": "Mix-to-video ekrani basligi" },
+  "studioLength": "LENGTH",
+  "@studioLength": { "description": "Sure secimi etiketi" },
+  "studioSeconds": "{seconds} SEC",
+  "@studioSeconds": { "description": "Sure secenegi", "placeholders": { "seconds": { "type": "int" } } },
+  "studioLengthHint": "Longer clips take longer to make — everything is rendered on this phone.",
+  "@studioLengthHint": { "description": "Sure secimi notu: cihazda uretiliyor" },
+  "studioExport": "MAKE THE VIDEO",
+  "@studioExport": { "description": "Birincil eylem" },
+
+  "notifSettingsTitle": "Notifications",
+  "@notifSettingsTitle": { "description": "Bildirim ayarlari ekrani basligi" },
+  "notifReminderSection": "EVENING REMINDER",
+  "@notifReminderSection": { "description": "Hatirlatici bolumu" },
+  "notifReminderOff": "No reminder",
+  "@notifReminderOff": { "description": "Hatirlatici kapali" },
+  "notifReminderAt": "Every evening at {hour}",
+  "@notifReminderAt": { "description": "Hatirlatici saati", "placeholders": {"hour": {"type": "String"}} },
+  "notifReminderHint": "A nudge to start the ritual — nothing else.",
+  "@notifReminderHint": { "description": "Hatirlatici aciklamasi" },
+  "notifQuietSection": "QUIET HOURS",
+  "@notifQuietSection": { "description": "Sessiz saatler bolumu" },
+  "notifQuietOff": "Off",
+  "@notifQuietOff": { "description": "Sessiz saat kapali" },
+  "notifQuietRange": "{start} — {end}",
+  "@notifQuietRange": { "description": "Sessiz saat araligi", "placeholders": {"start": {"type": "String"}, "end": {"type": "String"}} },
+  "notifQuietHint": "Nothing reaches you between these hours.",
+  "@notifQuietHint": { "description": "Sessiz saat aciklamasi" },
+  "notifSaveFailed": "Couldn't save. Your settings are unchanged.",
+  "@notifSaveFailed": { "description": "Kaydetme hatasi" },
+  "notifPick": "CHANGE",
+  "@notifPick": { "description": "Saat secme eylemi" },
+  "notifClear": "TURN OFF",
+  "@notifClear": { "description": "Tercihi kapatma" }
 }

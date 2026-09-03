@@ -6,13 +6,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/ambient/ambient.dart';
 import '../../../core/audio_engine/dsp/mix_render.dart';
+import '../../../core/audio_engine/dsp/tone.dart'
+    show toneGridBeat, toneGridHz, toneHzText;
 import '../../../core/design_system/design_system.dart';
+import '../../../core/storage/key_value_store.dart';
 import '../../../core/share/sharer.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../archetype/archetype_gradient.dart';
 import '../../archetype/archetype_providers.dart';
 import '../mixer_controller.dart';
 import 'asset_catalog_sheet.dart';
+import 'melodic_editor_sheet.dart';
+import '../../../core/storage/key_value_store.dart' show SecureKeyValueStore;
+import '../domain/melodic_preset_store.dart';
+import 'mixer_add_tone_sheet.dart';
+import 'share_studio_screen.dart';
 
 /// Mikser **PLAYER'ı** — uygulamanın ses çıkardığı ekran.
 ///
@@ -268,13 +276,23 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
   void initState() {
     super.initState();
     _c = widget.controller ?? MixerController(spec: widget.spec);
+    // Kayıtlı son mix'i yükle (varsa) — kullanıcı uygulama kapatıp açtığında
+    // son mix'i görmeli, her seferinde varsayılana sıfırlanmamalı.
+    if (widget.spec == null) _c.initFromStore();
     _c.onChanged = () {
       if (mounted) setState(() {});
+      // Stüdyo AYRI bir rotada: parent'ın setState'i onu yeniden çizmez.
+      // `onChanged` tek slot olduğu için ikinci bir abone yerine bu köprü.
+      _studioTick.value = _c.state.exportProgress;
     };
   }
 
+  /// Stüdyo rotasının dinlediği ilerleme değeri (null = dışa aktarma yok).
+  final ValueNotifier<double?> _studioTick = ValueNotifier<double?>(null);
+
   @override
   void dispose() {
+    _studioTick.dispose();
     _c.onChanged = null;
     _c.dispose();
     super.dispose();
@@ -296,7 +314,35 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         return l10n.mixerLayerRain;
       case LayerSource.pad:
         return l10n.mixerLayerPad;
+      case LayerSource.tone:
+        return l10n.mixerLayerTone;
+      case LayerSource.chords:
+        return l10n.mixerLayerChords;
+      case LayerSource.arpeggio:
+        return l10n.mixerLayerArpeggio;
+      case LayerSource.ceramic:
+        return l10n.mixerLayerCeramic;
+      case LayerSource.chimes:
+        return l10n.mixerLayerChimes;
+      case LayerSource.topSpin:
+        return l10n.mixerLayerTopSpin;
+      case LayerSource.friction:
+        return l10n.mixerLayerFriction;
     }
+  }
+
+  /// Tone katmanının tam etiketi: "Saf ton · 110 Hz" (+ "· 8 vuru").
+  ///
+  /// Hz, motorun DUYULAN (ızgaraya oturmuş) değeridir — kullanıcının sürgüyle
+  /// verdiği ham değer değil. Ekranda yazan ile çalan farklı olsaydı bu bir
+  /// yalan olurdu; fark algısal sıfır olsa bile sayılar farklıdır. Vuru da
+  /// aynı kuralla oturmuş değeriyle yazar (0 → hiç gösterilmez).
+  String _toneLabel(AppL10n l10n, MixLayer layer) {
+    final base =
+        '${l10n.mixerLayerTone} · ${toneHzText(toneGridHz(layer.frequencyHz!, 30))} Hz';
+    final beat = layer.beatHz;
+    if (beat == null || beat <= 0) return base;
+    return '$base · ${toneHzText(toneGridBeat(beat, 30))} ${l10n.mixerToneBeatUnit}';
   }
 
   @override
@@ -321,13 +367,27 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         foregroundColor: NoctaColors.inkPrimary,
+        // "Ton ekle" AppBar aksiyonunda — başlık satırına koymak ölçülmüştü,
+        // kaydırılan alandan ~44 px çalıyordu. AppBar maliyeti SIFIR.
+        actions: <Widget>[
+          IconButton(
+            key: const Key('mixer-add-tone'),
+            onPressed: _addTone,
+            tooltip: l10n.mixerAddTone,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            color: NoctaColors.inkPrimary,
+            icon: const Icon(Icons.music_note_outlined),
+          ),
+        ],
       ),
-      body: TickerMode(
-        enabled: s.isPlaying,
-        child: AmbientBackdrop(
-          gradient: archetypeGradientForSlug(slug),
-          gains: s.gains,
-          child: SafeArea(
+      body: Stack(
+        children: [
+          TickerMode(
+            enabled: s.isPlaying,
+            child: AmbientBackdrop(
+              gradient: archetypeGradientForSlug(slug),
+              gains: s.gains,
+              child: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final height = constraints.maxHeight;
@@ -395,6 +455,17 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             ),
           ),
         ),
+          ),
+          if (s.isRitualActive)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  key: const Key('mixer-ritual-dim'),
+                  color: NoctaColors.bgBase.withValues(alpha: 0.30),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -426,27 +497,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                l10n.mixerSoundLabel,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.micro,
-                  letterSpacing: 1.2,
-                  color: NoctaColors.inkSecondary,
-                ),
-              ),
-              const SizedBox(height: NoctaSpace.s2),
-              Text(
+              NMono(l10n.mixerSoundLabel, track: NoctaTrack.wide),
+              const SizedBox(height: NoctaSpace.s3),
+              NDisplay(
                 widget.title?.isNotEmpty == true
                     ? widget.title!
                     : l10n.mixerTitle,
                 key: const Key('mixer-title'),
                 maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.display,
-                  color: NoctaColors.inkPrimary,
-                  height: 1.15,
-                ),
+                size: NoctaFontSize.display,
+                height: 1.02,
               ),
               const SizedBox(height: NoctaSpace.s3),
               _statusLine(l10n, s),
@@ -476,11 +536,8 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-        ),
+        // Kolajda gosterge noktasi daire degil KARE bir isaret blogu.
+        Container(width: 8, height: 8, color: dot),
         const SizedBox(width: NoctaSpace.s2),
         // `Flexible` — metin SARAR, kırpılmaz.
         //
@@ -493,7 +550,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
           child: Text(
             text,
             key: const Key('mixer-status'),
-            style: TextStyle(
+            style: const TextStyle(
+              fontFamily: NoctaFont.mono,
+              letterSpacing: NoctaTrack.tight,
               fontSize: NoctaFontSize.caption,
               color: NoctaColors.inkSecondary,
             ),
@@ -553,6 +612,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
+                      if (s.isPreparing)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: NoctaSpace.s3),
+                          child: LinearProgressIndicator(
+                            key: Key('mixer-preparing-shimmer'),
+                            minHeight: 2,
+                            backgroundColor: NoctaColors.bgOverlay,
+                            color: NoctaColors.accentAurora,
+                          ),
+                        ),
                       if (widget.recipeUnavailable)
                         _notice(
                           // Dürüstlük: kullanıcı istediği sesi seçti ama başka
@@ -582,12 +651,15 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                             MixerErrorKind.assetAdd => l10n.mixerAssetAddFailed,
                             MixerErrorKind.assetDuplicate =>
                               l10n.mixerAssetAlreadyInMix,
+                            MixerErrorKind.layerLimit =>
+                              l10n.mixerLayerLimitReached,
                             _ => l10n.mixerFailed,
                           },
-                          // Çift ekleme bir ARIZA değil: kırmızı yerine ikincil
-                          // renk. Kullanıcıyı bir şeyin bozulduğuna inandırmak
-                          // istemiyoruz, yalnızca ne olduğunu söylüyoruz.
-                          color: s.errorKind == MixerErrorKind.assetDuplicate
+                          // Çift ekleme ve dolu tavan ARIZA değil: kırmızı
+                          // yerine ikincil renk. Kullanıcıyı bir şeyin bozulduğuna
+                          // inandırmak istemiyoruz, yalnızca ne olduğunu söylüyoruz.
+                          color: s.errorKind == MixerErrorKind.assetDuplicate ||
+                                  s.errorKind == MixerErrorKind.layerLimit
                               ? NoctaColors.inkSecondary
                               : NoctaColors.danger,
                           noticeKey: const Key('mixer-error'),
@@ -647,10 +719,15 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
 
                       for (final layer in s.layers)
                         _gainRow(
-                          label: _layerLabel(l10n, layer.type),
+                          label: layer.type == LayerSource.tone && layer.frequencyHz != null
+                              ? _toneLabel(l10n, layer)
+                              : _layerLabel(l10n, layer.type),
                           id: layer.id,
                           l10n: l10n,
                           s: s,
+                          // HER sentez katmanı kaldırılabilir: mikser serbest
+                          // araçtır, tarif yalnızca başlangıç noktasıdır.
+                          onRemove: () => _c.removeLayer(layer.id),
                         ),
                       // DOSYA katmanları sentezin ALTINDA, aynı sürgü bileşeniyle:
                       // kullanıcı için ikisi de "bir katman"dır. Etiket i18n'den
@@ -665,6 +742,37 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                           // katmanları tarifin kendisi (sürgüsü 0'a çekilebilir).
                           // Ekleyip vazgeçememek kabul edilemezdi.
                           onRemove: () => _c.removeAsset(asset.id),
+                        ),
+                      // ── KAYNAK EKLE — kaldırılan sentez kaynakları geri gelsin ──
+                      //
+                      // Mikser serbest araçtır: brown'u kaldıran kullanıcı buradan
+                      // geri ekleyebilmelidir. Yalnızca MISSLING kaynaklar gösterilir;
+                      // Wrap sığmazsa alt satıra iner (mevcut desen).
+                      if (_c.missingSources().where((s) => s != LayerSource.tone).isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: NoctaSpace.s2),
+                          child: Wrap(
+                            spacing: NoctaSpace.s2,
+                            runSpacing: NoctaSpace.s1,
+                            children: <Widget>[
+                              for (final missing
+                                  in _c.missingSources().where((s) => s != LayerSource.tone))
+                                ActionChip(
+                                  key: Key('mixer-add-source-${missing.name}'),
+                                  label: Text(
+                                    '+ ${_layerLabel(l10n, missing)}',
+                                    style: TextStyle(
+                                      fontSize: NoctaFontSize.caption,
+                                      color: NoctaColors.inkFaint,
+                                    ),
+                                  ),
+                                  onPressed: () => _addSource(missing),
+                                  backgroundColor: NoctaColors.bgOverlay,
+                                  side: BorderSide(color: NoctaColors.lineDashed),
+                                  materialTapTargetSize: MaterialTapTargetSize.padded,
+                                ),
+                            ],
+                          ),
                         ),
                       // ── Master limitleyici göstergesi ──
                       //
@@ -816,26 +924,16 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.caption,
-                    color: NoctaColors.inkPrimary,
-                  ),
-                ),
-              ),
+              Expanded(child: NDisplay(label, size: 18, maxLines: 1)),
               Text(
                 l10n.mixerGainPercent((gain * 100).round()),
-                style: TextStyle(
+                style: const TextStyle(
+                  fontFamily: NoctaFont.mono,
                   fontSize: NoctaFontSize.micro,
+                  letterSpacing: NoctaTrack.tight,
                   color: NoctaColors.inkSecondary,
                   // Sürgü oynarken yüzde her adımda sağa-sola zıplamasın.
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
+                  fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
                 ),
               ),
               if (onRemove != null)
@@ -858,16 +956,32 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 ),
             ],
           ),
-          Slider(
-            key: Key('gain-$layerId'),
-            value: gain,
-            onChanged: (v) => _c.setGain(layerId, v),
-            // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
-            // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
-            label: l10n.mixerGainPercent((gain * 100).round()),
-            divisions: 20,
-            activeColor: NoctaColors.accentAurora,
-            inactiveColor: NoctaColors.inkFaint.withValues(alpha: 0.3),
+          // Elegy: yuvarlak topuzlu Material surgusu yerine DIKDORTGEN dolum.
+          // Tasarimda katmanin sesi, kartin ne kadarinin krem dolduguyla
+          // anlatiliyor; surgunun kendisi bir "dolum cubugu".
+          //
+          // Etkilesim DEGISMEDI (hala `Slider`): surukleme davranisi, 20 adim,
+          // ekran okuyucu etiketi ve testlerin `gain-<id>` tutamagi ayni kaldi.
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 26,
+              activeTrackColor: NoctaColors.bgPaper,
+              inactiveTrackColor: NoctaColors.bgOverlay,
+              thumbColor: NoctaColors.accentAurora,
+              overlayColor: NoctaColors.accentAurora.withValues(alpha: 0.12),
+              trackShape: const RectangularSliderTrackShape(),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+              tickMarkShape: SliderTickMarkShape.noTickMark,
+            ),
+            child: Slider(
+              key: Key('gain-$layerId'),
+              value: gain,
+              onChanged: (v) => _c.setGain(layerId, v),
+              // Erişilebilirlik: ekran okuyucu "pembe gürültü, %30" desin.
+              // Yüzde biçimi yerele bağlı (EN "30%", TR "%30") → i18n'den.
+              label: l10n.mixerGainPercent((gain * 100).round()),
+              divisions: 20,
+            ),
           ),
         ],
       ),
@@ -897,47 +1011,71 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
         children: <Widget>[
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
+            // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
+            // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
+            // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
+            child: NButton(
               key: const Key('mixer-toggle'),
               // Hazırlanırken buton KİLİTLİ: render sırasında ikinci kez
               // basmak ikinci bir render tetiklerdi.
               onPressed: s.isPreparing ? null : () => _c.toggle(),
-              // Dokunma hedefi ≥44px (CLAUDE.md §7) — ekranın birincil eylemi.
-              // Sabit [playerControlsReserve] ile ORTAK: rezervasyon bu butonun
-              // yüksekliğini hesaplıyor, ikisi ayrışırsa buton ekrandan taşar.
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(kPlayerPlayButtonMinHeight),
-              ),
-              icon: Icon(s.isPlaying ? Icons.pause : Icons.play_arrow),
-              label: Text(
-                s.isPreparing
-                    ? l10n.mixerPreparing
-                    : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
-              ),
+              expand: true,
+              rule: true,
+              label: s.isPreparing
+                  ? l10n.mixerPreparing
+                  : (s.isPlaying ? l10n.mixerPause : l10n.mixerPlay),
             ),
           ),
+
+          // Ritüel zamanlayıcı — 10 dk fade (amaç: telefonu bırakıp uykuya geç).
+          // Çalarken görünür, duraklatılınca gizlenir. Aktifken kalan süre + iptal.
+          if (s.isPlaying) ...<Widget>[
+            const SizedBox(height: NoctaSpace.s2),
+            s.isRitualActive
+                ? Row(
+                    key: const Key('mixer-ritual-active'),
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'Ritüel: ${_formatRitual(s.ritualRemainingSeconds!)} kaldı — yavaşça soluyor',
+                          key: const Key('mixer-ritual-countdown'),
+                          style: TextStyle(
+                            fontFamily: NoctaFont.mono,
+                            fontSize: NoctaFontSize.caption,
+                            color: NoctaColors.inkSecondary,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        key: const Key('mixer-ritual-cancel'),
+                        onPressed: () => _c.cancelRitual(),
+                        child: Text(l10n.commonCancel),
+                      ),
+                    ],
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    child: NButton(
+                      key: const Key('mixer-ritual-start'),
+                      variant: NButtonVariant.ghost,
+                      onPressed: () => _c.startRitual(),
+                      label: '10 dk ritüel — yavaşça sönsün',
+                    ),
+                  ),
+          ],
 
           // Viral kanca #3 (docs/04 §131). iOS'ta gizli: native kodlayıcı yok.
           if (_canExportVideo) ...<Widget>[
             const SizedBox(height: NoctaSpace.s2),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              child: NButton(
                 key: const Key('mixer-export-video'),
-                onPressed: s.isExporting ? null : _exportVideo,
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: NoctaColors.inkPrimary,
-                  side: BorderSide(
-                    color: NoctaColors.inkFaint.withValues(alpha: 0.5),
-                  ),
-                ),
-                icon: const Icon(Icons.movie_creation_outlined),
-                label: Text(
-                  s.isExporting
-                      ? l10n.mixerExporting((s.exportProgress! * 100).round())
-                      : l10n.mixerExportVideo,
-                ),
+                variant: NButtonVariant.ghost,
+                onPressed: s.isExporting ? null : _openStudio,
+                label: s.isExporting
+                    ? l10n.mixerExporting((s.exportProgress! * 100).round())
+                    : l10n.mixerExportVideo,
               ),
             ),
             if (s.isExporting)
@@ -946,6 +1084,9 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                 child: LinearProgressIndicator(
                   key: const Key('mixer-export-progress'),
                   value: s.exportProgress,
+                  minHeight: 4,
+                  backgroundColor: NoctaColors.bgOverlay,
+                  color: NoctaColors.accentAurora,
                 ),
               ),
           ],
@@ -1019,6 +1160,51 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     }
   }
 
+  /// Ton seçicisini açar ve sonucu mikse ekler.
+  Future<void> _addTone() async {
+    if (_c.state.layers.length + _c.state.assets.length >=
+        MixerController.maxTotalLayers) {
+      _c.reportLayerLimit();
+      return;
+    }
+    final pick = await showAddToneSheet(context);
+    if (pick == null || !mounted) return;
+    final outcome = await _c.addToneLayer(pick.frequencyHz, beatHz: pick.beatHz);
+    if (!mounted) return;
+    if (outcome == AddToneOutcome.full) {
+      _c.reportLayerLimit();
+    }
+  }
+
+  /// Kaldırılan sentez kaynağını geri ekler. chords/arpeggio ise EDITÖR açılır
+  /// (kullanıcı kök nota/ölçek/tempo/enstrüman seçer), diğerleri doğrudan eklenir.
+  Future<void> _addSource(LayerSource type) async {
+    if (type == LayerSource.chords || type == LayerSource.arpeggio) {
+      final result = await showModalBottomSheet<MelodicPreset>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: NoctaColors.bgBase,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(NoctaRadius.sheet)),
+        ),
+        builder: (_) => MelodicEditorSheet(
+          isChords: type == LayerSource.chords,
+          presetStore: MelodicPresetStore(SecureKeyValueStore()),
+        ),
+      );
+      if (result == null || !mounted) return;
+      final outcome = await _c.addMelodicLayer(result);
+      if (!mounted) return;
+      if (outcome == AddSourceOutcome.full) _c.reportLayerLimit();
+      return;
+    }
+    final outcome = await _c.addSource(type);
+    if (!mounted) return;
+    if (outcome == AddSourceOutcome.full) {
+      _c.reportLayerLimit();
+    }
+  }
+
   /// Mikste dosya katmanı varken export onayı. false → export YAPILMAZ.
   ///
   /// Bu bir "emin misin" diyaloğu değil, bir BİLGİLENDİRME: paylaşılacak videonun
@@ -1054,7 +1240,64 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     return ok ?? false;
   }
 
-  Future<void> _exportVideo() async {
+  /// Video butonu artık DOĞRUDAN dışa aktarmıyor: **Share Studio**'yu açıyor
+  /// (Elegy §23). Kullanıcı ne çıkacağını görmeden ve süresini seçmeden
+  /// paylaşmaya zorlanmamalı — viral kancanın tamamı "paylaşmak hava atmak gibi
+  /// olsun" fikrine dayanıyor.
+  Future<void> _openStudio() async {
+    final l10n = AppL10n.of(context);
+    final slug = ref
+        .read(latestArchetypeResultProvider)
+        .maybeWhen(data: (r) => r?.archetypeSlug, orElse: () => null);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ValueListenableBuilder<double?>(
+          valueListenable: _studioTick,
+          builder: (context, progress, _) => ShareStudioScreen(
+            title: l10n.mixerVideoTitle,
+            peaks: _previewPeaks(),
+            gradient: archetypeGradientForSlug(slug),
+            exporting: progress != null,
+            progress: progress,
+            // Dışa aktarma bitince stüdyo KAPANIR: sonucu (paylaşım sayfası
+            // ya da hata metni) mikser ekranı gösteriyor. Stüdyo açık kalsaydı
+            // patlayan bir export'un hatası ALTINDA kalır, kullanıcı boş bir
+            // ekrana bakardı — testte tam olarak bu çıktı.
+            onExport: (seconds) async {
+              final nav = Navigator.of(context);
+              await _exportVideo(seconds: seconds);
+              if (nav.canPop()) nav.pop();
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Önizlemenin dalga formu — mix'in KATMAN KAZANÇLARINDAN türetilir.
+  ///
+  /// **Gerçek çıktının birebir dalga formu DEĞİL:** o, sesin offline render
+  /// edilmesini gerektiriyor (saniyeler sürer, ekran açılışını bekletirdi).
+  /// Önizlemenin işi kompozisyonu (başlık, gradyan, yerleşim) göstermek;
+  /// dalga formu mix'in şeklini yansıtan bir gösterge.
+  List<double> _previewPeaks() {
+    final gains = _c.state.gains.values.toList();
+    if (gains.isEmpty) return List<double>.filled(64, 0.2);
+    return List<double>.generate(64, (i) {
+      final g = gains[i % gains.length];
+      // Deterministik dalgalanma: aynı mix her açılışta aynı önizlemeyi verir.
+      final wobble = 0.6 + 0.4 * (((i * 37) % 11) / 10);
+      return (g * wobble).clamp(0.05, 1.0);
+    });
+  }
+
+  String _formatRitual(int secs) {
+    final m = secs ~/ 60;
+    final s = secs % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _exportVideo({int seconds = 15}) async {
     final l10n = AppL10n.of(context);
     // Dosya katmanı varsa ÖNCE söyle: video onlarsız üretilecek.
     if (_c.state.assets.isNotEmpty) {
@@ -1070,6 +1313,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
     final path = await _c.exportVideo(
       title: l10n.mixerVideoTitle,
       gradient: archetypeGradientForSlug(slug),
+      seconds: seconds,
     );
     // Hata state'e yazıldı ve ekranda gösteriliyor; burada paylaşacak bir şey yok.
     if (path == null || !mounted) return;

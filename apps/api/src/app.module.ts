@@ -22,6 +22,7 @@ import { SleepModule } from './modules/sleep/sleep.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { EntitlementModule } from './modules/entitlement';
 import { PrivacyModule } from './modules/privacy/privacy.module';
+import { CommunityModule } from './modules/community';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { PrivacyModule } from './modules/privacy/privacy.module';
     AnalyticsModule,
     EntitlementModule,
     PrivacyModule,
+    CommunityModule,
   ],
   providers: [
     // KRİTİK: ThrottlerModule tek başına HİÇBİR ŞEY zorlamaz — guard'ın kayıtlı

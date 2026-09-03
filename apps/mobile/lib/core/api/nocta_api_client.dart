@@ -130,36 +130,64 @@ class NoctaApiClient {
   /// AuthController.authorizedRequest ile sarılır (401→refresh→retry).
   Future<http.Response> getAuthed(String path, String accessToken) {
     return _send(
-      () => _client.get(Uri.parse('$baseUrl$path'), headers: _authHeaders(accessToken)),
+      () => _client.get(
+        Uri.parse('$baseUrl$path'),
+        headers: _authHeaders(accessToken),
+      ),
     );
   }
 
   /// Kimlik doğrulamalı POST (JSON gövde) — ham yanıt döner.
-  Future<http.Response> postAuthed(String path, String accessToken, Object body) {
+  Future<http.Response> postAuthed(
+    String path,
+    String accessToken,
+    Object body,
+  ) {
     return _send(
       () => _client.post(
         Uri.parse('$baseUrl$path'),
-        headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
+        headers: {
+          ..._authHeaders(accessToken),
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       ),
     );
   }
 
   /// Kimlik doğrulamalı PATCH (JSON gövde) — ham yanıt döner (kısmi güncelleme).
-  Future<http.Response> patchAuthed(String path, String accessToken, Object body) {
+  Future<http.Response> patchAuthed(
+    String path,
+    String accessToken,
+    Object body,
+  ) {
     return _send(
       () => _client.patch(
         Uri.parse('$baseUrl$path'),
-        headers: {..._authHeaders(accessToken), 'Content-Type': 'application/json'},
+        headers: {
+          ..._authHeaders(accessToken),
+          'Content-Type': 'application/json',
+        },
         body: jsonEncode(body),
       ),
     );
   }
 
+  /// Kimlik doğrulamalı DELETE — gövdesiz. Hesap silme (`DELETE /v1/auth/me`)
+  /// için var; sunucu 204 döner, gövde okunmaz.
+  Future<http.Response> deleteAuthed(String path, String accessToken) {
+    return _send(
+      () => _client.delete(
+        Uri.parse('$baseUrl$path'),
+        headers: _authHeaders(accessToken),
+      ),
+    );
+  }
+
   Map<String, String> _authHeaders(String accessToken) => {
-        ..._localeHeaders,
-        'Authorization': 'Bearer $accessToken',
-      };
+    ..._localeHeaders,
+    'Authorization': 'Bearer $accessToken',
+  };
 
   void close() => _client.close();
 }

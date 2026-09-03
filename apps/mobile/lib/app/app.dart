@@ -145,19 +145,46 @@ class _AppRoot extends ConsumerStatefulWidget {
 
 class _AppRootState extends ConsumerState<_AppRoot> {
   late final AnalyticsFlusher _flusher;
+  bool _offlineDismissed = false;
+  Timer? _offlineTimer;
 
   @override
   void initState() {
     super.initState();
     _flusher = AnalyticsFlusher(ref.read(analyticsProvider));
     WidgetsBinding.instance.addObserver(_flusher);
-    // AÇILIŞ AURASI ARTIK BURADA DEĞİL: `NoctaApp` açılışın ilk karesinde
-    // tetikliyor (bkz. `_NoctaAppState._signature`). Bu kök splash kalktıktan
-    // SONRA kuruluyor; ses burada başlasaydı animasyonun gerisinde kalırdı.
+    if (widget.offline) {
+      _offlineTimer = Timer(const Duration(seconds: 8), () {
+        if (mounted && widget.offline) setState(() => _offlineDismissed = true);
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppRoot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.offline && widget.offline) {
+      // Yeniden çevrimdışı olunca banner tekrar gösterilsin
+      _offlineDismissed = false;
+      _offlineTimer?.cancel();
+      _offlineTimer = Timer(const Duration(seconds: 8), () {
+        if (mounted && widget.offline) setState(() => _offlineDismissed = true);
+      });
+    }
+    if (oldWidget.offline && !widget.offline) {
+      _offlineDismissed = false;
+      _offlineTimer?.cancel();
+    }
+    if (widget.offline && !_offlineDismissed && _offlineTimer == null) {
+      _offlineTimer = Timer(const Duration(seconds: 8), () {
+        if (mounted && widget.offline) setState(() => _offlineDismissed = true);
+      });
+    }
   }
 
   @override
   void dispose() {
+    _offlineTimer?.cancel();
     WidgetsBinding.instance.removeObserver(_flusher);
     super.dispose();
   }
@@ -194,9 +221,7 @@ class _AppRootState extends ConsumerState<_AppRoot> {
         }
         return Column(
           children: [
-            // Çevrimdışıyken kullanıcı NEDEN bazı şeylerin boş olduğunu bilmeli —
-            // sessizce boş ekran göstermek "uygulama bozuk" izlenimi verirdi.
-            if (widget.offline) _offlineBanner(context),
+            if (widget.offline && !_offlineDismissed) _offlineBanner(context),
             strip,
             Expanded(child: child),
           ],
@@ -252,8 +277,21 @@ class _AppRootState extends ConsumerState<_AppRoot> {
               ),
               TextButton(
                 key: const Key('offline-retry'),
-                onPressed: () => ref.invalidate(sessionBootstrapProvider),
+                onPressed: () {
+                  setState(() => _offlineDismissed = false);
+                  ref.invalidate(sessionBootstrapProvider);
+                },
                 child: Text(AppL10n.of(context).offlineRetry),
+              ),
+              IconButton(
+                key: const Key('offline-dismiss'),
+                onPressed: () {
+                  _offlineTimer?.cancel();
+                  setState(() => _offlineDismissed = true);
+                },
+                icon: const Icon(Icons.close, size: 18),
+                tooltip: 'Kapat',
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               ),
             ],
           ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/media/card_renderer.dart';
 import '../../../core/share/sharer.dart';
 import 'night_report_card.dart';
+import 'widgets/night_receipt.dart';
 import '../../archetype/archetype_gradient.dart';
 import '../../analytics/analytics_providers.dart';
 import '../../archetype/archetype_providers.dart'
@@ -114,7 +116,9 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
 
       await ref
           .read(sharerProvider)
-          .share(ShareContent(text: share.title, url: share.webUrl, file: card));
+          .share(
+            ShareContent(text: share.title, url: share.webUrl, file: card),
+          );
       // Viral huni ölçümü (analitik bloklamaz). props YOK: gece tarihi PII'ye yakın
       // ve huni için gereksiz (docs/analytics-events.md).
       ref.read(analyticsProvider).track('report_shared');
@@ -149,87 +153,67 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
     );
   }
 
-  Widget _empty(BuildContext context) => Center(
-    child: Text(
-      AppL10n.of(context).nightReportEmpty,
-      key: const Key('report-empty'),
-      style: TextStyle(
-        fontSize: NoctaFontSize.body,
-        color: NoctaColors.inkSecondary,
+  Widget _empty(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    return SingleChildScrollView(
+      child: NEmptyState(
+        key: const Key('report-empty'),
+        title: l10n.nightReportEmpty,
+        actionLabel: l10n.homeStartRitual,
+        onAction: () => context.push('/sleep-mode'),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _report(BuildContext context, NightReport r) {
     final l10n = AppL10n.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(NoctaSpace.s5),
+      padding: const EdgeInsets.fromLTRB(
+        NoctaSpace.s6,
+        NoctaSpace.s5,
+        NoctaSpace.s6,
+        NoctaSpace.s8,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            r.nightDate,
-            style: TextStyle(
-              fontSize: NoctaFontSize.body,
-              color: NoctaColors.inkSecondary,
+          NightReceipt(
+            header: l10n.reportCardHeader,
+            date: r.nightDate,
+            duration: _Duration(
+              text: formatMinutes(r.totalDurationMinutes),
+              valueKey: const Key('report-duration'),
             ),
-          ),
-          const SizedBox(height: NoctaSpace.s2),
-          Text(
-            formatMinutes(r.totalDurationMinutes),
-            key: const Key('report-duration'),
-            style: TextStyle(
-              fontSize: NoctaFontSize.display,
-              color: NoctaColors.inkPrimary,
-            ),
-          ),
-          const SizedBox(height: NoctaSpace.s5),
-          NCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.nightReportCalm(r.calmScore),
-                  key: const Key('report-calm'),
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.h2,
-                    color: NoctaColors.accentAurora,
-                  ),
-                ),
-                const SizedBox(height: NoctaSpace.s1),
-                // Sağlık iddiası YOK: uygulama-içi göreli dinginlik ölçüsü.
-                Text(
-                  l10n.nightReportCalmDisclaimer,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.caption,
-                    color: NoctaColors.inkFaint,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: NoctaSpace.s3),
-          _Row(label: l10n.nightReportSessions, value: '${r.sessionCount}'),
-          // **`movementEvents` GÖSTERİLMİYOR (D-10):** ölçmüyoruz. Dedektör "hareket"
-          // ile "ses"i ayıramıyor (docs/04 §120 fixture'ları yok) ve alan her zaman 0
-          // dönüyor. "Movement events: 0" göstermek, ölçmediğimiz bir şeyi ölçmüş
-          // gibi sunmaktır — sıfır bile bir iddiadır.
-          _Row(label: l10n.nightReportSoundEvents, value: '${r.soundEvents}'),
-          Padding(
-            padding: const EdgeInsets.only(top: NoctaSpace.s1),
-            child: Text(
-              l10n.nightReportLoudHint,
-              key: const Key('report-loud-hint'),
-              style: TextStyle(
-                fontSize: NoctaFontSize.caption,
-                color: NoctaColors.inkFaint,
+            rows: <NightReceiptRow>[
+              NightReceiptRow(
+                label: l10n.nightReportCalm(r.calmScore),
+                value: '${r.calmScore}',
+                valueKey: const Key('report-calm'),
               ),
-            ),
+              NightReceiptRow(
+                label: l10n.nightReportSessions,
+                value: '${r.sessionCount}',
+              ),
+              // **`movementEvents` GÖSTERİLMİYOR (D-10):** ölçmüyoruz. Dedektör
+              // "hareket" ile "ses"i ayıramıyor (docs/04 §120 fixture'ları yok) ve
+              // alan her zaman 0 dönüyor. "Movement events: 0" göstermek,
+              // ölçmediğimiz bir şeyi ölçmüş gibi sunmaktır — sıfır bile bir iddiadır.
+              NightReceiptRow(
+                label: l10n.nightReportSoundEvents,
+                value: '${r.soundEvents}',
+              ),
+            ],
+            insight: l10n.nightReportLoudHint,
+            insightKey: const Key('report-loud-hint'),
+            // Sağlık iddiası YOK: uygulama-içi göreli dinginlik ölçüsü.
+            disclaimer: l10n.nightReportCalmDisclaimer,
           ),
-          const SizedBox(height: NoctaSpace.s5),
+          const SizedBox(height: NoctaSpace.s8),
           NButton(
             key: const Key('report-share'),
             label: _sharing ? l10n.nightReportSharing : l10n.nightReportShare,
+            expand: true,
+            rule: true,
             onPressed: _sharing ? null : _share,
           ),
         ],
@@ -238,34 +222,24 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
   }
 }
 
-class _Row extends StatelessWidget {
-  const _Row({required this.label, required this.value});
+/// Makbuzun büyük süresi: sayı serif ve iri, birim küçük.
+class _Duration extends StatelessWidget {
+  const _Duration({required this.text, this.valueKey});
 
-  final String label;
-  final String value;
+  final String text;
+  final Key? valueKey;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s1),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: NoctaFontSize.body,
-              color: NoctaColors.inkSecondary,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: NoctaFontSize.body,
-              color: NoctaColors.inkPrimary,
-            ),
-          ),
-        ],
+    return Text(
+      text,
+      key: valueKey,
+      style: const TextStyle(
+        fontFamily: NoctaFont.display,
+        fontSize: 50,
+        height: 1,
+        color: NoctaColors.inkOnPaper,
+        fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
       ),
     );
   }

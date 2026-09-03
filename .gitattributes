@@ -21,3 +21,4 @@
 *.mp3 binary
 *.wav binary
 *.mp4 binary
+graphify-out/graph.json merge=graphify

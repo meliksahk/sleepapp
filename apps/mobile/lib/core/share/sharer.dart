@@ -19,7 +19,10 @@ class ShareFile {
     this.path,
     required this.filename,
     required this.mimeType,
-  }) : assert((bytes == null) != (path == null), 'ya bayt ya yol, tam olarak biri');
+  }) : assert(
+         (bytes == null) != (path == null),
+         'ya bayt ya yol, tam olarak biri',
+       );
 
   /// Bellekteki içerik ([path] null ise dolu.)
   final Uint8List? bytes;
@@ -45,6 +48,14 @@ class ShareFile {
   /// mp4 kısayolu (mix-to-video, viral kanca #3) — dosya diskten paylaşılır.
   factory ShareFile.mp4({required String path, required String filename}) =>
       ShareFile._(path: path, filename: filename, mimeType: 'video/mp4');
+
+  /// JSON kısayolu (GDPR veri taşınabilirliği — `GET /v1/me/export`).
+  factory ShareFile.json({required String text, required String filename}) =>
+      ShareFile._(
+        bytes: Uint8List.fromList(utf8.encode(text)),
+        filename: filename,
+        mimeType: 'application/json',
+      );
 }
 
 /// Paylaşılacak içerik — başlık/metin + link, isteğe bağlı GÖRSEL.

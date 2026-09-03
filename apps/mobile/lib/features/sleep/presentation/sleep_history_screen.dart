@@ -19,7 +19,7 @@ class SleepHistoryScreen extends ConsumerWidget {
     final stats = ref.watch(sleepStatsProvider);
     final trend = ref.watch(sleepTrendProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(AppL10n.of(context).sleepHistoryTitle)),
+      appBar: AppBar(title: NMono(AppL10n.of(context).sleepHistoryTitle)),
       body: SafeArea(
         child: Column(
           children: [
@@ -34,16 +34,13 @@ class SleepHistoryScreen extends ConsumerWidget {
                         NoctaSpace.s5,
                         0,
                       ),
-                      child: Text(
+                      child: NMono(
                         AppL10n.of(context).sleepHistoryStats(
                           s.nights,
                           formatMinutes(s.averageDurationMinutes),
                         ),
                         key: const Key('sleep-stats'),
-                        style: TextStyle(
-                          fontSize: NoctaFontSize.body,
-                          color: NoctaColors.inkSecondary,
-                        ),
+                        track: NoctaTrack.wide,
                       ),
                     ),
               orElse: () => const SizedBox.shrink(),
@@ -64,7 +61,12 @@ class SleepHistoryScreen extends ConsumerWidget {
                         NoctaSpace.s5,
                         0,
                       ),
-                      child: (ref.watch(entitlementProvider).valueOrNull?.premium ?? true)
+                      child:
+                          (ref
+                                  .watch(entitlementProvider)
+                                  .valueOrNull
+                                  ?.premium ??
+                              true)
                           ? WeeklyTrendChart(trend: t)
                           : const _TrendPremiumLock(),
                     ),
@@ -85,13 +87,12 @@ class SleepHistoryScreen extends ConsumerWidget {
     return sessions.when(
       data: (list) => _list(context, list),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: IconButton(
-          key: const Key('sleep-history-retry'),
-          icon: const Icon(Icons.refresh),
-          iconSize: 40,
-          onPressed: () => ref.invalidate(recentSleepSessionsProvider),
-        ),
+      // Ciplak refresh ikonu DEGIL: ne oldu / ne yapabilirim (NErrorState).
+      error: (error, stack) => NErrorState(
+        retryKey: const Key('sleep-history-retry'),
+        message: AppL10n.of(context).loadFailed,
+        retryLabel: AppL10n.of(context).offlineRetry,
+        onRetry: () => ref.invalidate(recentSleepSessionsProvider),
       ),
     );
   }
@@ -99,43 +100,63 @@ class SleepHistoryScreen extends ConsumerWidget {
   Widget _list(BuildContext context, List<SleepSession> list) {
     if (list.isEmpty) {
       return Center(
-        child: Text(
-          AppL10n.of(context).sleepHistoryEmpty,
+        child: NEmptyState(
           key: const Key('sleep-history-empty'),
-          style: TextStyle(
-            fontSize: NoctaFontSize.body,
-            color: NoctaColors.inkSecondary,
-          ),
+          title: AppL10n.of(context).sleepHistoryEmpty,
+          actionLabel: AppL10n.of(context).homeStartRitual,
+          onAction: () => context.push('/sleep-mode'),
         ),
       );
     }
+    // En uzun gece olcek referansi: cubuklar birbirine gore okunur.
+    final int longest = list.fold<int>(
+      1,
+      (m, e) => e.durationMinutes > m ? e.durationMinutes : m,
+    );
     return ListView.separated(
-      padding: const EdgeInsets.all(NoctaSpace.s5),
+      padding: const EdgeInsets.all(NoctaSpace.s6),
       itemCount: list.length,
       separatorBuilder: (context, index) =>
-          const SizedBox(height: NoctaSpace.s3),
+          const Divider(color: NoctaColors.lineHairline),
       itemBuilder: (context, i) {
         final s = list[i];
         // Tıklama → o gecenin raporu (viral kanca #2).
         return GestureDetector(
           key: Key('sleep-session-${s.id}'),
           onTap: () => context.push('/report/${s.nightDate}'),
-          child: NCard(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s3),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  s.nightDate,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.body,
-                    color: NoctaColors.inkSecondary,
+                SizedBox(
+                  width: 58,
+                  child: NMono(s.nightDate, track: 0, maxLines: 1),
+                ),
+                const SizedBox(width: NoctaSpace.s3),
+                // Gecenin uzunlugu CUBUKLA da anlatilir: liste tek bakista okunur.
+                Expanded(
+                  child: Container(
+                    height: 22,
+                    color: NoctaColors.bgOverlay,
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: (s.durationMinutes / longest).clamp(
+                        0.02,
+                        1.0,
+                      ),
+                      child: Container(color: NoctaColors.inkFaint),
+                    ),
                   ),
                 ),
-                Text(
-                  s.durationText,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.body,
-                    color: NoctaColors.inkPrimary,
+                const SizedBox(width: NoctaSpace.s3),
+                SizedBox(
+                  width: 56,
+                  child: NMono(
+                    s.durationText,
+                    color: NoctaColors.inkSecondary,
+                    track: 0,
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
                   ),
                 ),
               ],
@@ -156,9 +177,8 @@ class _TrendPremiumLock extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppL10n.of(context);
     return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: NoctaColors.inkFaint.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(12),
+      decoration: const BoxDecoration(
+        border: Border.fromBorderSide(BorderSide(color: NoctaColors.lineSoft)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(NoctaSpace.s4),
@@ -167,13 +187,20 @@ class _TrendPremiumLock extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.lock_outline, size: 18, color: NoctaColors.inkSecondary),
+                Icon(
+                  Icons.lock_outline,
+                  size: 18,
+                  color: NoctaColors.inkSecondary,
+                ),
                 const SizedBox(width: NoctaSpace.s2),
                 Expanded(
                   child: Text(
                     l10n.trendLockText,
                     key: const Key('trend-premium-lock'),
-                    style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary),
+                    style: TextStyle(
+                      fontSize: NoctaFontSize.body,
+                      color: NoctaColors.inkSecondary,
+                    ),
                   ),
                 ),
               ],

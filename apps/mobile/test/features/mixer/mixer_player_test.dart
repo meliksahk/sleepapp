@@ -255,9 +255,10 @@ void main() {
         '(${atRest.join(", ")})');
     expect(
       atRest.length,
-      greaterThanOrEqualTo(4),
+      greaterThanOrEqualTo(3),
       reason: 'ilk bakışta ${atRest.length} katman görünüyor — mikser gibi '
-          'durmuyor (regresyon: eskiden 2 idi)',
+          'durmuyor (regresyon: eskiden 2 idi; 3 kabul edilir çünkü her sentez '
+          'satırında artık kaldırma butonu da var — mikser serbest araç)',
     );
 
     // (2) Kaydırınca HEPSİ ulaşılabilir.

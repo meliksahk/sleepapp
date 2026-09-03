@@ -237,9 +237,8 @@ void main() {
       expect(find.byKey(const Key('mixer-asset-loop-notice')), findsNothing);
       // Sentez katmanına dokunulmadı.
       expect(find.byKey(const Key('gain-brown')), findsOneWidget);
-      // Kaldırma düğmesi YALNIZCA dosya katmanlarında: sentez katmanı tarifin
-      // kendisidir, silinemez.
-      expect(find.byKey(const Key('remove-brown')), findsNothing);
+      // HER sentez katmanında kaldırma butonu VAR (mikser serbest araç).
+      expect(find.byKey(const Key('remove-brown')), findsOneWidget);
     });
 
     testWidgets('URL çözülemezse katman EKLENMEZ ve hata SÖYLENİR',
@@ -367,6 +366,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('mixer-export-video')));
+      // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+      // stüdyodaki süre seçiminden sonra başlar.
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('studio-export')));
       await tester.pumpAndSettle();
 
       expect(
@@ -417,6 +420,10 @@ void main() {
       await tester.pump();
 
       await tester.tap(find.byKey(const Key('mixer-export-video')));
+      // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+      // stüdyodaki süre seçiminden sonra başlar.
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('studio-export')));
       await tester.pump();
 
       expect(

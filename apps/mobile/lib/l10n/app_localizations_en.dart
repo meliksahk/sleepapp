@@ -142,6 +142,81 @@ class AppL10nEn extends AppL10n {
   String get mixerLayerPad => 'Warm pad';
 
   @override
+  String get mixerLayerTone => 'Pure tone';
+
+  @override
+  String get mixerAddSourceTitle => 'Add back a source';
+
+  @override
+  String get mixerAddTone => 'Add tone';
+
+  @override
+  String get mixerAddToneTitle => 'Choose a tone';
+
+  @override
+  String get mixerAddToneHint =>
+      'A pure sustained note. Blend it under noise or let it hum on its own.';
+
+  @override
+  String get mixerAddToneConfirm => 'Add to mix';
+
+  @override
+  String get mixerLayerLimitReached =>
+      'The mix is full — remove a layer to add another.';
+
+  @override
+  String get mixerToneBeatLabel => 'Beat (binaural)';
+
+  @override
+  String get mixerToneBeatUnit => 'beat';
+
+  @override
+  String get mixerToneBeatOff => 'Off';
+
+  @override
+  String get mixerToneBeatHint =>
+      'Each ear hears a slightly different pitch — you perceive a gentle pulsing beat. Works best with headphones. A sound effect, nothing more.';
+
+  @override
+  String get communityShareAction => 'Share';
+
+  @override
+  String get communityShareTitle => 'Share with the community';
+
+  @override
+  String get communityShareTitleField => 'Title';
+
+  @override
+  String get communityShareTerms =>
+      'Your sound will be reviewed before it appears for others. You confirm you own it or it is license-free. Your local copy is never removed.';
+
+  @override
+  String get communitySharing => 'Uploading…';
+
+  @override
+  String get communityShareConfirm => 'Send for review';
+
+  @override
+  String get communitySharedDone =>
+      'Sent! Your sound will appear in the community library after review.';
+
+  @override
+  String get communityShareFailed =>
+      'Your sound could not be shared. Try again later.';
+
+  @override
+  String get communitySharePendingLimit =>
+      'You have too many sounds waiting for review. Please wait for them to be reviewed first.';
+
+  @override
+  String get communityShareUploadFailed =>
+      'The file could not be uploaded. Check your connection and try again.';
+
+  @override
+  String get communityShareDurationUnknown =>
+      'This file\'s length could not be read, so it cannot be shared.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }
@@ -288,6 +363,47 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get mixerVideoTitle => 'Tonight\'s mix';
+
+  @override
+  String get mixerLayerChords => 'Chord progression';
+
+  @override
+  String get mixerLayerArpeggio => 'Pentatonic arpeggio';
+
+  @override
+  String get mixerLayerCeramic => 'Ceramic bowl';
+
+  @override
+  String get mixerLayerChimes => 'Wind chimes';
+
+  @override
+  String get mixerLayerTopSpin => 'Spinning top';
+
+  @override
+  String get mixerLayerFriction => 'Ceramic friction';
+
+  @override
+  String get sleepSoundTitle => 'Night sound';
+
+  @override
+  String get sleepSoundOn => 'Playing';
+
+  @override
+  String get sleepSoundOff => 'Off';
+
+  @override
+  String get sleepSoundTurnOn => 'Turn on';
+
+  @override
+  String get sleepSoundTurnOff => 'Turn off';
+
+  @override
+  String get sleepSoundHint =>
+      'A generated mix plays softly all night. It stops with the alarm and works offline.';
+
+  @override
+  String get sleepSoundFailed =>
+      'The sound could not start — night tracking continues.';
 
   @override
   String get alarmSectionTitle => 'Smart alarm';
@@ -633,11 +749,11 @@ class AppL10nEn extends AppL10n {
       'Take the free sleep archetype test and see how your nights actually work. No account needed.';
 
   @override
-  String get onboardingRitualTitle => 'Build your night ritual';
+  String get onboardingRitualTitle => 'Your 10-minute ritual';
 
   @override
   String get onboardingRitualBody =>
-      'Mix generative soundscapes yourself — rain, drones, soft noise. Everything is created on your phone and works offline.';
+      'Pick rain, a pure hum, ceramic friction or a spinning top — mix your own sleep sound. Tap 10-minute fade and the sound slowly disappears while you fall asleep. Everything is made on your phone, offline.';
 
   @override
   String get onboardingAlarmTitle => 'Wake up gently';
@@ -654,7 +770,7 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get homeRitualSubtitle =>
-      'Sound, and a gentler wake-up. Works with no connection.';
+      'Mix your ritual in seconds. 10-minute fade puts the phone to sleep with you. Works offline.';
 
   @override
   String get homeStartRitual => 'Start tonight';
@@ -665,6 +781,33 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get homeSectionExplore => 'Explore';
+
+  @override
+  String get communityBadge => 'Community';
+
+  @override
+  String get mySharesTitle => 'My shared sounds';
+
+  @override
+  String get mySharesEmpty =>
+      'You haven\'t shared anything yet. Share a sound from the mixer\'s sound catalog.';
+
+  @override
+  String get shareStatusPending => 'In review';
+
+  @override
+  String get shareStatusApproved => 'Live';
+
+  @override
+  String get shareStatusRejected => 'Not accepted';
+
+  @override
+  String get mySharesLoadFailed => 'Your shares could not be loaded.';
+
+  @override
+  String mySharesRejectionReason(String reason) {
+    return 'Reviewer note: \"$reason\"';
+  }
 
   @override
   String get settingsSignatureSound => 'Opening sound';
@@ -698,4 +841,181 @@ class AppL10nEn extends AppL10n {
   @override
   String get mixerRecipeUnavailable =>
       'We couldn\'t load this sound\'s recipe, so your default mix is playing.';
+
+  @override
+  String get privacySection => 'Privacy';
+
+  @override
+  String get privacyExport => 'DOWNLOAD MY DATA';
+
+  @override
+  String get privacyExportHint =>
+      'Everything we hold about you, as one JSON file.';
+
+  @override
+  String get privacyExporting => 'PREPARING…';
+
+  @override
+  String get privacyExportFailed =>
+      'We couldn\'t prepare your data. Try again in a moment.';
+
+  @override
+  String get privacyDeleteEntry => 'DELETE MY ACCOUNT';
+
+  @override
+  String get deleteAccountTitle => 'Delete your account';
+
+  @override
+  String get deleteAccountBody =>
+      'This can\'t be undone. Every night, mix, identity result and local sound file is erased.';
+
+  @override
+  String get deleteAccountItemNights => 'Your nights and reports';
+
+  @override
+  String get deleteAccountItemMixes => 'Your mixes and saved sounds';
+
+  @override
+  String get deleteAccountItemIdentity => 'Your sleep identity history';
+
+  @override
+  String get deleteAccountItemDevices => 'Every signed-in device';
+
+  @override
+  String get deleteAccountConfirm => 'I understand there is no way back.';
+
+  @override
+  String get deleteAccountCta => 'DELETE PERMANENTLY';
+
+  @override
+  String get deleteAccountCancel => 'KEEP MY ACCOUNT';
+
+  @override
+  String get deleteAccountDeleting => 'DELETING…';
+
+  @override
+  String get deleteAccountFailed =>
+      'We couldn\'t delete your account. Nothing was removed.';
+
+  @override
+  String get micPermissionTitle =>
+      'The microphone stays on. Nothing is recorded.';
+
+  @override
+  String get micPermissionFactCounts =>
+      'Your phone counts events — movement, sound, quiet. It never keeps the audio.';
+
+  @override
+  String get micPermissionFactLocal =>
+      'Analysis happens on this device. Nothing is uploaded, not even once.';
+
+  @override
+  String get micPermissionFactOptional =>
+      'Say no and the ritual still works — sound and alarm keep going, only the night report is skipped.';
+
+  @override
+  String get micPermissionAllow => 'CONTINUE';
+
+  @override
+  String get micPermissionSkip => 'NOT NOW';
+
+  @override
+  String get micPermissionDeniedTitle => 'PERMISSION DENIED';
+
+  @override
+  String get micPermissionDeniedBody =>
+      'The ritual still runs — only the night report won\'t be produced. You can turn it on later in your phone\'s settings.';
+
+  @override
+  String get alarmLatestAt => 'AT THE LATEST';
+
+  @override
+  String get alarmWindowWidth => 'WINDOW WIDTH';
+
+  @override
+  String alarmWindowMinutes(int minutes) {
+    return '$minutes MIN';
+  }
+
+  @override
+  String get alarmSave => 'SET THE ALARM';
+
+  @override
+  String get ritualTitle => 'My ritual';
+
+  @override
+  String get ritualNightsInRow => 'NIGHTS IN A ROW';
+
+  @override
+  String get ritualLongest => 'LONGEST';
+
+  @override
+  String get ritualTotalNights => 'NIGHTS TOTAL';
+
+  @override
+  String get ritualAverage => 'AVERAGE';
+
+  @override
+  String get ritualMonthLabel => 'THIS MONTH';
+
+  @override
+  String get ritualEmpty => 'Your ritual hasn\'t started yet.';
+
+  @override
+  String get studioTitle => 'Share studio';
+
+  @override
+  String get studioLength => 'LENGTH';
+
+  @override
+  String studioSeconds(int seconds) {
+    return '$seconds SEC';
+  }
+
+  @override
+  String get studioLengthHint =>
+      'Longer clips take longer to make — everything is rendered on this phone.';
+
+  @override
+  String get studioExport => 'MAKE THE VIDEO';
+
+  @override
+  String get notifSettingsTitle => 'Notifications';
+
+  @override
+  String get notifReminderSection => 'EVENING REMINDER';
+
+  @override
+  String get notifReminderOff => 'No reminder';
+
+  @override
+  String notifReminderAt(String hour) {
+    return 'Every evening at $hour';
+  }
+
+  @override
+  String get notifReminderHint => 'A nudge to start the ritual — nothing else.';
+
+  @override
+  String get notifQuietSection => 'QUIET HOURS';
+
+  @override
+  String get notifQuietOff => 'Off';
+
+  @override
+  String notifQuietRange(String start, String end) {
+    return '$start — $end';
+  }
+
+  @override
+  String get notifQuietHint => 'Nothing reaches you between these hours.';
+
+  @override
+  String get notifSaveFailed => 'Couldn\'t save. Your settings are unchanged.';
+
+  @override
+  String get notifPick => 'CHANGE';
+
+  @override
+  String get notifClear => 'TURN OFF';
 }

@@ -109,6 +109,10 @@ StyleDictionary.registerFormat({
     const spaceLines = [];
     const radiusLines = [];
     const fontSizeLines = [];
+    const fontFamilyLines = [];
+    const trackLines = [];
+    // Flutter tek aile adı ister; token'daki "Instrument Serif, Georgia, serif"in ilki alınır.
+    const firstFamily = (v) => String(v).split(',')[0].trim();
     for (const t of dictionary.allTokens) {
       const [group] = t.path;
       if (group === 'color') {
@@ -127,6 +131,12 @@ StyleDictionary.registerFormat({
         radiusLines.push(`  static const double ${camel([t.path[1]])} = ${pxToNum(t.value)};`);
       } else if (group === 'font' && t.path[1] === 'size') {
         fontSizeLines.push(`  static const double ${camel([t.path[2]])} = ${pxToNum(t.value)};`);
+      } else if (group === 'font' && t.path[1] === 'family') {
+        fontFamilyLines.push(
+          `  static const String ${camel([t.path[2]])} = '${firstFamily(t.value)}';`,
+        );
+      } else if (group === 'font' && t.path[1] === 'track') {
+        trackLines.push(`  static const double ${camel([t.path[2]])} = ${pxToNum(t.value)};`);
       }
     }
     const gradients = Object.entries(archetype)
@@ -171,6 +181,18 @@ class NoctaFontSize {
 ${fontSizeLines.join('\n')}
 }
 
+/// Yazı aileleri. Uygulamada üç ses: serif başlık, mono etiket, sans gövde.
+class NoctaFont {
+  NoctaFont._();
+${fontFamilyLines.join('\n')}
+}
+
+/// Mono etiketlerin harf aralığı (punto).
+class NoctaTrack {
+  NoctaTrack._();
+${trackLines.join('\n')}
+}
+
 /// Uygulamanın dark tema ThemeData'sı — token'lardan üretilir.
 ThemeData buildNoctaDarkTheme() {
   final base = ThemeData.dark(useMaterial3: true);
@@ -187,7 +209,34 @@ ThemeData buildNoctaDarkTheme() {
     textTheme: base.textTheme.apply(
       bodyColor: NoctaColors.inkPrimary,
       displayColor: NoctaColors.inkPrimary,
-      fontFamily: 'Inter',
+      fontFamily: NoctaFont.body,
+    ),
+    dividerTheme: const DividerThemeData(
+      color: NoctaColors.lineHairline,
+      thickness: 1,
+      space: 1,
+    ),
+    // Kolajda AppBar bir yüzey değil, kağıdın üstündeki boşluk: zeminsiz ve gölgesiz.
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      foregroundColor: NoctaColors.inkPrimary,
+      titleTextStyle: TextStyle(
+        fontFamily: NoctaFont.mono,
+        fontSize: NoctaFontSize.micro,
+        letterSpacing: NoctaTrack.label,
+        color: NoctaColors.inkSecondary,
+      ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: NoctaColors.bgRaised,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(NoctaRadius.sheet)),
+      ),
     ),
   );
 }
