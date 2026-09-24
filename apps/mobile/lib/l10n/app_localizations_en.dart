@@ -94,6 +94,9 @@ class AppL10nEn extends AppL10n {
   String get offlineRetry => 'Retry';
 
   @override
+  String get offlineDismiss => 'Dismiss';
+
+  @override
   String get homeOpenMixer => 'Open mixer';
 
   @override

@@ -76,6 +76,9 @@
   "offlineRetry": "Retry",
   "@offlineRetry": { "description": "Çevrimdışı çubuğundaki yeniden dene" },
 
+  "offlineDismiss": "Dismiss",
+  "@offlineDismiss": { "description": "Çevrimdışı bandını kapatan düğmenin ekran okuyucu adı. Tooltip DEĞİL: bant Overlay'in üstünde, tooltip çöker" },
+
   "homeOpenMixer": "Open mixer",
   "@homeOpenMixer": { "description": "Ana ekrandan miksere giden buton" },
 

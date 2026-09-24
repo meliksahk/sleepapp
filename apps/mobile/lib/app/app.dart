@@ -223,7 +223,15 @@ class _AppRootState extends ConsumerState<_AppRoot> {
           children: [
             if (widget.offline && !_offlineDismissed) _offlineBanner(context),
             strip,
-            Expanded(child: child),
+            // Navigator AYRI bir semantik kapsayıcı — ÖLÇÜLMÜŞ BİR HATA.
+            // Her rotanın `ModalBarrier`'ı bir `BlockSemantics` taşır: aynı
+            // semantik kapsayıcıda KENDİNDEN ÖNCE çizilen her şeyi ekran
+            // okuyucudan siler. Kapsayıcı olmadan bantlar (çevrimdışı bandı,
+            // gece şeridi) rotayla aynı kapsayıcıdaydı ve önce çizildikleri için
+            // ekran okuyucuya HİÇ görünmüyordu: semantik ağaçta ana ekranın 18
+            // düğümü vardı, bandın metni / "Yeniden dene" / "Kapat" yoktu.
+            // Kapsayıcı, bariyerin etkisini Navigator'ın içine hapseder.
+            Expanded(child: Semantics(container: true, child: child)),
           ],
         );
       },
@@ -289,8 +297,18 @@ class _AppRootState extends ConsumerState<_AppRoot> {
                   _offlineTimer?.cancel();
                   setState(() => _offlineDismissed = true);
                 },
-                icon: const Icon(Icons.close, size: 18),
-                tooltip: 'Kapat',
+                // `tooltip` BİLEREK YOK — ÖLÇÜLMÜŞ BİR ÇÖKME. Bu bant
+                // `MaterialApp.builder` içinde, Navigator'ın (dolayısıyla onun
+                // Overlay'inin) ÜSTÜNDE çiziliyor. Tooltip bir Overlay ata ister;
+                // bulamayınca bant her göründüğünde "No Overlay widget found"
+                // hatası verip ~99.000 px taşıyordu (17 test bununla düşüyordu).
+                // Erişilebilir ad `semanticLabel` ile verilir: ekran okuyucu
+                // düğmeyi yine adıyla okur, Overlay gerekmez.
+                icon: Icon(
+                  Icons.close,
+                  size: 18,
+                  semanticLabel: AppL10n.of(context).offlineDismiss,
+                ),
                 constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
               ),
             ],

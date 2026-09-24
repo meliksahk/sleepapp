@@ -110,4 +110,63 @@ void main() {
     expect(find.byKey(const Key('mixer-cta')), findsOneWidget);
     expect(find.byKey(const Key('offline-retry')), findsOneWidget);
   });
+  // ─────────── Bandı kapatma (ac4852e ile geldi, testi yoktu) ───────────
+  //
+  // Kapat düğmesi eklendiğinde bir `tooltip` taşıyordu. Bant Navigator'ın
+  // (yani Overlay'in) ÜSTÜNDE çizildiği için tooltip "No Overlay" hatası verip
+  // bandı ~99.000 px taşırıyordu: bant HER göründüğünde ekran bozuluyordu.
+  // Aşağıdaki testler hem çökmeyi hem de yeni davranışı kilitler.
+  group('çevrimdışı bandı kapatma', () {
+    Future<void> pumpOffline(WidgetTester t) async {
+      await t.pumpWidget(
+        appWith(AsyncValue.error(Exception('ağ yok'), StackTrace.empty)),
+      );
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('ÇEKİRDEK: kapat düğmesi bandı kaldırır ve hata ÜRETMEZ', (
+      t,
+    ) async {
+      await pumpOffline(t);
+      expect(find.byKey(const Key('offline-banner')), findsOneWidget);
+      expect(t.takeException(), isNull, reason: 'bant çizilirken hata oluştu');
+
+      await t.tap(find.byKey(const Key('offline-dismiss')));
+      await t.pump();
+
+      expect(find.byKey(const Key('offline-banner')), findsNothing);
+      // Bant gitti ama uygulama hâlâ kullanılabilir.
+      expect(find.byKey(const Key('mixer-cta')), findsOneWidget);
+    });
+
+    testWidgets('bant birkaç saniye sonra KENDİLİĞİNDEN kaybolur', (t) async {
+      await pumpOffline(t);
+      expect(find.byKey(const Key('offline-banner')), findsOneWidget);
+
+      await t.pump(const Duration(seconds: 9));
+
+      expect(find.byKey(const Key('offline-banner')), findsNothing);
+    });
+
+    testWidgets('ÇEKİRDEK: bant EKRAN OKUYUCUYA görünür, kapat hedefi ≥44 px', (
+      t,
+    ) async {
+      final semantics = t.ensureSemantics();
+      await pumpOffline(t);
+
+      // ÖLÇÜLMÜŞ HATA: bu üç düğüm semantik ağaçta YOKTU. Rotanın
+      // `ModalBarrier`'ı (BlockSemantics) aynı kapsayıcıda kendinden önce
+      // çizilen bantları siliyordu; ağaçta ana ekranın 20 düğümü vardı, bandın
+      // hiçbiri yoktu. Navigator artık ayrı semantik kapsayıcı (app.dart).
+      expect(find.semantics.byLabel(RegExp('Offline')), findsOne);
+      expect(find.semantics.byLabel('Retry'), findsOne);
+      // Kapat düğmesinin adı tooltip'ten değil `semanticLabel`'dan gelir.
+      expect(find.semantics.byLabel('Dismiss'), findsOne);
+
+      final size = t.getSize(find.byKey(const Key('offline-dismiss')));
+      expect(size.width, greaterThanOrEqualTo(44));
+      expect(size.height, greaterThanOrEqualTo(44));
+      semantics.dispose();
+    });
+  });
 }

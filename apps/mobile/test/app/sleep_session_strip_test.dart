@@ -296,6 +296,21 @@ void main() {
     expect(size.height, greaterThanOrEqualTo(44));
   });
 
+  testWidgets('ÇEKİRDEK: şerit EKRAN OKUYUCUYA görünür (CLAUDE.md §7)', (t) async {
+    // ÖLÇÜLMÜŞ HATA: şerit kabuk katmanında, Navigator'dan ÖNCE çiziliyor.
+    // Rotanın `ModalBarrier`'ı (BlockSemantics) aynı kapsayıcıda kendinden önce
+    // çizileni sildiği için şerit semantik ağaçta YOKTU — görme engelli bir
+    // kullanıcı gecenin sürdüğünü ve şeride dokunabileceğini hiç duymuyordu.
+    final semantics = t.ensureSemantics();
+    final beacon = SleepSessionBeacon()..begin(DateTime.now());
+
+    await t.pumpWidget(appWith(beacon));
+    await t.pumpAndSettle();
+
+    expect(find.semantics.byLabel(RegExp('Open sleep mode')), findsOne);
+    semantics.dispose();
+  });
+
   testWidgets('ÇEVRİMDIŞI bandı ile şerit BİRLİKTE yaşar (biri diğerini yemez)',
       (t) async {
     final beacon = SleepSessionBeacon()..begin(DateTime.now());

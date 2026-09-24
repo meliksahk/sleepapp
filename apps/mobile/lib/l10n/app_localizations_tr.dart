@@ -95,6 +95,9 @@ class AppL10nTr extends AppL10n {
   String get offlineRetry => 'Yeniden dene';
 
   @override
+  String get offlineDismiss => 'Kapat';
+
+  @override
   String get homeOpenMixer => 'Mikseri aç';
 
   @override

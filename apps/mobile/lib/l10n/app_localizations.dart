@@ -229,6 +229,12 @@ abstract class AppL10n {
   /// **'Retry'**
   String get offlineRetry;
 
+  /// Çevrimdışı bandını kapatan düğmenin ekran okuyucu adı. Tooltip DEĞİL: bant Overlay'in üstünde, tooltip çöker
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get offlineDismiss;
+
   /// Ana ekrandan miksere giden buton
   ///
   /// In en, this message translates to:

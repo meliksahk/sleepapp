@@ -26,6 +26,7 @@
   "homeSleepMode": "Uyku modu",
   "offlineBanner": "Çevrimdışı — bazı özellikler bağlantı gerektirir",
   "offlineRetry": "Yeniden dene",
+  "offlineDismiss": "Kapat",
   "homeOpenMixer": "Mikseri aç",
 
   "mixerTitle": "Mikser",
