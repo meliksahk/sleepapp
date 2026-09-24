@@ -307,6 +307,27 @@
   "loadFailedNoServer": "This part needs an account connection, which isn't available yet. Sound, the mixer and your own sounds all work offline.",
   "@loadFailedNoServer": { "description": "Ag katmani kapaliyken (apiBaseUrl bos) gosterilen hata metni; 'baglantini kontrol et' yaniltici olurdu" },
 
+  "libraryFilterAll": "All",
+  "@libraryFilterAll": { "description": "Kütüphane kategori çipi: filtresiz" },
+
+  "libraryFilterNoise": "Noise",
+  "@libraryFilterNoise": { "description": "Kütüphane kategori çipi" },
+
+  "libraryFilterNature": "Nature",
+  "@libraryFilterNature": { "description": "Kütüphane kategori çipi" },
+
+  "libraryFilterRelaxing": "Relaxing",
+  "@libraryFilterRelaxing": { "description": "Kütüphane kategori çipi" },
+
+  "libraryBadgeNoise": "Noise",
+  "@libraryBadgeNoise": { "description": "Tarif satırındaki kategori rozeti" },
+
+  "libraryBadgeNature": "Nature",
+  "@libraryBadgeNature": { "description": "Tarif satırındaki kategori rozeti" },
+
+  "libraryBadgeRelaxing": "Relaxing",
+  "@libraryBadgeRelaxing": { "description": "Tarif satırındaki kategori rozeti" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",

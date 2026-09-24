@@ -123,7 +123,7 @@ class _SoundsSection extends ConsumerWidget {
                   key: Key('detail-sound-${s.slug}'),
                   onTap: () => context.push('/library/${s.slug}'),
                   child: NCard(
-                    child: NDisplay(s.title('en'), size: NoctaFontSize.h2 - 6),
+                    child: NDisplay(s.title(Localizations.localeOf(context).languageCode), size: NoctaFontSize.h2 - 6),
                   ),
                 ),
               ),

@@ -333,6 +333,27 @@ class AppL10nEn extends AppL10n {
       'This part needs an account connection, which isn\'t available yet. Sound, the mixer and your own sounds all work offline.';
 
   @override
+  String get libraryFilterAll => 'All';
+
+  @override
+  String get libraryFilterNoise => 'Noise';
+
+  @override
+  String get libraryFilterNature => 'Nature';
+
+  @override
+  String get libraryFilterRelaxing => 'Relaxing';
+
+  @override
+  String get libraryBadgeNoise => 'Noise';
+
+  @override
+  String get libraryBadgeNature => 'Nature';
+
+  @override
+  String get libraryBadgeRelaxing => 'Relaxing';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }

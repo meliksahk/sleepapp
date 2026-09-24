@@ -334,6 +334,27 @@ class AppL10nTr extends AppL10n {
       'Bu bölüm hesap bağlantısı gerektiriyor; henüz kullanılamıyor. Ses, mikser ve kendi seslerin bağlantısız çalışır.';
 
   @override
+  String get libraryFilterAll => 'Tümü';
+
+  @override
+  String get libraryFilterNoise => 'Gürültüler';
+
+  @override
+  String get libraryFilterNature => 'Doğadan';
+
+  @override
+  String get libraryFilterRelaxing => 'Rahatlatıcı';
+
+  @override
+  String get libraryBadgeNoise => 'Gürültü';
+
+  @override
+  String get libraryBadgeNature => 'Doğa';
+
+  @override
+  String get libraryBadgeRelaxing => 'Rahatlatıcı';
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }

@@ -673,6 +673,48 @@ abstract class AppL10n {
   /// **'This part needs an account connection, which isn\'t available yet. Sound, the mixer and your own sounds all work offline.'**
   String get loadFailedNoServer;
 
+  /// Kütüphane kategori çipi: filtresiz
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryFilterAll;
+
+  /// Kütüphane kategori çipi
+  ///
+  /// In en, this message translates to:
+  /// **'Noise'**
+  String get libraryFilterNoise;
+
+  /// Kütüphane kategori çipi
+  ///
+  /// In en, this message translates to:
+  /// **'Nature'**
+  String get libraryFilterNature;
+
+  /// Kütüphane kategori çipi
+  ///
+  /// In en, this message translates to:
+  /// **'Relaxing'**
+  String get libraryFilterRelaxing;
+
+  /// Tarif satırındaki kategori rozeti
+  ///
+  /// In en, this message translates to:
+  /// **'Noise'**
+  String get libraryBadgeNoise;
+
+  /// Tarif satırındaki kategori rozeti
+  ///
+  /// In en, this message translates to:
+  /// **'Nature'**
+  String get libraryBadgeNature;
+
+  /// Tarif satırındaki kategori rozeti
+  ///
+  /// In en, this message translates to:
+  /// **'Relaxing'**
+  String get libraryBadgeRelaxing;
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:

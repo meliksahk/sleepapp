@@ -49,7 +49,7 @@ class SoundscapeDetailScreen extends ConsumerWidget {
         children: [
           const Spacer(),
           NDisplay(
-            d.soundscape.title('en'),
+            d.soundscape.title(Localizations.localeOf(context).languageCode),
             key: const Key('soundscape-detail-title'),
             size: r.isWide ? 56 : 44,
             height: 1.02,

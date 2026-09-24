@@ -61,18 +61,16 @@ class _SoundscapeLibraryScreenState extends ConsumerState<SoundscapeLibraryScree
 
   Widget _categoryFilter() {
     const cats = ['all', 'noise', 'nature', 'relaxing'];
-    String label(String c) {
-      switch (c) {
-        case 'noise':
-          return 'Gürültüler';
-        case 'nature':
-          return 'Doğadan';
-        case 'relaxing':
-          return 'Rahatlatıcı';
-        default:
-          return 'Tümü';
-      }
-    }
+    final l10n = AppL10n.of(context);
+    // Etiketler i18n'den: eskiden sabit Türkçeydi, İngilizce kullanıcı
+    // "Gürültüler / Doğadan" görüyordu (i18n kapısı `return '...'` kalıbını
+    // yakalamadığı için gözden kaçmıştı).
+    String label(String c) => switch (c) {
+      'noise' => l10n.libraryFilterNoise,
+      'nature' => l10n.libraryFilterNature,
+      'relaxing' => l10n.libraryFilterRelaxing,
+      _ => l10n.libraryFilterAll,
+    };
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(NoctaSpace.s4, NoctaSpace.s3, NoctaSpace.s4, NoctaSpace.s2),
@@ -209,18 +207,15 @@ class _SoundscapeContent extends StatelessWidget {
   }
 }
 
-String _catLabel(String c) {
-  switch (c) {
-    case 'noise':
-      return 'Gürültü';
-    case 'nature':
-      return 'Doğa';
-    case 'relaxing':
-      return 'Rahatlatıcı';
-    default:
-      return c;
-  }
-}
+/// Kategori rozeti — i18n'den (eskiden sabit Türkçeydi). Tanınmayan kategori
+/// kimliği olduğu gibi gösterilir: sunucu yeni bir kategori eklerse rozet boş
+/// kalmasın.
+String _catLabel(AppL10n l10n, String c) => switch (c) {
+  'noise' => l10n.libraryBadgeNoise,
+  'nature' => l10n.libraryBadgeNature,
+  'relaxing' => l10n.libraryBadgeRelaxing,
+  _ => c,
+};
 
 class _SoundscapeText extends StatelessWidget {
   const _SoundscapeText({required this.s, required this.affinity});
@@ -242,12 +237,12 @@ class _SoundscapeText extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            _catLabel(s.category),
-            style: TextStyle(fontSize: 9, letterSpacing: 0.8, color: NoctaColors.inkFaint),
+            _catLabel(AppL10n.of(context), s.category),
+            style: TextStyle(fontSize: NoctaFontSize.micro, letterSpacing: 0.8, color: NoctaColors.inkFaint),
           ),
         ),
         const SizedBox(height: NoctaSpace.s1),
-        NDisplay(s.title('en'), size: 20),
+        NDisplay(s.title(Localizations.localeOf(context).languageCode), size: 20),
         if (affinity.isNotEmpty) ...[
           const SizedBox(height: NoctaSpace.s1),
           NMono(

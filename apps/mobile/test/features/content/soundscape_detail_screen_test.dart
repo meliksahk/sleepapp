@@ -149,4 +149,37 @@ void main() {
     ]);
     expect(find.byKey(const Key('soundscape-detail-retry')), findsOneWidget);
   });
+
+  testWidgets('TR arayüzde başlık Türkçe (eskiden hep İngilizceydi)', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          soundscapeDetailProvider('rain').overrideWith(
+            (ref) async => SoundscapeDetail(
+              soundscape: Soundscape(
+                id: 'id-rain',
+                slug: 'rain',
+                titleI18n: const {'en': 'Soft Rain', 'tr': 'Yumuşak Yağmur'},
+                archetypeAffinity: const [],
+                version: 1,
+              ),
+              presets: const [],
+              previewUrl: null,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppL10n.localizationsDelegates,
+          supportedLocales: AppL10n.supportedLocales,
+          theme: buildNoctaDarkTheme(),
+          home: const SoundscapeDetailScreen(slug: 'rain'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Yumuşak Yağmur'), findsOneWidget);
+    expect(find.text('Soft Rain'), findsNothing);
+  });
 }

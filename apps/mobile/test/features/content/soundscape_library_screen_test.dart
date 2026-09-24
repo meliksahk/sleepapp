@@ -89,4 +89,60 @@ void main() {
     ]);
     expect(find.byKey(const Key('soundscape-retry')), findsOneWidget);
   });
+
+  group('dil: kategori etiketleri ve başlıklar arayüz dilinde', () {
+    // Bu grup öncesinde çipler ve rozet sabit Türkçeydi, başlık sabit
+    // İngilizceydi: EN kullanıcı "Tümü / Gürültüler" görüyor, TR kullanıcı
+    // Türkçe başlığı olan tarifi İngilizce okuyordu.
+    final feed = <Soundscape>[
+      Soundscape(
+        id: 'id-soft-rain',
+        slug: 'soft-rain',
+        titleI18n: const {'en': 'Soft Rain', 'tr': 'Yumuşak Yağmur'},
+        archetypeAffinity: const [],
+        version: 1,
+        category: 'noise',
+      ),
+    ];
+
+    Future<void> pumpIn(WidgetTester t, Locale locale) async {
+      await t.pumpWidget(
+        ProviderScope(
+          overrides: [soundscapeFeedProvider.overrideWith((ref) async => feed)],
+          child: MaterialApp(
+            locale: locale,
+            localizationsDelegates: AppL10n.localizationsDelegates,
+            supportedLocales: AppL10n.supportedLocales,
+            theme: buildNoctaDarkTheme(),
+            home: const SoundscapeLibraryScreen(),
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('EN: çipler, rozet ve başlık İngilizce; Türkçe kelime yok', (t) async {
+      await pumpIn(t, const Locale('en'));
+
+      expect(find.text('All'), findsOneWidget);
+      expect(find.text('Noise'), findsNWidgets(2)); // çip + rozet
+      expect(find.text('Nature'), findsOneWidget);
+      expect(find.text('Relaxing'), findsOneWidget);
+      expect(find.text('Soft Rain'), findsOneWidget);
+      for (final tr in ['Tümü', 'Gürültüler', 'Gürültü', 'Doğadan', 'Rahatlatıcı', 'Yumuşak Yağmur']) {
+        expect(find.text(tr), findsNothing, reason: tr);
+      }
+    });
+
+    testWidgets('TR: çipler, rozet ve başlık Türkçe', (t) async {
+      await pumpIn(t, const Locale('tr'));
+
+      expect(find.text('Tümü'), findsOneWidget);
+      expect(find.text('Gürültüler'), findsOneWidget);
+      expect(find.text('Gürültü'), findsOneWidget); // rozet
+      expect(find.text('Doğadan'), findsOneWidget);
+      expect(find.text('Yumuşak Yağmur'), findsOneWidget);
+      expect(find.text('Soft Rain'), findsNothing);
+    });
+  });
 }
