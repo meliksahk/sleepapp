@@ -559,9 +559,6 @@ class AppL10nTr extends AppL10n {
   }
 
   @override
-  String get reportCardCalm => 'Dinginlik';
-
-  @override
   String get reportCardLoud => 'Yüksek anlar';
 
   @override
@@ -572,7 +569,7 @@ class AppL10nTr extends AppL10n {
 
   @override
   String get reportCardDisclaimer =>
-      'Uyku ritüelin için uygulama içi bir dinginlik ölçüsü. Sağlık skoru değil.';
+      'Uyku ritüelinle geçen bir gecenin kaydı. Sağlık skoru değil.';
 
   @override
   String get reportShareText => 'NOCTA’daki gecem';
@@ -584,13 +581,7 @@ class AppL10nTr extends AppL10n {
   String get nightReportEmpty => 'Bu gece için uyku kaydı yok';
 
   @override
-  String nightReportCalm(int score) {
-    return 'Dinginlik $score/100';
-  }
-
-  @override
-  String get nightReportCalmDisclaimer =>
-      'Ritüelin için uygulama içi bir dinginlik ölçüsü — sağlık skoru değil.';
+  String get nightReportDisclaimer => 'Ritüelinin kaydı — sağlık skoru değil.';
 
   @override
   String get nightReportSessions => 'Oturumlar';

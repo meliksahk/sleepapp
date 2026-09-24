@@ -1595,12 +1595,10 @@ export interface components {
             nightDate: string;
             /** @example My night: 7h 42m */
             title: string;
-            /** @example Calm 85/100 · NOCTA sleep ritual */
+            /** @example NOCTA sleep ritual */
             subtitle: string;
             /** @example 7h 42m */
             durationText: string;
-            /** @example 85 */
-            calmScore: number;
             /** @example https://nocta.app */
             webUrl: string;
             /** @example nocta://report/2026-07-15 */
@@ -1658,11 +1656,6 @@ export interface components {
             movementEvents: number;
             /** @example 3 */
             soundEvents: number;
-            /**
-             * @description Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil
-             * @example 85
-             */
-            calmScore: number;
         };
         StreakDto: {
             /**

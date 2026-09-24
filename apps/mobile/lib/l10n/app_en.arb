@@ -525,9 +525,6 @@
     "placeholders": { "hours": { "type": "int" }, "minutes": { "type": "int" } }
   },
 
-  "reportCardCalm": "Calm",
-  "@reportCardCalm": { "description": "Kartta dinginlik satırı etiketi" },
-
   "reportCardLoud": "Louder moments",
   "@reportCardLoud": { "description": "D-10: ölçtüğümüz şey bu — 'hareket' değil" },
 
@@ -537,7 +534,7 @@
   "reportCardIdentity": "Identity",
   "@reportCardIdentity": { "description": "Kartta uyku kimliği satırı" },
 
-  "reportCardDisclaimer": "An in-app calm measure for your sleep ritual. Not a health score.",
+  "reportCardDisclaimer": "A record of a night with your sleep ritual. Not a health score.",
   "@reportCardDisclaimer": { "description": "CLAUDE.md §1.1 — kart paylaşılıyor, uyarı kartın ÜSTÜNDE olmalı" },
 
   "reportShareText": "My night on NOCTA",
@@ -549,14 +546,8 @@
   "nightReportEmpty": "No sleep recorded for this night",
   "@nightReportEmpty": { "description": "O gece için oturum yokken gösterilen boş durum" },
 
-  "nightReportCalm": "Calm {score}/100",
-  "@nightReportCalm": {
-    "description": "Uygulama-içi göreli dinginlik ölçüsü (SAĞLIK ÖLÇÜSÜ DEĞİL)",
-    "placeholders": { "score": { "type": "int" } }
-  },
-
-  "nightReportCalmDisclaimer": "An in-app calm measure for your ritual — not a health score.",
-  "@nightReportCalmDisclaimer": {
+  "nightReportDisclaimer": "A record of your ritual — not a health score.",
+  "@nightReportDisclaimer": {
     "description": "Sağlık iddiası feragati (CLAUDE.md §1.1) — çeviride de KORUNMALI"
   },
 

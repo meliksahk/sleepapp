@@ -3336,15 +3336,11 @@
           },
           "subtitle": {
             "type": "string",
-            "example": "Calm 85/100 · NOCTA sleep ritual"
+            "example": "NOCTA sleep ritual"
           },
           "durationText": {
             "type": "string",
             "example": "7h 42m"
-          },
-          "calmScore": {
-            "type": "number",
-            "example": 85
           },
           "webUrl": {
             "type": "string",
@@ -3355,15 +3351,7 @@
             "example": "nocta://report/2026-07-15"
           }
         },
-        "required": [
-          "nightDate",
-          "title",
-          "subtitle",
-          "durationText",
-          "calmScore",
-          "webUrl",
-          "deepLink"
-        ]
+        "required": ["nightDate", "title", "subtitle", "durationText", "webUrl", "deepLink"]
       },
       "RecordSleepSessionDto": {
         "type": "object",
@@ -3456,11 +3444,6 @@
           "soundEvents": {
             "type": "number",
             "example": 3
-          },
-          "calmScore": {
-            "type": "number",
-            "example": 85,
-            "description": "Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil"
           }
         },
         "required": [
@@ -3468,8 +3451,7 @@
           "sessionCount",
           "totalDurationMinutes",
           "movementEvents",
-          "soundEvents",
-          "calmScore"
+          "soundEvents"
         ]
       },
       "StreakDto": {

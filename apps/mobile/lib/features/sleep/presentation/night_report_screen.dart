@@ -80,7 +80,6 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
             nightDate: widget.nightDate,
             durationMinutes: r.totalDurationMinutes,
             soundEvents: r.soundEvents,
-            calmScore: r.calmScore,
             streak: _streak,
             archetypeName: _archetypeName,
             // Viral kanca #2: kart kullanıcının KENDİ arketip gradyanını gösterir
@@ -92,7 +91,6 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
                 r.totalDurationMinutes ~/ 60,
                 r.totalDurationMinutes % 60,
               ),
-              calmLabel: l10n.reportCardCalm,
               loudLabel: l10n.reportCardLoud,
               streakLabel: l10n.reportCardStreak,
               identityLabel: l10n.reportCardIdentity,
@@ -186,11 +184,6 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
             ),
             rows: <NightReceiptRow>[
               NightReceiptRow(
-                label: l10n.nightReportCalm(r.calmScore),
-                value: '${r.calmScore}',
-                valueKey: const Key('report-calm'),
-              ),
-              NightReceiptRow(
                 label: l10n.nightReportSessions,
                 value: '${r.sessionCount}',
               ),
@@ -205,8 +198,8 @@ class _NightReportScreenState extends ConsumerState<NightReportScreen> {
             ],
             insight: l10n.nightReportLoudHint,
             insightKey: const Key('report-loud-hint'),
-            // Sağlık iddiası YOK: uygulama-içi göreli dinginlik ölçüsü.
-            disclaimer: l10n.nightReportCalmDisclaimer,
+            // Sağlık iddiası YOK — makbuz iddia taşımaz, kayıt tutar.
+            disclaimer: l10n.nightReportDisclaimer,
           ),
           const SizedBox(height: NoctaSpace.s8),
           NButton(

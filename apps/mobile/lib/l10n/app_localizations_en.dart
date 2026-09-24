@@ -561,9 +561,6 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
-  String get reportCardCalm => 'Calm';
-
-  @override
   String get reportCardLoud => 'Louder moments';
 
   @override
@@ -574,7 +571,7 @@ class AppL10nEn extends AppL10n {
 
   @override
   String get reportCardDisclaimer =>
-      'An in-app calm measure for your sleep ritual. Not a health score.';
+      'A record of a night with your sleep ritual. Not a health score.';
 
   @override
   String get reportShareText => 'My night on NOCTA';
@@ -586,13 +583,8 @@ class AppL10nEn extends AppL10n {
   String get nightReportEmpty => 'No sleep recorded for this night';
 
   @override
-  String nightReportCalm(int score) {
-    return 'Calm $score/100';
-  }
-
-  @override
-  String get nightReportCalmDisclaimer =>
-      'An in-app calm measure for your ritual — not a health score.';
+  String get nightReportDisclaimer =>
+      'A record of your ritual — not a health score.';
 
   @override
   String get nightReportSessions => 'Sessions';

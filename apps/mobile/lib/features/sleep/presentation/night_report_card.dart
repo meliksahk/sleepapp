@@ -18,7 +18,6 @@ class NightReportCard extends StatelessWidget {
     required this.nightDate,
     required this.durationMinutes,
     required this.soundEvents,
-    required this.calmScore,
     required this.streak,
     required this.archetypeName,
     required this.gradient,
@@ -33,7 +32,6 @@ class NightReportCard extends StatelessWidget {
   /// ölçmediğimiz bir şeyi ölçmüş gibi sunmaktır — sıfır bile bir iddiadır.
   final int soundEvents;
 
-  final int calmScore;
   final int streak;
   final String? archetypeName;
   final LinearGradient gradient;
@@ -128,12 +126,6 @@ class NightReportCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 56),
-                        _rule(),
-                        _row(
-                          labels.calmLabel,
-                          '$calmScore/100',
-                          keyName: 'report-card-calm',
-                        ),
                         _rule(),
                         // D-10: "Sound events" DEĞİL — ölçtüğümüz şey "yüksek anlar".
                         _row(
@@ -251,7 +243,6 @@ class NightReportCardLabels {
   const NightReportCardLabels({
     required this.header,
     required this.duration,
-    required this.calmLabel,
     required this.loudLabel,
     required this.streakLabel,
     required this.identityLabel,
@@ -263,7 +254,6 @@ class NightReportCardLabels {
   /// Biçimlendirilmiş süre ("7h 12m") — biçim yerele bağlı, kart çevirmez.
   final String duration;
 
-  final String calmLabel;
 
   /// D-10: "hareket/ses" ayrımı doğrulanmadı; ölçtüğümüz şey "yüksek anlar".
   final String loudLabel;

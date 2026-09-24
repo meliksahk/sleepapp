@@ -63,7 +63,7 @@ void main() {
     final tr = jsonDecode(File('lib/l10n/app_tr.arb').readAsStringSync())
         as Map<String, dynamic>;
     expect(tr['reportCardDisclaimer'], contains('Sağlık skoru değil'));
-    expect(tr['nightReportCalmDisclaimer'], contains('sağlık skoru değil'));
+    expect(tr['nightReportDisclaimer'], contains('sağlık skoru değil'));
 
     // Yasak sağlık iddiaları TR metinlerine sızmamış olmalı.
     final allTrText = tr.entries
