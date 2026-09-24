@@ -3017,6 +3017,11 @@
           "version": {
             "type": "number",
             "example": 1
+          },
+          "category": {
+            "type": "string",
+            "enum": ["noise", "nature", "relaxing"],
+            "example": "nature"
           }
         },
         "required": [
@@ -3026,7 +3031,8 @@
           "engineParams",
           "layerDefs",
           "archetypeAffinity",
-          "version"
+          "version",
+          "category"
         ]
       },
       "WeeklyReleaseDto": {

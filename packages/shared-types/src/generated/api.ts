@@ -1448,6 +1448,11 @@ export interface components {
             archetypeAffinity: string[];
             /** @example 1 */
             version: number;
+            /**
+             * @example nature
+             * @enum {string}
+             */
+            category: "noise" | "nature" | "relaxing";
         };
         WeeklyReleaseDto: {
             /**

@@ -98,15 +98,26 @@ void main() {
     );
   });
 
-  testWidgets('"Relaxing" filtresi ağsız da DOLU', (tester) async {
-    // Regresyon: üretici seed'deki kategori UPDATE'lerini okumuyordu. Gömülü
-    // 25 tarifin hepsi 'nature' kalıyor, bu filtre kurulu APK'da hep boştu.
+  testWidgets('kategori filtrelerinin HİÇBİRİ ağsız boş değil', (tester) async {
+    // Regresyon: üretici seed'deki kategori UPDATE'lerini okumuyordu, gömülü
+    // 25 tarifin hepsi 'nature' kalıyordu. "Relaxing" ve "Noise" kurulu APK'da
+    // hep boştu. "Noise" ayrıca temiz kurulumda da boştu: kategori göçü boş
+    // tabloya koşuyordu, atama seed'e taşındı.
     await pumpLibrary(tester);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Relaxing'));
-    await tester.pumpAndSettle();
+    // Her filtrede listenin İLK kartı görünür olmalı; tembel liste yüzünden
+    // yalnız en üstteki karta bakılıyor.
+    for (final (chip, firstSlug, absentSlug) in <(String, String, String)>[
+      ('Noise', 'delta-drift', 'deep-ocean-hush'),
+      ('Relaxing', 'deep-hum', 'delta-drift'),
+      ('Nature', 'deep-ocean-hush', 'delta-drift'),
+    ]) {
+      await tester.tap(find.widgetWithText(ChoiceChip, chip));
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('soundscape-ceramic-drift')), findsOneWidget);
-    expect(find.byKey(const Key('soundscape-deep-ocean-hush')), findsNothing);
+      expect(find.byKey(const Key('soundscape-empty')), findsNothing, reason: '"$chip" filtresi boş');
+      expect(find.byKey(Key('soundscape-$firstSlug')), findsOneWidget, reason: '"$chip" filtresinde $firstSlug yok');
+      expect(find.byKey(Key('soundscape-$absentSlug')), findsNothing, reason: '"$chip" filtresi $absentSlug gösteriyor');
+    }
   });
 }

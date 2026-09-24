@@ -8,6 +8,7 @@ const s = (slug: string, affinity: string[]): Soundscape => ({
   layerDefs: {},
   archetypeAffinity: affinity,
   version: 1,
+  category: 'nature',
 });
 
 describe('sortByAffinity (saf domain)', () => {

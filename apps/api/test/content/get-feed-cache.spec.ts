@@ -23,6 +23,7 @@ const s = (slug: string, affinity: string[]): Soundscape => ({
   layerDefs: {},
   archetypeAffinity: affinity,
   version: 1,
+  category: 'nature',
 });
 
 /** findPublished çağrılarını sayan sahte repo; diğer metodlar kullanılmaz. */

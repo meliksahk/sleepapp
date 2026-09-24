@@ -457,6 +457,12 @@ VALUES
   )
 ON CONFLICT (slug) DO NOTHING;
 
+-- Kategori ataması. İlk iki satır 20260824000001 göçünün backfill'inin aynısı:
+-- göç, tablo BOŞKEN koştuğu için (migrate seed'den önce çalışır) temiz bir
+-- kurulumda hiçbir satıra dokunmuyordu. Sonuç: yeni veritabanında ve ondan
+-- üretilen APK kütüphanesinde "noise" filtresi boş, bu yedi tarif "nature".
+UPDATE soundscapes SET category = 'noise' WHERE slug IN ('delta-drift','cabin-fan') AND category <> 'noise';
+UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('deep-hum','soft-beat','cathedral-hum','rain-chapel','night-bell','midnight-garden','ocean-dream') AND category <> 'relaxing';
 UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('ceramic-drift','chime-haven','ritual-top-friction','top-spin-solo','friction-solo','ceramic-friction-duo','pink-ceramic-mist') AND category <> 'relaxing';
 UPDATE soundscapes SET category = 'nature' WHERE slug IN ('wind-chime-night') AND category <> 'nature';
 

@@ -170,14 +170,23 @@ test('SQL okuyucu: tanınmayan UPDATE biçiminde SESSİZCE atlamaz, patlar', () 
 test('ÇEKİRDEK: seed\'deki kategori ataması gömülü kütüphaneye yansır', () => {
   // Regresyon: üretici UPDATE'leri okumuyordu. 25 tarifin hepsi 'nature'
   // çıkıyordu ve cihazdaki "Rahatlatıcı" filtresi kurulu APK'da hep boştu.
-  const relaxing = seedStatements()
-    .map(parseUpdate)
-    .filter((u) => u?.column === 'category' && u.value === 'relaxing')
-    .flatMap((u) => u.keys);
-  assert.ok(relaxing.length > 0, "seed'de 'relaxing' ataması yok: test anlamsızlaştı");
+  // Beklenen: seed'deki atamalar SIRAYLA uygulanmış hâli (son yazan kazanır).
+  const expected = new Map();
+  for (const u of seedStatements().map(parseUpdate)) {
+    if (u?.table === 'soundscapes' && u.column === 'category') {
+      for (const slug of u.keys) expected.set(slug, u.value);
+    }
+  }
+  assert.ok(expected.size > 0, "seed'de kategori ataması yok: test anlamsızlaştı");
 
   const parsed = JSON.parse(buildLibraryJson());
   const bySlug = new Map(parsed.soundscapes.map((e) => [e.soundscape.slug, e.soundscape.category]));
-  for (const slug of relaxing) assert.equal(bySlug.get(slug), 'relaxing', slug);
+  for (const [slug, category] of expected) assert.equal(bySlug.get(slug), category, slug);
   assert.equal(bySlug.get('deep-ocean-hush'), 'nature');
+
+  // Cihazdaki üç filtrenin HİÇBİRİ boş kalmamalı. 'noise' temiz kurulumda boştu:
+  // kategori göçü boş tabloya koşuyordu, atama seed'e taşındı.
+  for (const category of ['noise', 'nature', 'relaxing']) {
+    assert.ok([...bySlug.values()].includes(category), `'${category}' kategorisinde tarif yok`);
+  }
 });

@@ -8,6 +8,7 @@ import type {
   Soundscape,
   SoundscapeMetaPatch,
   SoundscapeDetail,
+  SoundscapeCategory,
   SoundscapeSummary,
   WeeklyRelease,
 } from '../domain/soundscape';
@@ -22,6 +23,7 @@ interface SoundscapeRow {
   layer_defs: unknown;
   archetype_affinity: string[];
   version: number;
+  category: string;
 }
 interface PresetRow {
   archetype_slug: string;
@@ -184,6 +186,8 @@ function toSoundscape(row: SoundscapeRow): Soundscape {
     layerDefs: row.layer_defs,
     archetypeAffinity: row.archetype_affinity,
     version: row.version,
+    // DB'deki CHECK kısıtı yalnız SOUNDSCAPE_CATEGORIES değerlerine izin veriyor.
+    category: row.category as SoundscapeCategory,
   };
 }
 
