@@ -476,3 +476,58 @@ export function parseInsert(statement) {
 
   return { table, columns, rows };
 }
+
+/**
+ * `UPDATE <tablo> SET <sütun> = <değer> WHERE <anahtar> IN (<değerler>)
+ * [AND <sütun> <> <aynı değer>]` biçimini okur:
+ * `{ table, column, value, key, keys }`.
+ *
+ * UPDATE değilse null döner. UPDATE olup bu biçimde DEĞİLSE patlar. Eskiden
+ * okuyucu yalnız INSERT tanıyordu ve UPDATE'ler hiç görülmeden atlanıyordu:
+ * seed'in kategori ataması gömülü kütüphaneye ulaşmıyordu.
+ *
+ * Sondaki `AND <sütun> <> <değer>` yalnız idempotentlik koşulu olarak kabul
+ * edilir; değeri SET'tekiyle aynı değilse sonucu değiştirir, o yüzden patlar.
+ */
+export function parseUpdate(statement) {
+  if (!isKeyword(statement[0], 'UPDATE')) return null;
+  const fail = () => {
+    throw new Error(
+      `[sql] desteklenmeyen UPDATE biçimi (satır ${statement[0].line}): yalnızca ` +
+        "UPDATE t SET kolon = <değer> WHERE anahtar IN (...) [AND kolon <> <aynı değer>] okunur.",
+    );
+  };
+  const [, table, set, column, eq] = statement;
+  if (table?.kind !== 'ident' || !isKeyword(set, 'SET') || column?.kind !== 'ident' || !isPunct(eq, '=')) fail();
+  const whereAt = statement.findIndex((t) => isKeyword(t, 'WHERE'));
+  if (whereAt <= 5) fail();
+  const value = evaluate(statement.slice(5, whereAt));
+
+  const key = statement[whereAt + 1];
+  if (key?.kind !== 'ident' || !isKeyword(statement[whereAt + 2], 'IN') || !isPunct(statement[whereAt + 3], '(')) {
+    fail();
+  }
+  const close = matchParen(statement, whereAt + 3);
+  const keys = splitByComma(statement, whereAt + 4, close).map(evaluate);
+
+  const rest = statement.slice(close + 1);
+  if (rest.length > 0) {
+    const guard =
+      rest.length === 5 &&
+      isKeyword(rest[0], 'AND') &&
+      rest[1].kind === 'ident' &&
+      rest[1].value.toLowerCase() === column.value.toLowerCase() &&
+      isPunct(rest[2], '<') &&
+      isPunct(rest[3], '>') &&
+      evaluate(rest.slice(4)) === value;
+    if (!guard) fail();
+  }
+
+  return {
+    table: table.value.toLowerCase(),
+    column: column.value.toLowerCase(),
+    value,
+    key: key.value.toLowerCase(),
+    keys,
+  };
+}

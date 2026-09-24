@@ -97,4 +97,16 @@ void main() {
       reason: 'affinity altyazısı seed\'den taşınmamış',
     );
   });
+
+  testWidgets('"Relaxing" filtresi ağsız da DOLU', (tester) async {
+    // Regresyon: üretici seed'deki kategori UPDATE'lerini okumuyordu. Gömülü
+    // 25 tarifin hepsi 'nature' kalıyor, bu filtre kurulu APK'da hep boştu.
+    await pumpLibrary(tester);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Relaxing'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('soundscape-ceramic-drift')), findsOneWidget);
+    expect(find.byKey(const Key('soundscape-deep-ocean-hush')), findsNothing);
+  });
 }

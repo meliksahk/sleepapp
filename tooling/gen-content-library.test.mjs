@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { tokenize, splitStatements, parseInsert, parsePgTextArray } from './sql-values.mjs';
+import { tokenize, splitStatements, parseInsert, parsePgTextArray, parseUpdate } from './sql-values.mjs';
 import { buildLibraryJson, OUTPUT_PATH } from './gen-content-library.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -87,12 +87,31 @@ test('üretim DETERMİNİSTİK (aynı girdi → bayt bayt aynı çıktı)', () =
   assert.equal(buildLibraryJson(), buildLibraryJson());
 });
 
+/** Seed'in ifadeleri: beklentiler elle yazılmış sayılar yerine buradan türer. */
+function seedStatements() {
+  return splitStatements(tokenize(readFileSync(join(repoRoot, 'db/seed.sql'), 'utf8')));
+}
+
+function seedRows(table) {
+  return seedStatements().flatMap((st) => {
+    const parsed = parseInsert(st);
+    return parsed?.table === table ? parsed.rows : [];
+  });
+}
+
 test('üretilen kütüphane seed\'deki yayınlanmış tarifleri taşır', () => {
   const parsed = JSON.parse(buildLibraryJson());
   const slugs = parsed.soundscapes.map((e) => e.soundscape.slug);
-  assert.equal(slugs.length, 7);
+  // Beklenti seed'den türer. Eskiden "7" ve "3" elle yazılıydı; seed 25 tarife
+  // ve 4 haftalık parçaya büyüdü, bu test kırmızıya döndü ve CI bu dosyayı
+  // koşmadığı için görünmedi.
+  const published = seedRows('soundscapes').filter((r) => r.status === 'published');
+  assert.deepEqual(slugs, published.map((r) => r.slug));
   assert.ok(slugs.includes('hearth-and-static'), '#215 demo tarifi eksik');
-  assert.equal(parsed.weekly.soundscapeSlugs.length, 3);
+  assert.equal(
+    parsed.weekly.soundscapeSlugs.length,
+    seedRows('weekly_releases').at(-1).soundscape_ids.length,
+  );
   // Haftalık yayında DONDURULMUŞ tarih olmamalı (kural cihazda uygulanır).
   assert.equal(parsed.weekly.weekStart, undefined);
 });
@@ -120,4 +139,45 @@ test('ÇEKİRDEK: drift kapısı bozulmuş asset\'te exit 1 verir', () => {
   }
 
   assert.equal(gate().status, 0, 'test asset\'i geri yükleyemedi');
+});
+
+test('SQL okuyucu: seed biçimindeki UPDATE okunur', () => {
+  const sql =
+    "UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('a','b') AND category <> 'relaxing';";
+  const [statement] = splitStatements(tokenize(sql));
+  assert.deepEqual(parseUpdate(statement), {
+    table: 'soundscapes',
+    column: 'category',
+    value: 'relaxing',
+    key: 'slug',
+    keys: ['a', 'b'],
+  });
+  const [insert] = splitStatements(tokenize('INSERT INTO t (a) VALUES (1);'));
+  assert.equal(parseUpdate(insert), null);
+});
+
+test('SQL okuyucu: tanınmayan UPDATE biçiminde SESSİZCE atlamaz, patlar', () => {
+  for (const sql of [
+    "UPDATE soundscapes SET category = 'noise' WHERE id = 5;",
+    // Koşul değeri SET'tekinden farklı: sonucu değiştirir, idempotentlik değil.
+    "UPDATE soundscapes SET category = 'relaxing' WHERE slug IN ('a') AND category <> 'nature';",
+  ]) {
+    const [statement] = splitStatements(tokenize(sql));
+    assert.throws(() => parseUpdate(statement), /desteklenmeyen UPDATE/, sql);
+  }
+});
+
+test('ÇEKİRDEK: seed\'deki kategori ataması gömülü kütüphaneye yansır', () => {
+  // Regresyon: üretici UPDATE'leri okumuyordu. 25 tarifin hepsi 'nature'
+  // çıkıyordu ve cihazdaki "Rahatlatıcı" filtresi kurulu APK'da hep boştu.
+  const relaxing = seedStatements()
+    .map(parseUpdate)
+    .filter((u) => u?.column === 'category' && u.value === 'relaxing')
+    .flatMap((u) => u.keys);
+  assert.ok(relaxing.length > 0, "seed'de 'relaxing' ataması yok: test anlamsızlaştı");
+
+  const parsed = JSON.parse(buildLibraryJson());
+  const bySlug = new Map(parsed.soundscapes.map((e) => [e.soundscape.slug, e.soundscape.category]));
+  for (const slug of relaxing) assert.equal(bySlug.get(slug), 'relaxing', slug);
+  assert.equal(bySlug.get('deep-ocean-hush'), 'nature');
 });
