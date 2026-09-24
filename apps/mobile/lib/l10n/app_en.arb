@@ -193,6 +193,102 @@
   "communityShareDurationUnknown": "This file's length could not be read, so it cannot be shared.",
   "@communityShareDurationUnknown": { "description": "Süre cihazda okunamadı — sunucu süreyi zorunlu kılar; uydurma süre gönderilmez" },
 
+  "melodicRootNote": "Root note",
+  "@melodicRootNote": { "description": "Melodik editör: kök nota başlığı" },
+
+  "melodicScale": "Scale",
+  "@melodicScale": { "description": "Melodik editör: ölçek başlığı (arpej)" },
+
+  "melodicProgression": "Progression",
+  "@melodicProgression": { "description": "Melodik editör: akor progresyonu başlığı" },
+
+  "melodicTempo": "Tempo",
+  "@melodicTempo": { "description": "Melodik editör: tempo başlığı" },
+
+  "melodicInstrument": "Instrument",
+  "@melodicInstrument": { "description": "Melodik editör: dalga şekli seçimi başlığı" },
+
+  "melodicWaveSine": "Sine",
+  "@melodicWaveSine": { "description": "Dalga şekli" },
+
+  "melodicWaveTriangle": "Triangle",
+  "@melodicWaveTriangle": { "description": "Dalga şekli" },
+
+  "melodicWaveSaw": "Saw",
+  "@melodicWaveSaw": { "description": "Dalga şekli" },
+
+  "melodicWaveSquare": "Square",
+  "@melodicWaveSquare": { "description": "Dalga şekli" },
+
+  "melodicPreview": "Listen",
+  "@melodicPreview": { "description": "Önizleme düğmesi" },
+
+  "melodicSaveAsSet": "Save as a set",
+  "@melodicSaveAsSet": { "description": "Ayarları adlı bir set olarak kaydet" },
+
+  "melodicSetNameTitle": "Set name",
+  "@melodicSetNameTitle": { "description": "Set adı diyaloğu başlığı" },
+
+  "melodicSetNameHint": "e.g. Night Garden",
+  "@melodicSetNameHint": { "description": "Set adı ipucu" },
+
+  "melodicSave": "Save",
+  "@melodicSave": { "description": "Set adı diyaloğunda kaydet" },
+
+  "melodicPresetLibraryTitle": "Saved sets",
+  "@melodicPresetLibraryTitle": { "description": "Kayıtlı melodik setlerin listesi" },
+
+  "melodicPresetLibraryEmpty": "No saved sets yet. Build a sound in the editor and save it.",
+  "@melodicPresetLibraryEmpty": { "description": "Set listesi boş" },
+
+  "melodicUntitled": "(untitled)",
+  "@melodicUntitled": { "description": "Adsız set" },
+
+  "melodicKindChords": "Chords",
+  "@melodicKindChords": { "description": "Set türü etiketi (kısa)" },
+
+  "melodicKindArpeggio": "Arpeggio",
+  "@melodicKindArpeggio": { "description": "Set türü etiketi (kısa)" },
+
+  "melodicScalePentatonic": "Pentatonic",
+  "@melodicScalePentatonic": { "description": "Ölçek adı" },
+
+  "melodicScaleMajor": "Major",
+  "@melodicScaleMajor": { "description": "Ölçek adı" },
+
+  "melodicScaleMinor": "Minor",
+  "@melodicScaleMinor": { "description": "Ölçek adı" },
+
+  "melodicScaleDorian": "Dorian",
+  "@melodicScaleDorian": { "description": "Ölçek adı (mod)" },
+
+  "melodicScalePhrygian": "Phrygian",
+  "@melodicScalePhrygian": { "description": "Ölçek adı (mod)" },
+
+  "melodicScaleLydian": "Lydian",
+  "@melodicScaleLydian": { "description": "Ölçek adı (mod)" },
+
+  "melodicScaleMixolydian": "Mixolydian",
+  "@melodicScaleMixolydian": { "description": "Ölçek adı (mod)" },
+
+  "melodicScaleHarmonicMinor": "Harmonic minor",
+  "@melodicScaleHarmonicMinor": { "description": "Ölçek adı" },
+
+  "melodicScaleBlues": "Blues",
+  "@melodicScaleBlues": { "description": "Ölçek adı" },
+
+  "melodicTempoValue": "{value}×",
+  "@melodicTempoValue": {
+    "description": "Tempo sürgüsü etiketi",
+    "placeholders": { "value": { "type": "String" } }
+  },
+
+  "melodicSaved": "“{name}” saved",
+  "@melodicSaved": {
+    "description": "Set kaydedildi bildirimi",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",

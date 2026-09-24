@@ -1,16 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../../core/audio_engine/mix_player.dart' show BytesAudioSource;
-import '../../../core/audio_engine/dsp/user_melodic.dart'
-    show melodicScales, chordProgressions;
 import '../../../core/audio_engine/dsp/user_melodic.dart'
     show melodicScales, chordProgressions, userChordsSource, userArpeggioSource, Waveform;
+import '../../../core/audio_engine/dsp/wav_encoder.dart' show encodeWav;
+import '../../../core/audio_engine/mix_player.dart' show BytesAudioSource;
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../domain/melodic_preset_store.dart';
@@ -40,14 +37,10 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
   late int _patternIdx = widget.initial?.patternIdx ?? 0;
   late String _waveform = widget.initial?.waveform ?? 'sine';
   late double _tempoScale = widget.initial?.tempoScale ?? 1.0;
-  int _previewStep = 0;
   AudioPlayer? _previewPlayer;
   Timer? _debounce;
 
   static const List<String> _waveforms = ['sine', 'triangle', 'saw', 'square'];
-  static const List<String> _waveformLabels = ['Sinüs', 'Üçgen', 'Testere', 'Kare'];
-
-  String get _resultWaveform => _waveform;
 
   @override
   void dispose() {
@@ -98,28 +91,15 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
           );
         }
 
-        final wav = _pcmToWav(pcm, sr);
+        final wav = encodeWav(pcm, sampleRate: sr);
         await player.setAudioSource(BytesAudioSource(wav));
         await player.play();
-      } catch (_) {}
+      } catch (e, st) {
+        // Önizleme çalınamazsa editör çalışmaya devam eder; ama hata YUTULMAZ
+        // (CLAUDE.md §4: boş catch yasak).
+        debugPrint('nocta.melodic: önizleme çalınamadı: $e\n$st');
+      }
     });
-  }
-
-  Uint8List _pcmToWav(Float32List pcm, int sr) {
-    final wav = BytesBuilder();
-    final dataBytes = pcm.length * 2;
-    void wA(String s) { for (final c in s.codeUnits) wav.addByte(c); }
-    void w32(int v) { final b = ByteData(4)..setUint32(0, v, Endian.little); wav.add(b.buffer.asUint8List()); }
-    void w16(int v) { final b = ByteData(2)..setUint16(0, v, Endian.little); wav.add(b.buffer.asUint8List()); }
-    wA('RIFF'); w32(36 + dataBytes); wA('WAVE');
-    wA('fmt '); w32(16); w16(1); w16(1); w32(sr); w32(sr*2); w16(2); w16(16);
-    wA('data'); w32(dataBytes);
-    for (final v in pcm) {
-      final c = v.clamp(-1.0, 1.0);
-      final b = ByteData(2)..setInt16(0, (c * 32767).round(), Endian.little);
-      wav.add(b.buffer.asUint8List());
-    }
-    return wav.toBytes();
   }
 
   @override
@@ -139,7 +119,7 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
             const SizedBox(height: NoctaSpace.s4),
 
             // ── Kök nota ──
-            Text('Kök Nota', style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
+            Text(l10n.melodicRootNote, style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
             const SizedBox(height: NoctaSpace.s2),
             Wrap(
               spacing: NoctaSpace.s1,
@@ -149,12 +129,13 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
 
             // ── Ölçek / Progresyon ──
             if (!widget.isChords) ...[
-              Text('Ölçek', style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
+              Text(l10n.melodicScale, style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
               const SizedBox(height: NoctaSpace.s2),
               Wrap(
                 spacing: NoctaSpace.s2,
                 children: List.generate(melodicScales.length, (i) => _chip(
-                  label: melodicScales[i].name,
+                  label: melodicScaleLabel(l10n, melodicScales[i].name) ??
+                      melodicScales[i].name,
                   selected: _patternIdx == i,
                   onTap: () { setState(() => _patternIdx = i); _preview(); },
                 )),
@@ -162,7 +143,7 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
               const SizedBox(height: NoctaSpace.s4),
             ],
             if (widget.isChords) ...[
-              Text('Progresyon', style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
+              Text(l10n.melodicProgression, style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
               const SizedBox(height: NoctaSpace.s2),
               Wrap(
                 spacing: NoctaSpace.s2,
@@ -176,25 +157,25 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
             ],
 
             // ── Tempo ──
-            Text('Tempo', style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
+            Text(l10n.melodicTempo, style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
             SliderTheme(
               data: SliderThemeData(trackHeight: 20, activeTrackColor: NoctaColors.bgPaper, inactiveTrackColor: NoctaColors.bgOverlay, thumbColor: NoctaColors.accentAurora),
               child: Slider(
                 key: const Key('melodic-tempo'),
                 value: _tempoScale.clamp(0.5, 2.0),
                 min: 0.5, max: 2.0, divisions: 6,
-                label: '${_tempoScale.toStringAsFixed(1)}×',
+                label: l10n.melodicTempoValue(_tempoScale.toStringAsFixed(1)),
                 onChanged: (v) { setState(() => _tempoScale = v); _preview(); },
               ),
             ),
 
             // ── Dalga şekli ──
-            Text('Enstrüman', style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
+            Text(l10n.melodicInstrument, style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkSecondary)),
             const SizedBox(height: NoctaSpace.s2),
             Wrap(
               spacing: NoctaSpace.s2,
               children: List.generate(_waveforms.length, (i) => _chip(
-                label: _waveformLabels[i],
+                label: _waveformLabel(l10n, _waveforms[i]),
                 selected: _waveform == _waveforms[i],
                 onTap: () { setState(() => _waveform = _waveforms[i]); _preview(); },
               )),
@@ -202,7 +183,7 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
 
             const SizedBox(height: NoctaSpace.s5),
             Row(children: [
-              Expanded(child: NButton(key: Key('melodic-preview'), label: 'Dinle', variant: NButtonVariant.ghost, onPressed: _preview)),
+              Expanded(child: NButton(key: const Key('melodic-preview'), label: l10n.melodicPreview, variant: NButtonVariant.ghost, onPressed: _preview)),
               const SizedBox(width: NoctaSpace.s3),
               Expanded(child: NButton(
                 key: const Key('melodic-add'),
@@ -219,7 +200,7 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
             // ── Kaydet ──
             NButton(
               key: const Key('melodic-save'),
-              label: 'Set olarak kaydet',
+              label: l10n.melodicSaveAsSet,
               variant: NButtonVariant.ghost,
               expand: true,
               onPressed: () async {
@@ -228,12 +209,12 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     backgroundColor: NoctaColors.bgRaised,
-                    title: Text('Set adı'),
+                    title: Text(l10n.melodicSetNameTitle),
                     content: TextField(controller: nameCtrl, autofocus: true,
-                      decoration: InputDecoration(hintText: 'ör. Gece Bahçesi')),
+                      decoration: InputDecoration(hintText: l10n.melodicSetNameHint)),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Vazgeç')),
-                      TextButton(key: Key('melodic-save-confirm'), onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()), child: Text('Kaydet')),
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.commonCancel)),
+                      TextButton(key: Key('melodic-save-confirm'), onPressed: () => Navigator.pop(ctx, nameCtrl.text.trim()), child: Text(l10n.melodicSave)),
                     ],
                   ),
                 );
@@ -244,7 +225,7 @@ class _MelodicEditorSheetState extends State<MelodicEditorSheet> {
                 ));
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('"$name" kaydedildi')));
+                    SnackBar(content: Text(l10n.melodicSaved(name))));
                 }
               },
             ),
@@ -314,12 +295,12 @@ class _MelodicPresetLibrarySheetState extends State<MelodicPresetLibrarySheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            NDisplay('Hazır Setler', key: const Key('melodic-preset-lib-title'), size: NoctaFontSize.h2),
+            NDisplay(l10n.melodicPresetLibraryTitle, key: const Key('melodic-preset-lib-title'), size: NoctaFontSize.h2),
             const SizedBox(height: NoctaSpace.s4),
             if (_loading)
               const Center(child: CircularProgressIndicator())
             else if (_presets.isEmpty)
-              Text('Henüz kayıtlı set yok. Editörden bir ses oluşturup kaydedebilirsin.',
+              Text(l10n.melodicPresetLibraryEmpty,
                 style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary))
             else
               for (final p in _presets)
@@ -336,9 +317,9 @@ class _MelodicPresetLibrarySheetState extends State<MelodicPresetLibrarySheet> {
                         border: Border.all(color: NoctaColors.lineDashed),
                       ),
                       child: Row(children: [
-                        Expanded(child: Text(p.name.isEmpty ? '(isimsiz)' : p.name,
+                        Expanded(child: Text(p.name.isEmpty ? l10n.melodicUntitled : p.name,
                           style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkPrimary))),
-                        Text(p.isChords ? 'Akor' : 'Arpej',
+                        Text(p.isChords ? l10n.melodicKindChords : l10n.melodicKindArpeggio,
                           style: TextStyle(fontSize: NoctaFontSize.caption, color: NoctaColors.inkFaint)),
                       ]),
                     ),
@@ -351,3 +332,31 @@ class _MelodicPresetLibrarySheetState extends State<MelodicPresetLibrarySheet> {
   }
 }
 
+/// Ölçek adının kullanıcıya görünen hâli; tanınmayan ad için `null`.
+///
+/// Ses motorundaki ad (`melodicScales[i].name`) bir KİMLİKTİR, arayüz metni
+/// değil: motor katmanı (`core/audio_engine`) çeviri bilmez ve bilmemeli.
+/// Eskiden bu ad doğrudan ekrana basılıyordu; İngilizce kullanıcı "Majör",
+/// "Minör" görüyordu. `null` dönüşü, motora eklenip buraya eklenmeyen bir
+/// ölçeği testin yakalayabilmesi için var (bkz. melodic_editor_sheet_test).
+String? melodicScaleLabel(AppL10n l10n, String engineName) => switch (engineName) {
+  'Pentatonik' => l10n.melodicScalePentatonic,
+  'Majör' => l10n.melodicScaleMajor,
+  'Minör' => l10n.melodicScaleMinor,
+  'Dorian' => l10n.melodicScaleDorian,
+  'Frygian' => l10n.melodicScalePhrygian,
+  'Lydian' => l10n.melodicScaleLydian,
+  'Mixolydian' => l10n.melodicScaleMixolydian,
+  'Harmonic Minör' => l10n.melodicScaleHarmonicMinor,
+  'Blues' => l10n.melodicScaleBlues,
+  _ => null,
+};
+
+/// Dalga şeklinin kullanıcıya görünen adı. Motor kimliği (`sine` vb.) değişmez.
+String _waveformLabel(AppL10n l10n, String waveform) => switch (waveform) {
+  'sine' => l10n.melodicWaveSine,
+  'triangle' => l10n.melodicWaveTriangle,
+  'saw' => l10n.melodicWaveSaw,
+  'square' => l10n.melodicWaveSquare,
+  _ => waveform,
+};

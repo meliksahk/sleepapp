@@ -7,7 +7,6 @@ import '../../core/audio_engine/dsp/tone.dart' show toneMaxHz, toneMinHz;
 import '../../core/audio_engine/master_limiter.dart';
 import '../../core/audio_engine/mix_player.dart';
 import '../../core/media/mix_video_channel.dart';
-import '../../core/storage/key_value_store.dart';
 import '../mixer/data/mix_state_store.dart';
 import '../mixer/domain/melodic_preset_store.dart';
 import 'mix_video_exporter.dart';
@@ -198,12 +197,15 @@ MixSpec defaultMixSpec() => const MixSpec([
 /// **Render PAHALI** (katman başına 30 sn @48kHz) ve yalnızca [prepare]'de bir kez
 /// yapılır; slider `setLayerGain`'e gider → yeniden render YOK, ses kesilmez.
 class MixerController {
-  MixerController({MixPlayer? player, MixSpec? spec, MixVideoExporter? exporter, MixStateStore? stateStore})
-      : _player = player ?? MixPlayer(),
+  MixerController({
+    MixPlayer? player,
+    MixSpec? spec,
+    MixVideoExporter? exporter,
+    this._stateStore,
+  })  : _player = player ?? MixPlayer(),
         _exporter = exporter ??
             const MixVideoExporter(encoder: PlatformMixVideoEncoder()),
-        _spec = spec ?? defaultMixSpec(),
-        _stateStore = stateStore {
+        _spec = spec ?? defaultMixSpec() {
     _state = MixerState(
       layers: _spec.layers,
       assets: _spec.assets,

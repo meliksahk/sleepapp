@@ -123,8 +123,9 @@ Float32List userChordsSource(
       for (var i = start; i < end; i++) {
         final local = i - start;
         var env = 1.0;
-        if (local < fadeSamples) env = math.sin(math.pi / 2 * local / fadeSamples);
-        else if (local > chordSamples - fadeSamples) {
+        if (local < fadeSamples) {
+          env = math.sin(math.pi / 2 * local / fadeSamples);
+        } else if (local > chordSamples - fadeSamples) {
           env = math.sin(math.pi / 2 * (chordSamples - local) / fadeSamples);
         }
         final v = env * 0.20 / notes.length *
@@ -164,8 +165,12 @@ Float32List userArpeggioSource(
   final scale = melodicScales[scaleIdx % melodicScales.length];
   // Pingpong deseni: 0,1,2,...,N-1,N-2,...,1
   final pattern = <int>[];
-  for (var i = 0; i < scale.semitones.length; i++) pattern.add(i);
-  for (var i = scale.semitones.length - 2; i > 0; i--) pattern.add(i);
+  for (var i = 0; i < scale.semitones.length; i++) {
+    pattern.add(i);
+  }
+  for (var i = scale.semitones.length - 2; i > 0; i--) {
+    pattern.add(i);
+  }
   final numSteps = pattern.length;
 
   final arpLoopSamples = stepSamples * numSteps;

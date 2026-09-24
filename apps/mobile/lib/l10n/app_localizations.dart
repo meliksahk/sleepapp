@@ -463,6 +463,186 @@ abstract class AppL10n {
   /// **'This file\'s length could not be read, so it cannot be shared.'**
   String get communityShareDurationUnknown;
 
+  /// Melodik editör: kök nota başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Root note'**
+  String get melodicRootNote;
+
+  /// Melodik editör: ölçek başlığı (arpej)
+  ///
+  /// In en, this message translates to:
+  /// **'Scale'**
+  String get melodicScale;
+
+  /// Melodik editör: akor progresyonu başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Progression'**
+  String get melodicProgression;
+
+  /// Melodik editör: tempo başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Tempo'**
+  String get melodicTempo;
+
+  /// Melodik editör: dalga şekli seçimi başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Instrument'**
+  String get melodicInstrument;
+
+  /// Dalga şekli
+  ///
+  /// In en, this message translates to:
+  /// **'Sine'**
+  String get melodicWaveSine;
+
+  /// Dalga şekli
+  ///
+  /// In en, this message translates to:
+  /// **'Triangle'**
+  String get melodicWaveTriangle;
+
+  /// Dalga şekli
+  ///
+  /// In en, this message translates to:
+  /// **'Saw'**
+  String get melodicWaveSaw;
+
+  /// Dalga şekli
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get melodicWaveSquare;
+
+  /// Önizleme düğmesi
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get melodicPreview;
+
+  /// Ayarları adlı bir set olarak kaydet
+  ///
+  /// In en, this message translates to:
+  /// **'Save as a set'**
+  String get melodicSaveAsSet;
+
+  /// Set adı diyaloğu başlığı
+  ///
+  /// In en, this message translates to:
+  /// **'Set name'**
+  String get melodicSetNameTitle;
+
+  /// Set adı ipucu
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Night Garden'**
+  String get melodicSetNameHint;
+
+  /// Set adı diyaloğunda kaydet
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get melodicSave;
+
+  /// Kayıtlı melodik setlerin listesi
+  ///
+  /// In en, this message translates to:
+  /// **'Saved sets'**
+  String get melodicPresetLibraryTitle;
+
+  /// Set listesi boş
+  ///
+  /// In en, this message translates to:
+  /// **'No saved sets yet. Build a sound in the editor and save it.'**
+  String get melodicPresetLibraryEmpty;
+
+  /// Adsız set
+  ///
+  /// In en, this message translates to:
+  /// **'(untitled)'**
+  String get melodicUntitled;
+
+  /// Set türü etiketi (kısa)
+  ///
+  /// In en, this message translates to:
+  /// **'Chords'**
+  String get melodicKindChords;
+
+  /// Set türü etiketi (kısa)
+  ///
+  /// In en, this message translates to:
+  /// **'Arpeggio'**
+  String get melodicKindArpeggio;
+
+  /// Ölçek adı
+  ///
+  /// In en, this message translates to:
+  /// **'Pentatonic'**
+  String get melodicScalePentatonic;
+
+  /// Ölçek adı
+  ///
+  /// In en, this message translates to:
+  /// **'Major'**
+  String get melodicScaleMajor;
+
+  /// Ölçek adı
+  ///
+  /// In en, this message translates to:
+  /// **'Minor'**
+  String get melodicScaleMinor;
+
+  /// Ölçek adı (mod)
+  ///
+  /// In en, this message translates to:
+  /// **'Dorian'**
+  String get melodicScaleDorian;
+
+  /// Ölçek adı (mod)
+  ///
+  /// In en, this message translates to:
+  /// **'Phrygian'**
+  String get melodicScalePhrygian;
+
+  /// Ölçek adı (mod)
+  ///
+  /// In en, this message translates to:
+  /// **'Lydian'**
+  String get melodicScaleLydian;
+
+  /// Ölçek adı (mod)
+  ///
+  /// In en, this message translates to:
+  /// **'Mixolydian'**
+  String get melodicScaleMixolydian;
+
+  /// Ölçek adı
+  ///
+  /// In en, this message translates to:
+  /// **'Harmonic minor'**
+  String get melodicScaleHarmonicMinor;
+
+  /// Ölçek adı
+  ///
+  /// In en, this message translates to:
+  /// **'Blues'**
+  String get melodicScaleBlues;
+
+  /// Tempo sürgüsü etiketi
+  ///
+  /// In en, this message translates to:
+  /// **'{value}×'**
+  String melodicTempoValue(String value);
+
+  /// Set kaydedildi bildirimi
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}” saved'**
+  String melodicSaved(String name);
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:

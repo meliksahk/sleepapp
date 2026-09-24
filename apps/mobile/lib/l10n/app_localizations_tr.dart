@@ -221,6 +221,101 @@ class AppL10nTr extends AppL10n {
       'Bu dosyanın süresi okunamadığı için paylaşılamaz.';
 
   @override
+  String get melodicRootNote => 'Kök nota';
+
+  @override
+  String get melodicScale => 'Ölçek';
+
+  @override
+  String get melodicProgression => 'Progresyon';
+
+  @override
+  String get melodicTempo => 'Tempo';
+
+  @override
+  String get melodicInstrument => 'Enstrüman';
+
+  @override
+  String get melodicWaveSine => 'Sinüs';
+
+  @override
+  String get melodicWaveTriangle => 'Üçgen';
+
+  @override
+  String get melodicWaveSaw => 'Testere';
+
+  @override
+  String get melodicWaveSquare => 'Kare';
+
+  @override
+  String get melodicPreview => 'Dinle';
+
+  @override
+  String get melodicSaveAsSet => 'Set olarak kaydet';
+
+  @override
+  String get melodicSetNameTitle => 'Set adı';
+
+  @override
+  String get melodicSetNameHint => 'ör. Gece Bahçesi';
+
+  @override
+  String get melodicSave => 'Kaydet';
+
+  @override
+  String get melodicPresetLibraryTitle => 'Hazır setler';
+
+  @override
+  String get melodicPresetLibraryEmpty =>
+      'Henüz kayıtlı set yok. Editörden bir ses oluşturup kaydedebilirsin.';
+
+  @override
+  String get melodicUntitled => '(isimsiz)';
+
+  @override
+  String get melodicKindChords => 'Akor';
+
+  @override
+  String get melodicKindArpeggio => 'Arpej';
+
+  @override
+  String get melodicScalePentatonic => 'Pentatonik';
+
+  @override
+  String get melodicScaleMajor => 'Majör';
+
+  @override
+  String get melodicScaleMinor => 'Minör';
+
+  @override
+  String get melodicScaleDorian => 'Dorian';
+
+  @override
+  String get melodicScalePhrygian => 'Frigyen';
+
+  @override
+  String get melodicScaleLydian => 'Lydian';
+
+  @override
+  String get melodicScaleMixolydian => 'Mixolydian';
+
+  @override
+  String get melodicScaleHarmonicMinor => 'Harmonik minör';
+
+  @override
+  String get melodicScaleBlues => 'Blues';
+
+  @override
+  String melodicTempoValue(String value) {
+    return '$value×';
+  }
+
+  @override
+  String melodicSaved(String name) {
+    return '“$name” kaydedildi';
+  }
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }

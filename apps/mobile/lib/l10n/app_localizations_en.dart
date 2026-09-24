@@ -220,6 +220,101 @@ class AppL10nEn extends AppL10n {
       'This file\'s length could not be read, so it cannot be shared.';
 
   @override
+  String get melodicRootNote => 'Root note';
+
+  @override
+  String get melodicScale => 'Scale';
+
+  @override
+  String get melodicProgression => 'Progression';
+
+  @override
+  String get melodicTempo => 'Tempo';
+
+  @override
+  String get melodicInstrument => 'Instrument';
+
+  @override
+  String get melodicWaveSine => 'Sine';
+
+  @override
+  String get melodicWaveTriangle => 'Triangle';
+
+  @override
+  String get melodicWaveSaw => 'Saw';
+
+  @override
+  String get melodicWaveSquare => 'Square';
+
+  @override
+  String get melodicPreview => 'Listen';
+
+  @override
+  String get melodicSaveAsSet => 'Save as a set';
+
+  @override
+  String get melodicSetNameTitle => 'Set name';
+
+  @override
+  String get melodicSetNameHint => 'e.g. Night Garden';
+
+  @override
+  String get melodicSave => 'Save';
+
+  @override
+  String get melodicPresetLibraryTitle => 'Saved sets';
+
+  @override
+  String get melodicPresetLibraryEmpty =>
+      'No saved sets yet. Build a sound in the editor and save it.';
+
+  @override
+  String get melodicUntitled => '(untitled)';
+
+  @override
+  String get melodicKindChords => 'Chords';
+
+  @override
+  String get melodicKindArpeggio => 'Arpeggio';
+
+  @override
+  String get melodicScalePentatonic => 'Pentatonic';
+
+  @override
+  String get melodicScaleMajor => 'Major';
+
+  @override
+  String get melodicScaleMinor => 'Minor';
+
+  @override
+  String get melodicScaleDorian => 'Dorian';
+
+  @override
+  String get melodicScalePhrygian => 'Phrygian';
+
+  @override
+  String get melodicScaleLydian => 'Lydian';
+
+  @override
+  String get melodicScaleMixolydian => 'Mixolydian';
+
+  @override
+  String get melodicScaleHarmonicMinor => 'Harmonic minor';
+
+  @override
+  String get melodicScaleBlues => 'Blues';
+
+  @override
+  String melodicTempoValue(String value) {
+    return '$value×';
+  }
+
+  @override
+  String melodicSaved(String name) {
+    return '“$name” saved';
+  }
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }
