@@ -38,13 +38,17 @@ ContentLibrarySource brokenLibrarySource() {
 /// (seed.sql değişirse tek bir dosya güncellenir, altı test değil.)
 class LibraryFixture {
   /// `db/seed.sql`'deki yayınlanmış soundscape sayısı.
-  static const int soundscapeCount = 16;
+  ///
+  /// 16 → 25: beb38d0 (ritüel tarifi) ve bf56448 (8 yeni malzeme tarifi)
+  /// kütüphaneyi büyüttü ama bu sabit güncellenmedi. CI mobil işi analyze'da
+  /// durduğu için 5 test haftalarca kırmızı kaldı ve görünmedi.
+  static const int soundscapeCount = 25;
 
   /// #215'te eklenen tam demo tarif — müzik (pad) + gürültü (white) + efekt (fire).
   /// Bu iş öncesinde YALNIZCA seed'de yaşıyordu, kurulan APK'da yoktu.
   static const String demoSlug = 'hearth-and-static';
   static const String demoTitleEn = 'Hearth & Static';
 
-  /// Haftalık yayındaki parça sayısı.
-  static const int weeklyCount = 3;
+  /// Haftalık yayındaki parça sayısı (beb38d0 ritüel tarifini ekledi: 3 → 4).
+  static const int weeklyCount = 4;
 }

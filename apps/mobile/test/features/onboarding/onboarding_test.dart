@@ -40,7 +40,9 @@ void main() {
       // 2. sayfaya ilerle
       await t.tap(find.byKey(const Key('onboarding-cta')));
       await t.pumpAndSettle();
-      expect(find.text('Build your night ritual'), findsOneWidget);
+      // beb38d0 başlığı yeni amaca göre değiştirdi ("Build your night ritual"
+      // → 10 dakikalık ritüel); test eski metni aradığı için kırmızıydı.
+      expect(find.text('Your 10-minute ritual'), findsOneWidget);
 
       // 3. (son) sayfaya ilerle — henüz bitmedi
       await t.tap(find.byKey(const Key('onboarding-cta')));
@@ -75,6 +77,36 @@ void main() {
       // Gizlilik vaadi kullanıcıya AÇIKÇA gösterilir — sessizce mikrofon istemek yok.
       expect(find.textContaining('raw audio never leaves'), findsOneWidget);
     });
+  });
+
+  group('OnboardingScreen · küçük ekran + büyük yazı (CLAUDE.md §7)', () {
+    // beb38d0 ritüel metnini uzattı; sayfa sabit bir Column'du ve 800×600
+    // yüzeyde bile 76 px taşıyordu. Artık sığmayan sayfa dikeyde kaydırılır.
+    for (final scale in <double>[1.0, 1.3, 2.0]) {
+      testWidgets('320×568 · ölçek $scale · her sayfa TAŞMADAN çizilir', (t) async {
+        t.view.physicalSize = const Size(320, 568);
+        t.view.devicePixelRatio = 1.0;
+        addTearDown(t.view.reset);
+
+        await t.pumpWidget(
+          MediaQuery(
+            data: MediaQueryData(
+              size: const Size(320, 568),
+              textScaler: TextScaler.linear(scale),
+            ),
+            child: _wrap(OnboardingScreen(onDone: () async {})),
+          ),
+        );
+        await t.pumpAndSettle();
+        expect(t.takeException(), isNull, reason: '1. sayfa taştı');
+
+        for (var page = 2; page <= 3; page++) {
+          await t.tap(find.byKey(const Key('onboarding-cta')));
+          await t.pumpAndSettle();
+          expect(t.takeException(), isNull, reason: '$page. sayfa taştı');
+        }
+      });
+    }
   });
 
   group('onboardingSeenProvider (ilk açılış kapısı)', () {

@@ -153,29 +153,48 @@ class _OnboardingPage extends StatelessWidget {
               ),
             ),
           ),
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                NMono(step, track: NoctaTrack.wide),
-                const SizedBox(height: NoctaSpace.s5),
-                NDisplay(title, size: NoctaFontSize.display, height: 1.06),
-                const SizedBox(height: NoctaSpace.s4),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 300),
-                  child: Text(
-                    body,
-                    style: const TextStyle(
-                      fontSize: NoctaFontSize.body,
-                      color: NoctaColors.inkSecondary,
-                      height: 1.65,
+          // KAYDIRILABİLİR, ama sığdığında görünüm DEĞİŞMEZ. beb38d0 ritüel
+          // metnini uzattı ve sabit Column 800×600 test yüzeyinde 76 px taştı;
+          // küçük telefonda ve büyük yazı ölçeğinde taşma daha büyük olur.
+          // `minHeight = sayfa yüksekliği` sayesinde içerik sığarken eskisi gibi
+          // alta yaslı durur; sığmayınca sayfa dikeyde kaydırılır (PageView
+          // yatay kaydırdığı için eksenler çakışmaz).
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        NMono(step, track: NoctaTrack.wide),
+                        const SizedBox(height: NoctaSpace.s5),
+                        NDisplay(
+                          title,
+                          size: NoctaFontSize.display,
+                          height: 1.06,
+                        ),
+                        const SizedBox(height: NoctaSpace.s4),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: Text(
+                            body,
+                            style: const TextStyle(
+                              fontSize: NoctaFontSize.body,
+                              color: NoctaColors.inkSecondary,
+                              height: 1.65,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: NoctaSpace.s8),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: NoctaSpace.s8),
-              ],
+              ),
             ),
           ),
         ],
