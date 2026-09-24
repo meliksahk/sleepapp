@@ -122,6 +122,21 @@ void main() {
     expect(find.text('Active devices: 2'), findsOneWidget);
   });
 
+  testWidgets('bildirim bölümünde başlık TEKRARLANMAZ ("Notifications / Notifications")', (
+    tester,
+  ) async {
+    final api = _mockClient(notificationsEnabled: true);
+    await _pump(tester, api, await _authWith(api));
+
+    // Bölüm başlığı bir kez; alt ekranı açan düğme ardındaki şeyi söyler.
+    expect(find.text('Notifications'), findsOneWidget);
+    final button = find.byKey(const Key('notif-settings-open'));
+    expect(
+      find.descendant(of: button, matching: find.text('Reminder & quiet hours')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('bildirim toggle profil değerini yansıtır (açık)', (tester) async {
     final api = _mockClient(notificationsEnabled: true);
     await _pump(tester, api, await _authWith(api));

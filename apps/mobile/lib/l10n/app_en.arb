@@ -964,6 +964,8 @@
 
   "notifSettingsTitle": "Notifications",
   "@notifSettingsTitle": { "description": "Bildirim ayarlari ekrani basligi" },
+  "settingsNotificationsOpen": "Reminder & quiet hours",
+  "@settingsNotificationsOpen": { "description": "Ayarlardaki bildirim ekranini acan dugme; bolum basligiyla ayni olmamasi icin ICERIGI anlatir" },
   "notifReminderSection": "EVENING REMINDER",
   "@notifReminderSection": { "description": "Hatirlatici bolumu" },
   "notifReminderOff": "No reminder",

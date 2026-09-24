@@ -1963,6 +1963,12 @@ abstract class AppL10n {
   /// **'Notifications'**
   String get notifSettingsTitle;
 
+  /// Ayarlardaki bildirim ekranini acan dugme; bolum basligiyla ayni olmamasi icin ICERIGI anlatir
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder & quiet hours'**
+  String get settingsNotificationsOpen;
+
   /// Hatirlatici bolumu
   ///
   /// In en, this message translates to:

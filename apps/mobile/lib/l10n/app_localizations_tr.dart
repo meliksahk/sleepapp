@@ -1095,6 +1095,9 @@ class AppL10nTr extends AppL10n {
   String get notifSettingsTitle => 'Bildirimler';
 
   @override
+  String get settingsNotificationsOpen => 'Hatırlatıcı ve sessiz saatler';
+
+  @override
   String get notifReminderSection => 'AKŞAM HATIRLATICISI';
 
   @override

@@ -350,6 +350,7 @@
   "studioExport": "VİDEOYU ÜRET",
 
   "notifSettingsTitle": "Bildirimler",
+  "settingsNotificationsOpen": "Hatırlatıcı ve sessiz saatler",
   "notifReminderSection": "AKŞAM HATIRLATICISI",
   "notifReminderOff": "Hatırlatıcı yok",
   "notifReminderAt": "Her akşam {hour}",

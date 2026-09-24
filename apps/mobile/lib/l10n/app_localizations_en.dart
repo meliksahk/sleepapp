@@ -1095,6 +1095,9 @@ class AppL10nEn extends AppL10n {
   String get notifSettingsTitle => 'Notifications';
 
   @override
+  String get settingsNotificationsOpen => 'Reminder & quiet hours';
+
+  @override
   String get notifReminderSection => 'EVENING REMINDER';
 
   @override

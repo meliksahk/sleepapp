@@ -160,7 +160,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               const SizedBox(height: NoctaSpace.s3),
               NButton(
                 key: const Key('notif-settings-open'),
-                label: l10n.notifSettingsTitle,
+                // Bölüm başlığı zaten "Bildirimler" — düğme de öyle olunca
+                // ekranda "Bildirimler / Bildirimler" tekrarı çıkıyordu. Düğme
+                // ARDINDAKİ şeyi söyler.
+                label: l10n.settingsNotificationsOpen,
                 variant: NButtonVariant.ghost,
                 onPressed: () => context.push('/settings/notifications'),
               ),
