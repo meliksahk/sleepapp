@@ -7,7 +7,7 @@ import { AppModule } from '../../src/app.module';
 import { CACHE } from '../../src/shared/cache/cache.port';
 import { InMemoryCache } from '../../src/shared/cache/in-memory-cache';
 import { USER_SOUND_STORAGE, type UserSoundStorage } from '../../src/modules/community';
-import { resetThrottleCounters } from '../support/reset-throttle';
+import { resetInMemoryThrottle, resetThrottleCounters } from '../support/reset-throttle';
 
 /**
  * Topluluk sesleri e2e (HTTP) — gerçek DB + SAHTE depolama.
@@ -104,7 +104,15 @@ describe('Community sounds e2e (HTTP)', () => {
   // Slot açma ucunda @Throttle(10/saat) VARDIR (spam freni). Testler tek IP'den
   // koştuğu için sayaçlar her testten önce sıfırlanır — reset-throttle.ts'teki
   // "üçüncü kez düşmeyelim" kuralının uygulanışı.
-  beforeEach(resetThrottleCounters);
+  //
+  // İKİ depo da sıfırlanır: lokalde sayaç Redis'te, CI'da (REDIS_URL yok)
+  // BELLEKTE. Yalnız Redis sıfırlandığında bu dosya CI'da 8 testi 429 ile
+  // düşürüyordu; uygulama `beforeAll`'da bir kez kurulduğu için bellek-içi
+  // sayaç dosya boyunca birikiyordu.
+  beforeEach(async () => {
+    await resetThrottleCounters();
+    resetInMemoryThrottle(app);
+  });
 
   beforeAll(async () => {
     await prisma.$connect();
