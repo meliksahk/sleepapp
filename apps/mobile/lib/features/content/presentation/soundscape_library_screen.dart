@@ -94,7 +94,7 @@ class _SoundscapeLibraryScreenState extends ConsumerState<SoundscapeLibraryScree
   Widget _listContent(BuildContext context, List<Soundscape> list) {
     if (list.isEmpty) {
       return Center(
-        child: Text('Bu kategoride ses yok', style: TextStyle(color: NoctaColors.inkSecondary)),
+        child: Text(AppL10n.of(context).libraryCategoryEmpty, style: TextStyle(color: NoctaColors.inkSecondary)),
       );
     }
     final r = Responsive.of(context);

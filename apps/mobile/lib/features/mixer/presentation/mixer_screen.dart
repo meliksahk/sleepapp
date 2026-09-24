@@ -1059,7 +1059,7 @@ class _MixerScreenState extends ConsumerState<MixerScreen> {
                       key: const Key('mixer-ritual-start'),
                       variant: NButtonVariant.ghost,
                       onPressed: () => _c.startRitual(),
-                      label: '10 dk ritüel — yavaşça sönsün',
+                      label: l10n.mixerRitualStart,
                     ),
                   ),
           ],

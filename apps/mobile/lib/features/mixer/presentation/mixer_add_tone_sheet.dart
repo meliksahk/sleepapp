@@ -330,7 +330,7 @@ class _AddToneSheetState extends State<AddToneSheet> {
   Widget _noteChip(String label, double hz, {required bool selected}) {
     return FilterChip(
       key: Key('add-tone-note-$label'),
-      label: Text('$label · ${toneHzText(hz)}'),
+      label: Text(AppL10n.of(context).toneNoteChip(label, toneHzText(hz))),
       selected: selected,
       showCheckmark: false,
       onSelected: (_) => setState(() => _hz = hz),

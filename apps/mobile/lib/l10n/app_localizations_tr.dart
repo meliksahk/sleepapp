@@ -316,6 +316,20 @@ class AppL10nTr extends AppL10n {
   }
 
   @override
+  String get libraryCategoryEmpty => 'Bu kategoride ses yok.';
+
+  @override
+  String get homeRitualTryCta => '10 dk ritüeli dene — Topaç ve Sürtme';
+
+  @override
+  String get mixerRitualStart => '10 dk ritüel — yavaşça sönsün';
+
+  @override
+  String toneNoteChip(String note, String hz) {
+    return '$note · $hz';
+  }
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }

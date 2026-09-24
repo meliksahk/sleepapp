@@ -643,6 +643,30 @@ abstract class AppL10n {
   /// **'“{name}” saved'**
   String melodicSaved(String name);
 
+  /// Kütüphanede seçili kategori boş
+  ///
+  /// In en, this message translates to:
+  /// **'No sounds in this category.'**
+  String get libraryCategoryEmpty;
+
+  /// Ana ekran: ritüel tarifini tek dokunuşla açan bağlantı
+  ///
+  /// In en, this message translates to:
+  /// **'Try the 10-min ritual — Top & Friction'**
+  String get homeRitualTryCta;
+
+  /// Mikserde 10 dakikalık kısılma zamanlayıcısını başlatan düğme
+  ///
+  /// In en, this message translates to:
+  /// **'10-min ritual — fade out slowly'**
+  String get mixerRitualStart;
+
+  /// Ton seçicideki nota çipi: nota adı + frekans (Hz birimi yazılmaz, başlıkta var)
+  ///
+  /// In en, this message translates to:
+  /// **'{note} · {hz}'**
+  String toneNoteChip(String note, String hz);
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:

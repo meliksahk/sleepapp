@@ -289,6 +289,21 @@
     "placeholders": { "name": { "type": "String" } }
   },
 
+  "libraryCategoryEmpty": "No sounds in this category.",
+  "@libraryCategoryEmpty": { "description": "Kütüphanede seçili kategori boş" },
+
+  "homeRitualTryCta": "Try the 10-min ritual — Top & Friction",
+  "@homeRitualTryCta": { "description": "Ana ekran: ritüel tarifini tek dokunuşla açan bağlantı" },
+
+  "mixerRitualStart": "10-min ritual — fade out slowly",
+  "@mixerRitualStart": { "description": "Mikserde 10 dakikalık kısılma zamanlayıcısını başlatan düğme" },
+
+  "toneNoteChip": "{note} · {hz}",
+  "@toneNoteChip": {
+    "description": "Ton seçicideki nota çipi: nota adı + frekans (Hz birimi yazılmaz, başlıkta var)",
+    "placeholders": { "note": { "type": "String" }, "hz": { "type": "String" } }
+  },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",

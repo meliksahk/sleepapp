@@ -133,7 +133,7 @@ class HomeScreen extends ConsumerWidget {
                                 const SizedBox(height: NoctaSpace.s1),
                                 _PaperLink(
                                   key: const Key('ritual-try-cta'),
-                                  label: 'Try 10-min ritual — Top & Friction',
+                                  label: l10n.homeRitualTryCta,
                                   onTap: () => context.push(
                                       '/mixer?soundscape=ritual-top-friction'),
                                 ),

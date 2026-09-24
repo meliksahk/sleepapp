@@ -315,6 +315,20 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
+  String get libraryCategoryEmpty => 'No sounds in this category.';
+
+  @override
+  String get homeRitualTryCta => 'Try the 10-min ritual — Top & Friction';
+
+  @override
+  String get mixerRitualStart => '10-min ritual — fade out slowly';
+
+  @override
+  String toneNoteChip(String note, String hz) {
+    return '$note · $hz';
+  }
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }
