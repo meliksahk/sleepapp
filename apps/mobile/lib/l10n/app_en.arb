@@ -304,6 +304,9 @@
     "placeholders": { "note": { "type": "String" }, "hz": { "type": "String" } }
   },
 
+  "loadFailedNoServer": "This part needs an account connection, which isn't available yet. Sound, the mixer and your own sounds all work offline.",
+  "@loadFailedNoServer": { "description": "Ag katmani kapaliyken (apiBaseUrl bos) gosterilen hata metni; 'baglantini kontrol et' yaniltici olurdu" },
+
   "mixerGainPercent": "{percent}%",
   "@mixerGainPercent": {
     "description": "Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.",

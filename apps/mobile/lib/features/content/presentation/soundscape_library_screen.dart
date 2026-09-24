@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../core/design_system/responsive.dart';
 import '../../../l10n/app_localizations.dart';
@@ -29,11 +30,9 @@ class _SoundscapeLibraryScreenState extends ConsumerState<SoundscapeLibraryScree
         child: feed.when(
           data: (list) => _filteredList(context, list),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => NErrorState(
+          error: (error, stack) => NetworkErrorView(
             retryKey: const Key('soundscape-retry'),
-            message: AppL10n.of(context).loadFailed,
-            retryLabel: AppL10n.of(context).offlineRetry,
-            onRetry: () => ref.invalidate(soundscapeFeedProvider),
+                        onRetry: () => ref.invalidate(soundscapeFeedProvider),
           ),
         ),
       ),

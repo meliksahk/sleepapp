@@ -329,6 +329,10 @@ class AppL10nEn extends AppL10n {
   }
 
   @override
+  String get loadFailedNoServer =>
+      'This part needs an account connection, which isn\'t available yet. Sound, the mixer and your own sounds all work offline.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '$percent%';
   }

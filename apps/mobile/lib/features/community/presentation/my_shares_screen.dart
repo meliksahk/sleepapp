@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../community_providers.dart';
@@ -59,21 +60,14 @@ class MySharesScreen extends ConsumerWidget {
       body: shares.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(key: Key('my-shares-loading'))),
-        error: (_, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(l10n.mySharesLoadFailed,
-                  style: TextStyle(fontSize: NoctaFontSize.body, color: NoctaColors.inkSecondary)),
-              const SizedBox(height: NoctaSpace.s3),
-              NButton(
-                key: const Key('my-shares-retry'),
-                label: l10n.offlineRetry,
-                variant: NButtonVariant.ghost,
-                onPressed: () => ref.invalidate(mySharesProvider),
-              ),
-            ],
-          ),
+        // Ağ katmanı kapalıyken (kurulu APK'nın bugünkü hâli) "yüklenemedi +
+        // yeniden dene" yanıltıcıydı: sunucu yok, yeniden deneme her seferinde
+        // aynı hatayı verir. NetworkErrorView ağ kapalıyken dürüst metni
+        // gösterir ve düğmeyi gizler; ağ açıkken bu ekranın kendi metni kalır.
+        error: (_, _) => NetworkErrorView(
+          retryKey: const Key('my-shares-retry'),
+          onlineMessage: l10n.mySharesLoadFailed,
+          onRetry: () => ref.invalidate(mySharesProvider),
         ),
         data: (items) => items.isEmpty
             ? Center(

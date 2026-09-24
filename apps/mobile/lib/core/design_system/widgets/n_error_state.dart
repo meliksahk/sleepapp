@@ -25,7 +25,10 @@ class NErrorState extends StatelessWidget {
 
   final String message;
   final String retryLabel;
-  final VoidCallback onRetry;
+
+  /// null → düğme HİÇ çizilmez. Yeniden denemenin işe yaramayacağı hallerde
+  /// (ör. ağ katmanı komple kapalı) düğme göstermek kullanıcıyı oyalar.
+  final VoidCallback? onRetry;
 
   /// Elegy'de kullanılmıyor (işaret bloğu geldi); API kırılmasın diye duruyor.
   final IconData icon;
@@ -74,13 +77,15 @@ class NErrorState extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: NoctaSpace.s5),
-            NButton(
-              key: retryKey,
-              label: retryLabel,
-              variant: NButtonVariant.ghost,
-              onPressed: onRetry,
-            ),
+            if (onRetry != null) ...<Widget>[
+              const SizedBox(height: NoctaSpace.s5),
+              NButton(
+                key: retryKey,
+                label: retryLabel,
+                variant: NButtonVariant.ghost,
+                onPressed: onRetry!,
+              ),
+            ],
           ],
         ),
       ),

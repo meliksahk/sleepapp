@@ -667,6 +667,12 @@ abstract class AppL10n {
   /// **'{note} · {hz}'**
   String toneNoteChip(String note, String hz);
 
+  /// Ag katmani kapaliyken (apiBaseUrl bos) gosterilen hata metni; 'baglantini kontrol et' yaniltici olurdu
+  ///
+  /// In en, this message translates to:
+  /// **'This part needs an account connection, which isn\'t available yet. Sound, the mixer and your own sounds all work offline.'**
+  String get loadFailedNoServer;
+
   /// Katman kazancı yüzdesi — erişilebilirlik etiketi. YERELLEŞTİRİLEBİLİR: İngilizce '30%' yazar, Türkçe '%30'. Literal bırakmak yanlış olurdu.
   ///
   /// In en, this message translates to:

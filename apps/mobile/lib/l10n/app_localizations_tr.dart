@@ -330,6 +330,10 @@ class AppL10nTr extends AppL10n {
   }
 
   @override
+  String get loadFailedNoServer =>
+      'Bu bölüm hesap bağlantısı gerektiriyor; henüz kullanılamıyor. Ses, mikser ve kendi seslerin bağlantısız çalışır.';
+
+  @override
   String mixerGainPercent(int percent) {
     return '%$percent';
   }

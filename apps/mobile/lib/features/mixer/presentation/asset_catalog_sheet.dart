@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/audio_engine/dsp/mix_render.dart';
+import '../../../app/flavor.dart';
+import '../../../core/api/network_error_view.dart';
 import '../../../core/design_system/design_system.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../community/community_providers.dart';
@@ -147,11 +149,9 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
                     error: (error, stack) => <Widget>[
                       const SizedBox(height: NoctaSpace.s5),
                       _sectionTitle(l10n.mixerRemoteSectionTitle),
-                      NErrorState(
+                      NetworkErrorView(
                         retryKey: const Key('asset-catalog-retry'),
-                        message: l10n.loadFailed,
-                        retryLabel: l10n.offlineRetry,
-                        onRetry: () =>
+                                                onRetry: () =>
                             ref.invalidate(audioAssetCatalogProvider),
                       ),
                     ],
@@ -367,13 +367,19 @@ class _AssetCatalogSheetState extends ConsumerState<AssetCatalogSheet> {
               ),
               // "Topluluğa sun" — silmenin YANINDA ama ayırt edilir ikonla.
               // Paylaşım OPT-IN'dir: hiçbir ses otomatik yüklenmez (§6).
-              IconButton(
-                key: Key('local-sound-share-${sound.id}'),
-                onPressed: () => _shareToCommunity(l10n, sound),
-                tooltip: l10n.communityShareAction,
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                icon: Icon(Icons.cloud_upload_outlined, size: 20, color: NoctaColors.inkSecondary),
-              ),
+              //
+              // Ağ katmanı KAPALIYKEN gizli: paylaşım bir sunucu çağrısıdır ve
+              // kurulu APK'da sunucu yok. Düğme görünseydi kullanıcı başlık yazıp
+              // onaylar, her seferinde "birazdan tekrar dene" hatası alırdı —
+              // hiçbir zaman işlemeyecek bir akış.
+              if (FlavorConfig.currentOrNull?.hasApi ?? true)
+                IconButton(
+                  key: Key('local-sound-share-${sound.id}'),
+                  onPressed: () => _shareToCommunity(l10n, sound),
+                  tooltip: l10n.communityShareAction,
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  icon: Icon(Icons.cloud_upload_outlined, size: 20, color: NoctaColors.inkSecondary),
+                ),
               IconButton(
                 key: Key('local-sound-delete-${sound.id}'),
                 onPressed: () => _confirmDelete(l10n, sound),

@@ -101,6 +101,7 @@
   "homeRitualTryCta": "10 dk ritüeli dene — Topaç ve Sürtme",
   "mixerRitualStart": "10 dk ritüel — yavaşça sönsün",
   "toneNoteChip": "{note} · {hz}",
+  "loadFailedNoServer": "Bu bölüm hesap bağlantısı gerektiriyor; henüz kullanılamıyor. Ses, mikser ve kendi seslerin bağlantısız çalışır.",
   "mixerGainPercent": "%{percent}",
   "mixerStopgapNotice": "Erken sürüm: yerelde üretilip döngüleniyor. Ses kalitesi nihai değil.",
   "mixerFailed": "Ses başlatılamadı.",
