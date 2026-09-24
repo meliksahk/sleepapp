@@ -84,10 +84,14 @@ class AuthController {
 
   /// Aktif oturumlar (cihaz listesi) — token'sız meta.
   Future<List<SessionInfo>> listSessions() async {
-    final res = await authorizedRequest((token) => _client.getAuthed('/v1/auth/sessions', token));
+    final res = await authorizedRequest(
+      (token) => _client.getAuthed('/v1/auth/sessions', token),
+    );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     final list = jsonDecode(res.body) as List<dynamic>;
-    return list.map((e) => SessionInfo.fromJson(e as Map<String, dynamic>)).toList();
+    return list
+        .map((e) => SessionInfo.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Diğer cihazlardan çık — mevcut oturum hariç tümünü iptal eder. İptal sayısı.
@@ -101,6 +105,33 @@ class AuthController {
     );
     if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
     return (jsonDecode(res.body) as Map<String, dynamic>)['revoked'] as int;
+  }
+
+  /// **Hesabı kalıcı olarak siler** (App Store zorunluluğu, CLAUDE.md §6).
+  ///
+  /// Sunucu tarafı kaskad siler (`DELETE /v1/auth/me`, 204). Sunucu onayladıktan
+  /// SONRA yerel oturum temizlenir — sıra önemli: önce yerel temizleseydik ve
+  /// istek başarısız olsaydı, kullanıcı hesabı SİLİNMEDEN uygulamadan atılırdı
+  /// ve geri dönemezdi (anonim cihaz kimliğiyle yeni bir hesap açardı).
+  Future<void> deleteAccount() async {
+    final res = await authorizedRequest(
+      (token) => _client.deleteAuthed('/v1/auth/me', token),
+    );
+    // 204 beklenir; 200 de kabul (sunucu ileride gövde dönerse kırılmasın).
+    if (res.statusCode != 204 && res.statusCode != 200) {
+      throw ApiException(res.statusCode, res.body);
+    }
+    await signOut();
+  }
+
+  /// Kişisel verinin tamamı (GDPR taşınabilirliği) — `GET /v1/me/export`.
+  /// Ham JSON gövdesi döner; ne yapılacağı (paylaş/kaydet) çağıranın işi.
+  Future<String> exportData() async {
+    final res = await authorizedRequest(
+      (token) => _client.getAuthed('/v1/me/export', token),
+    );
+    if (res.statusCode != 200) throw ApiException(res.statusCode, res.body);
+    return res.body;
   }
 
   Future<void> signOut() async {

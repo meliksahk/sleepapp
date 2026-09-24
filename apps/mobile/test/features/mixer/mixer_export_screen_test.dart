@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:nocta/core/design_system/design_system.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
 import 'package:nocta/core/share/sharer.dart';
@@ -14,6 +15,9 @@ import 'package:nocta/features/mixer/mix_video_exporter.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Mikser ekranında **mix-to-video** (viral kanca #3, docs/04 §131).
 ///
@@ -21,7 +25,7 @@ import 'package:nocta/l10n/app_localizations.dart';
 /// çizilmez — kodlayıcı Android çerçeve API'si, `toImage` ise headless asılıyor
 /// (#140). Kanıtlanan şey: butonun doğru anda görünmesi, ilerlemenin gösterilmesi,
 /// videonun PAYLAŞIMA gitmesi ve hata metninin doğru olması.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   @override
   bool playing = false;
 
@@ -74,6 +78,7 @@ void main() {
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
         loopSeconds: 1,
         sampleRate: 8000,
         playerFactory: _FakePlayer.new,
@@ -118,6 +123,10 @@ void main() {
   testWidgets('ÇEKİRDEK: export edilen video PAYLAŞIMA gider', (t) async {
     await pump(t);
     await t.tap(find.byKey(const Key('mixer-export-video')));
+    // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+    // stüdyodaki süre seçiminden sonra başlar.
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('studio-export')));
     await t.pumpAndSettle();
 
     // Viral kanca sürtünmesizliğe dayanır: dosya üretilip ekranda bırakılırsa
@@ -152,6 +161,10 @@ void main() {
       ),
     );
     await t.tap(find.byKey(const Key('mixer-export-video')));
+    // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+    // stüdyodaki süre seçiminden sonra başlar.
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('studio-export')));
     await t.pumpAndSettle();
     expect(sharer.shared, hasLength(1));
     expect(sharer.shared.single.file!.mimeType, 'video/mp4');
@@ -162,6 +175,10 @@ void main() {
     encoder.failOnFinish = StateError('codec öldü');
 
     await t.tap(find.byKey(const Key('mixer-export-video')));
+    // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+    // stüdyodaki süre seçiminden sonra başlar.
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('studio-export')));
     await t.pumpAndSettle();
 
     // "Sound could not start." demek kullanıcıyı çalan sesi kurcalamaya yollardı.
@@ -174,12 +191,17 @@ void main() {
     await pump(t);
     frameGate = Completer<void>(); // ilk karede dur
     await t.tap(find.byKey(const Key('mixer-export-video')));
+    // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+    // stüdyodaki süre seçiminden sonra başlar.
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('studio-export')));
     // settle YOK: export'un ortasını yakalamak istiyoruz.
     await t.pump();
 
-    expect(find.byKey(const Key('mixer-export-progress')), findsOneWidget);
-    final button =
-        t.widget<OutlinedButton>(find.byKey(const Key('mixer-export-video')));
+    // Export STÜDYODA sürüyor (F5): ilerleme ve kilit orada gösterilir.
+    // İddia aynı — çift basış ikinci native oturum açardı.
+    expect(find.byKey(const Key('studio-progress')), findsOneWidget);
+    final button = t.widget<NButton>(find.byKey(const Key('studio-export')));
     // Çift basış ikinci native oturum açardı.
     expect(button.onPressed, isNull);
 
@@ -196,6 +218,10 @@ void main() {
     await t.pumpAndSettle();
 
     await t.tap(find.byKey(const Key('mixer-export-video')));
+    // Video butonu artık Share Studio'yu AÇIYOR (F5): dışa aktarma
+    // stüdyodaki süre seçiminden sonra başlar.
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('studio-export')));
     await t.pumpAndSettle();
 
     // Export edilen ses, kullanıcının duyduğu sessiz mix olmalı. Kazanç 0'a

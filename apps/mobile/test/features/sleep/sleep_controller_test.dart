@@ -89,13 +89,12 @@ void main() {
           'totalDurationMinutes': 360,
           'movementEvents': 4,
           'soundEvents': 2,
-          'calmScore': 85,
         }),
         200,
       );
     });
     final report = await ok.nightReport('2026-03-10');
-    expect(report?.calmScore, 85);
+    expect(report?.soundEvents, 2);
 
     final none = await _build((req) async => http.Response('not found', 404));
     expect(await none.nightReport('2000-01-01'), isNull);

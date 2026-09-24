@@ -106,6 +106,13 @@ jobs:
       - name: Content library drift scan
         run: pnpm check:content-drift
 
+      # Üreticilerin ve kapıların KENDİ testleri. Bu adım yokken
+      # gen-content-library.test.mjs kırmızıya döndü ve kimse görmedi; aynı
+      # dönemde üretici seed'deki kategori UPDATE'lerini sessizce atlıyordu.
+      # Bir kapının yeşil olması, ancak kapının kendisi test ediliyorsa anlamlı.
+      - name: Tooling tests (codegen + drift gates)
+        run: pnpm test:tooling
+
   mobile:
     name: Flutter (apps/mobile)
     runs-on: ubuntu-latest

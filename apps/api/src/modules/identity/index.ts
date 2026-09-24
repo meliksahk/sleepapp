@@ -10,3 +10,4 @@ export { GetActiveSessionsUseCase } from './application/get-active-sessions.usec
 export type { ActiveSessionInfo } from './domain/user.entity';
 export { SearchUsersUseCase } from './application/search-users.usecase';
 export type { AdminUserSummary } from './domain/ports';
+export { CountAccountDeletionsUseCase } from './application/count-account-deletions.usecase';

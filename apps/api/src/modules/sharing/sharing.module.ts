@@ -39,7 +39,6 @@ const providers: Provider[] = [
           ? {
               nightDate: report.nightDate,
               totalDurationMinutes: report.totalDurationMinutes,
-              calmScore: report.calmScore,
             }
           : null;
       },

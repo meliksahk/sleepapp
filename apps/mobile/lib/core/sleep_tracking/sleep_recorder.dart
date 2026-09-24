@@ -33,13 +33,20 @@ class SleepRecorder {
     this.frameSamples = 256,
     this.logEnvelope = false,
     DateTime Function()? now,
-  })  : _detectorFactory = detectorFactory ??
-            ((floor) => AcousticEventDetector(initialFloorDb: floor)),
+  })  :
+        // Lint `this._detectorFactory` öneriyor ama BU MÜMKÜN DEĞİL: adlandırılmış
+        // parametre alt çizgiyle başlayamaz (Dart kuralı).
+        // ignore: prefer_initializing_formals
+        _detectorFactory = detectorFactory,
         _now = now ?? DateTime.now;
 
   /// Mikrofon kaynağı — test sahte enjekte eder, üretim `RecordMicSource` verir.
   final MicSource mic;
-  final AcousticEventDetector Function(double initialFloorDb) _detectorFactory;
+
+  /// null = varsayılan dedektör. Varsayılan BURADA kurulamaz: dedektör artık
+  /// [frameDuration] istiyor ve o `sampleRate`/`frameSamples`'tan türüyor —
+  /// başlatıcı listesinde `this` okunamaz. Bu yüzden kurulum `_feed`'e taşındı.
+  final AcousticEventDetector Function(double initialFloorDb)? _detectorFactory;
   final DateTime Function() _now;
 
   /// **ISINMA — HAYALET OLAY HATASI (testte yakalandı):** dedektörün uyarlanır tabanı
@@ -161,7 +168,8 @@ class SleepRecorder {
     // Medyan: tek bir gürültü patlaması (kapı çarpması) ortalamayı bozar, medyanı bozmaz.
     final sorted = List<double>.from(_warmup)..sort();
     final floor = sorted[sorted.length ~/ 2];
-    _detector = _detectorFactory(floor);
+    _detector = _detectorFactory?.call(floor) ??
+        AcousticEventDetector(frameDuration: frameDuration, initialFloorDb: floor);
   }
 
   /// Kaydı bitirir ve **taslak** döner (kaydetmez — o çağıranın işi).

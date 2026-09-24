@@ -1,3 +1,6 @@
+import type { INestApplication } from '@nestjs/common';
+import { ThrottlerStorage, ThrottlerStorageService } from '@nestjs/throttler';
+
 /**
  * Rate-limit sayaçlarını sıfırlar — hız sınırına TABİ her e2e testi için.
  *
@@ -14,12 +17,23 @@
  * yüzden çözüm artık paylaşılan: hız sınırına tabi YENİ bir e2e yazan herkes
  * `beforeEach(resetThrottleCounters)` yazsın, aynı tuzağa üçüncü kez düşmeyelim.
  *
+ * ⚠️ **Üçüncü kez düşüldü — CI'da, REDIS_URL YOKKEN.** Burada eskiden "REDIS_URL
+ * yoksa depolama bellek-içidir ve her app kurulumunda zaten sıfırdır" yazıyordu.
+ * Bu, uygulamayı `beforeAll`'da BİR KEZ kuran dosyalar için YANLIŞ: bellek-içi
+ * sayaç o tek uygulama örneğinde dosya boyunca birikir. `community.e2e` düşük
+ * limitli bir uca (`@Throttle` 10/saat) 10'dan fazla istek attığı için CI'da 8
+ * testi 429 ile düşüyordu; lokalde REDIS_URL olduğu için hep yeşildi. Böyle
+ * dosyalar [resetInMemoryThrottle]'ı da çağırmalı.
+ *
  * Testler `--runInBand` (sıralı) koştuğu için başka bir testin sayacını yarıda
  * silme riski yok.
+ *
+ * (Parametresiz kalması bilinçli: `beforeEach(fn)`'e verilen fonksiyon parametre
+ * alırsa Jest onu `done` geri çağrısı bekleyen bir kanca sanar.)
  */
 export async function resetThrottleCounters(): Promise<void> {
   const url = process.env.REDIS_URL;
-  // REDIS_URL yoksa depolama bellek-içidir ve her app kurulumunda zaten sıfırdır.
+  // REDIS_URL yoksa sayaç bellektedir → bkz. [resetInMemoryThrottle].
   if (!url) return;
 
   const { default: IORedis } = await import('ioredis');
@@ -30,4 +44,21 @@ export async function resetThrottleCounters(): Promise<void> {
   } finally {
     await redis.quit();
   }
+}
+
+/**
+ * Bellek-içi throttler sayacını sıfırlar (REDIS_URL YOKKEN — CI'ın hâli).
+ *
+ * Depo Redis ise hiçbir şey yapmaz; o durumda [resetThrottleCounters] yeterli.
+ *
+ * **Sıra önemli:** önce `onApplicationShutdown()` (açık API) bekleyen "sayacı
+ * düşür" zamanlayıcılarını temizler, SONRA harita boşaltılır. Harita
+ * zamanlayıcılar dururken boşaltılsaydı, TTL dolduğunda zamanlayıcı silinmiş
+ * kaydı okumaya çalışır ve test sürecini TypeError ile düşürürdü.
+ */
+export function resetInMemoryThrottle(app: INestApplication): void {
+  const storage = app.get<unknown>(ThrottlerStorage, { strict: false });
+  if (!(storage instanceof ThrottlerStorageService)) return;
+  storage.onApplicationShutdown();
+  storage.storage.clear();
 }

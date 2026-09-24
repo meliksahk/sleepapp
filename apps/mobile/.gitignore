@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Golden test başarısızlık çıktıları (flutter test yazar; depoya GİRMEZ).
+# F0 commitinde (PR #220) yanlışlıkla commit edildi, tekrarlanmasın.
+test/**/failures/

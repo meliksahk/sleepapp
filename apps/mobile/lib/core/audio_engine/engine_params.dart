@@ -1,4 +1,5 @@
 import 'dsp/mix_render.dart';
+import 'dsp/tone.dart' show toneBeatMaxHz, toneBeatMinHz, toneMaxHz, toneMinHz;
 
 /// `soundscapes.engine_params` → [MixSpec] ayrıştırıcısı.
 ///
@@ -56,7 +57,42 @@ MixLayer? _parseLayer(Object? input) {
   final gain = input['gain'];
   if (gain is! num || !gain.isFinite || gain < 0 || gain > 1) return null;
 
-  return MixLayer(id: id, type: type, gain: gain.toDouble());
+  // `frequencyHz` YALNIZCA tone katmanında geçerlidir — ve ton için ZORUNLUDUR.
+  // Kurallar sunucu sözleşmesiyle (mixer-state.ts parseLayer) birebir aynıdır;
+  // iki taraf ayrışsaydı admin'de kaydedilen bir tarif telefonda reddedilirdi.
+  final rawFreq = input['frequencyHz'];
+  double? frequencyHz;
+  if (rawFreq != null) {
+    if (rawFreq is! num || !rawFreq.isFinite) return null;
+    frequencyHz = rawFreq.toDouble();
+    if (frequencyHz < toneMinHz || frequencyHz > toneMaxHz) return null;
+    // Ton DIŞI katmana frekans iliştirmek sözleşme ihlalidir: sessizce yok
+    // saymak, editörün hatasını duyulmayan bir sapmaya çevirirdi.
+    if (type != LayerSource.tone) return null;
+  }
+  if (type == LayerSource.tone && frequencyHz == null) return null;
+
+  // `beatHz` (binaural vuru): sunucu sözleşmesiyle AYNI kurallar — yalnızca
+  // tone'da geçerli, [toneBeatMinHz, toneBeatMaxHz] Hz, ton dışında yasak.
+  // 0 da reddedilir: mono'nun tek tel ifadesi alanın YOKLUĞUDUR. İki taraf
+  // ayrışsaydı editörün kaydettiği binaural tarif telefonda ya reddedilir ya
+  // sessizce mono çalardı.
+  final rawBeat = input['beatHz'];
+  double? beatHz;
+  if (rawBeat != null) {
+    if (rawBeat is! num || !rawBeat.isFinite) return null;
+    beatHz = rawBeat.toDouble();
+    if (type != LayerSource.tone) return null;
+    if (beatHz < toneBeatMinHz || beatHz > toneBeatMaxHz) return null;
+  }
+
+  return MixLayer(
+    id: id,
+    type: type,
+    gain: gain.toDouble(),
+    frequencyHz: frequencyHz,
+    beatHz: beatHz,
+  );
 }
 
 /// Tel üzerindeki dizgi → enum. Tek kaynak `LayerSource.values`: elle yazılmış bir

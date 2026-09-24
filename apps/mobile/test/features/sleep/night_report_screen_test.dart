@@ -26,7 +26,6 @@ const _report = NightReport(
   totalDurationMinutes: 462,
   movementEvents: 12,
   soundEvents: 3,
-  calmScore: 85,
 );
 
 /// Paylaşımları kaydeden sahte Sharer (native pano yerine).
@@ -67,7 +66,6 @@ Future<(NoctaApiClient, AuthController)> _api({required bool hasShare}) async {
           'title': 'My night: 7h 42m',
           'subtitle': 'Calm 85/100 · NOCTA sleep ritual',
           'durationText': '7h 42m',
-          'calmScore': 85,
           'webUrl': 'https://nocta.app/r/abc',
           'deepLink': 'nocta://report/$_night',
         }),
@@ -113,7 +111,7 @@ Future<(RecordingSharer, RecordingAnalytics)> _pump(
 }
 
 void main() {
-  testWidgets('rapor gösterilir (süre + calm + olaylar)', (tester) async {
+  testWidgets('rapor gösterilir (süre + olaylar)', (tester) async {
     await _pump(
       tester,
       overrides: [nightReportProvider(_night).overrideWith((ref) async => _report)],
@@ -121,8 +119,11 @@ void main() {
 
     expect(find.byKey(const Key('report-duration')), findsOneWidget);
     expect(find.text('7h 42m'), findsOneWidget);
-    expect(find.byKey(const Key('report-calm')), findsOneWidget);
-    expect(find.text('Calm 85/100'), findsOneWidget);
+    // **"Calm" satırı KALDIRILDI (F0):** skorun girdisi üretimde hiç dolmuyordu,
+    // yani her gece aynı sayı yazıyordu. Sabit bir sayıyı skor diye göstermek
+    // ölçüm iddiasıdır.
+    expect(find.byKey(const Key('report-calm')), findsNothing);
+    expect(find.textContaining('Calm'), findsNothing);
     // **"Movement events" ARTIK GÖSTERİLMİYOR (D-10):** dedektör hareketi ölçmüyor
     // (docs/04 §120 fixture'ları yok) ve alan her zaman 0 dönüyor. Ölçmediğimiz bir
     // şeyi göstermek — sıfır bile olsa — bir iddiadır.
@@ -132,7 +133,7 @@ void main() {
     expect(find.byKey(const Key('report-loud-hint')), findsOneWidget);
   });
 
-  testWidgets('calm skoru sağlık iddiası taşımaz (uyarı metni)', (tester) async {
+  testWidgets('rapor sağlık iddiası taşımaz (uyarı metni)', (tester) async {
     await _pump(
       tester,
       overrides: [nightReportProvider(_night).overrideWith((ref) async => _report)],

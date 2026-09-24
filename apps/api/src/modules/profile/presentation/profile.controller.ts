@@ -36,6 +36,9 @@ export class ProfileController {
       locale: dto.locale,
       timezone: dto.timezone,
       notificationsEnabled: dto.notificationsEnabled,
+      reminderHour: dto.reminderHour,
+      quietHoursStart: dto.quietHoursStart,
+      quietHoursEnd: dto.quietHoursEnd,
     });
   }
 }

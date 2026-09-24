@@ -76,6 +76,12 @@ export interface Overview {
     readonly shared: number;
     readonly rate: number | null;
   };
+  /**
+   * Son 30 günde silinen hesap sayısı. Kaskadın gerçekten işlediğini operasyonel
+   * olarak görmenin tek yolu: `users` satırı hard-delete edildiği için başka
+   * hiçbir yerde iz kalmıyor. Kullanıcı kimliği TAŞIMAZ (olay sayacı).
+   */
+  readonly deletedAccounts30d: number;
 }
 
 export interface OverviewSource {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nocta/core/design_system/design_system.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
@@ -11,10 +12,13 @@ import 'package:nocta/features/content/content_providers.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_route.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// `/mixer?soundscape=<slug>` — kütüphanedeki sesin GERÇEKTEN çalındığı yol.
 
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   double lastVolume = -1;
   @override
   bool playing = false;
@@ -57,6 +61,7 @@ MixerController _testController(MixSpec spec) {
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
       loopSeconds: 1, // 30 sn render testi yavaşlatırdı
       sampleRate: 8000,
       playerFactory: () {
@@ -207,7 +212,7 @@ void main() {
     expect(find.byKey(const Key('gain-brown')), findsOneWidget);
     expect(find.byKey(const Key('mixer-recipe-fallback')), findsOneWidget);
     // Çal butonu ETKİN — kullanıcı ağsız da ses açabilir.
-    final toggle = tester.widget<FilledButton>(
+    final toggle = tester.widget<NButton>(
       find.byKey(const Key('mixer-toggle')),
     );
     expect(toggle.onPressed, isNotNull);

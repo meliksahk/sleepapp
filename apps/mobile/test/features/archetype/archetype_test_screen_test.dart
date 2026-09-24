@@ -199,6 +199,9 @@ void main() {
       await _answerAll(tester);
       await _submit(tester);
 
+      // Sonuç ekranı kaydırılabilir; 600px'lik test penceresinde eylemler
+      // katlamanın altında kalıyor (gerçek telefonda görünür).
+      await tester.ensureVisible(find.byKey(const Key('archetype-share')));
       await tester.tap(find.byKey(const Key('archetype-share')));
 
       // `runAsync` ŞART: paylaşım önce kimlik kartını PNG'ye render ediyor
@@ -241,6 +244,7 @@ void main() {
     await _pump(tester, await _service(existingResult: true));
     expect(find.byKey(const Key('archetype-result')), findsOneWidget);
 
+    await tester.ensureVisible(find.byKey(const Key('archetype-retake')));
     await tester.tap(find.byKey(const Key('archetype-retake')));
     await tester.pumpAndSettle();
 

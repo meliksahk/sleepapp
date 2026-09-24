@@ -120,6 +120,10 @@ flutter:
   # Inter — tema `fontFamily: 'Inter'` BİLDİRİYORDU ama font bundle EDİLMİYORDU:
   # uygulama sessizce Roboto'ya düşüyordu, yani tasarım niyeti hiç uygulanmadı.
   # OFL lisanslı (assets/fonts/LICENSE.txt), gömülü dağıtıma izin verir.
+  # Elegy'nin üç sesi (docs/06). Üçü de OFL — gömülü dağıtıma izin verir
+  # (assets/fonts/LICENSE.txt, OFL-InstrumentSerif.txt, OFL-IBMPlexMono.txt).
+  # Toplam ~340 KB; aile adları `NoctaFont` token'larıyla BİREBİR eşleşmeli,
+  # yoksa Flutter sessizce Roboto'ya düşer ve tasarım hiç uygulanmamış olur.
   fonts:
     - family: Inter
       fonts:
@@ -127,6 +131,16 @@ flutter:
           weight: 400
         - asset: assets/fonts/Inter-600.ttf
           weight: 600
+    - family: Instrument Serif
+      fonts:
+        - asset: assets/fonts/InstrumentSerif-Regular.ttf
+          weight: 400
+    - family: IBM Plex Mono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IBMPlexMono-Medium.ttf
+          weight: 500
 
   assets:
     # Arketip soru matrisi + puanlama metinleri — ÜRETİLEN dosya (kaynak: API
@@ -179,8 +193,8 @@ flutter_launcher_icons:
 
 # Splash: dark marka arka planı (beyaz flaşı öldürür) + ortada hilal logo.
 flutter_native_splash:
-  color: "#0A0E1A"
+  color: "#08080A"
   image: assets/icon/splash_logo.png
   android_12:
-    color: "#0A0E1A"
+    color: "#08080A"
     image: assets/icon/splash_logo.png

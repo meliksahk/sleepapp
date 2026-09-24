@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import 'fake_playlist_player.dart';
 
 /// Asset (DOSYA) katmanı — cihazsız.
 ///
@@ -10,7 +13,7 @@ import 'package:nocta/core/audio_engine/mix_player.dart';
 ///    (→ sürgü/çal/duraklat tek koddan çalışıyor),
 /// 2. dosya RENDER EDİLMİYOR (renderer'a hiç uğramıyor),
 /// 3. bozuk/eksik dosya uygulamayı KIRMIYOR — mix eksik ama ÇALIYOR.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   _FakePlayer({this.failOnSource = false});
 
   /// DOSYA kaynağı açılırken atsın mı — "dosya yok / ağ yok / bozuk kodek".
@@ -98,6 +101,12 @@ void main() {
         renderedIds.add(r.id);
         return renderLoopSync(r);
       },
+      // Sonsuz uzatılan sentez katmanı parça üreticisinden geçer; o da
+      // kaydedilir ki "dosya render edilmez" iddiası iki yolu da kapsasın.
+      segmentRenderer: (r) async {
+        renderedIds.add(r.layer.id);
+        return renderSegmentSync(r);
+      },
       playerFactory: () {
         final p = _FakePlayer(failOnSource: failAssets);
         created.add(p);
@@ -118,7 +127,9 @@ void main() {
     expect(player.voiceCount, 2, reason: 'sentez + dosya, tek listede');
     // Renderer YALNIZCA sentez katmanı için çağrıldı. Asset render edilseydi
     // burada 'asset-1' de olurdu — tam olarak engellemeye çalıştığımız hata.
-    expect(renderedIds, <String>['brown']);
+    // Kahverengi sonsuz uzatıldığı için ilk parçasından sonra ikinci parçası da
+    // üretilir; sayı değil KİMLİK önemli: listede dosya katmanı olmamalı.
+    expect(renderedIds.toSet(), <String>{'brown'});
     expect(player.failedAssetIds, isEmpty);
   });
 

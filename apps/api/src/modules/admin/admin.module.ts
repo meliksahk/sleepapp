@@ -1,5 +1,5 @@
 import { Module, type Provider } from '@nestjs/common';
-import { IdentityModule } from '../identity';
+import { IdentityModule, CountAccountDeletionsUseCase } from '../identity';
 import { FlagsModule } from '../flags';
 import type { SoundscapeSummary } from '../content';
 import { WaitlistModule, CountWaitlistUseCase } from '../waitlist';
@@ -96,21 +96,32 @@ const providers: Provider[] = [
       CountWaitlistUseCase,
       GetShareFunnelUseCase,
       CountPushAudienceUseCase,
+      CountAccountDeletionsUseCase,
     ],
     useFactory: (
       countSoundscapes: CountSoundscapesUseCase,
       countWaitlist: CountWaitlistUseCase,
       shareFunnel: GetShareFunnelUseCase,
       countPushAudience: CountPushAudienceUseCase,
+      countDeletions: CountAccountDeletionsUseCase,
     ): OverviewSource => ({
       read: async () => {
-        const [soundscapes, waitlist, funnel, pushAudience] = await Promise.all([
-          countSoundscapes.execute(),
-          countWaitlist.execute(),
-          shareFunnel.execute(),
-          countPushAudience.execute(),
-        ]);
-        return { soundscapes, waitlist, pushAudience, shareFunnel: funnel };
+        const [soundscapes, waitlist, funnel, pushAudience, deletedAccounts30d] = await Promise.all(
+          [
+            countSoundscapes.execute(),
+            countWaitlist.execute(),
+            shareFunnel.execute(),
+            countPushAudience.execute(),
+            countDeletions.execute(30),
+          ],
+        );
+        return {
+          soundscapes,
+          waitlist,
+          pushAudience,
+          shareFunnel: funnel,
+          deletedAccounts30d,
+        };
       },
     }),
   },

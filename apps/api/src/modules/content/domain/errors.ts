@@ -1,4 +1,4 @@
-import { LAYER_SOURCES } from './mixer-state';
+import { LAYER_SOURCES, TONE_MAX_HZ, TONE_MIN_HZ } from './mixer-state';
 
 /** content domain hataları — tipli hiyerarşi (CLAUDE.md §4). */
 export class ContentError extends Error {
@@ -47,13 +47,22 @@ export class SoundscapeNotFoundError extends ContentError {
   }
 }
 
-/** Ses tarifi sözleşmeye uymuyor (bkz. engine-params.ts). */
+/**
+ * Ses tarifi sözleşmeye uymuyor (bkz. engine-params.ts).
+ *
+ * Metin, LAYER_SOURCES'tan ÜRETİLİR (elle yazılmaz): liste büyüyünce hata
+ * metni bayat kalır ve editör geçerli bir tipi "geçersiz" sanıp vazgeçerdi.
+ * tone katmanının frekans şartı ayrıca yazılır — tek parametreli kaynak,
+ * hatanın en sık sebebi onun eksik alanı olacaktır.
+ */
 export class InvalidRecipeError extends ContentError {
   constructor() {
     super(
       'invalid_recipe',
       'Ses tarifi geçersiz: schemaVersion=1 ve 1–8 arası benzersiz katman ' +
-        `({id, type: ${LAYER_SOURCES.join('|')}, gain: 0–1}) gerekir.`,
+        `({id, type: ${LAYER_SOURCES.join('|')}, gain: 0–1}) gerekir. ` +
+        `"tone" katmanında frequencyHz zorunludur (${TONE_MIN_HZ}–${TONE_MAX_HZ} Hz); ` +
+        'diğer tiplerde bu alan bulunamaz.',
     );
   }
 }

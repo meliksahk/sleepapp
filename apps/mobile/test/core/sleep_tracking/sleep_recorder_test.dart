@@ -21,16 +21,31 @@ void main() {
     return f;
   }
 
+  /// SleepRecorder'ın gerçek çerçeve süresi: 16 kHz / 256 örnek = 16 ms.
+  const frameDuration = Duration(microseconds: 16000);
+  int framesFor(Duration d) => (d.inMicroseconds / frameDuration.inMicroseconds).ceil();
+
   /// Sessiz taban + ortasında yüksek bir olay.
+  ///
+  /// **SÜREYLE yazılıyor, çerçeve SAYISIyla değil.** Önceden `loud(5)`/`quiet(30)`
+  /// gibi sabitler vardı; dedektörün süreleri düzeltilince (çerçeve sabitleri 16 ms
+  /// yerine 50 ms varsayıyordu) bunlar sessizce eşiğin ALTINA düştü — 5 çerçeve
+  /// = 80 ms, yeni alt sınır 100 ms. Testin niyeti "duyulur bir olay" idi; niyeti
+  /// süre olarak yazınca ayarlar değişse de test aynı şeyi test etmeye devam eder.
   List<Float32List> nightWith({required int events}) {
     final frames = <Float32List>[];
-    void quiet(int n) => frames.addAll(List.generate(n, (_) => frame(0.0001)));
-    void loud(int n) => frames.addAll(List.generate(n, (_) => frame(0.5)));
+    void quiet(Duration d) =>
+        frames.addAll(List.generate(framesFor(d), (_) => frame(0.0001)));
+    void loud(Duration d) =>
+        frames.addAll(List.generate(framesFor(d), (_) => frame(0.5)));
 
-    quiet(30); // taban otursun
+    quiet(const Duration(milliseconds: 500)); // taban otursun
     for (var i = 0; i < events; i++) {
-      loud(5);
-      quiet(30); // refractory + taban
+      // 200 ms: kısa ama minDuration'ın (100 ms) rahatça üstünde — gerçek bir
+      // dönme hareketi bu mertebede.
+      loud(const Duration(milliseconds: 200));
+      // 1 sn: refrakterin (500 ms) rahatça üstünde, olaylar ayrı sayılsın.
+      quiet(const Duration(seconds: 1));
     }
     return frames;
   }
@@ -134,7 +149,8 @@ void main() {
     // kaybolurdu — ve kullanıcı sabah eksik bir rapor görürdü.
     final frames = <Float32List>[
       ...List.generate(30, (_) => frame(0.0001)),
-      ...List.generate(5, (_) => frame(0.5)), // ses HÂLÂ sürerken akış bitiyor
+      // 200 ms: minDuration'ın (100 ms) üstünde. Ses HÂLÂ sürerken akış bitiyor.
+      ...List.generate(framesFor(const Duration(milliseconds: 200)), (_) => frame(0.5)),
     ];
     final rec = SleepRecorder(mic: FakeMicSource(frames), now: nowFn);
 
@@ -164,7 +180,12 @@ void main() {
     final rec = SleepRecorder(
       mic: FakeMicSource(nightWith(events: 3)),
       detectorFactory: (floor) =>
-          AcousticEventDetector(thresholdDb: 90.0, initialFloorDb: floor),
+          AcousticEventDetector(
+            // SleepRecorder'ın gerçek hızı: 16 kHz / 256 örnek = 16 ms.
+            frameDuration: const Duration(microseconds: 16000),
+            thresholdDb: 90.0,
+            initialFloorDb: floor,
+          ),
       now: nowFn,
     );
 
@@ -198,7 +219,8 @@ void main() {
       frame(0.9), // ısınma sırasında kapı çarptı
       ...List.generate(7, (_) => frame(0.0001)),
       ...List.generate(30, (_) => frame(0.0001)),
-      ...List.generate(5, (_) => frame(0.5)), // gerçek olay
+      // 200 ms: minDuration'ın (100 ms) üstünde — gerçek olay.
+      ...List.generate(framesFor(const Duration(milliseconds: 200)), (_) => frame(0.5)),
       ...List.generate(30, (_) => frame(0.0001)),
     ];
     final rec = SleepRecorder(mic: FakeMicSource(frames), now: nowFn);

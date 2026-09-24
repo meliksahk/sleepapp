@@ -13,7 +13,16 @@ void main() {
   const loopSeconds = 2;
   const n = sr * loopSeconds;
 
-  MixSpec spec(LayerSource t) => MixSpec([MixLayer(id: 'a', type: t, gain: 1.0)]);
+  MixSpec spec(LayerSource t) => MixSpec([
+        // tone, katman başına frekans ister (sözleşme): genel döngü testleri
+        // TÜM kaynakları tararken tonu da kapsasın diye tek istisna burada.
+        MixLayer(
+          id: 'a',
+          type: t,
+          gain: 1.0,
+          frequencyHz: t == LayerSource.tone ? 220 : null,
+        ),
+      ]);
 
   /// Döngü dikişindeki adım: son örnekten ilk örneğe (buffer kendine eklenince).
   double seamStep(Float32List b) => (b[0] - b[b.length - 1]).abs();

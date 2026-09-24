@@ -48,6 +48,9 @@ import { ResetTotpUseCase } from './application/reset-totp.usecase';
 import { GetTotpStatusUseCase } from './application/get-totp-status.usecase';
 import { LogoutUseCase } from './application/logout.usecase';
 import { DeleteAccountUseCase } from './application/delete-account.usecase';
+import { CountAccountDeletionsUseCase } from './application/count-account-deletions.usecase';
+import { ACCOUNT_DELETION_LOG, type AccountDeletionLog } from './domain/account-deletion-log';
+import { PrismaAccountDeletionLog } from './infrastructure/prisma/prisma-account-deletion-log';
 import { RevokeOtherSessionsUseCase } from './application/revoke-other-sessions.usecase';
 import { GetActiveSessionsUseCase } from './application/get-active-sessions.usecase';
 import { SearchUsersUseCase } from './application/search-users.usecase';
@@ -67,6 +70,11 @@ const providers: Provider[] = [
     provide: USER_REPOSITORY,
     inject: [PrismaService],
     useFactory: (prisma: PrismaService): UserRepository => new PrismaUserRepository(prisma),
+  },
+  {
+    provide: ACCOUNT_DELETION_LOG,
+    inject: [PrismaService],
+    useFactory: (prisma: PrismaService): AccountDeletionLog => new PrismaAccountDeletionLog(prisma),
   },
   {
     provide: REFRESH_TOKEN_REPOSITORY,
@@ -187,8 +195,15 @@ const providers: Provider[] = [
   },
   {
     provide: DeleteAccountUseCase,
-    inject: [USER_REPOSITORY],
-    useFactory: (users: UserRepository): DeleteAccountUseCase => new DeleteAccountUseCase(users),
+    inject: [USER_REPOSITORY, ACCOUNT_DELETION_LOG],
+    useFactory: (users: UserRepository, deletions: AccountDeletionLog): DeleteAccountUseCase =>
+      new DeleteAccountUseCase(users, deletions),
+  },
+  {
+    provide: CountAccountDeletionsUseCase,
+    inject: [ACCOUNT_DELETION_LOG],
+    useFactory: (deletions: AccountDeletionLog): CountAccountDeletionsUseCase =>
+      new CountAccountDeletionsUseCase(deletions),
   },
   {
     provide: RevokeOtherSessionsUseCase,
@@ -274,6 +289,14 @@ const providers: Provider[] = [
 @Module({
   controllers: [AuthController],
   providers,
-  exports: [AuthGuard, AuthorizeUseCase, GetActiveSessionsUseCase, SearchUsersUseCase],
+  exports: [
+    AuthGuard,
+    AuthorizeUseCase,
+    GetActiveSessionsUseCase,
+    SearchUsersUseCase,
+    // Panel panosu tüketiyor — admin modülü identity'nin repo'suna DOKUNMAZ,
+    // yalnızca bu public use case'i çağırır (docs/02 §2 boundary).
+    CountAccountDeletionsUseCase,
+  ],
 })
 export class IdentityModule {}

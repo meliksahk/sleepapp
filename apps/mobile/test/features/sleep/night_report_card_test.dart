@@ -13,17 +13,15 @@ void main() {
   const labels = NightReportCardLabels(
     header: 'Night receipt',
     duration: '7h 12m',
-    calmLabel: 'Calm',
     loudLabel: 'Louder moments',
     streakLabel: 'Night streak',
     identityLabel: 'Identity',
-    disclaimer: 'An in-app calm measure for your sleep ritual. Not a health score.',
+    disclaimer: 'A record of a night with your sleep ritual. Not a health score.',
   );
 
   Future<void> pumpCard(
     WidgetTester t, {
     int soundEvents = 4,
-    int calmScore = 78,
     int streak = 3,
     String? archetypeName = 'Deep Ocean',
     double textScale = 1.0,
@@ -39,7 +37,6 @@ void main() {
           nightDate: '2026-07-17',
           durationMinutes: 432,
           soundEvents: soundEvents,
-          calmScore: calmScore,
           streak: streak,
           archetypeName: archetypeName,
           gradient: NoctaArchetypeGradient.overthinker,
@@ -55,7 +52,7 @@ void main() {
       await pumpCard(t);
 
       // Kart PAYLAŞILIYOR: uyarı uygulamanın içinde kalırsa kartı gören kişi
-      // "Calm 78/100"u bir sağlık skoru sanar (CLAUDE.md §1.1).
+      // makbuzdaki sayıları bir sağlık ölçüsü sanar (CLAUDE.md §1.1).
       expect(find.byKey(const Key('report-card-disclaimer')), findsOneWidget);
       expect(find.textContaining('Not a health score'), findsOneWidget);
     });
@@ -67,6 +64,8 @@ void main() {
       // "Movement: 0" göstermek, ölçmediğimiz bir şeyi ölçmüş gibi sunmaktır —
       // sıfır bile bir iddiadır (DECISIONS D-10).
       expect(find.textContaining('Movement'), findsNothing);
+      // F0: "Calm" satırı da yok — girdisi olmayan sabit bir skordu.
+      expect(find.byKey(const Key('report-card-calm')), findsNothing);
       expect(find.text('Louder moments'), findsOneWidget);
     });
 
@@ -82,7 +81,6 @@ void main() {
 
       expect(find.byKey(const Key('report-card-duration')), findsOneWidget);
       expect(find.text('7h 12m'), findsOneWidget);
-      expect(find.text('78/100'), findsOneWidget);
       expect(find.text('4'), findsOneWidget);
     });
 

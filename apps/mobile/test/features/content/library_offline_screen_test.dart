@@ -97,4 +97,27 @@ void main() {
       reason: 'affinity altyazısı seed\'den taşınmamış',
     );
   });
+
+  testWidgets('kategori filtrelerinin HİÇBİRİ ağsız boş değil', (tester) async {
+    // Regresyon: üretici seed'deki kategori UPDATE'lerini okumuyordu, gömülü
+    // 25 tarifin hepsi 'nature' kalıyordu. "Relaxing" ve "Noise" kurulu APK'da
+    // hep boştu. "Noise" ayrıca temiz kurulumda da boştu: kategori göçü boş
+    // tabloya koşuyordu, atama seed'e taşındı.
+    await pumpLibrary(tester);
+
+    // Her filtrede listenin İLK kartı görünür olmalı; tembel liste yüzünden
+    // yalnız en üstteki karta bakılıyor.
+    for (final (chip, firstSlug, absentSlug) in <(String, String, String)>[
+      ('Noise', 'delta-drift', 'deep-ocean-hush'),
+      ('Relaxing', 'deep-hum', 'delta-drift'),
+      ('Nature', 'deep-ocean-hush', 'delta-drift'),
+    ]) {
+      await tester.tap(find.widgetWithText(ChoiceChip, chip));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('soundscape-empty')), findsNothing, reason: '"$chip" filtresi boş');
+      expect(find.byKey(Key('soundscape-$firstSlug')), findsOneWidget, reason: '"$chip" filtresinde $firstSlug yok');
+      expect(find.byKey(Key('soundscape-$absentSlug')), findsNothing, reason: '"$chip" filtresi $absentSlug gösteriyor');
+    }
+  });
 }

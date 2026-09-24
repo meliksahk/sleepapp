@@ -166,4 +166,114 @@ void main() {
       );
     });
   });
+
+  group('tone katmanı — frekans sözleşmesi (sunucu mixer-state.ts ile birebir)', () {
+    test('tone + frekans kabul edilir, değer KORUNUR', () {
+      final spec = parseEngineParams(decode(
+        '{"schemaVersion":1,"layers":[{"id":"hum","type":"tone","gain":0.2,"frequencyHz":110}]}',
+      ));
+      expect(spec!.layers.first.type, LayerSource.tone);
+      expect(spec.layers.first.frequencyHz, 110);
+    });
+
+    test('frekans tam sayı gelebilir (JSON 110 ile 110.0 aynıdır)', () {
+      final spec = parseEngineParams(decode(
+        '{"schemaVersion":1,"layers":[{"id":"hum","type":"tone","gain":0.2,"frequencyHz":110.5}]}',
+      ));
+      expect(spec!.layers.first.frequencyHz, 110.5);
+    });
+
+    test('tonda frekans YOK → TÜM tarif reddedilir (zorunlu alan)', () {
+      expect(
+        parseEngineParams(decode(
+          '{"schemaVersion":1,"layers":[{"id":"hum","type":"tone","gain":0.2}]}',
+        )),
+        isNull,
+      );
+    });
+
+    test('frekans aralık dışı → null', () {
+      expect(
+        parseEngineParams(decode(
+          '{"schemaVersion":1,"layers":[{"id":"hum","type":"tone","gain":0.2,"frequencyHz":19.9}]}',
+        )),
+        isNull,
+      );
+      expect(
+        parseEngineParams(decode(
+          '{"schemaVersion":1,"layers":[{"id":"hum","type":"tone","gain":0.2,"frequencyHz":2001}]}',
+        )),
+        isNull,
+      );
+    });
+
+    test('gürültü katmanına frekans iliştirilmiş → null (sözleşme ihlali)', () {
+      // Sessizce yok saymak, editörün hatasını duyulmayan bir sapmaya çevirirdi.
+      expect(
+        parseEngineParams(decode(
+          '{"schemaVersion":1,"layers":[{"id":"a","type":"pink","gain":0.5,"frequencyHz":110}]}',
+        )),
+        isNull,
+      );
+    });
+
+    test('ayrıştırılan tone spec GERÇEKTEN render edilir (uçtan uca)', () {
+      final spec = parseEngineParams(decode(
+        '{"schemaVersion":1,"layers":[{"id":"hum","type":"tone","gain":0.2,"frequencyHz":110}]}',
+      ))!;
+      final out = renderMix(spec, seconds: 1, sampleRate: 8000);
+      expect(out.any((s) => s != 0), isTrue);
+    });
+
+    test('beatHz kabul edilir ve KORUNUR (binaural tarif)', () {
+      final spec = parseEngineParams(decode(
+        '{"schemaVersion":1,"layers":['
+        '{"id":"b","type":"tone","gain":0.2,"frequencyHz":200,"beatHz":8}]}',
+      ));
+      expect(spec!.layers.first.beatHz, 8);
+    });
+
+    test('beatHz YOKLUĞU mono demektir (beat null)', () {
+      final spec = parseEngineParams(decode(
+        '{"schemaVersion":1,"layers":[{"id":"m","type":"tone","gain":0.2,"frequencyHz":110}]}',
+      ));
+      expect(spec!.layers.first.beatHz, isNull);
+    });
+
+    test('beat aralık dışı → null', () {
+      for (final bad in [0, 0.1, 25]) {
+        expect(
+          parseEngineParams(decode(
+            '{"schemaVersion":1,"layers":['
+            '{"id":"b","type":"tone","gain":0.2,"frequencyHz":200,"beatHz":$bad}]}',
+          )),
+          isNull,
+          reason: 'beatHz=$bad reddedilmeli',
+        );
+      }
+    });
+
+    test('sınır vuru (0.5 ve 20) kabul edilir — sunucuyla birebir', () {
+      for (final good in [0.5, 20]) {
+        expect(
+          parseEngineParams(decode(
+            '{"schemaVersion":1,"layers":['
+            '{"id":"b","type":"tone","gain":0.2,"frequencyHz":200,"beatHz":$good}]}',
+          )),
+          isNotNull,
+          reason: 'beatHz=$good geçerli olmalı',
+        );
+      }
+    });
+
+    test('gürültü katmanına beat iliştirilmiş → null', () {
+      expect(
+        parseEngineParams(decode(
+          '{"schemaVersion":1,"layers":['
+          '{"id":"a","type":"pink","gain":0.5,"beatHz":8}]}',
+        )),
+        isNull,
+      );
+    });
+  });
 }

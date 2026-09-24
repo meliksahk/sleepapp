@@ -144,8 +144,10 @@ describe('Admin pano e2e (HTTP)', () => {
     const res = await overview(await tokenFor(['owner'])).expect(200);
     expect(res.body).not.toHaveProperty('d7Retention');
     expect(res.body).not.toHaveProperty('trialConversion');
-    // pushAudience (#185) MEŞRU computable metrik → kümede; d7/trial UYDURULMAZ (yok).
+    // pushAudience (#185) ve deletedAccounts30d MEŞRU computable metrikler → kümede
+    // (ikisi de gerçek satır sayar); d7/trial UYDURULMAZ (yok).
     expect(Object.keys(res.body).sort()).toEqual([
+      'deletedAccounts30d',
       'pushAudience',
       'shareFunnel',
       'soundscapes',

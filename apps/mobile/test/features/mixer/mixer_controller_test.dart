@@ -2,14 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
+import 'package:nocta/features/mixer/domain/melodic_preset_store.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Mikser denetleyicisi — cihazsız.
 ///
 /// Burada kanıtlanan şey "ses duyuluyor" DEĞİL (o emülatör/cihaz işi). Kanıtlanan:
 /// **slider yeniden render TETİKLEMİYOR**. Bu, mimarinin can damarı — tetikleseydi
 /// her slider hareketinde ses kesilir ve tık olurdu.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   int setVolumeCalls = 0;
   int setAudioSourceCalls = 0;
   double lastVolume = -1;
@@ -73,6 +77,7 @@ void main() {
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
         // 1 sn: test hızlı koşsun (30 sn render × katman = yavaş).
         loopSeconds: 1,
         sampleRate: 8000,
@@ -180,5 +185,128 @@ void main() {
     // toplam 1'i aşarsa işletim sistemi mikserinde kırpma olur.
     final total = defaultMixSpec().layers.fold<double>(0, (a, l) => a + l.gain);
     expect(total, lessThanOrEqualTo(1.0));
+  });
+
+  group('tone katmanı — kullanıcı Hz seçip ekler', () {
+    test('hazırlanmamış mikserde yalnızca state\'e girer (player YOK)', () async {
+      final c = build();
+      final before = created.length;
+
+      final outcome = await c.addToneLayer(110);
+
+      expect(outcome, AddToneOutcome.added);
+      expect(created.length, before, reason: 'mix hazır değil → canlı ekleme yok');
+      expect(c.state.layers.last.type, LayerSource.tone);
+      expect(c.state.layers.last.frequencyHz, 110);
+      // Kullanıcının eklediği katman KALDIRILABİLİR olmalı.
+      expect(c.state.userAddedSynthIds, contains('tone'));
+    });
+
+    test('prepare sonrası CANLI eklenir ve çalıyorsa hemen başlar', () async {
+      final c = build();
+      await c.prepare();
+      await c.toggle(); // çalıyor
+      final before = created.length;
+
+      await c.addToneLayer(110);
+
+      expect(created.length, before + 1, reason: 'yeni katmana yeni player');
+      expect(created.last.playing, isTrue,
+          reason: 'mix çalarken eklenen katman da başlamalı');
+      expect(player.voiceCount, 3);
+    });
+
+    test('id benzersiz üretilir: tone, tone-2 ...', () async {
+      final c = build();
+      await c.addToneLayer(110);
+      await c.addToneLayer(220);
+      expect(
+        c.state.userAddedSynthIds.toSet().length,
+        c.state.userAddedSynthIds.length,
+        reason: 'çakışan id sürgünün yanlış katmanı oynatması demekti',
+      );
+      expect(c.state.gains.keys, containsAll(<String>['tone', 'tone-2']));
+    });
+
+    test('removeLayer: kullanıcının katmanı state\'ten VE sesi düşer', () async {
+      final c = build();
+      await c.prepare();
+      await c.addToneLayer(110);
+      expect(player.voiceCount, 3);
+
+      await c.removeLayer(c.state.userAddedSynthIds.first);
+
+      expect(player.voiceCount, 2,
+          reason: 'kaldırılan katmanın sesi de SUSMALI — "kaldırdım ama duyuyorum" olmaz');
+      expect(c.state.layers.any((l) => l.id == 'tone'), isFalse);
+      expect(c.state.gains.containsKey('tone'), isFalse);
+      expect(c.state.userAddedSynthIds, isEmpty);
+    });
+
+    test('tariften gelen sentez satırı DA kaldırılabilir (mikser serbest araç)', () async {
+      final c = build();
+      await c.prepare();
+
+      await c.removeLayer('brown');
+
+      expect(c.state.layers.any((l) => l.id == 'brown'), isFalse,
+          reason: 'mikser serbest araçtır; tarif başlangıç noktasıdır, kısıt değil');
+    });
+
+    test('tavan doluysa full döner, hiçbir şey değişmez', () async {
+      final c = build();
+      // spec 2 + 6 ton = 8 (tavan)
+      for (var i = 0; i < MixerController.maxTotalLayers - 2; i++) {
+        expect(await c.addToneLayer(110), AddToneOutcome.added);
+      }
+      expect(c.state.layers.length + c.state.assets.length,
+          MixerController.maxTotalLayers);
+
+      final outcome = await c.addToneLayer(440);
+
+      expect(outcome, AddToneOutcome.full);
+      expect(c.state.layers.length + c.state.assets.length,
+          MixerController.maxTotalLayers,
+          reason: 'tavan aşılmamalı: sessizce eklemek bütçeyi çiğner');
+    });
+
+    test('currentSpec frekansı TAŞIR (export yolu render assert\'ini yememeli)', () async {
+      final c = build();
+      await c.addToneLayer(110);
+      final layer =
+          c.currentSpec().layers.firstWhere((l) => l.type == LayerSource.tone);
+      expect(layer.frequencyHz, 110);
+    });
+
+    test('ÇEKİRDEK: currentSpec melodi ayarlarını TAŞIR (çalma ve dışa aktarma)', () async {
+      // `prepare()` çaları bu tarifle yüklüyor; ayarlar burada düşerse editörde
+      // seçilen kök nota, dalga, tempo ve dizi hiç duyulmaz.
+      final c = build();
+      await c.addMelodicLayer(const MelodicPreset(
+        name: 'test',
+        rootSemi: 5,
+        patternIdx: 3,
+        waveform: 'saw',
+        tempoScale: 2.0,
+        isChords: true,
+      ));
+      final layer = c.currentSpec().layers.firstWhere((l) => l.type == LayerSource.chords);
+      expect(
+        <Object?>[layer.rootSemi, layer.waveform, layer.tempoScale, layer.patternIdx],
+        <Object?>[5, 'saw', 2.0, 3],
+      );
+    });
+
+    test('beatHz > 0 katmana TAŞINIR; 0/null → mono (alan hiç yazılmaz)', () async {
+      final c = build();
+      await c.addToneLayer(200, beatHz: 8);
+      await c.addToneLayer(150); // beat yok
+
+      final layers = c.currentSpec().layers.where((l) => l.type == LayerSource.tone);
+      final withBeat = layers.firstWhere((l) => l.id == 'tone');
+      final mono = layers.firstWhere((l) => l.id == 'tone-2');
+      expect(withBeat.beatHz, 8);
+      expect(mono.beatHz, isNull, reason: '0 yerine null: mono tek gösterim olsun');
+    });
   });
 }

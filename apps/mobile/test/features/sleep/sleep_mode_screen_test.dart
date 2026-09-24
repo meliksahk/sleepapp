@@ -74,7 +74,7 @@ void main() {
     for (var i = 0; i < 5; i++) {
       await t.pump(const Duration(milliseconds: 20));
     }
-    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 400)); // pumpAndSettle DEĞİL: nefes alan küre sürekli animasyon
   }
 
   late FakeNightService service;
@@ -108,7 +108,7 @@ void main() {
         home: SleepModeScreen(controller: controller),
       ),
     );
-    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 400)); // pumpAndSettle DEĞİL: nefes alan küre sürekli animasyon
     return controller;
   }
 
@@ -129,7 +129,7 @@ void main() {
     final c = await pump(t, permission: false);
 
     await t.tap(find.byKey(const Key('sleep-toggle')));
-    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 400)); // pumpAndSettle DEĞİL: nefes alan küre sürekli animasyon
 
     expect(find.byKey(const Key('sleep-permission-denied')), findsOneWidget);
     expect(c.state.isRecording, isFalse);
@@ -141,7 +141,7 @@ void main() {
     final c = await pump(t);
 
     await t.tap(find.byKey(const Key('sleep-toggle')));
-    await t.pumpAndSettle();
+    await t.pump(const Duration(milliseconds: 400)); // pumpAndSettle DEĞİL: nefes alan küre sürekli animasyon
 
     expect(c.state.isRecording, isTrue);
     expect(find.byKey(const Key('sleep-elapsed')), findsOneWidget);

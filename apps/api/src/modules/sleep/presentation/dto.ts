@@ -27,11 +27,6 @@ export class NightReportDto {
   @ApiProperty({ example: 462 }) totalDurationMinutes!: number;
   @ApiProperty({ example: 12 }) movementEvents!: number;
   @ApiProperty({ example: 3 }) soundEvents!: number;
-  @ApiProperty({
-    example: 85,
-    description: 'Uygulama-içi göreli dinginlik (0-100), sağlık ölçüsü değil',
-  })
-  calmScore!: number;
 }
 
 export class SleepStatsDto {

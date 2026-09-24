@@ -66,6 +66,12 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>NOCTA listens during sleep mode to time your alarm to a lighter moment. The analysis happens on your phone; raw audio is never recorded to a file or uploaded.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>audio</string>
+		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

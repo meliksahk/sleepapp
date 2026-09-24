@@ -93,25 +93,50 @@ Float32List renderSeamlessLoop(
 
   final out = Float32List(n);
   // Harman bölgesi [0, X): kuyruğu başa eşit-güç harmanla.
-  //
-  // Clamp NEDENİ: eşit-güç ağırlıkları GÜCÜ korur ama anlık TOPLAM θ=π/4'te
-  // sin+cos=√2'ye kadar çıkabilir → iki büyük aynı-işaretli örnek [-1,1]'i aşabilir
-  // (korelasyonsuz gürültüde nadir). Dikiş örnekleri ETKİLENMEZ: i=0'da wIn=0 →
-  // out[0]=s[n] (zaten [-1,1]); [X,N) bölgesi ham. Yani süreklilik kanıtı bozulmaz,
-  // yalnızca nadir bir iç harman örneği kırpılır (mikserin clamp felsefesiyle aynı).
-  final scale = (math.pi / 2) / x;
-  for (var i = 0; i < x; i++) {
-    final theta = i * scale;
-    final wIn = math.sin(theta); // 0 → 1 (baş)
-    final wOut = math.cos(theta); // 1 → 0 (kuyruk)
-    final v = s[i] * wIn + s[n + i] * wOut;
-    out[i] = v > 1.0 ? 1.0 : (v < -1.0 ? -1.0 : v);
-  }
+  writeEqualPowerSeam(out, head: s, tail: s, tailOffset: n, x: x);
   // Kalan [X, N): değişmeden kopyala.
   for (var i = x; i < n; i++) {
     out[i] = s[i];
   }
   return out;
+}
+
+/// Sorunsuz döngü crossfade'i — kilitli olmayan kaynakların dikişi için
+/// [n + X] örnek üretildiğinde X'in varsayılanı (50 ms). Sonsuz uzatma zinciri
+/// (`segment_chain.dart`) de aynı uzunluğu kullanır: iki dikiş türü ayrışmasın.
+int seamCrossfadeSamples(int sampleRate, int n) {
+  final x = (const Duration(milliseconds: 50).inMicroseconds * sampleRate / 1e6).round();
+  return x > n ~/ 2 ? n ~/ 2 : x;
+}
+
+/// [out]'un ilk [x] örneğine eşit-güç dikiş yazar: [head] içeri girer (sin),
+/// [tail] dışarı çıkar (cos). `out[0] = tail[tailOffset]`, yani dikiş kuyruğun
+/// kaldığı yerden sürer.
+///
+/// Döngü dikişi (`renderSeamlessLoop`: baş ile KENDİ kuyruğu) ve sonsuz uzatma
+/// zinciri (bir parçanın başı ile ÖNCEKİ parçanın kuyruğu) aynı matematiği
+/// buradan kullanır.
+///
+/// Clamp NEDENİ: eşit-güç ağırlıkları GÜCÜ korur ama anlık TOPLAM θ=π/4'te
+/// sin+cos=√2'ye kadar çıkabilir → iki büyük aynı-işaretli örnek [-1,1]'i aşabilir
+/// (korelasyonsuz gürültüde nadir). Dikiş örnekleri ETKİLENMEZ: i=0'da sin=0 →
+/// out[0]=tail[tailOffset] (zaten [-1,1]). Yani süreklilik kanıtı bozulmaz,
+/// yalnızca nadir bir iç harman örneği kırpılır (mikserin clamp felsefesiyle aynı).
+void writeEqualPowerSeam(
+  Float32List out, {
+  required Float32List head,
+  required Float32List tail,
+  int tailOffset = 0,
+  required int x,
+}) {
+  final scale = (math.pi / 2) / x;
+  for (var i = 0; i < x; i++) {
+    final theta = i * scale;
+    final wIn = math.sin(theta); // 0 → 1 (baş)
+    final wOut = math.cos(theta); // 1 → 0 (kuyruk)
+    final v = head[i] * wIn + tail[tailOffset + i] * wOut;
+    out[i] = v > 1.0 ? 1.0 : (v < -1.0 ? -1.0 : v);
+  }
 }
 
 /// Katman başına crossfade yolu — spec'te en az bir **döngüye kilitli** kaynak
@@ -145,6 +170,15 @@ Float32List _renderPerLayerLoop(
       seed: layerSeed(seed, i),
       sampleRate: sampleRate,
       loopSamples: n,
+      frequencyHz: layer.frequencyHz,
+      beatHz: layer.beatHz,
+      // Melodi ayarları: bu çağrı eskiden yalnız ton alanlarını geçiriyordu;
+      // akor ve arpej kilitli olduğu için hep bu yoldan geçer ve kullanıcının
+      // seçtiği kök nota, dalga, tempo ve dizi sessizce düşüyordu.
+      rootSemi: layer.rootSemi,
+      waveform: layer.waveform,
+      tempoScale: layer.tempoScale,
+      patternIdx: layer.patternIdx,
     );
 
     final lay = Float32List(n);

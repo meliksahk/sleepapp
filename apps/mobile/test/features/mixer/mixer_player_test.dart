@@ -18,6 +18,9 @@ import 'package:nocta/features/auth/auth_providers.dart';
 import 'package:nocta/features/sleep/sleep_providers.dart';
 import 'package:nocta/features/sleep/sleep_session_beacon.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Mikser **PLAYER** sözleşmesi (#214).
 ///
@@ -36,7 +39,7 @@ import 'package:nocta/l10n/app_localizations.dart';
 /// **Kontrast oranı ÖLÇÜLMEDİ.** Scrim'in VARLIĞI ve alfası test ediliyor; o
 /// alfanın gerçek bir cihazda, karanlık odada, hareketli gradyanın en açık
 /// anında AA kontrastı verdiği ölçülmedi.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   @override
   bool playing = false;
 
@@ -68,6 +71,7 @@ MixerController _controller(MixSpec spec) => MixerController(
       spec: spec,
       player: MixPlayer(
         loopRenderer: (r) async => renderLoopSync(r),
+        segmentRenderer: (r) async => renderSegmentSync(r),
         loopSeconds: 1,
         sampleRate: 8000,
         playerFactory: _FakePlayer.new,
@@ -255,9 +259,10 @@ void main() {
         '(${atRest.join(", ")})');
     expect(
       atRest.length,
-      greaterThanOrEqualTo(4),
+      greaterThanOrEqualTo(3),
       reason: 'ilk bakışta ${atRest.length} katman görünüyor — mikser gibi '
-          'durmuyor (regresyon: eskiden 2 idi)',
+          'durmuyor (regresyon: eskiden 2 idi; 3 kabul edilir çünkü her sentez '
+          'satırında artık kaldırma butonu da var — mikser serbest araç)',
     );
 
     // (2) Kaydırınca HEPSİ ulaşılabilir.

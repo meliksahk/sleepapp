@@ -39,7 +39,19 @@ class NativeMixPlayer {
       final layer = spec.layers[i];
       final pcm = encodePcm16(
         renderSeamlessLoop(
-          MixSpec([MixLayer(id: layer.id, type: layer.type, gain: 1.0)]),
+          MixSpec([
+            MixLayer(
+              id: layer.id,
+              type: layer.type,
+              gain: 1.0,
+              frequencyHz: layer.frequencyHz,
+              // Native yol MONO'dur: binaural tone buraya tremololu mono
+              // indirgemesiyle girer (renderSource beatHz dalı). Kulaklıkta
+              // duyulan uzamsal vuru native grafda henüz yoktur — canlı yol
+              // zaten default olarak NativeMixPlayer DEĞİL (bkz. sınıf yorumu).
+              beatHz: layer.beatHz,
+            ),
+          ]),
           loopSeconds: loopSeconds,
           sampleRate: sampleRate,
           seed: i * 104729, // asal: MixPlayer ile aynı — katmanlar arası benzerlik olmasın

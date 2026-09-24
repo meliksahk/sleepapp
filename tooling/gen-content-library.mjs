@@ -40,7 +40,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { tokenize, splitStatements, parseInsert, parsePgTextArray } from './sql-values.mjs';
+import { tokenize, splitStatements, parseInsert, parsePgTextArray, parseUpdate } from './sql-values.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -127,6 +127,28 @@ function assertValidLayers(layers, contract, context) {
   }
 }
 
+/**
+ * Seed'deki UPDATE'i o ana dek eklenmiş satırlara uygular (SQL'deki sıra
+ * anlamıyla aynı: INSERT'ten önceki UPDATE hiçbir satıra dokunmaz).
+ *
+ * Eskiden UPDATE'ler hiç okunmuyordu. Seed yedi tarifi 'relaxing' yapıyor ama
+ * gömülü kütüphanede 25 tarifin hepsi varsayılan 'nature' kalıyordu; cihazdaki
+ * "Rahatlatıcı" filtresi kurulu APK'da hep boştu. Kütüphaneyi etkileyen başka
+ * bir UPDATE gelirse sessizce atlanmaz, üretim durur.
+ */
+function applyUpdate(update, inserts) {
+  if (update === null || !(update.table in inserts)) return;
+  if (update.table !== 'soundscapes' || update.column !== 'category' || update.key !== 'slug') {
+    throw new Error(
+      `[content-library] ✗ desteklenmeyen UPDATE: ${update.table}.${update.column} ` +
+        `(anahtar: ${update.key}). Kütüphaneyi etkileyen güncelleme sessizce atlanmaz; buraya destek ekleyin.`,
+    );
+  }
+  for (const row of inserts.soundscapes) {
+    if (update.keys.includes(row.slug)) row.category = update.value;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Üretilecek JSON'u (string olarak) döndürür. Drift kapısı da bunu çağırır. */
@@ -143,6 +165,7 @@ export function buildLibraryJson() {
   for (const statement of statements) {
     const parsed = parseInsert(statement);
     if (parsed && parsed.table in inserts) inserts[parsed.table].push(...parsed.rows);
+    applyUpdate(parseUpdate(statement), inserts);
   }
 
   if (inserts.soundscapes.length === 0) {
@@ -171,6 +194,7 @@ export function buildLibraryJson() {
       archetypeAffinity: parsePgTextArray(row.archetype_affinity, context),
       // Seed `version` yazmıyor → sütun DEFAULT'u. Yazarsa ona saygı duyulur.
       version: typeof row.version === 'number' ? row.version : versionDefault,
+      category: row.category ?? 'nature',
       engineParams,
     };
 

@@ -15,9 +15,12 @@ import 'package:nocta/features/settings/locale_store.dart';
 import 'package:nocta/features/sleep/sleep_providers.dart';
 import 'package:nocta/features/sleep/sleep_session_beacon.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Cihazsız oynatıcı — düzen testi ses donanımına dokunmamalı.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   @override
   bool playing = false;
 
@@ -82,6 +85,7 @@ Future<void> _pumpPlayer(
             spec: defaultMixSpec(),
             player: MixPlayer(
               loopRenderer: (r) async => renderLoopSync(r),
+              segmentRenderer: (r) async => renderSegmentSync(r),
               loopSeconds: 1,
               sampleRate: 8000,
               playerFactory: _FakePlayer.new,

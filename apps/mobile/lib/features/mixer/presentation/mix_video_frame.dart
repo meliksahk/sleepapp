@@ -48,7 +48,10 @@ class MixVideoFrame extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(gradient: gradient),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 96, vertical: 140),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 96,
+                vertical: 140,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -59,9 +62,9 @@ class MixVideoFrame extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 72,
-                      height: 1.15,
-                      fontWeight: FontWeight.w600,
+                      fontFamily: NoctaFont.display,
+                      fontSize: 76,
+                      height: 1.05,
                       color: NoctaColors.inkPrimary,
                     ),
                   ),
@@ -69,7 +72,10 @@ class MixVideoFrame extends StatelessWidget {
                   SizedBox(
                     height: 420,
                     child: CustomPaint(
-                      painter: _WaveformPainter(peaks: peaks, progress: progress),
+                      painter: _WaveformPainter(
+                        peaks: peaks,
+                        progress: progress,
+                      ),
                       size: Size.infinite,
                     ),
                   ),
@@ -78,10 +84,11 @@ class MixVideoFrame extends StatelessWidget {
                     'NOCTA',
                     key: const Key('mix-video-wordmark'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 40,
+                    style: const TextStyle(
+                      fontFamily: NoctaFont.mono,
+                      fontSize: 38,
                       letterSpacing: 12,
-                      color: NoctaColors.inkPrimary.withValues(alpha: 0.9),
+                      color: NoctaColors.inkPrimary,
                     ),
                   ),
                 ],
@@ -123,7 +130,9 @@ class _WaveformPainter extends CustomPainter {
           const Radius.circular(4),
         ),
         Paint()
-          ..color = NoctaColors.inkPrimary.withValues(alpha: played ? 0.95 : 0.28),
+          ..color = NoctaColors.inkPrimary.withValues(
+            alpha: played ? 0.95 : 0.28,
+          ),
       );
     }
   }

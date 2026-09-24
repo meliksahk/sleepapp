@@ -42,7 +42,13 @@ describe('Content e2e (HTTP)', () => {
       },
     });
     await prisma.soundscapes.create({
-      data: { ...base, slug: slugs.deep, archetype_affinity: ['deep-ocean'], status: 'published' },
+      data: {
+        ...base,
+        slug: slugs.deep,
+        archetype_affinity: ['deep-ocean'],
+        status: 'published',
+        category: 'noise',
+      },
     });
     await prisma.soundscapes.create({
       data: { ...base, slug: slugs.draft, archetype_affinity: ['overthinker'], status: 'draft' },
@@ -116,6 +122,27 @@ describe('Content e2e (HTTP)', () => {
       .map((x: { slug: string }) => x.slug);
     expect(mineSlugs).toContain(slugs.over);
     expect(mineSlugs).not.toContain(slugs.draft);
+  });
+
+  it('feed ve detay kategoriyi taşır', async () => {
+    // Regresyon: sütun DB'de vardı ama hiçbir yanıtta yoktu. Sunucu açıkken mobil
+    // her tarifi 'nature' sayıyor, "Noise" ve "Relaxing" filtreleri boş kalıyordu.
+    const t = await token();
+    const feed = await request(app.getHttpServer())
+      .get('/v1/content/feed')
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    const bySlug = new Map(
+      feed.body.map((x: { slug: string; category: string }) => [x.slug, x.category]),
+    );
+    expect(bySlug.get(slugs.deep)).toBe('noise');
+    expect(bySlug.get(slugs.over)).toBe('nature'); // sütunun varsayılanı
+
+    const detail = await request(app.getHttpServer())
+      .get(`/v1/content/soundscapes/${slugs.deep}`)
+      .set('Authorization', `Bearer ${t}`)
+      .expect(200);
+    expect(detail.body.soundscape.category).toBe('noise');
   });
 
   it('yayınlanmış soundscape detay + preset', async () => {

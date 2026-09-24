@@ -67,7 +67,9 @@ features/report/
 
 **Sentezin ürün avantajı (teselli değil):** üretilen ses **hiç döngüye girmez** —
 örneklenmiş uyku sesindeki en yaygın şikâyet duyulabilir loop noktasıdır. Ayrıca bant
-genişliği/depolama maliyeti sıfırdır ve internetsiz çalışır.
+genişliği/depolama maliyeti sıfırdır ve internetsiz çalışır. (Bu söz 2026-09'a kadar
+kodda karşılanmıyordu: katman 30 sn'lik tek buffer'ı döngülüyordu. Karşılayan mekanizma
+§1.2.2; ton, akor ve topaç tasarım gereği periyodik kalır.)
 
 **v2'de gerçek kayıt istenirse yol:** CC0/kamu malı kütüphaneler veya ısmarlama/kendi
 kaydımız. Motora bir "asset katmanı" tipi eklenir ve sentez katmanlarıyla yan yana
@@ -77,16 +79,17 @@ kaydımız. Motora bir "asset katmanı" tipi eklenir ve sentez katmanlarıyla ya
 
 Motorun kaynak listesi (`LayerSource`, `core/audio_engine/dsp/mix_render.dart`):
 
-| kaynak                 | yapı                                                      | tepe sınırı (kapalı form) |
-| ---------------------- | --------------------------------------------------------- | ------------------------- |
-| `white`/`pink`/`brown` | düz gürültü (`noise.dart`)                                | 1.00 (tepe-normalize)     |
-| `waves`                | kahverengi yatak + yavaş zarf + zarfa bağlı alçak geçiren | 0.96                      |
-| `fire`                 | kahverengi yatak + kısa çıtırtı transientleri             | 0.80                      |
-| `rain`                 | filtrelenmiş beyaz yatak + sık damla transientleri        | 0.64                      |
-| `pad`                  | tamamen tonal (kısmi tonlar + parıltı), gürültü YOK       | 0.491                     |
+| kaynak                 | yapı                                                                                                                                                       | tepe sınırı (kapalı form) |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `white`/`pink`/`brown` | düz gürültü (`noise.dart`)                                                                                                                                 | 1.00 (tepe-normalize)     |
+| `waves`                | kahverengi yatak + yavaş zarf + zarfa bağlı alçak geçiren                                                                                                  | 0.96                      |
+| `fire`                 | kahverengi yatak + kısa çıtırtı transientleri                                                                                                              | 0.80                      |
+| `rain`                 | filtrelenmiş beyaz yatak + sık damla transientleri                                                                                                         | 0.64                      |
+| `pad`                  | tamamen tonal (kısmi tonlar + parıltı), gürültü YOK                                                                                                        | 0.491                     |
+| `tone`                 | kullanıcının seçtiği frekansta saf sinüs; opsiyonel binaural vuru (`beatHz`) → MixPlayer'da STEREO (L/R farklı perde), export'ta tremololu mono indirgemek | kanal başına 0.50         |
 
-Sınırlar `meditative.dart`'ta kanıtlanır ve testle doğrulanır; **hiçbir kaynakta
-`clamp` yoktur** — clamp gerekiyorsa sınır yanlıştır.
+Sınırlar `meditative.dart`/`tone.dart`'ta kanıtlanır ve testle doğrulanır;
+**hiçbir kaynakta `clamp` yoktur** — clamp gerekiyorsa sınır yanlıştır.
 
 **DÖNGÜ KİLİDİ — pazarlıksız kural.** `MixPlayer` 30 sn'lik buffer'ı döngüler.
 `renderSeamlessLoop`'un eşit-güç crossfade'i **korelasyonsuz gürültü** için dikiş
@@ -108,6 +111,52 @@ kilitli katman ham kopyalanır (`mix_loop.dart`).
 **Sözleşme üç yerde yaşar** (apps/* birbirini import edemez): mobil enum, sunucu
 `LAYER_SOURCES`, panel `LAYER_SOURCES`. `tooling/check-layer-source-drift.mjs`
 üçünü sıra dahil karşılaştırır ve CI'da zorlar.
+
+### 1.2.2 Sonsuz uzatma: ses gece boyunca birebir tekrar etmez (2026-09)
+
+`MixPlayer` eskiden her katmanı 30 sn'lik tek bir buffer'dan `LoopMode.one` ile
+döngülüyordu: dikiş tıksızdı ama aynı 30 sn sekiz saatte ~960 kez birebir dönüyordu.
+Artık tohumla değişen her sentez katmanı bir **parça zinciri** olarak çalınır
+(`core/audio_engine/dsp/segment_chain.dart`):
+
+- Katmanın çaları, 30 sn'lik parçalardan oluşan boşluksuz bir just_audio çalma
+  listesi çalar. Listede her zaman çalan parça ve ondan sonraki parça vardır.
+- Çalar bir parçaya geçtiğinde öncekini listeden çıkarır, baytlarını bırakır
+  (`BytesAudioSource.release`: just_audio eklenen her kaynağı oynatıcı kapanana dek
+  tutar) ve sıradakini yeni bir tohumla ayrı isolate'te üretip ekler. Üretim çalma
+  hızında ilerler; duraklatılmışken üretim yok.
+- Ardışık parçalar kaynak türüne göre dikişsiz birleşir. Kilitli olmayan kaynaklarda
+  yeni parçanın başı önceki parçanın kuyruğuyla 50 ms eşit-güç harmanlanır (döngü
+  dikişinin aynı matematiği, `writeEqualPowerSeam`). Kilitli kaynaklarda parçalar
+  harmansız eklenir; döngü kilidi sınırdaki sürekliliği zaten sağlar.
+- Kilitli olmayan kaynaklarda her parça ilk parçanın RMS'ine hizalanır (±3 dB
+  sınırlı): gürültü üreteçleri her buffer'ı kendi tepesine normalize ettiği için iki
+  tohum arasında 1.3 dB'e varan fark ölçüldü; hizalanmasa her 30 sn'de bir basamak
+  duyulurdu.
+- İlk parça eski döngü buffer'ının birebir aynısıdır. Liste `LoopMode.all` ile
+  kurulur: yeni parça zamanında eklenemezse çalar elindeki listeyi döndürür, ses
+  kesilmez; en kötü durum eski davranıştır.
+
+| grup                                | kaynaklar                                       | neden                                                                     |
+| ----------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| yeniden üretilir, harmanlanır       | white, pink, brown, waves, fire, rain, friction | tohum sesin kendisini değiştirir                                          |
+| yeniden üretilir, harmansız eklenir | pad, arpeggio, ceramic, chimes                  | döngüye kilitli; tohum olayları (parıltı, nota, vuruş) değiştirir         |
+| tek döngü                           | tone, chords, topSpin                           | tohumdan bağımsız (ölçülen gövde korelasyonu 1.000); sabit/ritmik tasarım |
+
+`friction` bu işle birlikte kilitli gruptan çıktı: el hareketi kilitli ama taşıdığı
+bantlı kahverengi gürültü rastgele (aynı tohumun başı ile döngü sonrası devamının
+korelasyonu 0.006); ham kopya sarma noktasında küçük bir süreksizlik bırakıyordu.
+
+**Maliyet (ölçüldü, masaüstü JIT, 48 kHz):** bir 30 sn parçanın üretimi ve WAV'a
+paketlenmesi kaynağa göre 63–227 ms (pad en pahalı). Yedi katmanlı varsayılan
+karışım için 30 sn'de 734 ms, bir çekirdeğin ~%2.4'ü. Telefonda birkaç kat fazlası
+beklenir; gece boyu pil etkisi cihazda ölçülecek. **Bellek:** yeniden üretilen
+katman başına iki parça (~5.8 MB) + bırakılmış parçaların küçük kabukları.
+
+**Kaçış yolu:** `MixPlayer(extendForever: false)` eski tek döngüye döner.
+
+**Doğrulanmadı:** gerçek cihazda kulakla dinlenmedi. just_audio'nun Android ve iOS
+için belgelediği boşluksuz geçiş, gece boyu bellek ve pil cihazda denenecek.
 
 ### 1.2 Ses Motoru Mimarisi (teknik hendek)
 

@@ -6,6 +6,13 @@ import type { MixerState } from './mixer-state';
 
 export type ContentStatus = 'draft' | 'scheduled' | 'published';
 
+/**
+ * Kütüphane kategorisi. Değerler 20260824000001 göçündeki CHECK kısıtının aynısı.
+ * Mobil kütüphane ekranı bununla süzer; yanıtta yoksa her tarif 'nature' sayılır.
+ */
+export const SOUNDSCAPE_CATEGORIES = ['noise', 'nature', 'relaxing'] as const;
+export type SoundscapeCategory = (typeof SOUNDSCAPE_CATEGORIES)[number];
+
 export interface Soundscape {
   readonly id: string;
   readonly slug: string;
@@ -14,6 +21,7 @@ export interface Soundscape {
   readonly layerDefs: unknown;
   readonly archetypeAffinity: readonly string[];
   readonly version: number;
+  readonly category: SoundscapeCategory;
 }
 
 export interface Preset {

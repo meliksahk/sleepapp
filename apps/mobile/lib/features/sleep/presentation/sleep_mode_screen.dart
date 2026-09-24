@@ -7,15 +7,33 @@ import '../../../core/sleep_tracking/smart_alarm.dart';
 import '../../../l10n/app_localizations.dart';
 import '../sleep_mode_controller.dart';
 import '../sleep_session_beacon.dart';
+import 'widgets/night_orb.dart';
 
 /// Uyku modu (docs/04 M3) — **mikrofonun gerçekten dinlediği ekran**.
 ///
 /// #128–#132'de uyku takibi mantığı yazıldı ve test edildi ama kullanıcı ona hiç
 /// ulaşamıyordu. Burası o kapı.
 class SleepModeScreen extends StatefulWidget {
-  const SleepModeScreen({super.key, required this.controller});
+  const SleepModeScreen({
+    super.key,
+    required this.controller,
+    this.micRationale,
+    this.onEditAlarm,
+  });
 
   final SleepModeController controller;
+
+  /// Kayıt BAŞLAMADAN önce çalışan gerekçe kapısı (Elegy §13).
+  ///
+  /// `true` → başla · `false` → başlama (kullanıcı "şimdi değil" dedi).
+  /// **Opsiyonel ve varsayılan null:** kapı bir yerleştirme (routing) kararı,
+  /// bu ekranın iç mantığı değil. Null olduğunda ekran eskisi gibi doğrudan
+  /// başlar — mevcut widget testleri router kurmadan koşmaya devam eder.
+  final Future<bool> Function()? micRationale;
+
+  /// Alarm kurulum EKRANINA götürür (Elegy §14). Verilmezse ekran eski
+  /// davranışa düşer: sistemin saat diyaloğu. Yerleştirme kararı router'ın.
+  final VoidCallback? onEditAlarm;
 
   @override
   State<SleepModeScreen> createState() => _SleepModeScreenState();
@@ -44,40 +62,55 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   }
 
   /// Alarm kurma bölümü — **opt-in**, varsayılan kapalı.
+  ///
+  /// Elegy: gece ekranında hiçbir şey parlamaz; bölüm mono etiket + ince
+  /// çizgiyle ayrılır, kontroller sönük.
   Widget _alarmSection(BuildContext context, AppL10n l10n, SleepModeState s) {
     final at = s.alarmAt;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.alarmSectionTitle, style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 4),
+        const Divider(color: NoctaColors.nightLine),
+        const SizedBox(height: NoctaSpace.s4),
+        NMono(l10n.alarmSectionTitle, color: NoctaColors.nightFaint),
+        const SizedBox(height: NoctaSpace.s2),
         Text(
           at == null ? l10n.alarmOff : l10n.alarmSet(_formatTime(context, at)),
           key: const Key('alarm-status'),
-          style: Theme.of(context).textTheme.bodyLarge,
+          style: const TextStyle(
+            fontFamily: NoctaFont.mono,
+            fontSize: NoctaFontSize.caption,
+            letterSpacing: NoctaTrack.tight,
+            color: NoctaColors.nightInk,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: NoctaSpace.s2),
         // Alarmın ne YAPTIĞINI söyler: sezgisel + son tarih garantisi. Kullanıcı
         // "akıllı" kelimesinden uyku evresi ölçtüğümüzü sanmamalı (CLAUDE.md §1.1).
         Text(
           l10n.alarmExplain(widget.controller.alarmWindow.inMinutes),
           key: const Key('alarm-explain'),
-          style: Theme.of(context).textTheme.bodySmall,
+          style: const TextStyle(
+            fontSize: NoctaFontSize.caption,
+            height: 1.6,
+            color: NoctaColors.nightFaint,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: NoctaSpace.s3),
         Row(
           children: [
-            OutlinedButton(
+            _NightAction(
               key: const Key('alarm-choose'),
-              onPressed: () => _pickAlarm(context),
-              child: Text(l10n.alarmChoose),
+              label: l10n.alarmChoose,
+              onTap: () => _pickAlarm(context),
+              boxed: true,
             ),
             if (at != null) ...[
-              const SizedBox(width: 12),
-              TextButton(
+              const SizedBox(width: NoctaSpace.s3),
+              _NightAction(
                 key: const Key('alarm-clear'),
-                onPressed: () => widget.controller.setAlarm(null),
-                child: Text(l10n.alarmClear),
+                label: l10n.alarmClear,
+                onTap: () => widget.controller.setAlarm(null),
               ),
             ],
           ],
@@ -89,7 +122,61 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
   String _formatTime(BuildContext context, DateTime at) =>
       TimeOfDay.fromDateTime(at).format(context);
 
+  /// RİTÜEL SESİ bölümü — 4. özellik "tek tuş"un görünür yüzü.
+  ///
+  /// **Opt-in ve kalıcı:** varsayılan kapalıdır (uyurken habersiz ses = kötü
+  /// sürpriz); kullanıcı bir gece açtıysa tercih hatırlanır. Kayıt sırasında da
+  /// değiştirilebilir: yatakta "ses fazla geldi" diyebilmelidir.
+  Widget _soundSection(AppL10n l10n, SleepModeState s) {
+    final statusText = s.soundFailed
+        ? l10n.sleepSoundFailed
+        : (s.soundEnabled ? l10n.sleepSoundOn : l10n.sleepSoundOff);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(color: NoctaColors.nightLine),
+        const SizedBox(height: NoctaSpace.s4),
+        NMono(l10n.sleepSoundTitle, color: NoctaColors.nightFaint),
+        const SizedBox(height: NoctaSpace.s2),
+        Text(
+          statusText,
+          key: const Key('sleep-sound-status'),
+          style: TextStyle(
+            fontFamily: NoctaFont.mono,
+            fontSize: NoctaFontSize.caption,
+            letterSpacing: NoctaTrack.tight,
+            color: s.soundFailed ? NoctaColors.lineDanger : NoctaColors.nightInk,
+          ),
+        ),
+        const SizedBox(height: NoctaSpace.s2),
+        Text(
+          l10n.sleepSoundHint,
+          style: const TextStyle(
+            fontSize: NoctaFontSize.caption,
+            height: 1.6,
+            color: NoctaColors.nightFaint,
+          ),
+        ),
+        const SizedBox(height: NoctaSpace.s3),
+        _NightAction(
+          key: const Key('sleep-sound-toggle'),
+          label: s.soundEnabled ? l10n.sleepSoundTurnOff : l10n.sleepSoundTurnOn,
+          boxed: true,
+          onTap: () => widget.controller
+              .setSoundEnabled(!widget.controller.state.soundEnabled),
+        ),
+      ],
+    );
+  }
+
   Future<void> _pickAlarm(BuildContext context) async {
+    // Kurulum ekranı varsa oraya: saat + PENCERE birlikte ayarlanır. Sistemin
+    // diyaloğu pencereyi soramaz, yani ürünün farkını gizler.
+    final edit = widget.onEditAlarm;
+    if (edit != null) {
+      edit();
+      return;
+    }
     final now = DateTime.now();
     final picked = await showTimePicker(
       context: context,
@@ -114,177 +201,369 @@ class _SleepModeScreenState extends State<SleepModeScreen> {
     final l10n = AppL10n.of(context);
     final s = widget.controller.state;
 
+    // ALARM ÇALIYORSA EKRANIN TAMAMINI DEVRALIR (Elegy §15).
+    //
+    // Panel olarak durduğunda "geceyi bitir" ve "başlat/bitir" düğmeleri hâlâ
+    // ekrandaydı — yarı uykulu bir insan için üç düğmeli bir ekran, yanlış
+    // düğmeye basmanın davetidir. Çalarken tek bir karar var: sustur.
+    if (s.alarmRinging) {
+      return _AlarmRingingView(
+        trigger: s.alarmTrigger,
+        elapsed: s.startedAt == null ? null : _elapsed(s.startedAt!),
+        eventCount: s.eventCount,
+        onDismiss: widget.controller.dismissAlarm,
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.sleepModeTitle)),
+      // Uyku modu bg.base'ten de karanlık: bu ekran gece boyunca AÇIK kalıyor.
+      backgroundColor: NoctaColors.bgNight,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: NMono(l10n.sleepModeTitle, color: NoctaColors.nightFaint),
+      ),
+      // İÇERİK kaydırılır, ASIL EYLEM SABİT kalır. Küre + 64px saat + alarm
+      // bölümü küçük ekranda sabit `Column`'a sığmıyordu (testte 136px taşma);
+      // her şeyi kaydırılabilir yapmak ise başlat/bitir düğmesini ekranın
+      // altına itiyordu — yarı uykulu kullanıcının aradığı tek düğme o.
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(NoctaSpace.s5),
+          padding: const EdgeInsets.all(NoctaSpace.s6),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // GİZLİLİK ÖNDE: kullanıcı mikrofonu açmadan ÖNCE ne olduğunu bilmeli.
-              // Bunu ayarlara gömmek, iznin bilinçli olmasını engellerdi.
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // "MİKROFON AÇIK" göstergesi GİZLENMEZ (docs/04 §1.3): kullanıcı
+                      // gece boyunca mikrofonun açık olduğunu görür.
+                      if (s.isRecording)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: NoctaColors.nightInk,
+                              ),
+                            ),
+                            const SizedBox(width: NoctaSpace.s2),
+                            NMono(
+                              l10n.sleepModeRecording,
+                              color: NoctaColors.nightFaint,
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: NoctaSpace.s8),
+
+                      if (s.isRecording && s.startedAt != null)
+                        Column(
+                          children: [
+                            const NightOrb(size: 200),
+                            const SizedBox(height: NoctaSpace.s8),
+                            // Saat serif ve BÜYÜK ama sönük: yarı uykuluyken okunur,
+                            // gözü açmaz.
+                            Text(
+                              _elapsed(s.startedAt!),
+                              key: const Key('sleep-elapsed'),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: NoctaFont.display,
+                                fontSize: 64,
+                                height: 1,
+                                color: NoctaColors.nightInk,
+                                fontFeatures: <FontFeature>[
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: NoctaSpace.s4),
+                            NMono(
+                              l10n.sleepModeEvents(s.eventCount),
+                              key: const Key('sleep-event-count'),
+                              color: NoctaColors.nightFaint,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+
+                      if (s.permissionDenied)
+                        _NightNotice(
+                          key: const Key('sleep-permission-denied'),
+                          text: l10n.sleepModePermissionDenied,
+                        ),
+
+                      // Servis başlatılamadı → kayıt BAŞLATILMADI. Bunu izin reddinden ayrı
+                      // göstermek şart: biri kullanıcının seçimi, diğeri sistem sorunu.
+                      if (s.serviceFailed)
+                        _NightNotice(
+                          key: const Key('sleep-service-failed'),
+                          text: l10n.sleepModeServiceFailed,
+                        ),
+
+                      if (s.savedDraft != null) ...[
+                        NDisplay(
+                          l10n.sleepModeSaved(
+                            s.savedDraft!.duration.inHours,
+                            s.savedDraft!.duration.inMinutes % 60,
+                          ),
+                          key: const Key('sleep-saved'),
+                          size: NoctaFontSize.h2,
+                          color: NoctaColors.nightInk,
+                          textAlign: TextAlign.center,
+                        ),
+                        // Gece zarfı varsa paylaşılabilir (docs/04 §120 fixture'ı).
+                        // Otomatik gönderim YOK: veri kullanıcının cihazında üretildi.
+                        if (widget.controller.envelope != null) ...[
+                          const SizedBox(height: NoctaSpace.s3),
+                          Text(
+                            l10n.sleepModeExportHint,
+                            key: const Key('sleep-export-hint'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: NoctaFontSize.caption,
+                              height: 1.6,
+                              color: NoctaColors.nightFaint,
+                            ),
+                          ),
+                          const SizedBox(height: NoctaSpace.s2),
+                          NButton(
+                            key: const Key('sleep-export'),
+                            label: l10n.sleepModeExportEnvelope,
+                            variant: NButtonVariant.ghost,
+                            onPressed: () => widget.controller.shareEnvelope(
+                              text: l10n.sleepModeExportHint,
+                            ),
+                          ),
+                        ],
+                        if (s.error != null) ...[
+                          const SizedBox(height: NoctaSpace.s2),
+                          // Gece YOK SAYILMAZ: veri cihazda üretildi, yalnızca sunucuya
+                          // yazılamadı. Kullanıcıya bunu ayırt ettirmek dürüstlük.
+                          _NightNotice(
+                            key: const Key('sleep-save-failed'),
+                            text: l10n.sleepModeSaveFailed,
+                          ),
+                        ],
+                      ],
+
+                      _alarmSection(context, l10n, s),
+                      _soundSection(l10n, s),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: NoctaSpace.s5),
+              // GİZLİLİK: kullanıcı mikrofonu açmadan ÖNCE ne olduğunu bilmeli.
+              // Ayarlara gömmek, iznin bilinçli olmasını engellerdi.
               Text(
                 l10n.sleepModePrivacy,
                 key: const Key('sleep-privacy'),
-                style: TextStyle(
+                textAlign: TextAlign.center,
+                style: const TextStyle(
                   fontSize: NoctaFontSize.caption,
-                  color: NoctaColors.inkSecondary,
+                  height: 1.6,
+                  color: NoctaColors.nightFaint,
                 ),
               ),
-              const Spacer(),
-
-              if (s.isRecording && s.startedAt != null)
-                Column(
-                  children: [
-                    Text(
-                      _elapsed(s.startedAt!),
-                      key: const Key('sleep-elapsed'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: NoctaFontSize.display,
-                        color: NoctaColors.inkPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: NoctaSpace.s2),
-                    Text(
-                      l10n.sleepModeRecording,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: NoctaColors.accentAurora),
-                    ),
-                    const SizedBox(height: NoctaSpace.s3),
-                    Text(
-                      l10n.sleepModeEvents(s.eventCount),
-                      key: const Key('sleep-event-count'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: NoctaColors.inkSecondary),
-                    ),
-                  ],
-                ),
-
-              if (s.permissionDenied)
-                Text(
-                  l10n.sleepModePermissionDenied,
-                  key: const Key('sleep-permission-denied'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: NoctaColors.accentDawn),
-                ),
-
-              // Servis başlatılamadı → kayıt BAŞLATILMADI. Bunu izin reddinden ayrı
-              // göstermek şart: biri kullanıcının seçimi, diğeri sistem sorunu.
-              if (s.serviceFailed)
-                Text(
-                  l10n.sleepModeServiceFailed,
-                  key: const Key('sleep-service-failed'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: NoctaColors.accentDawn),
-                ),
-
-              if (s.savedDraft != null) ...[
-                Text(
-                  l10n.sleepModeSaved(
-                    s.savedDraft!.duration.inHours,
-                    s.savedDraft!.duration.inMinutes % 60,
-                  ),
-                  key: const Key('sleep-saved'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: NoctaFontSize.h2,
-                    color: NoctaColors.inkPrimary,
-                  ),
-                ),
-                // Gece zarfı varsa paylaşılabilir (docs/04 §120 fixture'ı).
-                // Otomatik gönderim YOK: veri kullanıcının cihazında üretildi.
-                if (widget.controller.envelope != null) ...[
-                  const SizedBox(height: NoctaSpace.s3),
-                  Text(
-                    l10n.sleepModeExportHint,
-                    key: const Key('sleep-export-hint'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.caption,
-                      color: NoctaColors.inkFaint,
-                    ),
-                  ),
-                  const SizedBox(height: NoctaSpace.s2),
-                  NButton(
-                    key: const Key('sleep-export'),
-                    label: l10n.sleepModeExportEnvelope,
-                    variant: NButtonVariant.ghost,
-                    onPressed: () => widget.controller.shareEnvelope(
-                      text: l10n.sleepModeExportHint,
-                    ),
-                  ),
-                ],
-                if (s.error != null) ...[
-                  const SizedBox(height: NoctaSpace.s2),
-                  // Gece YOK SAYILMAZ: veri cihazda üretildi, yalnızca sunucuya
-                  // yazılamadı. Kullanıcıya bunu ayırt ettirmek dürüstlük.
-                  Text(
-                    l10n.sleepModeSaveFailed,
-                    key: const Key('sleep-save-failed'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: NoctaFontSize.caption,
-                      color: NoctaColors.accentDawn,
-                    ),
-                  ),
-                ],
-              ],
-
-              // ÇALIYORSA her şeyin üstünde: kullanıcı yarı uykulu, aradığı tek
-              // düğme bu. Aşağıda bir yerde olsaydı telefonu kurcalardı.
-              if (s.alarmRinging) ...[
-                Card(
-                  key: const Key('alarm-ringing'),
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text(
-                          s.alarmTrigger == AlarmTrigger.lightSleep
-                              ? l10n.alarmRingingLightSleep
-                              : l10n.alarmRingingDeadline,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        NButton(
-                          key: const Key('alarm-dismiss'),
-                          label: l10n.alarmDismiss,
-                          onPressed: widget.controller.dismissAlarm,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              _alarmSection(context, l10n, s),
-
-              const Spacer(),
+              const SizedBox(height: NoctaSpace.s4),
               NButton(
                 key: const Key('sleep-toggle'),
+                variant: s.isRecording
+                    ? NButtonVariant.ghost
+                    : NButtonVariant.primary,
                 label: s.isRecording ? l10n.sleepModeStop : l10n.sleepModeStart,
                 // Karar BASMA ANINDA verilir, build anında değil. `onPressed`i
                 // `s.isRecording`e göre seçmek, build ile basış arasında durum
                 // değişirse YANLIŞ eylemi çağırırdı — nitekim çağırdı: testte
                 // "bitir"e basmak yeniden `start()` tetikledi ve gece kaydedilmedi.
-                onPressed: () {
+                onPressed: () async {
                   final now = widget.controller.state;
                   if (now.isRecording) {
                     widget.controller.stopAndSave();
-                  } else {
-                    widget.controller.start(
-                      notificationTitle: l10n.sleepModeNotificationTitle,
-                      notificationBody: l10n.sleepModeNotificationBody,
-                    );
+                    return;
                   }
+                  // Gerekçe kapısı: sistemin izin kutusu bundan SONRA çıkar.
+                  final gate = widget.micRationale;
+                  if (gate != null && !await gate()) return;
+                  widget.controller.start(
+                    notificationTitle: l10n.sleepModeNotificationTitle,
+                    notificationBody: l10n.sleepModeNotificationBody,
+                  );
                 },
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Gece ekranındaki uyarı satırı — kızıl işaret bloğu + sönük metin.
+/// Gece paletinde parlak uyarı rengi kullanmıyoruz: kullanıcıyı uyandırmaz.
+class _NightNotice extends StatelessWidget {
+  const _NightNotice({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: NoctaSpace.s2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 8,
+            height: 8,
+            margin: const EdgeInsets.only(top: 6),
+            color: NoctaColors.lineDanger,
+          ),
+          const SizedBox(width: NoctaSpace.s3),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: NoctaFontSize.caption,
+                height: 1.6,
+                color: NoctaColors.nightInk,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Gece ekranının sönük eylemi. `OutlinedButton`/`TextButton` Material'ın
+/// kendi renklerini getiriyordu (mor dalgalanma, parlak metin) — gece paletini
+/// deliyordu.
+class _NightAction extends StatelessWidget {
+  const _NightAction({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.boxed = false,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool boxed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(
+            horizontal: NoctaSpace.s4,
+            vertical: NoctaSpace.s3,
+          ),
+          alignment: Alignment.center,
+          decoration: boxed
+              ? const BoxDecoration(
+                  border: Border.fromBorderSide(
+                    BorderSide(color: NoctaColors.nightLine),
+                  ),
+                )
+              : null,
+          child: NMono(label, color: NoctaColors.nightInk, height: 1),
+        ),
+      ),
+    );
+  }
+}
+
+/// **Alarm çalıyor** (Elegy §15) — gecenin tek sıcak karesi.
+///
+/// Gece paleti burada BİTER: ekran artık kullanıcıyı uyandırıyor, karartmanın
+/// anlamı yok. Gün doğumu gradyanı aşağıdan yukarı açılır.
+///
+/// **"Sustur" geceyi BİTİRMEZ** — kullanıcı uyumaya dönebilir. Tasarımdaki
+/// "kapat ve raporu aç" akışı bunu değiştirirdi; görsel bir karar uğruna
+/// davranışı değiştirmedik (test bunu sabitliyor).
+class _AlarmRingingView extends StatelessWidget {
+  const _AlarmRingingView({
+    required this.trigger,
+    required this.elapsed,
+    required this.eventCount,
+    required this.onDismiss,
+  });
+
+  final AlarmTrigger? trigger;
+  final String? elapsed;
+  final int eventCount;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppL10n.of(context);
+    final String? spent = elapsed;
+    return Scaffold(
+      key: const Key('alarm-ringing'),
+      backgroundColor: NoctaColors.bgNight,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: <Color>[NoctaColors.accentDawn, NoctaColors.bgNight],
+            stops: <double>[0, 0.75],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(NoctaSpace.s6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const Spacer(),
+                NMono(
+                  trigger == AlarmTrigger.lightSleep
+                      ? l10n.alarmRingingLightSleep
+                      : l10n.alarmRingingDeadline,
+                  track: NoctaTrack.wide,
+                  color: NoctaColors.inkSecondary,
+                ),
+                const SizedBox(height: NoctaSpace.s4),
+                if (spent != null)
+                  Text(
+                    spent,
+                    key: const Key('alarm-ringing-elapsed'),
+                    style: const TextStyle(
+                      fontFamily: NoctaFont.display,
+                      fontSize: 82,
+                      height: 1,
+                      color: NoctaColors.inkPrimary,
+                      fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+                    ),
+                  ),
+                const SizedBox(height: NoctaSpace.s4),
+                NMono(
+                  l10n.sleepModeEvents(eventCount),
+                  color: NoctaColors.inkSecondary,
+                ),
+                const Spacer(),
+                NButton(
+                  key: const Key('alarm-dismiss'),
+                  label: l10n.alarmDismiss,
+                  expand: true,
+                  rule: true,
+                  onPressed: onDismiss,
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -37,8 +37,7 @@ async function bootstrap(): Promise<void> {
         return;
       }
       // SESSİZ REDDETME YOK: engellenen kaynak logda görünsün, yoksa yanlış
-      // yapılandırma "site bozuk ama sunucu sağlıklı" gibi görünür.
-      // eslint-disable-next-line no-console
+      // yapılandırma "site bozuk ama sunucu sağlıklı" gibi görünürdü.
       console.warn(`[api] CORS reddedildi: ${origin} (izinli: ${corsOrigins.join(', ')})`);
       callback(null, false);
     },

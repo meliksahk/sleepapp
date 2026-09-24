@@ -78,6 +78,6 @@ describe('Sharing report card e2e (HTTP)', () => {
     expect(res.body.durationText).toBe('7h 30m');
     expect(res.body.title).toBe('My night: 7h 30m');
     expect(res.body.deepLink).toBe('nocta://report/2026-04-10');
-    expect(typeof res.body.calmScore).toBe('number');
+    expect(res.body).not.toHaveProperty('calmScore'); // F0: sabit skor kaldırıldı
   });
 });

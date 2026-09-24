@@ -65,7 +65,16 @@ MixSpec limitTotalGain(MixSpec spec) {
   return MixSpec(
     [
       for (final l in spec.layers)
-        MixLayer(id: l.id, type: l.type, gain: l.gain * k),
+        MixLayer(
+          id: l.id,
+          type: l.type,
+          gain: l.gain * k,
+          // Frekans/vuru ölçeklenmez, TAŞINIR: tone katmanının Hz'i tarifin
+          // kimliğidir; burada düşürülseydi normalize edilmiş tarif sessizce
+          // assert ile patlardı (tone + frequencyHz null).
+          frequencyHz: l.frequencyHz,
+          beatHz: l.beatHz,
+        ),
     ],
     assets: [for (final a in spec.assets) a.copyWith(gain: a.gain * k)],
   );

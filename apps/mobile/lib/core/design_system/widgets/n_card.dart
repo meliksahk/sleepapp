@@ -1,25 +1,34 @@
 import 'package:flutter/material.dart';
-import '../nocta_theme.dart';
 
-/// NOCTA kart yüzeyi — bg/raised + 1px iç kenarlık (docs/06 elevation).
+import '../generated/nocta_tokens.dart';
+
+/// NOCTA kart yüzeyi — Elegy'de **keskin kenarlı koyu panel**.
+///
+/// Kolajın iki yüzeyi var: koyu panel (bu) ve krem kağıt (`NPaper`).
+/// Yuvarlatma ve gölge yok; ayrım 1px çizgiyle yapılır.
 class NCard extends StatelessWidget {
   const NCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(NoctaSpace.s4),
+    this.color = NoctaColors.bgRaised,
+    this.border = NoctaColors.lineSoft,
   });
 
   final Widget child;
   final EdgeInsets padding;
+  final Color color;
+  final Color? border;
 
   @override
   Widget build(BuildContext context) {
+    final Color? edge = border;
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: NoctaColors.bgRaised,
+        color: color,
         borderRadius: BorderRadius.circular(NoctaRadius.card),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: edge == null ? null : Border.all(color: edge),
       ),
       child: child,
     );

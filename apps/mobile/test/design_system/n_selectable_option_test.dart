@@ -26,7 +26,11 @@ void main() {
     tester,
   ) async {
     // Seçimi yalnızca renkle anlatmak düşük kontrastlı ekranda ve renk körlüğünde
-    // kaybolur; tik ikonu şekil düzeyinde ayrım sağlar.
+    // kaybolur; ŞEKİL düzeyinde ayrım şart.
+    //
+    // Elegy (kolaj) tasarımında tik ikonu yok — seçenek krem bir kağıt parçası ve
+    // seçim, sol kenardaki işaret bloğunun BÜYÜMESİYLE anlatılıyor. Güvence aynı
+    // kaldı, kanıtı değişti: ikon aramak yerine iki halin işaretini ÖLÇÜYORUZ.
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -40,7 +44,17 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.check), findsOneWidget);
+    final marks = find.byKey(const Key('n-option-mark'));
+    expect(marks, findsNWidgets(2));
+    final Size selectedMark = tester.getSize(marks.at(0));
+    final Size emptyMark = tester.getSize(marks.at(1));
+    expect(
+      selectedMark,
+      isNot(emptyMark),
+      reason: 'seçili ve boş halin işareti aynı boyutta — ayrım yalnızca renkte kalmış',
+    );
+    expect(selectedMark.width, greaterThan(emptyMark.width));
+    expect(selectedMark.height, greaterThan(emptyMark.height));
   });
 
   testWidgets('dokunma hedefi en az 44px (CLAUDE.md §7)', (tester) async {

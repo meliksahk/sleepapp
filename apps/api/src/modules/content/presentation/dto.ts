@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { MAX_MIXER_LAYERS, LAYER_SOURCES, type LayerSource } from '../domain/mixer-state';
+import { SOUNDSCAPE_CATEGORIES, type SoundscapeCategory } from '../domain/soundscape';
 
 export class SoundscapeDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -12,6 +13,8 @@ export class SoundscapeDto {
   layerDefs!: unknown;
   @ApiProperty({ type: [String] }) archetypeAffinity!: string[];
   @ApiProperty({ example: 1 }) version!: number;
+  @ApiProperty({ enum: SOUNDSCAPE_CATEGORIES, example: 'nature' })
+  category!: SoundscapeCategory;
 }
 
 export class MixerLayerDto {

@@ -25,29 +25,32 @@ class ExploreTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Elegy: dolu kart degil, yalnizca 1px cerceve. Ikon kucuk ve sonuk;
+    // agirligi etiket tasiyor (mono, iki satira sarabilir).
     return InkWell(
-      borderRadius: BorderRadius.circular(NoctaRadius.card),
       onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 88),
-        child: NCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Icon(icon, size: 24, color: NoctaColors.accentAurora),
-              const SizedBox(height: NoctaSpace.s2),
-              Text(
-                label,
-                maxLines: 2,
-                softWrap: true,
-                style: TextStyle(
-                  fontSize: NoctaFontSize.body,
-                  color: NoctaColors.inkPrimary,
-                ),
-              ),
-            ],
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.all(NoctaSpace.s4),
+        decoration: const BoxDecoration(
+          border: Border.fromBorderSide(
+            BorderSide(color: NoctaColors.lineSoft),
           ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, size: 20, color: NoctaColors.inkFaint),
+            const SizedBox(height: NoctaSpace.s5),
+            NMono(
+              label,
+              color: NoctaColors.inkSecondary,
+              track: NoctaTrack.tight,
+              maxLines: 2,
+            ),
+          ],
         ),
       ),
     );

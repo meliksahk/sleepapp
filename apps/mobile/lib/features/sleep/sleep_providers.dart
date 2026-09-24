@@ -3,11 +3,14 @@ import '../auth/auth_providers.dart';
 import '../../core/share/sharer.dart';
 import '../../core/sleep_tracking/alarm_sound.dart';
 import '../../core/sleep_tracking/night_alarm_scheduler.dart';
+import '../../core/sleep_tracking/night_data_store.dart';
 import '../../core/sleep_tracking/night_service.dart';
 import '../../core/sleep_tracking/sleep_session_queue.dart';
 import '../../core/storage/key_value_store.dart';
 import '../../core/sleep_tracking/record_mic_source.dart';
 import '../../core/sleep_tracking/sleep_recorder.dart';
+import 'night_sound_player.dart';
+import '../../core/audio_engine/mix_player.dart';
 import 'sleep_controller.dart';
 import 'sleep_mode_controller.dart';
 import 'sleep_models.dart';
@@ -61,6 +64,14 @@ final sleepSessionBeaconProvider = Provider<SleepSessionBeacon>((ref) {
   return beacon;
 });
 
+/// Ritüel sesi player'ı — MixerScreen'in player'ından AYRI örnek (bkz.
+/// MixNightSoundPlayer yorumu: iki ekran tek controller'ı paylaşamaz).
+final nightSoundPlayerProvider = Provider<NightSoundPlayer>((ref) {
+  final player = MixNightSoundPlayer(player: MixPlayer());
+  ref.onDispose(player.player.dispose);
+  return player;
+});
+
 /// Uyku modu denetleyicisi — gerçek mikrofonla.
 ///
 /// `RecordMicSource` üretim adaptörü; testler `SleepModeController`'ı doğrudan
@@ -86,5 +97,31 @@ final sleepModeControllerProvider = Provider<SleepModeController>((ref) {
     sessionQueue: SleepSessionQueue(SecureKeyValueStore()),
     // Gece başlayınca/bitince kabuktaki şerit kendini gösterir/gizler.
     beacon: ref.read(sleepSessionBeaconProvider),
+    // 4. özellik "tek tuş": gece başlarken ritüel sesi de opt-in olarak başlar.
+    soundPlayer: ref.read(nightSoundPlayerProvider),
+    prefs: ref.read(keyValueStoreProvider),
+    // Veri kaybı düzeltmesi: zarf + draft diske yazılır, restart sonrası okunur.
+    nightDataStore: NightDataStore(SecureKeyValueStore()),
   );
 });
+
+/// Mikrofon gerekçe ekranının GÖSTERİLDİĞİ bilgisi.
+///
+/// **Neden kalıcı:** gerekçe her gece gösterilirse bir bilgi değil bir engel
+/// olur; kullanıcı üçüncü gece onu okumadan geçer. Bir kez gösterilir, kararı
+/// alınır, bir daha araya girmez.
+class MicRationaleFlag {
+  const MicRationaleFlag(this._store);
+
+  static const String _key = 'mic_rationale_seen';
+
+  final KeyValueStore _store;
+
+  Future<bool> seen() async => (await _store.read(_key)) == '1';
+
+  Future<void> markSeen() => _store.write(_key, '1');
+}
+
+final micRationaleFlagProvider = Provider<MicRationaleFlag>(
+  (ref) => MicRationaleFlag(ref.read(keyValueStoreProvider)),
+);

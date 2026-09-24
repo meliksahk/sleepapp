@@ -27,8 +27,9 @@ Soundscape _s(String slug, String title) => Soundscape(
 Future<void> _pump(
   WidgetTester tester,
   String slug,
-  List<Override> overrides,
-) async {
+  List<Override> overrides, {
+  Locale? locale,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: <Override>[
@@ -39,6 +40,7 @@ Future<void> _pump(
         ...overrides,
       ],
       child: MaterialApp(
+        locale: locale,
         localizationsDelegates: AppL10n.localizationsDelegates,
         supportedLocales: AppL10n.supportedLocales,
         theme: buildNoctaDarkTheme(),
@@ -127,5 +129,31 @@ void main() {
     ]);
     expect(find.byKey(const Key('sounds-heading')), findsNothing);
     expect(find.byKey(const Key('detail-name')), findsOneWidget);
+  });
+
+  testWidgets('TR arayüzde uygun ses başlıkları Türkçe (eskiden hep İngilizceydi)', (tester) async {
+    await _pump(
+      tester,
+      'deep-ocean',
+      [
+        archetypeContentProvider.overrideWith(
+          (ref) async => const {'deep-ocean': _info},
+        ),
+        soundscapesForArchetypeProvider.overrideWith(
+          (ref, arg) async => [
+            Soundscape(
+              id: 'id-tide',
+              slug: 'tide',
+              titleI18n: const {'en': 'Tide', 'tr': 'Gelgit'},
+              archetypeAffinity: const ['deep-ocean'],
+              version: 1,
+            ),
+          ],
+        ),
+      ],
+      locale: const Locale('tr'),
+    );
+    expect(find.text('Gelgit'), findsOneWidget);
+    expect(find.text('Tide'), findsNothing);
   });
 }
