@@ -12,10 +12,13 @@ import 'package:nocta/features/content/content_providers.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_route.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// `/mixer?soundscape=<slug>` — kütüphanedeki sesin GERÇEKTEN çalındığı yol.
 
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   double lastVolume = -1;
   @override
   bool playing = false;
@@ -58,6 +61,7 @@ MixerController _testController(MixSpec spec) {
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
       loopSeconds: 1, // 30 sn render testi yavaşlatırdı
       sampleRate: 8000,
       playerFactory: () {

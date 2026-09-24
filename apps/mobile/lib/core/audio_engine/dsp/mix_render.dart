@@ -57,6 +57,12 @@ enum LayerSource {
 ///
 /// `tone` pad ile AYNI gerekçeyle kilitlidir: saf sinüstür ve frekansı
 /// `loopLockedHz` ile ızgaraya oturtulur → kuyruk = baş (bkz. `tone.dart`).
+///
+/// **`friction` KİLİTLİ DEĞİL.** El hareketi döngüye kilitli ama taşıdığı şey
+/// rastgele bantlı kahverengi gürültü: aynı tohumun başı ile döngü sonrası
+/// devamının korelasyonu 0.006 ölçüldü. Kilitli sayıldığı dönemde döngü ham
+/// kopyalanıyordu ve sarma noktasında küçük bir süreksizlik kalıyordu; artık
+/// diğer gürültü kaynakları gibi eşit-güç harmanlanır.
 bool isLoopPeriodic(LayerSource type) =>
     type == LayerSource.pad ||
     type == LayerSource.tone ||
@@ -64,8 +70,7 @@ bool isLoopPeriodic(LayerSource type) =>
     type == LayerSource.arpeggio ||
     type == LayerSource.ceramic ||
     type == LayerSource.chimes ||
-    type == LayerSource.topSpin ||
-    type == LayerSource.friction;
+    type == LayerSource.topSpin;
 
 /// Tek bir mikser katmanı: hangi kaynak, hangi kazanç.
 class MixLayer {

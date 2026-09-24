@@ -2,14 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:nocta/core/audio_engine/dsp/mix_render.dart';
 import 'package:nocta/core/audio_engine/mix_player.dart';
+import 'package:nocta/features/mixer/domain/melodic_preset_store.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Mikser denetleyicisi — cihazsız.
 ///
 /// Burada kanıtlanan şey "ses duyuluyor" DEĞİL (o emülatör/cihaz işi). Kanıtlanan:
 /// **slider yeniden render TETİKLEMİYOR**. Bu, mimarinin can damarı — tetikleseydi
 /// her slider hareketinde ses kesilir ve tık olurdu.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   int setVolumeCalls = 0;
   int setAudioSourceCalls = 0;
   double lastVolume = -1;
@@ -73,6 +77,7 @@ void main() {
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
         // 1 sn: test hızlı koşsun (30 sn render × katman = yavaş).
         loopSeconds: 1,
         sampleRate: 8000,
@@ -271,6 +276,25 @@ void main() {
       final layer =
           c.currentSpec().layers.firstWhere((l) => l.type == LayerSource.tone);
       expect(layer.frequencyHz, 110);
+    });
+
+    test('ÇEKİRDEK: currentSpec melodi ayarlarını TAŞIR (çalma ve dışa aktarma)', () async {
+      // `prepare()` çaları bu tarifle yüklüyor; ayarlar burada düşerse editörde
+      // seçilen kök nota, dalga, tempo ve dizi hiç duyulmaz.
+      final c = build();
+      await c.addMelodicLayer(const MelodicPreset(
+        name: 'test',
+        rootSemi: 5,
+        patternIdx: 3,
+        waveform: 'saw',
+        tempoScale: 2.0,
+        isChords: true,
+      ));
+      final layer = c.currentSpec().layers.firstWhere((l) => l.type == LayerSource.chords);
+      expect(
+        <Object?>[layer.rootSemi, layer.waveform, layer.tempoScale, layer.patternIdx],
+        <Object?>[5, 'saw', 2.0, 3],
+      );
     });
 
     test('beatHz > 0 katmana TAŞINIR; 0/null → mono (alan hiç yazılmaz)', () async {

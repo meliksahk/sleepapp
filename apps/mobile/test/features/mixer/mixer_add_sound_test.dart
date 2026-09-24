@@ -12,6 +12,9 @@ import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/mixer_providers.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// **SON MİL:** kullanıcı katalogdan kendi dosyasını seçip mikse EKLEYEBİLİYOR mu.
 ///
@@ -19,7 +22,7 @@ import 'package:nocta/l10n/app_localizations.dart';
 /// vardı ve test ediliyordu; eksik olan tek şey EKRANDI. Bu dosya o son halkayı
 /// kilitler: katalog açılıyor, seçim katmana dönüşüyor, katman kaldırılabiliyor,
 /// boş/hatalı durumlar kırılmıyor ve export'un bilinen deliği söyleniyor.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   @override
   bool playing = false;
 
@@ -81,6 +84,7 @@ void main() {
           loopSeconds: 1,
           sampleRate: 8000,
           loopRenderer: (r) async => renderLoopSync(r),
+          segmentRenderer: (r) async => renderSegmentSync(r),
           playerFactory: _FakePlayer.new,
         ),
       );
@@ -288,6 +292,7 @@ void main() {
         loopSeconds: 1,
         sampleRate: 8000,
         loopRenderer: (r) async => renderLoopSync(r),
+        segmentRenderer: (r) async => renderSegmentSync(r),
         playerFactory: _FakePlayer.new,
       );
       final c = MixerController(
@@ -313,6 +318,7 @@ void main() {
         loopSeconds: 1,
         sampleRate: 8000,
         loopRenderer: (r) async => renderLoopSync(r),
+        segmentRenderer: (r) async => renderSegmentSync(r),
         playerFactory: _FakePlayer.new,
       );
       final c = MixerController(

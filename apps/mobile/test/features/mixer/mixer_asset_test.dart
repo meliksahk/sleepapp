@@ -8,9 +8,12 @@ import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/features/mixer/soundscape_mix.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Asset katmanı MİKSERDE — sürgüsü, kırpma sınırı ve dürüstlük dipnotu.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   double lastVolume = -1;
 
   @override
@@ -110,6 +113,7 @@ void main() {
             loopSeconds: 1,
             sampleRate: 8000,
             loopRenderer: (r) async => renderLoopSync(r),
+            segmentRenderer: (r) async => renderSegmentSync(r),
             playerFactory: _FakePlayer.new,
           ),
         );
@@ -153,6 +157,7 @@ void main() {
             loopSeconds: 1,
             sampleRate: 8000,
             loopRenderer: (r) async => renderLoopSync(r),
+            segmentRenderer: (r) async => renderSegmentSync(r),
             playerFactory: _FakePlayer.new,
           ),
         );

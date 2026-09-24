@@ -41,7 +41,9 @@ class MixNightSoundPlayer implements NightSoundPlayer {
   Future<void> play() async {
     if (player.isPlaying) return;
     if (!_loaded) {
-      // İlk gece: tek seferlik render (~300 ms/7 katman). Sonrakiler bellekten.
+      // İlk açılış: katmanların ilk parçaları üretilir (~300 ms/7 katman).
+      // Çalarken sonraki parçalar arka planda üretilir; ses gece boyu birebir
+      // tekrar etmez (bkz. segment_chain.dart).
       await player.load(spec ?? defaultMixSpec());
       _loaded = true;
     }

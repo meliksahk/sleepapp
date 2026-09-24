@@ -15,6 +15,9 @@ import 'package:nocta/features/mixer/mix_video_exporter.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import '../../core/audio_engine/fake_playlist_player.dart';
 
 /// Mikser ekranında **mix-to-video** (viral kanca #3, docs/04 §131).
 ///
@@ -22,7 +25,7 @@ import 'package:nocta/l10n/app_localizations.dart';
 /// çizilmez — kodlayıcı Android çerçeve API'si, `toImage` ise headless asılıyor
 /// (#140). Kanıtlanan şey: butonun doğru anda görünmesi, ilerlemenin gösterilmesi,
 /// videonun PAYLAŞIMA gitmesi ve hata metninin doğru olması.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   @override
   bool playing = false;
 
@@ -75,6 +78,7 @@ void main() {
       // pump döngüleri gerçek bir isolate'i beklemez. Senkron renderer enjekte
       // ediyoruz — `playerFactory` ile aynı desen.
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
         loopSeconds: 1,
         sampleRate: 8000,
         playerFactory: _FakePlayer.new,

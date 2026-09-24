@@ -639,6 +639,13 @@ class MixerController {
               // duyduğundan farklı bir mix paylaşmış olurdu.
               frequencyHz: l.frequencyHz,
               beatHz: l.beatHz,
+              // Melodi ayarları da KAYBEDİLMEZ: bu tarif hem çalmaya (prepare)
+              // hem video dışa aktarmaya gidiyor. Eskiden düşüyordu; editörde ne
+              // seçilirse seçilsin varsayılan akor/arpej çalıyordu.
+              rootSemi: l.rootSemi,
+              waveform: l.waveform,
+              tempoScale: l.tempoScale,
+              patternIdx: l.patternIdx,
             ),
         ],
         assets: [

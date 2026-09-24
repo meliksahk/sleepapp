@@ -8,6 +8,9 @@ import 'package:nocta/core/audio_engine/mix_player.dart';
 import 'package:nocta/features/mixer/mixer_controller.dart';
 import 'package:nocta/features/mixer/presentation/mixer_screen.dart';
 import 'package:nocta/l10n/app_localizations.dart';
+import 'package:nocta/core/audio_engine/dsp/segment_chain.dart';
+
+import 'fake_playlist_player.dart';
 
 /// **MASTER LİMİTLEYİCİ** — kırpma koruması.
 ///
@@ -24,7 +27,7 @@ import 'package:nocta/l10n/app_localizations.dart';
 /// yazılan** `setVolume` değerlerinin toplamı. Sahte player her çağrıyı
 /// kaydediyor; iddia doğrudan o kayıtlardan doğrulanıyor — motorun kendi
 /// raporladığı sayıdan değil.
-class _FakePlayer implements AudioPlayer {
+class _FakePlayer with FakePlaylistPlayer implements AudioPlayer {
   /// Bu player'a yazılan TÜM ses seviyeleri, sırayla. Rampanın basamak
   /// büyüklüğü buradan ölçülüyor.
   final List<double> volumes = <double>[];
@@ -75,6 +78,7 @@ void main() {
       sampleRate: 8000,
       limiterRampStep: ramp,
       loopRenderer: (r) async => renderLoopSync(r),
+      segmentRenderer: (r) async => renderSegmentSync(r),
       playerFactory: () {
         final p = _FakePlayer();
         created.add(p);
