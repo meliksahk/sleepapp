@@ -167,7 +167,7 @@ class _SoundscapeCard extends StatelessWidget {
                   color: NoctaColors.bgBase,
                   border: Border.all(color: NoctaColors.lineHairline),
                 ),
-                child: CustomPaint(painter: _TexturePainter(seed: s.slug.hashCode)),
+                child: CustomPaint(painter: SoundTexturePainter(soundTextureSignature(s.mixSpec, s.slug.hashCode))),
               ),
             ),
             const SizedBox(width: NoctaSpace.s4),
@@ -197,7 +197,7 @@ class _SoundscapeContent extends StatelessWidget {
               color: NoctaColors.bgBase,
               border: Border.all(color: NoctaColors.lineHairline),
             ),
-            child: CustomPaint(painter: _TexturePainter(seed: s.slug.hashCode)),
+            child: CustomPaint(painter: SoundTexturePainter(soundTextureSignature(s.mixSpec, s.slug.hashCode))),
           ),
         ),
         const SizedBox(width: NoctaSpace.s4),
@@ -254,29 +254,4 @@ class _SoundscapeText extends StatelessWidget {
       ],
     );
   }
-}
-/// Tarif karesinin dokusu — her slug kendi deterministik desenini alır.
-class _TexturePainter extends CustomPainter {
-  const _TexturePainter({required this.seed});
-
-  final int seed;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = NoctaColors.inkSecondary
-      ..strokeWidth = 1;
-    final int step = 3 + (seed.abs() % 4);
-    final bool diagonal = seed.isEven;
-    for (double i = -size.height; i < size.width; i += step + 2) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(diagonal ? i + size.height : i, size.height),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_TexturePainter old) => old.seed != seed;
 }

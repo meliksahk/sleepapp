@@ -7,4 +7,5 @@ export 'widgets/n_card.dart';
 export 'widgets/n_error_state.dart';
 export 'widgets/n_paper.dart';
 export 'widgets/n_selectable_option.dart';
+export 'widgets/n_sound_texture.dart';
 export 'widgets/n_text.dart';
